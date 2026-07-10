@@ -1,0 +1,1231 @@
+{
+  "_meta": {
+    "endpoint": "countries_list",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/countries/list",
+    "status": 200,
+    "bytes": 9484,
+    "captured_at": "2026-07-10T09:59:58Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "countries",
+    "data": [
+      {
+        "id": 11650,
+        "nm": "Albania",
+        "cid": 8,
+        "fid": 2
+      },
+      {
+        "id": 31,
+        "nm": "Algeria",
+        "cid": 12,
+        "fid": 3
+      },
+      {
+        "id": 11651,
+        "nm": "Andorra",
+        "cid": 20,
+        "fid": 5
+      },
+      {
+        "id": 1748,
+        "nm": "Angola",
+        "cid": 24,
+        "fid": 6
+      },
+      {
+        "id": 32,
+        "nm": "Antigua and Barbuda",
+        "cid": 28,
+        "fid": 7
+      },
+      {
+        "id": 33,
+        "nm": "Argentina",
+        "cid": 32,
+        "fid": 8
+      },
+      {
+        "id": 1,
+        "nm": "Armenia",
+        "cid": 51,
+        "fid": 9
+      },
+      {
+        "id": 11652,
+        "nm": "Aruba",
+        "cid": 533,
+        "fid": 10
+      },
+      {
+        "id": 34,
+        "nm": "Australia",
+        "cid": 36,
+        "fid": 12
+      },
+      {
+        "id": 35,
+        "nm": "Austria",
+        "cid": 40,
+        "fid": 13
+      },
+      {
+        "id": 2,
+        "nm": "Azerbaijan",
+        "cid": 31,
+        "fid": 14
+      },
+      {
+        "id": 16,
+        "nm": "Bahamas",
+        "cid": 44,
+        "fid": 15
+      },
+      {
+        "id": 36,
+        "nm": "Bahrain",
+        "cid": 48,
+        "fid": 16
+      },
+      {
+        "id": 18,
+        "nm": "Bangladesh",
+        "cid": 50,
+        "fid": 17
+      },
+      {
+        "id": 19,
+        "nm": "Barbados",
+        "cid": 52,
+        "fid": 18
+      },
+      {
+        "id": 37,
+        "nm": "Belarus",
+        "cid": 112,
+        "fid": 19
+      },
+      {
+        "id": 21,
+        "nm": "Belgium",
+        "cid": 56,
+        "fid": 20
+      },
+      {
+        "id": 22,
+        "nm": "Belize",
+        "cid": 84,
+        "fid": 21
+      },
+      {
+        "id": 23,
+        "nm": "Benin",
+        "cid": 204,
+        "fid": 22
+      },
+      {
+        "id": 24,
+        "nm": "Bermuda",
+        "cid": 60,
+        "fid": 23
+      },
+      {
+        "id": 25,
+        "nm": "Bhutan",
+        "cid": 64,
+        "fid": 24
+      },
+      {
+        "id": 26,
+        "nm": "Bolivia",
+        "cid": 68,
+        "fid": 25
+      },
+      {
+        "id": 27,
+        "nm": "Bosnia-Herzegovina",
+        "cid": 70,
+        "fid": 26
+      },
+      {
+        "id": 28,
+        "nm": "Botswana",
+        "cid": 72,
+        "fid": 27
+      },
+      {
+        "id": 38,
+        "nm": "Brazil",
+        "cid": 76,
+        "fid": 28
+      },
+      {
+        "id": 7923795,
+        "nm": "Brunei",
+        "cid": 96,
+        "fid": null
+      },
+      {
+        "id": 39,
+        "nm": "Bulgaria",
+        "cid": 100,
+        "fid": 30
+      },
+      {
+        "id": 11653,
+        "nm": "Burkina Faso",
+        "cid": 854,
+        "fid": 31
+      },
+      {
+        "id": 45055,
+        "nm": "Burundi",
+        "cid": 108,
+        "fid": 32
+      },
+      {
+        "id": 54857,
+        "nm": "Cambodia",
+        "cid": 116,
+        "fid": 33
+      },
+      {
+        "id": 40,
+        "nm": "Cameroon",
+        "cid": 120,
+        "fid": 34
+      },
+      {
+        "id": 41,
+        "nm": "Canada",
+        "cid": 124,
+        "fid": 35
+      },
+      {
+        "id": 11654,
+        "nm": "Chile",
+        "cid": 152,
+        "fid": 40
+      },
+      {
+        "id": 1749,
+        "nm": "China",
+        "cid": 156,
+        "fid": 41
+      },
+      {
+        "id": 42,
+        "nm": "Colombia",
+        "cid": 170,
+        "fid": 42
+      },
+      {
+        "id": 1750,
+        "nm": "Costa Rica",
+        "cid": 188,
+        "fid": 46
+      },
+      {
+        "id": 43,
+        "nm": "Croatia",
+        "cid": 191,
+        "fid": 47
+      },
+      {
+        "id": 15038943,
+        "nm": "Cuba",
+        "cid": 192,
+        "fid": null
+      },
+      {
+        "id": 11655,
+        "nm": "Cyprus",
+        "cid": 196,
+        "fid": 50
+      },
+      {
+        "id": 1751,
+        "nm": "Czech Republic",
+        "cid": 203,
+        "fid": 51
+      },
+      {
+        "id": 3,
+        "nm": "Democratic Republic Congo",
+        "cid": 180,
+        "fid": 52
+      },
+      {
+        "id": 44,
+        "nm": "Denmark",
+        "cid": 208,
+        "fid": 53
+      },
+      {
+        "id": 11656,
+        "nm": "Djibouti",
+        "cid": 262,
+        "fid": 54
+      },
+      {
+        "id": 45,
+        "nm": "Ecuador",
+        "cid": 218,
+        "fid": 57
+      },
+      {
+        "id": 4818504,
+        "nm": "Egypt",
+        "cid": 818,
+        "fid": 58
+      },
+      {
+        "id": 47,
+        "nm": "El Salvador",
+        "cid": 222,
+        "fid": 59
+      },
+      {
+        "id": 48,
+        "nm": "England",
+        "cid": 907,
+        "fid": 60
+      },
+      {
+        "id": 49,
+        "nm": "Estonia",
+        "cid": 233,
+        "fid": 63
+      },
+      {
+        "id": 4,
+        "nm": "Ethiopia",
+        "cid": 231,
+        "fid": 64
+      },
+      {
+        "id": 9042775,
+        "nm": "Europe",
+        "cid": 954,
+        "fid": 65
+      },
+      {
+        "id": 11657,
+        "nm": "Faroe Islands",
+        "cid": 234,
+        "fid": 67
+      },
+      {
+        "id": 11658,
+        "nm": "Fiji",
+        "cid": 242,
+        "fid": 60
+      },
+      {
+        "id": 50,
+        "nm": "Finland",
+        "cid": 246,
+        "fid": 69
+      },
+      {
+        "id": 11659,
+        "nm": "France",
+        "cid": 250,
+        "fid": 71
+      },
+      {
+        "id": 10066182,
+        "nm": "Gabon",
+        "cid": 266,
+        "fid": null
+      },
+      {
+        "id": 54858,
+        "nm": "Gambia",
+        "cid": 270,
+        "fid": 77
+      },
+      {
+        "id": 5,
+        "nm": "Georgia",
+        "cid": 268,
+        "fid": 78
+      },
+      {
+        "id": 51,
+        "nm": "Germany",
+        "cid": 276,
+        "fid": 79
+      },
+      {
+        "id": 1752,
+        "nm": "Ghana",
+        "cid": 288,
+        "fid": 80
+      },
+      {
+        "id": 11660,
+        "nm": "Gibraltar",
+        "cid": 292,
+        "fid": 81
+      },
+      {
+        "id": 19558287,
+        "nm": "Great Britain",
+        "cid": 826,
+        "fid": 224
+      },
+      {
+        "id": 52,
+        "nm": "Greece",
+        "cid": 300,
+        "fid": 83
+      },
+      {
+        "id": 82,
+        "nm": "Greenland",
+        "cid": 304,
+        "fid": 84
+      },
+      {
+        "id": 83,
+        "nm": "Grenada",
+        "cid": 308,
+        "fid": 85
+      },
+      {
+        "id": 85,
+        "nm": "Guam",
+        "cid": 316,
+        "fid": 87
+      },
+      {
+        "id": 53,
+        "nm": "Guatemala",
+        "cid": 320,
+        "fid": 88
+      },
+      {
+        "id": 87,
+        "nm": "Guinea",
+        "cid": 324,
+        "fid": 89
+      },
+      {
+        "id": 88,
+        "nm": "Guinea Bissau",
+        "cid": 245,
+        "fid": 90
+      },
+      {
+        "id": 89,
+        "nm": "Guyana",
+        "cid": 328,
+        "fid": 91
+      },
+      {
+        "id": 90,
+        "nm": "Haiti",
+        "cid": 332,
+        "fid": 92
+      },
+      {
+        "id": 54,
+        "nm": "Honduras",
+        "cid": 340,
+        "fid": 93
+      },
+      {
+        "id": 92,
+        "nm": "Hong Kong",
+        "cid": 344,
+        "fid": 94
+      },
+      {
+        "id": 55,
+        "nm": "Hungary",
+        "cid": 348,
+        "fid": 95
+      },
+      {
+        "id": 56,
+        "nm": "Iceland",
+        "cid": 352,
+        "fid": 96
+      },
+      {
+        "id": 95,
+        "nm": "India",
+        "cid": 356,
+        "fid": 97
+      },
+      {
+        "id": 97,
+        "nm": "Indonesia",
+        "cid": 360,
+        "fid": 98
+      },
+      {
+        "id": 57,
+        "nm": "International",
+        "cid": 916,
+        "fid": 99
+      },
+      {
+        "id": 58,
+        "nm": "Iran",
+        "cid": 364,
+        "fid": 100
+      },
+      {
+        "id": 6,
+        "nm": "Iraq",
+        "cid": 368,
+        "fid": 101
+      },
+      {
+        "id": 7,
+        "nm": "Israel",
+        "cid": 376,
+        "fid": 103
+      },
+      {
+        "id": 102,
+        "nm": "Italy",
+        "cid": 380,
+        "fid": 104
+      },
+      {
+        "id": 103,
+        "nm": "Ivory Coast",
+        "cid": 384,
+        "fid": 105
+      },
+      {
+        "id": 105,
+        "nm": "Jamaica",
+        "cid": 388,
+        "fid": 106
+      },
+      {
+        "id": 59,
+        "nm": "Japan",
+        "cid": 392,
+        "fid": 107
+      },
+      {
+        "id": 60,
+        "nm": "Jordan",
+        "cid": 400,
+        "fid": 108
+      },
+      {
+        "id": 8,
+        "nm": "Kazakhstan",
+        "cid": 398,
+        "fid": 109
+      },
+      {
+        "id": 113,
+        "nm": "Kenya",
+        "cid": 404,
+        "fid": 110
+      },
+      {
+        "id": 114,
+        "nm": "Kiribati",
+        "cid": 296,
+        "fid": 111
+      },
+      {
+        "id": 9,
+        "nm": "Korea Republic",
+        "cid": 410,
+        "fid": 113
+      },
+      {
+        "id": 117,
+        "nm": "Kosovo",
+        "cid": 986,
+        "fid": 247
+      },
+      {
+        "id": 61,
+        "nm": "Kuwait",
+        "cid": 414,
+        "fid": 114
+      },
+      {
+        "id": 119,
+        "nm": "Kyrgyzstan",
+        "cid": 981,
+        "fid": 242
+      },
+      {
+        "id": 120,
+        "nm": "Laos",
+        "cid": 418,
+        "fid": 116
+      },
+      {
+        "id": 62,
+        "nm": "Latvia",
+        "cid": 428,
+        "fid": 117
+      },
+      {
+        "id": 122,
+        "nm": "Lebanon",
+        "cid": 422,
+        "fid": 118
+      },
+      {
+        "id": 123,
+        "nm": "Lesotho",
+        "cid": 426,
+        "fid": 119
+      },
+      {
+        "id": 124,
+        "nm": "Liberia",
+        "cid": 430,
+        "fid": 120
+      },
+      {
+        "id": 125,
+        "nm": "Libya",
+        "cid": 434,
+        "fid": 121
+      },
+      {
+        "id": 126,
+        "nm": "Liechtenstein",
+        "cid": 438,
+        "fid": 122
+      },
+      {
+        "id": 10,
+        "nm": "Lithuania",
+        "cid": 440,
+        "fid": 123
+      },
+      {
+        "id": 128,
+        "nm": "Luxembourg",
+        "cid": 442,
+        "fid": 124
+      },
+      {
+        "id": 54859,
+        "nm": "Macao",
+        "cid": 446,
+        "fid": 125
+      },
+      {
+        "id": 131,
+        "nm": "Madagascar",
+        "cid": 450,
+        "fid": 126
+      },
+      {
+        "id": 11,
+        "nm": "Malawi",
+        "cid": 454,
+        "fid": 127
+      },
+      {
+        "id": 133,
+        "nm": "Malaysia",
+        "cid": 458,
+        "fid": 128
+      },
+      {
+        "id": 134,
+        "nm": "Maldives",
+        "cid": 462,
+        "fid": 129
+      },
+      {
+        "id": 63,
+        "nm": "Mali",
+        "cid": 466,
+        "fid": 130
+      },
+      {
+        "id": 64,
+        "nm": "Malta",
+        "cid": 470,
+        "fid": 131
+      },
+      {
+        "id": 139,
+        "nm": "Mauritania",
+        "cid": 478,
+        "fid": 135
+      },
+      {
+        "id": 140,
+        "nm": "Mauritius",
+        "cid": 480,
+        "fid": 136
+      },
+      {
+        "id": 65,
+        "nm": "Mexico",
+        "cid": 484,
+        "fid": 137
+      },
+      {
+        "id": 144,
+        "nm": "Moldova",
+        "cid": 498,
+        "fid": 140
+      },
+      {
+        "id": 145,
+        "nm": "Monaco",
+        "cid": 492,
+        "fid": 141
+      },
+      {
+        "id": 146,
+        "nm": "Mongolia",
+        "cid": 496,
+        "fid": 142
+      },
+      {
+        "id": 147,
+        "nm": "Montenegro",
+        "cid": 499,
+        "fid": 143
+      },
+      {
+        "id": 148,
+        "nm": "Montserrat",
+        "cid": 985,
+        "fid": 246
+      },
+      {
+        "id": 66,
+        "nm": "Morocco",
+        "cid": 504,
+        "fid": 132
+      },
+      {
+        "id": 150,
+        "nm": "Mozambique",
+        "cid": 508,
+        "fid": 146
+      },
+      {
+        "id": 151,
+        "nm": "Myanmar",
+        "cid": 104,
+        "fid": 147
+      },
+      {
+        "id": 152,
+        "nm": "Namibia",
+        "cid": 516,
+        "fid": 148
+      },
+      {
+        "id": 153,
+        "nm": "Nauru",
+        "cid": 520,
+        "fid": 149
+      },
+      {
+        "id": 154,
+        "nm": "Nepal",
+        "cid": 524,
+        "fid": 150
+      },
+      {
+        "id": 155,
+        "nm": "Netherlands",
+        "cid": 528,
+        "fid": 151
+      },
+      {
+        "id": 157,
+        "nm": "New Caledonia",
+        "cid": 540,
+        "fid": 154
+      },
+      {
+        "id": 158,
+        "nm": "New Zealand",
+        "cid": 554,
+        "fid": 155
+      },
+      {
+        "id": 67,
+        "nm": "Nicaragua",
+        "cid": 558,
+        "fid": 156
+      },
+      {
+        "id": 160,
+        "nm": "Niger",
+        "cid": 562,
+        "fid": 157
+      },
+      {
+        "id": 161,
+        "nm": "Nigeria",
+        "cid": 566,
+        "fid": 158
+      },
+      {
+        "id": 162,
+        "nm": "Niue",
+        "cid": 570,
+        "fid": 159
+      },
+      {
+        "id": 163,
+        "nm": "Norfolk Island",
+        "cid": 574,
+        "fid": 160
+      },
+      {
+        "id": 130,
+        "nm": "North Macedonia",
+        "cid": 807,
+        "fid": 75
+      },
+      {
+        "id": 1753,
+        "nm": "Northern Ireland",
+        "cid": 919,
+        "fid": 161
+      },
+      {
+        "id": 164,
+        "nm": "Northern Mariana Islands",
+        "cid": 580,
+        "fid": 162
+      },
+      {
+        "id": 68,
+        "nm": "Norway",
+        "cid": 578,
+        "fid": 163
+      },
+      {
+        "id": 166,
+        "nm": "Oman",
+        "cid": 512,
+        "fid": 164
+      },
+      {
+        "id": 167,
+        "nm": "Pakistan",
+        "cid": 586,
+        "fid": 166
+      },
+      {
+        "id": 169,
+        "nm": "Palestine",
+        "cid": 275,
+        "fid": 168
+      },
+      {
+        "id": 69,
+        "nm": "Panama",
+        "cid": 591,
+        "fid": 169
+      },
+      {
+        "id": 171,
+        "nm": "Papua New Guinea",
+        "cid": 598,
+        "fid": 170
+      },
+      {
+        "id": 70,
+        "nm": "Paraguay",
+        "cid": 600,
+        "fid": 171
+      },
+      {
+        "id": 173,
+        "nm": "Peru",
+        "cid": 604,
+        "fid": 172
+      },
+      {
+        "id": 174,
+        "nm": "Philippines",
+        "cid": 608,
+        "fid": 173
+      },
+      {
+        "id": 12,
+        "nm": "Poland",
+        "cid": 616,
+        "fid": 175
+      },
+      {
+        "id": 177,
+        "nm": "Portugal",
+        "cid": 620,
+        "fid": 176
+      },
+      {
+        "id": 178,
+        "nm": "Puerto Rico",
+        "cid": 630,
+        "fid": 177
+      },
+      {
+        "id": 179,
+        "nm": "Qatar",
+        "cid": 634,
+        "fid": 178
+      },
+      {
+        "id": 71,
+        "nm": "Republic of Ireland",
+        "cid": 372,
+        "fid": 102
+      },
+      {
+        "id": 13,
+        "nm": "Romania",
+        "cid": 642,
+        "fid": 181
+      },
+      {
+        "id": 72,
+        "nm": "Russia",
+        "cid": 643,
+        "fid": 182
+      },
+      {
+        "id": 73,
+        "nm": "Rwanda",
+        "cid": 646,
+        "fid": 183
+      },
+      {
+        "id": 184,
+        "nm": "Saint Kitts and Nevis",
+        "cid": 659,
+        "fid": 184
+      },
+      {
+        "id": 185,
+        "nm": "Saint Lucia",
+        "cid": 662,
+        "fid": 185
+      },
+      {
+        "id": 186,
+        "nm": "Saint Vincent and the Grenadines",
+        "cid": 670,
+        "fid": 187
+      },
+      {
+        "id": 187,
+        "nm": "Samoa",
+        "cid": 882,
+        "fid": 188
+      },
+      {
+        "id": 188,
+        "nm": "San Marino",
+        "cid": 674,
+        "fid": 189
+      },
+      {
+        "id": 189,
+        "nm": "Sao Tome and Principe",
+        "cid": 999,
+        "fid": 261
+      },
+      {
+        "id": 74,
+        "nm": "Saudi Arabia",
+        "cid": 682,
+        "fid": 191
+      },
+      {
+        "id": 246,
+        "nm": "Scotland",
+        "cid": 921,
+        "fid": 192
+      },
+      {
+        "id": 191,
+        "nm": "Senegal",
+        "cid": 686,
+        "fid": 193
+      },
+      {
+        "id": 14,
+        "nm": "Serbia",
+        "cid": 688,
+        "fid": 194
+      },
+      {
+        "id": 193,
+        "nm": "Seychelles",
+        "cid": 690,
+        "fid": 195
+      },
+      {
+        "id": 194,
+        "nm": "Sierra Leone",
+        "cid": 694,
+        "fid": 196
+      },
+      {
+        "id": 195,
+        "nm": "Singapore",
+        "cid": 702,
+        "fid": 197
+      },
+      {
+        "id": 196,
+        "nm": "Slovakia",
+        "cid": 703,
+        "fid": 198
+      },
+      {
+        "id": 75,
+        "nm": "Slovenia",
+        "cid": 705,
+        "fid": 199
+      },
+      {
+        "id": 198,
+        "nm": "Solomon Islands",
+        "cid": 90,
+        "fid": 200
+      },
+      {
+        "id": 199,
+        "nm": "Somalia",
+        "cid": 706,
+        "fid": 201
+      },
+      {
+        "id": 76,
+        "nm": "South Africa",
+        "cid": 710,
+        "fid": 202
+      },
+      {
+        "id": 202,
+        "nm": "Spain",
+        "cid": 724,
+        "fid": 203
+      },
+      {
+        "id": 203,
+        "nm": "Sri Lanka",
+        "cid": 144,
+        "fid": 204
+      },
+      {
+        "id": 206,
+        "nm": "Sudan",
+        "cid": 736,
+        "fid": 205
+      },
+      {
+        "id": 207,
+        "nm": "Suriname",
+        "cid": 740,
+        "fid": 206
+      },
+      {
+        "id": 77,
+        "nm": "Sweden",
+        "cid": 752,
+        "fid": 208
+      },
+      {
+        "id": 211,
+        "nm": "Switzerland",
+        "cid": 756,
+        "fid": 209
+      },
+      {
+        "id": 212,
+        "nm": "Syria",
+        "cid": 760,
+        "fid": 210
+      },
+      {
+        "id": 11661,
+        "nm": "Tahiti",
+        "cid": 987,
+        "fid": 249
+      },
+      {
+        "id": 213,
+        "nm": "Taiwan",
+        "cid": 158,
+        "fid": 211
+      },
+      {
+        "id": 214,
+        "nm": "Tajikistan",
+        "cid": 762,
+        "fid": 212
+      },
+      {
+        "id": 11662,
+        "nm": "Tanzania",
+        "cid": 834,
+        "fid": 213
+      },
+      {
+        "id": 216,
+        "nm": "Thailand",
+        "cid": 764,
+        "fid": 214
+      },
+      {
+        "id": 217,
+        "nm": "Togo",
+        "cid": 768,
+        "fid": 216
+      },
+      {
+        "id": 219,
+        "nm": "Tonga",
+        "cid": 776,
+        "fid": 217
+      },
+      {
+        "id": 220,
+        "nm": "Trinidad and Tobago",
+        "cid": 780,
+        "fid": 218
+      },
+      {
+        "id": 221,
+        "nm": "Tunisia",
+        "cid": 788,
+        "fid": 219
+      },
+      {
+        "id": 78,
+        "nm": "Turkey",
+        "cid": 792,
+        "fid": 220
+      },
+      {
+        "id": 223,
+        "nm": "Turkmenistan",
+        "cid": 795,
+        "fid": 221
+      },
+      {
+        "id": 224,
+        "nm": "Turks and Caicos Islands",
+        "cid": 983,
+        "fid": 244
+      },
+      {
+        "id": 225,
+        "nm": "Tuvalu",
+        "cid": 991,
+        "fid": 253
+      },
+      {
+        "id": 1754,
+        "nm": "U.A.E",
+        "cid": 784,
+        "fid": 222
+      },
+      {
+        "id": 15,
+        "nm": "Uganda",
+        "cid": 800,
+        "fid": 223
+      },
+      {
+        "id": 227,
+        "nm": "Ukraine",
+        "cid": 804,
+        "fid": 225
+      },
+      {
+        "id": 232,
+        "nm": "Uruguay",
+        "cid": 858,
+        "fid": 226
+      },
+      {
+        "id": 79,
+        "nm": "USA",
+        "cid": 840,
+        "fid": 227
+      },
+      {
+        "id": 233,
+        "nm": "Uzbekistan",
+        "cid": 860,
+        "fid": 228
+      },
+      {
+        "id": 234,
+        "nm": "Vanuatu",
+        "cid": 548,
+        "fid": 229
+      },
+      {
+        "id": 80,
+        "nm": "Venezuela",
+        "cid": 862,
+        "fid": 230
+      },
+      {
+        "id": 81,
+        "nm": "Vietnam",
+        "cid": 704,
+        "fid": 231
+      },
+      {
+        "id": 90591,
+        "nm": "Wales",
+        "cid": 925,
+        "fid": 234
+      },
+      {
+        "id": 245,
+        "nm": "West Indies",
+        "cid": 248,
+        "fid": 248
+      },
+      {
+        "id": 241,
+        "nm": "Yemen",
+        "cid": 887,
+        "fid": 237
+      },
+      {
+        "id": 242,
+        "nm": "Zambia",
+        "cid": 894,
+        "fid": 239
+      },
+      {
+        "id": 243,
+        "nm": "Zimbabwe",
+        "cid": 716,
+        "fid": 240
+      }
+    ]
+  }
+}

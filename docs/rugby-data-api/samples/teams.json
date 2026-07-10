@@ -1,0 +1,1769 @@
+{
+  "_meta": {
+    "endpoint": "teams",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/teams",
+    "status": 200,
+    "bytes": 18113,
+    "captured_at": "2026-07-10T10:00:01Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "Teams",
+    "data": [
+      {
+        "id": 559,
+        "nm": "Aberaeron",
+        "sg": "aberaeron-559"
+      },
+      {
+        "id": 439,
+        "nm": "Aberavon",
+        "sg": "aberavon-439"
+      },
+      {
+        "id": 362,
+        "nm": "Aberavon Green Stars",
+        "sg": "aberavon-green-stars-362"
+      },
+      {
+        "id": 561,
+        "nm": "Aberavon Quins",
+        "sg": "aberavon-quins-561"
+      },
+      {
+        "id": 553,
+        "nm": "Abercarn",
+        "sg": "abercarn-553"
+      },
+      {
+        "id": 436,
+        "nm": "Abercrave",
+        "sg": "abercrave-436"
+      },
+      {
+        "id": 325,
+        "nm": "Abercwmboi",
+        "sg": "abercwmboi-325"
+      },
+      {
+        "id": 322,
+        "nm": "Abercynon",
+        "sg": "abercynon-322"
+      },
+      {
+        "id": 391,
+        "nm": "Aberdare",
+        "sg": "aberdare-391"
+      },
+      {
+        "id": 337,
+        "nm": "Abergavenny",
+        "sg": "abergavenny-337"
+      },
+      {
+        "id": 333,
+        "nm": "Abertillery",
+        "sg": "abertillery-333"
+      },
+      {
+        "id": 355,
+        "nm": "Aberystwyth",
+        "sg": "aberystwyth-355"
+      },
+      {
+        "id": 505,
+        "nm": "Agen",
+        "sg": "agen-505"
+      },
+      {
+        "id": 400,
+        "nm": "Ammanford",
+        "sg": "ammanford-400"
+      },
+      {
+        "id": 276,
+        "nm": "Ampthill",
+        "sg": "ampthill-276"
+      },
+      {
+        "id": 508,
+        "nm": "Angouleme",
+        "sg": "angouleme-508"
+      },
+      {
+        "id": 231,
+        "nm": "Anthem RC",
+        "sg": "anthem-rc-231"
+      },
+      {
+        "id": 183,
+        "nm": "Argentina",
+        "sg": "argentina-183"
+      },
+      {
+        "id": 476,
+        "nm": "Argentina 7s",
+        "sg": "argentina-7s-476"
+      },
+      {
+        "id": 543,
+        "nm": "Argentina 7s W(w)",
+        "sg": "argentina-7s-ww-543"
+      },
+      {
+        "id": 208,
+        "nm": "Argentina U20",
+        "sg": "argentina-u20-208"
+      },
+      {
+        "id": 298,
+        "nm": "ASM Clermont Auvergne",
+        "sg": "asm-clermont-auvergne-298"
+      },
+      {
+        "id": 214,
+        "nm": "Auckland",
+        "sg": "auckland-214"
+      },
+      {
+        "id": 507,
+        "nm": "Aurillac",
+        "sg": "aurillac-507"
+      },
+      {
+        "id": 252,
+        "nm": "Australia",
+        "sg": "australia-252"
+      },
+      {
+        "id": 482,
+        "nm": "Australia 7s",
+        "sg": "australia-7s-482"
+      },
+      {
+        "id": 547,
+        "nm": "Australia 7s W(w)",
+        "sg": "australia-7s-ww-547"
+      },
+      {
+        "id": 206,
+        "nm": "Australia U20",
+        "sg": "australia-u20-206"
+      },
+      {
+        "id": 170,
+        "nm": "Australia(w)",
+        "sg": "australiaw-170"
+      },
+      {
+        "id": 421,
+        "nm": "Ayr",
+        "sg": "ayr-421"
+      },
+      {
+        "id": 341,
+        "nm": "Bala",
+        "sg": "bala-341"
+      },
+      {
+        "id": 190,
+        "nm": "Barbarians",
+        "sg": "barbarians-190"
+      },
+      {
+        "id": 381,
+        "nm": "Bargoed RFC",
+        "sg": "bargoed-rfc-381"
+      },
+      {
+        "id": 321,
+        "nm": "Barry",
+        "sg": "barry-321"
+      },
+      {
+        "id": 270,
+        "nm": "Bath",
+        "sg": "bath-270"
+      },
+      {
+        "id": 220,
+        "nm": "Bay of Plenty",
+        "sg": "bay-of-plenty-220"
+      },
+      {
+        "id": 291,
+        "nm": "Bayonne",
+        "sg": "bayonne-291"
+      },
+      {
+        "id": 389,
+        "nm": "Beddau",
+        "sg": "beddau-389"
+      },
+      {
+        "id": 282,
+        "nm": "Bedford Blues",
+        "sg": "bedford-blues-282"
+      },
+      {
+        "id": 338,
+        "nm": "Bedlinog",
+        "sg": "bedlinog-338"
+      },
+      {
+        "id": 393,
+        "nm": "Bedwas",
+        "sg": "bedwas-393"
+      },
+      {
+        "id": 195,
+        "nm": "Belgium",
+        "sg": "belgium-195"
+      },
+      {
+        "id": 310,
+        "nm": "Benetton Treviso",
+        "sg": "benetton-treviso-310"
+      },
+      {
+        "id": 346,
+        "nm": "Bethesda",
+        "sg": "bethesda-346"
+      },
+      {
+        "id": 513,
+        "nm": "Beziers",
+        "sg": "beziers-513"
+      },
+      {
+        "id": 511,
+        "nm": "Biarritz Olympique",
+        "sg": "biarritz-olympique-511"
+      },
+      {
+        "id": 317,
+        "nm": "Black Lion",
+        "sg": "black-lion-317"
+      },
+      {
+        "id": 428,
+        "nm": "Blackwood",
+        "sg": "blackwood-428"
+      },
+      {
+        "id": 331,
+        "nm": "Blaenavon",
+        "sg": "blaenavon-331"
+      },
+      {
+        "id": 429,
+        "nm": "Blaina",
+        "sg": "blaina-429"
+      },
+      {
+        "id": 73,
+        "nm": "Blues",
+        "sg": "blues-73"
+      },
+      {
+        "id": 410,
+        "nm": "Boland Cavaliers",
+        "sg": "boland-cavaliers-410"
+      },
+      {
+        "id": 379,
+        "nm": "Bonymaen",
+        "sg": "bonymaen-379"
+      },
+      {
+        "id": 177,
+        "nm": "Brazil",
+        "sg": "brazil-177"
+      },
+      {
+        "id": 549,
+        "nm": "Brazil 7s W(w)",
+        "sg": "brazil-7s-ww-549"
+      },
+      {
+        "id": 372,
+        "nm": "Brecon",
+        "sg": "brecon-372"
+      },
+      {
+        "id": 443,
+        "nm": "Bridgend",
+        "sg": "bridgend-443"
+      },
+      {
+        "id": 361,
+        "nm": "Bridgend Athletic",
+        "sg": "bridgend-athletic-361"
+      },
+      {
+        "id": 265,
+        "nm": "Bristol Bears",
+        "sg": "bristol-bears-265"
+      },
+      {
+        "id": 490,
+        "nm": "Bristol Bears Women(w)",
+        "sg": "bristol-bears-womenw-490"
+      },
+      {
+        "id": 182,
+        "nm": "British & Irish Lions",
+        "sg": "british-irish-lions-182"
+      },
+      {
+        "id": 72,
+        "nm": "Brumbies",
+        "sg": "brumbies-72"
+      },
+      {
+        "id": 395,
+        "nm": "Brynmawr",
+        "sg": "brynmawr-395"
+      },
+      {
+        "id": 368,
+        "nm": "Builth Wells",
+        "sg": "builth-wells-368"
+      },
+      {
+        "id": 455,
+        "nm": "Buller",
+        "sg": "buller-455"
+      },
+      {
+        "id": 307,
+        "nm": "Bulls",
+        "sg": "bulls-307"
+      },
+      {
+        "id": 356,
+        "nm": "Burry Port",
+        "sg": "burry-port-356"
+      },
+      {
+        "id": 509,
+        "nm": "CA Brive",
+        "sg": "ca-brive-509"
+      },
+      {
+        "id": 340,
+        "nm": "Caernarfon",
+        "sg": "caernarfon-340"
+      },
+      {
+        "id": 434,
+        "nm": "Caerphilly",
+        "sg": "caerphilly-434"
+      },
+      {
+        "id": 285,
+        "nm": "Caldy",
+        "sg": "caldy-285"
+      },
+      {
+        "id": 392,
+        "nm": "Cambrian Welfare",
+        "sg": "cambrian-welfare-392"
+      },
+      {
+        "id": 286,
+        "nm": "Cambridge",
+        "sg": "cambridge-286"
+      },
+      {
+        "id": 179,
+        "nm": "Cambridge University",
+        "sg": "cambridge-university-179"
+      },
+      {
+        "id": 259,
+        "nm": "Canada",
+        "sg": "canada-259"
+      },
+      {
+        "id": 541,
+        "nm": "Canada 7s W(w)",
+        "sg": "canada-7s-ww-541"
+      },
+      {
+        "id": 167,
+        "nm": "Canada(w)",
+        "sg": "canadaw-167"
+      },
+      {
+        "id": 224,
+        "nm": "Canterbury",
+        "sg": "canterbury-224"
+      },
+      {
+        "id": 515,
+        "nm": "Carcassonne",
+        "sg": "carcassonne-515"
+      },
+      {
+        "id": 374,
+        "nm": "Cardiff Met",
+        "sg": "cardiff-met-374"
+      },
+      {
+        "id": 445,
+        "nm": "Cardiff RFC",
+        "sg": "cardiff-rfc-445"
+      },
+      {
+        "id": 311,
+        "nm": "Cardiff Rugby",
+        "sg": "cardiff-rugby-311"
+      },
+      {
+        "id": 447,
+        "nm": "Carmarthen",
+        "sg": "carmarthen-447"
+      },
+      {
+        "id": 558,
+        "nm": "Carmarthen Athletic",
+        "sg": "carmarthen-athletic-558"
+      },
+      {
+        "id": 300,
+        "nm": "Castres Olympique",
+        "sg": "castres-olympique-300"
+      },
+      {
+        "id": 318,
+        "nm": "Cheetahs",
+        "sg": "cheetahs-318"
+      },
+      {
+        "id": 232,
+        "nm": "Chicago Hounds",
+        "sg": "chicago-hounds-232"
+      },
+      {
+        "id": 74,
+        "nm": "Chiefs",
+        "sg": "chiefs-74"
+      },
+      {
+        "id": 194,
+        "nm": "Chile",
+        "sg": "chile-194"
+      },
+      {
+        "id": 278,
+        "nm": "Chinnor",
+        "sg": "chinnor-278"
+      },
+      {
+        "id": 349,
+        "nm": "COBRA",
+        "sg": "cobra-349"
+      },
+      {
+        "id": 502,
+        "nm": "Colomiers",
+        "sg": "colomiers-502"
+      },
+      {
+        "id": 431,
+        "nm": "Colwyn Bay",
+        "sg": "colwyn-bay-431"
+      },
+      {
+        "id": 313,
+        "nm": "Connacht",
+        "sg": "connacht-313"
+      },
+      {
+        "id": 284,
+        "nm": "Cornish Pirates",
+        "sg": "cornish-pirates-284"
+      },
+      {
+        "id": 221,
+        "nm": "Counties Manukau",
+        "sg": "counties-manukau-221"
+      },
+      {
+        "id": 281,
+        "nm": "Coventry",
+        "sg": "coventry-281"
+      },
+      {
+        "id": 380,
+        "nm": "Cross Keys",
+        "sg": "cross-keys-380"
+      },
+      {
+        "id": 78,
+        "nm": "Crusaders",
+        "sg": "crusaders-78"
+      },
+      {
+        "id": 406,
+        "nm": "Crymych",
+        "sg": "crymych-406"
+      },
+      {
+        "id": 414,
+        "nm": "Currie",
+        "sg": "currie-414"
+      },
+      {
+        "id": 556,
+        "nm": "Cymry Caerdydd",
+        "sg": "cymry-caerdydd-556"
+      },
+      {
+        "id": 283,
+        "nm": "Doncaster",
+        "sg": "doncaster-283"
+      },
+      {
+        "id": 332,
+        "nm": "Dowlais",
+        "sg": "dowlais-332"
+      },
+      {
+        "id": 315,
+        "nm": "Dragons",
+        "sg": "dragons-315"
+      },
+      {
+        "id": 398,
+        "nm": "Dunvant",
+        "sg": "dunvant-398"
+      },
+      {
+        "id": 277,
+        "nm": "Ealing Trailfinders",
+        "sg": "ealing-trailfinders-277"
+      },
+      {
+        "id": 452,
+        "nm": "East Coast",
+        "sg": "east-coast-452"
+      },
+      {
+        "id": 448,
+        "nm": "Ebbw Vale",
+        "sg": "ebbw-vale-448"
+      },
+      {
+        "id": 304,
+        "nm": "Edinburgh",
+        "sg": "edinburgh-304"
+      },
+      {
+        "id": 562,
+        "nm": "Edinburgh Accies",
+        "sg": "edinburgh-accies-562"
+      },
+      {
+        "id": 243,
+        "nm": "England",
+        "sg": "england-243"
+      },
+      {
+        "id": 199,
+        "nm": "England U20",
+        "sg": "england-u20-199"
+      },
+      {
+        "id": 425,
+        "nm": "England XV",
+        "sg": "england-xv-425"
+      },
+      {
+        "id": 162,
+        "nm": "England(w)",
+        "sg": "englandw-162"
+      },
+      {
+        "id": 269,
+        "nm": "Exeter Chiefs",
+        "sg": "exeter-chiefs-269"
+      },
+      {
+        "id": 484,
+        "nm": "Exeter Chiefs Women(w)",
+        "sg": "exeter-chiefs-womenw-484"
+      },
+      {
+        "id": 352,
+        "nm": "Felinfoel",
+        "sg": "felinfoel-352"
+      },
+      {
+        "id": 168,
+        "nm": "Fiji",
+        "sg": "fiji-168"
+      },
+      {
+        "id": 253,
+        "nm": "Fiji",
+        "sg": "fiji-253"
+      },
+      {
+        "id": 477,
+        "nm": "Fiji 7s",
+        "sg": "fiji-7s-477"
+      },
+      {
+        "id": 548,
+        "nm": "Fiji 7s W(w)",
+        "sg": "fiji-7s-ww-548"
+      },
+      {
+        "id": 538,
+        "nm": "Fiji U20",
+        "sg": "fiji-u20-538"
+      },
+      {
+        "id": 76,
+        "nm": "Fijian Drua",
+        "sg": "fijian-drua-76"
+      },
+      {
+        "id": 185,
+        "nm": "First Nations & Pasifika XV",
+        "sg": "first-nations-pasifika-xv-185"
+      },
+      {
+        "id": 241,
+        "nm": "France",
+        "sg": "france-241"
+      },
+      {
+        "id": 483,
+        "nm": "France 7s",
+        "sg": "france-7s-483"
+      },
+      {
+        "id": 544,
+        "nm": "France 7s W(w)",
+        "sg": "france-7s-ww-544"
+      },
+      {
+        "id": 204,
+        "nm": "France U20",
+        "sg": "france-u20-204"
+      },
+      {
+        "id": 426,
+        "nm": "France XV",
+        "sg": "france-xv-426"
+      },
+      {
+        "id": 166,
+        "nm": "France(w)",
+        "sg": "francew-166"
+      },
+      {
+        "id": 188,
+        "nm": "Georgia",
+        "sg": "georgia-188"
+      },
+      {
+        "id": 210,
+        "nm": "Georgia U20",
+        "sg": "georgia-u20-210"
+      },
+      {
+        "id": 196,
+        "nm": "Germany",
+        "sg": "germany-196"
+      },
+      {
+        "id": 531,
+        "nm": "Germany 7s",
+        "sg": "germany-7s-531"
+      },
+      {
+        "id": 387,
+        "nm": "Glamorgan Wanderers",
+        "sg": "glamorgan-wanderers-387"
+      },
+      {
+        "id": 415,
+        "nm": "Glasgow Hawks",
+        "sg": "glasgow-hawks-415"
+      },
+      {
+        "id": 423,
+        "nm": "Glasgow Hutchesons Aloysians",
+        "sg": "glasgow-hutchesons-aloysians-423"
+      },
+      {
+        "id": 301,
+        "nm": "Glasgow Warriors",
+        "sg": "glasgow-warriors-301"
+      },
+      {
+        "id": 272,
+        "nm": "Gloucester",
+        "sg": "gloucester-272"
+      },
+      {
+        "id": 492,
+        "nm": "Gloucester-Hartpury Women(w)",
+        "sg": "gloucester-hartpury-womenw-492"
+      },
+      {
+        "id": 403,
+        "nm": "Glynneath",
+        "sg": "glynneath-403"
+      },
+      {
+        "id": 402,
+        "nm": "Gorseinon",
+        "sg": "gorseinon-402"
+      },
+      {
+        "id": 405,
+        "nm": "Gowerton",
+        "sg": "gowerton-405"
+      },
+      {
+        "id": 481,
+        "nm": "Great Britain 7s",
+        "sg": "great-britain-7s-481"
+      },
+      {
+        "id": 552,
+        "nm": "Great Britain 7s W(w)",
+        "sg": "great-britain-7s-ww-552"
+      },
+      {
+        "id": 510,
+        "nm": "Grenoble FC",
+        "sg": "grenoble-fc-510"
+      },
+      {
+        "id": 412,
+        "nm": "Griquas",
+        "sg": "griquas-412"
+      },
+      {
+        "id": 274,
+        "nm": "Harlequins",
+        "sg": "harlequins-274"
+      },
+      {
+        "id": 485,
+        "nm": "Harlequins Women(w)",
+        "sg": "harlequins-womenw-485"
+      },
+      {
+        "id": 275,
+        "nm": "Hartpury RFC",
+        "sg": "hartpury-rfc-275"
+      },
+      {
+        "id": 422,
+        "nm": "Hawick",
+        "sg": "hawick-422"
+      },
+      {
+        "id": 217,
+        "nm": "Hawke's Bay",
+        "sg": "hawkes-bay-217"
+      },
+      {
+        "id": 351,
+        "nm": "Hendy",
+        "sg": "hendy-351"
+      },
+      {
+        "id": 437,
+        "nm": "Heol y Cyw",
+        "sg": "heol-y-cyw-437"
+      },
+      {
+        "id": 417,
+        "nm": "Heriots",
+        "sg": "heriots-417"
+      },
+      {
+        "id": 82,
+        "nm": "Highlanders",
+        "sg": "highlanders-82"
+      },
+      {
+        "id": 520,
+        "nm": "Hong Kong",
+        "sg": "hong-kong-520"
+      },
+      {
+        "id": 460,
+        "nm": "Horowhenua",
+        "sg": "horowhenua-460"
+      },
+      {
+        "id": 233,
+        "nm": "Houston SaberCats",
+        "sg": "houston-sabercats-233"
+      },
+      {
+        "id": 77,
+        "nm": "Hurricanes",
+        "sg": "hurricanes-77"
+      },
+      {
+        "id": 184,
+        "nm": "Invitational AU & NZ",
+        "sg": "invitational-au-nz-184"
+      },
+      {
+        "id": 238,
+        "nm": "Ireland",
+        "sg": "ireland-238"
+      },
+      {
+        "id": 200,
+        "nm": "Ireland U20",
+        "sg": "ireland-u20-200"
+      },
+      {
+        "id": 163,
+        "nm": "Ireland(w)",
+        "sg": "irelandw-163"
+      },
+      {
+        "id": 240,
+        "nm": "Italy",
+        "sg": "italy-240"
+      },
+      {
+        "id": 203,
+        "nm": "Italy U20",
+        "sg": "italy-u20-203"
+      },
+      {
+        "id": 174,
+        "nm": "Italy(w)",
+        "sg": "italyw-174"
+      },
+      {
+        "id": 178,
+        "nm": "Japan",
+        "sg": "japan-178"
+      },
+      {
+        "id": 255,
+        "nm": "Japan",
+        "sg": "japan-255"
+      },
+      {
+        "id": 550,
+        "nm": "Japan 7s W(w)",
+        "sg": "japan-7s-ww-550"
+      },
+      {
+        "id": 537,
+        "nm": "Japan U20",
+        "sg": "japan-u20-537"
+      },
+      {
+        "id": 416,
+        "nm": "Kelso",
+        "sg": "kelso-416"
+      },
+      {
+        "id": 404,
+        "nm": "Kenfig Hill",
+        "sg": "kenfig-hill-404"
+      },
+      {
+        "id": 532,
+        "nm": "Kenya 7s",
+        "sg": "kenya-7s-532"
+      },
+      {
+        "id": 353,
+        "nm": "Kidwelly",
+        "sg": "kidwelly-353"
+      },
+      {
+        "id": 459,
+        "nm": "King Country",
+        "sg": "king-country-459"
+      },
+      {
+        "id": 294,
+        "nm": "La Rochelle",
+        "sg": "la-rochelle-294"
+      },
+      {
+        "id": 433,
+        "nm": "Lampeter Town",
+        "sg": "lampeter-town-433"
+      },
+      {
+        "id": 432,
+        "nm": "Laugharne",
+        "sg": "laugharne-432"
+      },
+      {
+        "id": 273,
+        "nm": "Leicester Tigers",
+        "sg": "leicester-tigers-273"
+      },
+      {
+        "id": 486,
+        "nm": "Leicester Tigers Women(w)",
+        "sg": "leicester-tigers-womenw-486"
+      },
+      {
+        "id": 306,
+        "nm": "Leinster",
+        "sg": "leinster-306"
+      },
+      {
+        "id": 312,
+        "nm": "Lions",
+        "sg": "lions-312"
+      },
+      {
+        "id": 442,
+        "nm": "Llandovery",
+        "sg": "llandovery-442"
+      },
+      {
+        "id": 343,
+        "nm": "Llandudno",
+        "sg": "llandudno-343"
+      },
+      {
+        "id": 401,
+        "nm": "Llanelli Wanderers",
+        "sg": "llanelli-wanderers-401"
+      },
+      {
+        "id": 342,
+        "nm": "Llangefni",
+        "sg": "llangefni-342"
+      },
+      {
+        "id": 376,
+        "nm": "Llangennech",
+        "sg": "llangennech-376"
+      },
+      {
+        "id": 328,
+        "nm": "Llanharan",
+        "sg": "llanharan-328"
+      },
+      {
+        "id": 327,
+        "nm": "Llanishen",
+        "sg": "llanishen-327"
+      },
+      {
+        "id": 279,
+        "nm": "London Scottish",
+        "sg": "london-scottish-279"
+      },
+      {
+        "id": 488,
+        "nm": "Loughborough Lightning(w)",
+        "sg": "loughborough-lightningw-488"
+      },
+      {
+        "id": 296,
+        "nm": "Lyon Rugby",
+        "sg": "lyon-rugby-296"
+      },
+      {
+        "id": 407,
+        "nm": "Maesteg Harlequins",
+        "sg": "maesteg-harlequins-407"
+      },
+      {
+        "id": 213,
+        "nm": "Manawatu",
+        "sg": "manawatu-213"
+      },
+      {
+        "id": 438,
+        "nm": "Maori All Blacks",
+        "sg": "maori-all-blacks-438"
+      },
+      {
+        "id": 419,
+        "nm": "Melrose",
+        "sg": "melrose-419"
+      },
+      {
+        "id": 382,
+        "nm": "Merthyr RFC",
+        "sg": "merthyr-rfc-382"
+      },
+      {
+        "id": 229,
+        "nm": "Miami Sharks",
+        "sg": "miami-sharks-229"
+      },
+      {
+        "id": 458,
+        "nm": "Mid Cant",
+        "sg": "mid-cant-458"
+      },
+      {
+        "id": 80,
+        "nm": "Moana Pasifika",
+        "sg": "moana-pasifika-80"
+      },
+      {
+        "id": 339,
+        "nm": "Mold",
+        "sg": "mold-339"
+      },
+      {
+        "id": 329,
+        "nm": "Monmouth",
+        "sg": "monmouth-329"
+      },
+      {
+        "id": 514,
+        "nm": "Mont-de-Marsan",
+        "sg": "mont-de-marsan-514"
+      },
+      {
+        "id": 449,
+        "nm": "Montauban",
+        "sg": "montauban-449"
+      },
+      {
+        "id": 287,
+        "nm": "Montpellier",
+        "sg": "montpellier-287"
+      },
+      {
+        "id": 390,
+        "nm": "Mountain Ash",
+        "sg": "mountain-ash-390"
+      },
+      {
+        "id": 303,
+        "nm": "Munster",
+        "sg": "munster-303"
+      },
+      {
+        "id": 427,
+        "nm": "Namibia",
+        "sg": "namibia-427"
+      },
+      {
+        "id": 345,
+        "nm": "Nant Conwy",
+        "sg": "nant-conwy-345"
+      },
+      {
+        "id": 365,
+        "nm": "Nantyffyllon",
+        "sg": "nantyffyllon-365"
+      },
+      {
+        "id": 375,
+        "nm": "Narberth",
+        "sg": "narberth-375"
+      },
+      {
+        "id": 373,
+        "nm": "Neath",
+        "sg": "neath-373"
+      },
+      {
+        "id": 560,
+        "nm": "Neath Athletic",
+        "sg": "neath-athletic-560"
+      },
+      {
+        "id": 336,
+        "nm": "Nelson",
+        "sg": "nelson-336"
+      },
+      {
+        "id": 197,
+        "nm": "Netherlands",
+        "sg": "netherlands-197"
+      },
+      {
+        "id": 506,
+        "nm": "Nevers",
+        "sg": "nevers-506"
+      },
+      {
+        "id": 225,
+        "nm": "New England Free Jacks",
+        "sg": "new-england-free-jacks-225"
+      },
+      {
+        "id": 172,
+        "nm": "New Zealand",
+        "sg": "new-zealand-172"
+      },
+      {
+        "id": 254,
+        "nm": "New Zealand",
+        "sg": "new-zealand-254"
+      },
+      {
+        "id": 480,
+        "nm": "New Zealand 7s",
+        "sg": "new-zealand-7s-480"
+      },
+      {
+        "id": 545,
+        "nm": "New Zealand 7s W(w)",
+        "sg": "new-zealand-7s-ww-545"
+      },
+      {
+        "id": 209,
+        "nm": "New Zealand U20",
+        "sg": "new-zealand-u20-209"
+      },
+      {
+        "id": 383,
+        "nm": "Newbridge",
+        "sg": "newbridge-383"
+      },
+      {
+        "id": 378,
+        "nm": "Newcastle Emlyn",
+        "sg": "newcastle-emlyn-378"
+      },
+      {
+        "id": 271,
+        "nm": "Newcastle Red Bulls",
+        "sg": "newcastle-red-bulls-271"
+      },
+      {
+        "id": 441,
+        "nm": "Newport",
+        "sg": "newport-441"
+      },
+      {
+        "id": 334,
+        "nm": "Newport HSOB",
+        "sg": "newport-hsob-334"
+      },
+      {
+        "id": 557,
+        "nm": "Newtown",
+        "sg": "newtown-557"
+      },
+      {
+        "id": 235,
+        "nm": "NOLA Gold",
+        "sg": "nola-gold-235"
+      },
+      {
+        "id": 223,
+        "nm": "North Harbour",
+        "sg": "north-harbour-223"
+      },
+      {
+        "id": 453,
+        "nm": "North Otago",
+        "sg": "north-otago-453"
+      },
+      {
+        "id": 266,
+        "nm": "Northampton Saints",
+        "sg": "northampton-saints-266"
+      },
+      {
+        "id": 218,
+        "nm": "Northland",
+        "sg": "northland-218"
+      },
+      {
+        "id": 280,
+        "nm": "Nottingham",
+        "sg": "nottingham-280"
+      },
+      {
+        "id": 230,
+        "nm": "Old Glory DC",
+        "sg": "old-glory-dc-230"
+      },
+      {
+        "id": 309,
+        "nm": "Ospreys",
+        "sg": "ospreys-309"
+      },
+      {
+        "id": 212,
+        "nm": "Otago",
+        "sg": "otago-212"
+      },
+      {
+        "id": 180,
+        "nm": "Oxford University",
+        "sg": "oxford-university-180"
+      },
+      {
+        "id": 295,
+        "nm": "Pau",
+        "sg": "pau-295"
+      },
+      {
+        "id": 394,
+        "nm": "Penallta",
+        "sg": "penallta-394"
+      },
+      {
+        "id": 326,
+        "nm": "Penarth",
+        "sg": "penarth-326"
+      },
+      {
+        "id": 288,
+        "nm": "Perpignan",
+        "sg": "perpignan-288"
+      },
+      {
+        "id": 446,
+        "nm": "Pontypool",
+        "sg": "pontypool-446"
+      },
+      {
+        "id": 371,
+        "nm": "Pontypridd RFC",
+        "sg": "pontypridd-rfc-371"
+      },
+      {
+        "id": 187,
+        "nm": "Portugal",
+        "sg": "portugal-187"
+      },
+      {
+        "id": 456,
+        "nm": "Poverty Bay",
+        "sg": "poverty-bay-456"
+      },
+      {
+        "id": 503,
+        "nm": "Provence Rugby",
+        "sg": "provence-rugby-503"
+      },
+      {
+        "id": 413,
+        "nm": "Pumas",
+        "sg": "pumas-413"
+      },
+      {
+        "id": 348,
+        "nm": "Pwllheli",
+        "sg": "pwllheli-348"
+      },
+      {
+        "id": 292,
+        "nm": "Racing 92",
+        "sg": "racing-92-292"
+      },
+      {
+        "id": 81,
+        "nm": "Reds",
+        "sg": "reds-81"
+      },
+      {
+        "id": 444,
+        "nm": "RGC 1404",
+        "sg": "rgc-1404-444"
+      },
+      {
+        "id": 320,
+        "nm": "Rhydyfelin",
+        "sg": "rhydyfelin-320"
+      },
+      {
+        "id": 554,
+        "nm": "Rhymney",
+        "sg": "rhymney-554"
+      },
+      {
+        "id": 450,
+        "nm": "Richmond",
+        "sg": "richmond-450"
+      },
+      {
+        "id": 186,
+        "nm": "Romania",
+        "sg": "romania-186"
+      },
+      {
+        "id": 226,
+        "nm": "Rugby FC Los Angeles",
+        "sg": "rugby-fc-los-angeles-226"
+      },
+      {
+        "id": 385,
+        "nm": "Rumney",
+        "sg": "rumney-385"
+      },
+      {
+        "id": 344,
+        "nm": "Ruthin",
+        "sg": "ruthin-344"
+      },
+      {
+        "id": 267,
+        "nm": "Sale Sharks",
+        "sg": "sale-sharks-267"
+      },
+      {
+        "id": 491,
+        "nm": "Sale Sharks Women(w)",
+        "sg": "sale-sharks-womenw-491"
+      },
+      {
+        "id": 175,
+        "nm": "Samoa",
+        "sg": "samoa-175"
+      },
+      {
+        "id": 258,
+        "nm": "Samoa",
+        "sg": "samoa-258"
+      },
+      {
+        "id": 227,
+        "nm": "San Diego Legion",
+        "sg": "san-diego-legion-227"
+      },
+      {
+        "id": 268,
+        "nm": "Saracens",
+        "sg": "saracens-268"
+      },
+      {
+        "id": 487,
+        "nm": "Saracens Women(w)",
+        "sg": "saracens-womenw-487"
+      },
+      {
+        "id": 308,
+        "nm": "Scarlets",
+        "sg": "scarlets-308"
+      },
+      {
+        "id": 239,
+        "nm": "Scotland",
+        "sg": "scotland-239"
+      },
+      {
+        "id": 202,
+        "nm": "Scotland U20",
+        "sg": "scotland-u20-202"
+      },
+      {
+        "id": 169,
+        "nm": "Scotland(w)",
+        "sg": "scotlandw-169"
+      },
+      {
+        "id": 228,
+        "nm": "Seattle Seawolves",
+        "sg": "seattle-seawolves-228"
+      },
+      {
+        "id": 418,
+        "nm": "Selkirk",
+        "sg": "selkirk-418"
+      },
+      {
+        "id": 302,
+        "nm": "Sharks",
+        "sg": "sharks-302"
+      },
+      {
+        "id": 367,
+        "nm": "Skewen",
+        "sg": "skewen-367"
+      },
+      {
+        "id": 176,
+        "nm": "South Africa",
+        "sg": "south-africa-176"
+      },
+      {
+        "id": 257,
+        "nm": "South Africa",
+        "sg": "south-africa-257"
+      },
+      {
+        "id": 478,
+        "nm": "South Africa 7s",
+        "sg": "south-africa-7s-478"
+      },
+      {
+        "id": 546,
+        "nm": "South Africa 7s W(w)",
+        "sg": "south-africa-7s-ww-546"
+      },
+      {
+        "id": 205,
+        "nm": "South Africa U20",
+        "sg": "south-africa-u20-205"
+      },
+      {
+        "id": 457,
+        "nm": "South Cant",
+        "sg": "south-cant-457"
+      },
+      {
+        "id": 222,
+        "nm": "Southland",
+        "sg": "southland-222"
+      },
+      {
+        "id": 251,
+        "nm": "Spain",
+        "sg": "spain-251"
+      },
+      {
+        "id": 479,
+        "nm": "Spain 7s",
+        "sg": "spain-7s-479"
+      },
+      {
+        "id": 542,
+        "nm": "Spain 7s W(w)",
+        "sg": "spain-7s-ww-542"
+      },
+      {
+        "id": 207,
+        "nm": "Spain U20",
+        "sg": "spain-u20-207"
+      },
+      {
+        "id": 165,
+        "nm": "Spain(w)",
+        "sg": "spainw-165"
+      },
+      {
+        "id": 435,
+        "nm": "St Albans",
+        "sg": "st-albans-435"
+      },
+      {
+        "id": 384,
+        "nm": "St Peters",
+        "sg": "st-peters-384"
+      },
+      {
+        "id": 358,
+        "nm": "St. Clears",
+        "sg": "st-clears-358"
+      },
+      {
+        "id": 324,
+        "nm": "St. Joseph's",
+        "sg": "st-josephs-324"
+      },
+      {
+        "id": 289,
+        "nm": "Stade Francais",
+        "sg": "stade-francais-289"
+      },
+      {
+        "id": 540,
+        "nm": "Stade Nicois",
+        "sg": "stade-nicois-540"
+      },
+      {
+        "id": 305,
+        "nm": "Stormers",
+        "sg": "stormers-305"
+      },
+      {
+        "id": 440,
+        "nm": "Swansea",
+        "sg": "swansea-440"
+      },
+      {
+        "id": 364,
+        "nm": "Swansea Uplands",
+        "sg": "swansea-uplands-364"
+      },
+      {
+        "id": 198,
+        "nm": "Switzerland",
+        "sg": "switzerland-198"
+      },
+      {
+        "id": 386,
+        "nm": "Talywain",
+        "sg": "talywain-386"
+      },
+      {
+        "id": 211,
+        "nm": "Taranaki",
+        "sg": "taranaki-211"
+      },
+      {
+        "id": 216,
+        "nm": "Tasman",
+        "sg": "tasman-216"
+      },
+      {
+        "id": 408,
+        "nm": "Tata Steel",
+        "sg": "tata-steel-408"
+      },
+      {
+        "id": 359,
+        "nm": "Tenby United",
+        "sg": "tenby-united-359"
+      },
+      {
+        "id": 461,
+        "nm": "Thames Valley",
+        "sg": "thames-valley-461"
+      },
+      {
+        "id": 399,
+        "nm": "Tondu",
+        "sg": "tondu-399"
+      },
+      {
+        "id": 191,
+        "nm": "Tonga",
+        "sg": "tonga-191"
+      },
+      {
+        "id": 290,
+        "nm": "Toulon",
+        "sg": "toulon-290"
+      },
+      {
+        "id": 297,
+        "nm": "Toulouse",
+        "sg": "toulouse-297"
+      },
+      {
+        "id": 489,
+        "nm": "Trailfinders Women(w)",
+        "sg": "trailfinders-womenw-489"
+      },
+      {
+        "id": 397,
+        "nm": "Trebanos",
+        "sg": "trebanos-397"
+      },
+      {
+        "id": 388,
+        "nm": "Treorchy",
+        "sg": "treorchy-388"
+      },
+      {
+        "id": 314,
+        "nm": "Ulster",
+        "sg": "ulster-314"
+      },
+      {
+        "id": 293,
+        "nm": "Union Bordeaux Begles",
+        "sg": "union-bordeaux-begles-293"
+      },
+      {
+        "id": 192,
+        "nm": "Uruguay",
+        "sg": "uruguay-192"
+      },
+      {
+        "id": 533,
+        "nm": "Uruguay 7s",
+        "sg": "uruguay-7s-533"
+      },
+      {
+        "id": 536,
+        "nm": "Uruguay U20",
+        "sg": "uruguay-u20-536"
+      },
+      {
+        "id": 512,
+        "nm": "US Dax",
+        "sg": "us-dax-512"
+      },
+      {
+        "id": 504,
+        "nm": "US Oyonnax",
+        "sg": "us-oyonnax-504"
+      },
+      {
+        "id": 173,
+        "nm": "USA",
+        "sg": "usa-173"
+      },
+      {
+        "id": 256,
+        "nm": "USA",
+        "sg": "usa-256"
+      },
+      {
+        "id": 530,
+        "nm": "USA 7s",
+        "sg": "usa-7s-530"
+      },
+      {
+        "id": 551,
+        "nm": "USA 7s W(w)",
+        "sg": "usa-7s-ww-551"
+      },
+      {
+        "id": 539,
+        "nm": "USA U20",
+        "sg": "usa-u20-539"
+      },
+      {
+        "id": 234,
+        "nm": "Utah Warriors",
+        "sg": "utah-warriors-234"
+      },
+      {
+        "id": 501,
+        "nm": "Valence Romans",
+        "sg": "valence-romans-501"
+      },
+      {
+        "id": 500,
+        "nm": "Vannes",
+        "sg": "vannes-500"
+      },
+      {
+        "id": 363,
+        "nm": "Vardre",
+        "sg": "vardre-363"
+      },
+      {
+        "id": 215,
+        "nm": "Waikato",
+        "sg": "waikato-215"
+      },
+      {
+        "id": 454,
+        "nm": "Wairarapa",
+        "sg": "wairarapa-454"
+      },
+      {
+        "id": 242,
+        "nm": "Wales",
+        "sg": "wales-242"
+      },
+      {
+        "id": 201,
+        "nm": "Wales U20",
+        "sg": "wales-u20-201"
+      },
+      {
+        "id": 164,
+        "nm": "Wales(w)",
+        "sg": "walesw-164"
+      },
+      {
+        "id": 75,
+        "nm": "Waratahs",
+        "sg": "waratahs-75"
+      },
+      {
+        "id": 420,
+        "nm": "Watsonians FC",
+        "sg": "watsonians-fc-420"
+      },
+      {
+        "id": 555,
+        "nm": "Wattstown",
+        "sg": "wattstown-555"
+      },
+      {
+        "id": 360,
+        "nm": "Waunarlwydd",
+        "sg": "waunarlwydd-360"
+      },
+      {
+        "id": 219,
+        "nm": "Wellington",
+        "sg": "wellington-219"
+      },
+      {
+        "id": 430,
+        "nm": "Welshpool",
+        "sg": "welshpool-430"
+      },
+      {
+        "id": 462,
+        "nm": "West Coast",
+        "sg": "west-coast-462"
+      },
+      {
+        "id": 79,
+        "nm": "Western Force",
+        "sg": "western-force-79"
+      },
+      {
+        "id": 411,
+        "nm": "Western Province",
+        "sg": "western-province-411"
+      },
+      {
+        "id": 463,
+        "nm": "Whanganui",
+        "sg": "whanganui-463"
+      },
+      {
+        "id": 451,
+        "nm": "Worcester Warriors",
+        "sg": "worcester-warriors-451"
+      },
+      {
+        "id": 350,
+        "nm": "Wrexham",
+        "sg": "wrexham-350"
+      },
+      {
+        "id": 396,
+        "nm": "Ynysddu",
+        "sg": "ynysddu-396"
+      },
+      {
+        "id": 409,
+        "nm": "Ystalyfera",
+        "sg": "ystalyfera-409"
+      },
+      {
+        "id": 377,
+        "nm": "Ystrad Rhondda",
+        "sg": "ystrad-rhondda-377"
+      },
+      {
+        "id": 370,
+        "nm": "Ystradgynlais",
+        "sg": "ystradgynlais-370"
+      },
+      {
+        "id": 316,
+        "nm": "Zebre",
+        "sg": "zebre-316"
+      },
+      {
+        "id": 189,
+        "nm": "Zimbabwe",
+        "sg": "zimbabwe-189"
+      }
+    ]
+  }
+}

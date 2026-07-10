@@ -1,0 +1,440 @@
+{
+  "_meta": {
+    "endpoint": "league_193_table",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/193/table",
+    "status": 200,
+    "bytes": 2645,
+    "captured_at": "2026-07-10T10:00:10Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "Tournament Table",
+    "live_team_ids": [],
+    "data": [
+      [
+        {
+          "grp": "Pool D",
+          "tnm": "France U20",
+          "tid": 204,
+          "pos": 1,
+          "plc": 1,
+          "mt": 3,
+          "wo": 3,
+          "lo": 0,
+          "dr": 0,
+          "pts": 15,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool D",
+          "tnm": "Australia U20",
+          "tid": 206,
+          "pos": 2,
+          "plc": 2,
+          "mt": 3,
+          "wo": 2,
+          "lo": 1,
+          "dr": 0,
+          "pts": 12,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool D",
+          "tnm": "Fiji U20",
+          "tid": 538,
+          "pos": 3,
+          "plc": 3,
+          "mt": 3,
+          "wo": 1,
+          "lo": 2,
+          "dr": 0,
+          "pts": 5,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "grp": "Pool D",
+          "tnm": "Spain U20",
+          "tid": 207,
+          "pos": 4,
+          "plc": 4,
+          "mt": 3,
+          "wo": 0,
+          "lo": 3,
+          "dr": 0,
+          "pts": 3,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "L",
+            "L",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        }
+      ],
+      [
+        {
+          "grp": "Pool C",
+          "tnm": "England U20",
+          "tid": 199,
+          "pos": 1,
+          "plc": 1,
+          "mt": 3,
+          "wo": 3,
+          "lo": 0,
+          "dr": 0,
+          "pts": 15,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "W",
+            "W",
+            "L",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "W",
+            "W",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool C",
+          "tnm": "Argentina U20",
+          "tid": 208,
+          "pos": 2,
+          "plc": 2,
+          "mt": 3,
+          "wo": 2,
+          "lo": 1,
+          "dr": 0,
+          "pts": 12,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "Pool C",
+          "tnm": "Ireland U20",
+          "tid": 200,
+          "pos": 3,
+          "plc": 3,
+          "mt": 3,
+          "wo": 1,
+          "lo": 2,
+          "dr": 0,
+          "pts": 8,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool C",
+          "tnm": "USA U20",
+          "tid": 539,
+          "pos": 4,
+          "plc": 4,
+          "mt": 3,
+          "wo": 0,
+          "lo": 3,
+          "dr": 0,
+          "pts": 1,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "L",
+            "L"
+          ]
+        }
+      ],
+      [
+        {
+          "grp": "Pool B",
+          "tnm": "New Zealand U20",
+          "tid": 209,
+          "pos": 1,
+          "plc": 1,
+          "mt": 3,
+          "wo": 3,
+          "lo": 0,
+          "dr": 0,
+          "pts": 15,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool B",
+          "tnm": "Scotland U20",
+          "tid": 202,
+          "pos": 2,
+          "plc": 2,
+          "mt": 3,
+          "wo": 2,
+          "lo": 1,
+          "dr": 0,
+          "pts": 11,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "W",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "grp": "Pool B",
+          "tnm": "Italy U20",
+          "tid": 203,
+          "pos": 3,
+          "plc": 3,
+          "mt": 3,
+          "wo": 1,
+          "lo": 2,
+          "dr": 0,
+          "pts": 7,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "Pool B",
+          "tnm": "Japan U20",
+          "tid": 537,
+          "pos": 4,
+          "plc": 4,
+          "mt": 3,
+          "wo": 0,
+          "lo": 3,
+          "dr": 0,
+          "pts": 1,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "L",
+            "L"
+          ]
+        }
+      ],
+      [
+        {
+          "grp": "Pool A",
+          "tnm": "South Africa U20",
+          "tid": 205,
+          "pos": 1,
+          "plc": 1,
+          "mt": 3,
+          "wo": 3,
+          "lo": 0,
+          "dr": 0,
+          "pts": 15,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool A",
+          "tnm": "Wales U20",
+          "tid": 201,
+          "pos": 2,
+          "plc": 2,
+          "mt": 3,
+          "wo": 2,
+          "lo": 1,
+          "dr": 0,
+          "pts": 10,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "W",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "grp": "Pool A",
+          "tnm": "Georgia U20",
+          "tid": 210,
+          "pos": 3,
+          "plc": 3,
+          "mt": 3,
+          "wo": 1,
+          "lo": 2,
+          "dr": 0,
+          "pts": 7,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "Pool A",
+          "tnm": "Uruguay U20",
+          "tid": 536,
+          "pos": 4,
+          "plc": 4,
+          "mt": 3,
+          "wo": 0,
+          "lo": 3,
+          "dr": 0,
+          "pts": 0,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "L",
+            "L"
+          ]
+        }
+      ]
+    ]
+  }
+}

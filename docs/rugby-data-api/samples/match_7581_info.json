@@ -1,0 +1,158 @@
+{
+  "_meta": {
+    "endpoint": "match_7581_info",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7581/info",
+    "status": 200,
+    "bytes": 1409,
+    "captured_at": "2026-07-10T10:00:04Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "Match info",
+    "data": {
+      "match_id": 7581,
+      "datetime": "2026-07-02 11:30:00",
+      "status": "Finished",
+      "events": {
+        "first_half_events": [],
+        "second_half_events": []
+      },
+      "homeTeam": "Argentina U20",
+      "awayTeam": "Ireland U20",
+      "match_summary": {
+        "tries": {
+          "ht": "8",
+          "at": "6"
+        },
+        "goals": {
+          "ht": "10",
+          "at": "5"
+        },
+        "drop_goals": {
+          "ht": "-",
+          "at": "-"
+        },
+        "carries": {
+          "ht": "0",
+          "at": "0"
+        },
+        "metres": {
+          "ht": "771",
+          "at": "516"
+        },
+        "tackles": {
+          "ht": "144",
+          "at": "93"
+        },
+        "yellow_cards": {
+          "ht": "1",
+          "at": "1"
+        },
+        "red_cards": {
+          "ht": "0",
+          "at": "0"
+        }
+      },
+      "form": [
+        {
+          "team": "Argentina U20",
+          "lfm": [
+            "L",
+            "W",
+            "W",
+            "L",
+            "W"
+          ],
+          "matches": [
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "England U20",
+              "atid": 199,
+              "ft": "38-40"
+            },
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "Ireland U20",
+              "atid": 200,
+              "ft": "62-40"
+            },
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "USA U20",
+              "atid": 539,
+              "ft": "78-14"
+            },
+            {
+              "htn": "South Africa U20",
+              "htid": 205,
+              "atn": "Argentina U20",
+              "atid": 208,
+              "ft": "48-24"
+            },
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "Spain U20",
+              "atid": 207,
+              "ft": "33-30"
+            }
+          ]
+        },
+        {
+          "team": "Ireland U20",
+          "lfm": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ],
+          "matches": [
+            {
+              "htn": "Ireland U20",
+              "htid": 200,
+              "atn": "USA U20",
+              "atid": 539,
+              "ft": "73-22"
+            },
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "Ireland U20",
+              "atid": 200,
+              "ft": "62-40"
+            },
+            {
+              "htn": "England U20",
+              "htid": 199,
+              "atn": "Ireland U20",
+              "atid": 200,
+              "ft": "34-27"
+            },
+            {
+              "htn": "Ireland U20",
+              "htid": 200,
+              "atn": "Scotland U20",
+              "atid": 202,
+              "ft": "47-14"
+            },
+            {
+              "htn": "Ireland U20",
+              "htid": 200,
+              "atn": "Wales U20",
+              "atid": 201,
+              "ft": "48-33"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

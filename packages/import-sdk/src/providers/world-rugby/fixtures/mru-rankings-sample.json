@@ -1,0 +1,45 @@
+{
+  "label": "Mens Rugby Union",
+  "effective": { "label": "2026-07-06" },
+  "entries": [
+    {
+      "team": {
+        "id": "39",
+        "altId": "a49729a5-a9e7-4a53-b18b-13b81d4752f4",
+        "name": "South Africa",
+        "abbreviation": "RSA",
+        "countryCode": "ZAF"
+      },
+      "pts": 93.94110080257116,
+      "pos": 1,
+      "previousPts": 93.94110080257116,
+      "previousPos": 1
+    },
+    {
+      "team": {
+        "id": "37",
+        "altId": "ec6ede05-0367-4b75-a66d-2d7a58950dcd",
+        "name": "New Zealand",
+        "abbreviation": "NZL",
+        "countryCode": "NZL"
+      },
+      "pts": 91.03847125290281,
+      "pos": 2,
+      "previousPts": 90.3251602439559,
+      "previousPos": 2
+    },
+    {
+      "team": {
+        "id": "35",
+        "altId": "84c81e4f-f67a-4812-9800-df4c554de009",
+        "name": "Scotland",
+        "abbreviation": "SCO",
+        "countryCode": "SCO"
+      },
+      "pts": 84.10980436176874,
+      "pos": 5,
+      "previousPts": 82.90261977005284,
+      "previousPos": 7
+    }
+  ]
+}

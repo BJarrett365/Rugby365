@@ -1,0 +1,195 @@
+{
+  "_meta": {
+    "endpoint": "news_leagues",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/news/leagues",
+    "status": 200,
+    "bytes": 2060,
+    "captured_at": "2026-07-10T09:59:59Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "news leagues",
+    "data": [
+      {
+        "id": 168,
+        "name": "Rugby World Cup",
+        "league_id": 21915,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 81,
+        "name": "Six Nations",
+        "league_id": 21699,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 184,
+        "name": "International",
+        "league_id": 21697,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 206,
+        "name": "International",
+        "league_id": 21697,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 39,
+        "name": "Rugby Championship",
+        "league_id": 21701,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 31,
+        "name": "Lions",
+        "league_id": 21696,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 104,
+        "name": "PREM",
+        "league_id": 21709,
+        "category_id": 60,
+        "rugbyCategory": {
+          "id": 48,
+          "fb_category_id": 907,
+          "flag_id": 60
+        }
+      },
+      {
+        "id": 203,
+        "name": "PREM",
+        "league_id": 21709,
+        "category_id": 60,
+        "rugbyCategory": {
+          "id": 48,
+          "fb_category_id": 907,
+          "flag_id": 60
+        }
+      },
+      {
+        "id": 188,
+        "name": "URC",
+        "league_id": 21712,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 94,
+        "name": "Top 14",
+        "league_id": 21711,
+        "category_id": 71,
+        "rugbyCategory": {
+          "id": 11659,
+          "fb_category_id": 250,
+          "flag_id": 71
+        }
+      },
+      {
+        "id": 204,
+        "name": "Top 14",
+        "league_id": 21711,
+        "category_id": 71,
+        "rugbyCategory": {
+          "id": 11659,
+          "fb_category_id": 250,
+          "flag_id": 71
+        }
+      },
+      {
+        "id": 205,
+        "name": "Top 14",
+        "league_id": 21711,
+        "category_id": 71,
+        "rugbyCategory": {
+          "id": 11659,
+          "fb_category_id": 250,
+          "flag_id": 71
+        }
+      },
+      {
+        "id": 114,
+        "name": "Super Rugby",
+        "league_id": 21684,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 197,
+        "name": "Super Rugby",
+        "league_id": 21684,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 100,
+        "name": "Champions Cup",
+        "league_id": 21737,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      },
+      {
+        "id": 97,
+        "name": "Challenge Cup",
+        "league_id": 21736,
+        "category_id": 99,
+        "rugbyCategory": {
+          "id": 57,
+          "fb_category_id": 916,
+          "flag_id": 99
+        }
+      }
+    ]
+  }
+}

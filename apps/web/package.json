@@ -1,0 +1,37 @@
+{
+  "name": "@rugby365/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "NEXT_DIST_DIR=node_modules/.cache/rugby365-next next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rugby365/commentary": "*",
+    "@rugby365/db": "*",
+    "@rugby365/commentary-research": "*",
+    "@rugby365/import-sdk": "*",
+    "@rugby365/match-operator-agent": "*",
+    "@rugby365/match-spec": "*",
+    "@rugby365/shared": "*",
+    "drizzle-orm": "^0.44.2",
+    "next": "15.2.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

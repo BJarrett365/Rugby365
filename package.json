@@ -1,0 +1,29 @@
+{
+  "name": "rugby365",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "node scripts/ensure-db.cjs && npm run dev -w @rugby365/web",
+    "dev:kill-port": "lsof -tiTCP:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true",
+    "dev:restart": "npm run dev:kill-port && rm -rf apps/web/.next apps/web/node_modules/.cache/rugby365-next && NEXT_DIST_DIR=node_modules/.cache/rugby365-next npm run dev -w @rugby365/web",
+    "dev:restart:full": "npm run dev:kill-port && rm -rf apps/web/.next && node scripts/ensure-db.cjs && npm run dev -w @rugby365/web",
+    "prebuild": "npm run dev:kill-port",
+    "build": "npm run build -w @rugby365/web",
+    "db:generate": "npm run generate -w @rugby365/db",
+    "db:up": "node scripts/ensure-db.cjs",
+    "db:check": "node scripts/db-check.mjs",
+    "db:migrate": "npm run migrate -w @rugby365/db",
+    "db:seed": "npm run seed -w @rugby365/db",
+    "demo:feed": "node scripts/demo-live-match-feed.mjs",
+    "agent:sandbox": "tsx scripts/agent-sandbox-run.ts",
+    "agent:sandbox:live": "tsx scripts/agent-sandbox-run.ts --fixture=false --once=false --poll-interval=30",
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
+  }
+}

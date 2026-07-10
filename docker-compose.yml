@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: rugby365
+      POSTGRES_PASSWORD: rugby365
+      POSTGRES_DB: rugby365
+    volumes:
+      - rugby365_pg:/var/lib/postgresql/data
+volumes:
+  rugby365_pg:

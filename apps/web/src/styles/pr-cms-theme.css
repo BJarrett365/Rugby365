@@ -1,0 +1,1096 @@
+/**
+ * Planet Rugby CMS visual theme.
+ * Visual-only — no layout or behaviour changes.
+ */
+@import "./pr-cms-tokens.css";
+
+/* ─── Shell structure (layout unchanged from legacy CMS) ─── */
+.admin-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.admin-shell__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-shell__brand {
+  text-decoration: none;
+}
+
+.admin-shell__menu-btn {
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell__menu-btn {
+    display: none;
+  }
+}
+
+.admin-shell__nav {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 var(--page-pad-x) 0.75rem;
+}
+
+.admin-shell__nav--open {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell__nav {
+    display: none !important;
+  }
+}
+
+.admin-shell__nav-link {
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.admin-shell__nav-short {
+  display: inline;
+}
+
+.admin-shell__nav-full {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .admin-shell__nav-short {
+    display: none;
+  }
+  .admin-shell__nav-full {
+    display: inline;
+  }
+}
+
+.admin-shell__body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.admin-shell__sidebar {
+  display: none;
+  width: 14rem;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell__sidebar {
+    display: flex;
+  }
+}
+
+.admin-shell__sidebar-link {
+  text-decoration: none;
+}
+
+.admin-shell__content {
+  flex: 1;
+  padding: var(--page-pad-y) var(--page-pad-x);
+  padding-bottom: calc(var(--page-pad-y) + 4rem);
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell__content {
+    padding-bottom: var(--page-pad-y);
+  }
+}
+
+.admin-shell__bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell__bottom-nav {
+    display: none;
+  }
+}
+
+.admin-shell__bottom-link {
+  flex: 1;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.admin-shell__surface-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem var(--page-pad-x) 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-shell__surface-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.admin-shell__surface-pills {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.375rem;
+}
+
+.admin-shell__surface-pill {
+  font-size: 0.6875rem;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0.375rem 0.625rem;
+}
+
+/* ─── Page header layout ─── */
+.admin-shell .page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .admin-shell .page-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.admin-shell .page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ─── Grid utilities ─── */
+.admin-shell .cms-grid-2 {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .admin-shell .cms-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-shell .cms-split {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .admin-shell .cms-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+}
+
+/* ─── Shell & layout (visual) ─── */
+.admin-shell {
+  background: var(--pr-dark-teal);
+  color: var(--pr-white);
+  font-family: var(--pr-font);
+  font-size: var(--pr-text-body);
+  line-height: 1.5;
+}
+
+.admin-shell__header {
+  background: var(--pr-navy);
+  border-bottom: 1px solid var(--pr-border);
+}
+
+.admin-shell__header-row {
+  padding: 0.875rem var(--page-pad-x);
+}
+
+.admin-shell__brand {
+  color: var(--pr-gold);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.admin-shell__brand:hover {
+  color: var(--pr-gold-hover);
+}
+
+.admin-shell__menu-btn {
+  background: var(--pr-teal-light);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-white);
+  font-weight: 600;
+  padding: 0.5rem 1.125rem;
+}
+
+.admin-shell__menu-btn:hover {
+  background: #426a6c;
+}
+
+.admin-shell__nav {
+  background: var(--pr-navy);
+  padding-bottom: 1rem;
+}
+
+.admin-shell__nav-link {
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-grey);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+}
+
+.admin-shell__nav-link:hover {
+  background: var(--pr-teal-light);
+  color: var(--pr-white);
+}
+
+.admin-shell__nav-link--active {
+  background: var(--pr-teal-light);
+  border-color: transparent;
+  box-shadow: inset 0 -3px 0 var(--pr-gold);
+  color: var(--pr-gold);
+}
+
+.admin-shell__sidebar {
+  background: var(--pr-navy);
+  border-right: 1px solid var(--pr-border);
+  padding: 1rem 0.75rem;
+}
+
+.admin-shell__sidebar-link {
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-grey);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+}
+
+.admin-shell__sidebar-link:hover {
+  background: var(--pr-teal-light);
+  color: var(--pr-white);
+}
+
+.admin-shell__sidebar-link--active {
+  background: var(--pr-teal-light);
+  box-shadow: inset 3px 0 0 var(--pr-gold);
+  color: var(--pr-gold);
+  font-weight: 600;
+}
+
+.admin-shell__content {
+  background: var(--pr-dark-teal);
+}
+
+.admin-shell__bottom-nav {
+  background: var(--pr-navy);
+  border-top: 1px solid var(--pr-border);
+}
+
+.admin-shell__bottom-link {
+  color: var(--pr-grey);
+  font-size: 0.6875rem;
+}
+
+.admin-shell__bottom-link--active {
+  color: var(--pr-gold);
+}
+
+.admin-shell__surface-bar {
+  background: var(--pr-teal);
+  border-top: 1px solid var(--pr-border);
+}
+
+.admin-shell__surface-label {
+  color: var(--pr-grey);
+}
+
+.admin-shell__surface-pill {
+  background: var(--pr-teal-light);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-white);
+}
+
+.admin-shell__surface-pill--active {
+  background: var(--pr-white);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--pr-navy);
+}
+
+.admin-shell__nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-shell__nav-group + .admin-shell__nav-group {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--pr-border);
+}
+
+.admin-shell__nav-group-label {
+  color: var(--pr-grey);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.25rem;
+  padding: 0 1rem;
+  text-transform: uppercase;
+}
+
+.admin-shell .cms-card--link {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-shell .cms-card--link:hover {
+  background: var(--pr-teal-light);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ─── Page header ─── */
+.admin-shell .page-header {
+  margin-bottom: 1.75rem;
+}
+
+.admin-shell .page-header__eyebrow {
+  color: var(--pr-grey);
+  font-size: var(--pr-text-small);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.admin-shell .page-header__title {
+  color: var(--pr-white);
+  font-size: var(--pr-text-page-title);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-shell .page-header__desc {
+  color: var(--pr-grey);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  max-width: 42rem;
+}
+
+/* ─── Cards & panels ─── */
+.admin-shell .cms-card {
+  background: var(--pr-teal);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-md);
+  box-shadow: none;
+  padding: 1.25rem;
+}
+
+.admin-shell .cms-card h3,
+.admin-shell .cms-card .cms-card__title {
+  color: var(--pr-white);
+  font-size: var(--pr-text-card-heading);
+  font-weight: 700;
+}
+
+.admin-shell .cms-card--nested,
+.admin-shell .rounded-lg.border.border-zinc-800.bg-zinc-950\/50 {
+  background: var(--pr-teal-light) !important;
+  border-color: var(--pr-border) !important;
+}
+
+/* ─── Buttons ─── */
+.admin-shell .cms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--pr-radius-pill);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1.5rem;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-shell .cms-btn--primary {
+  background: var(--pr-gold);
+  color: var(--pr-navy);
+}
+
+.admin-shell .cms-btn--primary:hover:not(:disabled) {
+  background: var(--pr-gold-hover);
+  transform: translateY(-1px);
+}
+
+.admin-shell .cms-btn--secondary {
+  background: var(--pr-teal-light);
+  border: none;
+  color: var(--pr-white);
+}
+
+.admin-shell .cms-btn--secondary:hover:not(:disabled) {
+  background: #426a6c;
+  color: var(--pr-white);
+}
+
+.admin-shell .cms-btn:not(.cms-btn--secondary):not(.cms-btn--danger):not(.text-red-400) {
+  background: var(--pr-gold);
+  color: var(--pr-navy);
+}
+
+.admin-shell .cms-btn:not(.cms-btn--secondary):not(.cms-btn--danger):not(.text-red-400):hover:not(:disabled) {
+  background: var(--pr-gold-hover);
+  transform: translateY(-1px);
+}
+
+.admin-shell .cms-btn--outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  color: var(--pr-white);
+}
+
+.admin-shell .cms-btn--outline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  transform: none;
+}
+
+.admin-shell .cms-btn.text-red-400,
+.admin-shell .cms-btn--danger {
+  background: transparent;
+  border: 1px solid var(--pr-error-muted);
+  color: var(--pr-error);
+}
+
+.admin-shell .cms-btn.text-red-400:hover:not(:disabled),
+.admin-shell .cms-btn--danger:hover:not(:disabled) {
+  background: rgba(212, 106, 106, 0.12);
+}
+
+.admin-shell .cms-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.admin-shell a.cms-btn {
+  text-decoration: none;
+}
+
+/* ─── Forms ─── */
+.admin-shell .cms-input,
+.admin-shell .cms-select,
+.admin-shell .cms-textarea,
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+.admin-shell select,
+.admin-shell textarea {
+  background: var(--pr-navy);
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-white);
+  font-family: inherit;
+  font-size: var(--pr-text-body);
+  line-height: 1.5;
+  padding: 0.75rem 0.875rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-shell .cms-select,
+.admin-shell select {
+  min-height: var(--touch-min);
+}
+
+.admin-shell label .cms-select,
+.admin-shell label select,
+.admin-shell .cms-field .cms-select,
+.admin-shell .cms-field select,
+.admin-shell .cms-grid-2 .cms-select,
+.admin-shell .cms-grid-2 select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-shell .cms-input:focus,
+.admin-shell .cms-select:focus,
+.admin-shell .cms-textarea:focus,
+.admin-shell input:focus,
+.admin-shell select:focus,
+.admin-shell textarea:focus {
+  border-color: var(--pr-gold);
+  box-shadow: 0 0 0 3px rgba(231, 188, 99, 0.22);
+  outline: none;
+}
+
+.admin-shell label {
+  color: var(--pr-grey);
+  display: block;
+  font-size: 0.9375rem;
+}
+
+.admin-shell label > .cms-input,
+.admin-shell label > .cms-select,
+.admin-shell label > input:not([type="checkbox"]):not([type="radio"]),
+.admin-shell label > select,
+.admin-shell label > textarea {
+  margin-top: 0.375rem;
+}
+
+.admin-shell .cms-section-title {
+  color: var(--pr-white);
+  font-size: var(--pr-text-card-heading);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.admin-shell .cms-meta-grid {
+  display: grid;
+  gap: 0.75rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.admin-shell .cms-meta-grid dt {
+  color: var(--pr-grey);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.admin-shell .cms-meta-grid dd {
+  color: var(--pr-white);
+  font-size: 0.9375rem;
+  margin: 0.125rem 0 0;
+}
+
+.admin-shell .cms-table-scroll {
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.admin-shell .cms-table-scroll table {
+  margin: 0;
+}
+
+.admin-shell .cms-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.admin-shell fieldset {
+  border: none;
+}
+
+.admin-shell legend {
+  color: var(--pr-grey);
+  font-size: 0.9375rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-shell input[type="checkbox"],
+.admin-shell input[type="radio"] {
+  accent-color: var(--pr-gold);
+}
+
+/* ─── Tables ─── */
+.admin-shell table {
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  width: 100%;
+}
+
+.admin-shell table thead th,
+.admin-shell .cms-table thead th {
+  background: var(--pr-navy);
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-white);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+}
+
+.admin-shell table tbody tr,
+.admin-shell .cms-table tbody tr {
+  background: var(--pr-teal);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-shell table tbody tr:nth-child(even),
+.admin-shell .cms-table tbody tr:nth-child(even) {
+  background: var(--pr-teal-row-alt);
+}
+
+.admin-shell table tbody tr:hover,
+.admin-shell .cms-table tbody tr:hover {
+  background: var(--pr-teal-light);
+}
+
+.admin-shell table td,
+.admin-shell .cms-table td {
+  color: var(--pr-white);
+  padding: 0.75rem 0.875rem;
+  vertical-align: top;
+}
+
+.admin-shell table .text-zinc-500,
+.admin-shell table .text-zinc-400,
+.admin-shell table .text-zinc-600 {
+  color: var(--pr-grey) !important;
+}
+
+/* ─── Tabs (fixtures / results style) ─── */
+.admin-shell .cms-tabs {
+  border-bottom: 1px solid var(--pr-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.admin-shell .cms-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  color: var(--pr-grey);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.25rem;
+}
+
+.admin-shell .cms-tab:hover {
+  color: var(--pr-white);
+}
+
+.admin-shell .cms-tab--active {
+  border-bottom-color: var(--pr-gold);
+  color: var(--pr-gold);
+}
+
+/* ─── Filter pills ─── */
+.admin-shell .cms-pill {
+  background: var(--pr-teal-light);
+  border: 1px solid transparent;
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
+
+.admin-shell .cms-pill--active {
+  background: var(--pr-white);
+  color: var(--pr-navy);
+}
+
+.admin-shell .cms-pill:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 2px;
+}
+
+/* ─── Status badges ─── */
+.admin-shell .cms-status {
+  border-radius: var(--pr-radius-pill);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.625rem;
+  text-transform: uppercase;
+}
+
+.admin-shell .cms-status--success {
+  background: rgba(84, 185, 137, 0.18);
+  color: var(--pr-green);
+}
+
+.admin-shell .cms-status--warning {
+  background: rgba(231, 188, 99, 0.18);
+  color: var(--pr-gold);
+}
+
+.admin-shell .cms-status--error {
+  background: rgba(212, 106, 106, 0.15);
+  color: var(--pr-error);
+}
+
+.admin-shell .cms-status--neutral {
+  background: rgba(167, 173, 172, 0.15);
+  color: var(--pr-grey);
+}
+
+/* ─── Tailwind utility harmonisation inside CMS ─── */
+.admin-shell .text-zinc-200,
+.admin-shell .text-zinc-300 {
+  color: var(--pr-white) !important;
+}
+
+.admin-shell .text-zinc-400,
+.admin-shell .text-zinc-500,
+.admin-shell .text-zinc-600 {
+  color: var(--pr-grey) !important;
+}
+
+.admin-shell .text-emerald-400,
+.admin-shell .text-emerald-300 {
+  color: var(--pr-gold) !important;
+}
+
+.admin-shell .text-amber-300,
+.admin-shell .text-amber-400 {
+  color: var(--pr-gold) !important;
+}
+
+.admin-shell .text-red-400 {
+  color: var(--pr-error) !important;
+}
+
+.admin-shell .border-zinc-700,
+.admin-shell .border-zinc-800,
+.admin-shell .border-zinc-800\/60,
+.admin-shell .border-zinc-900,
+.admin-shell .border-violet-900\/40,
+.admin-shell .border-sky-900\/40,
+.admin-shell .border-indigo-900\/40 {
+  border-color: var(--pr-border) !important;
+}
+
+.admin-shell .bg-zinc-950,
+.admin-shell .bg-zinc-950\/50,
+.admin-shell .bg-zinc-950\/80,
+.admin-shell .bg-zinc-900 {
+  background: var(--pr-track) !important;
+}
+
+.admin-shell .bg-zinc-800,
+.admin-shell .bg-zinc-800\/50 {
+  background: var(--pr-teal-light) !important;
+}
+
+.admin-shell thead.bg-zinc-950\/80,
+.admin-shell thead.bg-zinc-950 {
+  background: var(--pr-navy) !important;
+}
+
+.admin-shell .hover\:border-emerald-500:hover {
+  border-color: var(--pr-gold) !important;
+}
+
+.admin-shell .hover\:bg-zinc-800:hover {
+  background: var(--pr-teal-light) !important;
+}
+
+.admin-shell .text-green-400,
+.admin-shell .text-green-500 {
+  color: var(--pr-green) !important;
+}
+
+.admin-shell a.text-emerald-400:hover,
+.admin-shell a:not(.cms-btn):hover {
+  color: var(--pr-gold-hover);
+}
+
+.admin-shell a:not(.cms-btn) {
+  color: var(--pr-gold);
+  text-decoration: none;
+}
+
+.admin-shell a:not(.cms-btn):hover {
+  text-decoration: underline;
+}
+
+.admin-shell .ring-amber-400\/60,
+.admin-shell .ring-1.ring-amber-400\/60 {
+  --tw-ring-color: rgba(231, 188, 99, 0.55) !important;
+}
+
+.admin-shell .cms-btn--primary.ring-1 {
+  box-shadow: 0 0 0 1px rgba(231, 188, 99, 0.45);
+}
+
+/* Progress / inset tracks */
+.admin-shell progress,
+.admin-shell .cms-progress-track {
+  background: var(--pr-track);
+}
+
+/* Section headings in cards */
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4 {
+  color: var(--pr-white);
+  font-weight: 700;
+}
+
+.admin-shell h4.text-emerald-400 {
+  color: var(--pr-gold) !important;
+}
+
+/* Lists in help text */
+.admin-shell ol,
+.admin-shell ul {
+  color: var(--pr-grey);
+}
+
+.admin-shell strong {
+  color: var(--pr-white);
+  font-weight: 600;
+}
+
+/* Overflow tables inside cards */
+.admin-shell .overflow-x-auto {
+  border-radius: var(--pr-radius-sm);
+}
+
+/* Radio groups in import scope */
+.admin-shell input[type="radio"] + span .text-zinc-200 {
+  color: var(--pr-white) !important;
+}
+
+.admin-shell input[type="radio"] + span .text-zinc-500 {
+  color: var(--pr-grey) !important;
+}
+
+/* ─── Fixtures schedule (admin matches) ─── */
+.admin-shell .fixtures-competition-select select {
+  background: var(--pr-navy);
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-date-picker__header {
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-date-picker__header:hover {
+  color: var(--pr-gold);
+}
+
+.admin-shell .fixtures-date-strip__day {
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-grey);
+}
+
+.admin-shell .fixtures-date-strip__day:hover {
+  background: var(--pr-teal-light);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-date-strip__day--active {
+  background: var(--pr-white);
+  border-color: var(--pr-white);
+  color: var(--pr-navy);
+  box-shadow: none;
+}
+
+.admin-shell .fixtures-date-strip__day--has-fixtures:not(.fixtures-date-strip__day--active) {
+  background: var(--pr-teal-light);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-date-strip__day--has-fixtures.fixtures-date-strip__day--active {
+  background: var(--pr-white);
+  border-color: var(--pr-white);
+  color: var(--pr-navy);
+  box-shadow: 0 0 0 2px rgba(231, 188, 99, 0.35);
+}
+
+.admin-shell .fixtures-calendar {
+  background: var(--pr-teal);
+  border: 1px solid var(--pr-border);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+}
+
+.admin-shell .fixtures-calendar-dismiss {
+  background: rgba(14, 48, 55, 0.72);
+}
+
+.admin-shell .fixtures-calendar__close:hover,
+.admin-shell .fixtures-calendar__day:hover {
+  background: var(--pr-teal-light);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-calendar__arrow {
+  color: var(--pr-gold);
+}
+
+.admin-shell .fixtures-calendar__title {
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-calendar__weekdays {
+  color: var(--pr-grey);
+}
+
+.admin-shell .fixtures-calendar__day {
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-calendar__day--muted {
+  color: rgba(167, 173, 172, 0.45);
+}
+
+.admin-shell .fixtures-calendar__day--has-fixtures:not(.fixtures-calendar__day--active) {
+  background: var(--pr-teal-light);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-calendar__day--today:not(.fixtures-calendar__day--active) {
+  outline-color: var(--pr-gold);
+}
+
+.admin-shell .fixtures-calendar__day--active {
+  background: var(--pr-gold);
+  color: var(--pr-navy);
+}
+
+.admin-shell .fixtures-competition-block {
+  background: var(--pr-teal);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-md);
+}
+
+.admin-shell .fixtures-competition-block__header {
+  background: var(--pr-navy);
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-row,
+.admin-shell .fixtures-row__link {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-shell .fixtures-row--admin {
+  background: var(--pr-teal);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-shell .fixtures-competition-block__rows > .fixtures-row:nth-child(even),
+.admin-shell .fixtures-competition-block__rows > .fixtures-row--admin:nth-child(even) {
+  background: var(--pr-teal-row-alt);
+}
+
+.admin-shell .fixtures-row--admin .fixtures-row__link {
+  background: transparent;
+}
+
+.admin-shell .fixtures-row:not(.fixtures-row--admin) {
+  background: var(--pr-teal);
+}
+
+.admin-shell .fixtures-competition-block__rows > .fixtures-row:not(.fixtures-row--admin):nth-child(even) {
+  background: var(--pr-teal-row-alt);
+}
+
+.admin-shell .fixtures-row:hover,
+.admin-shell .fixtures-row__link:hover,
+.admin-shell .fixtures-row--admin:hover,
+.admin-shell .fixtures-row--admin .fixtures-row__link:hover {
+  background: var(--pr-teal-light);
+}
+
+.admin-shell .fixtures-row--admin:hover .fixtures-row__link {
+  background: transparent;
+}
+
+.admin-shell .fixtures-row__link--selected {
+  background: rgba(231, 188, 99, 0.14);
+  box-shadow: inset 3px 0 0 var(--pr-gold);
+}
+
+.admin-shell .fixtures-row__link--selected:hover {
+  background: rgba(231, 188, 99, 0.2);
+}
+
+.admin-shell .fixtures-row__time {
+  color: var(--pr-grey);
+}
+
+.admin-shell .fixtures-row__home,
+.admin-shell .fixtures-row__away {
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-row__score {
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-row__score--result {
+  color: var(--pr-gold);
+}
+
+.admin-shell .fixtures-row__star {
+  color: var(--pr-grey);
+}
+
+.admin-shell .fixtures-row__admin-btn {
+  background: var(--pr-teal-light);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-pill);
+  color: var(--pr-white);
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+}
+
+.admin-shell .fixtures-row__admin-btn:hover {
+  background: #426a6c;
+  color: var(--pr-white);
+}
+
+.admin-shell .fixtures-row__admin-btn--danger {
+  color: var(--pr-error);
+  border-color: rgba(212, 106, 106, 0.35);
+}
+
+.admin-shell .fixtures-row__admin-btn--danger:hover {
+  background: rgba(212, 106, 106, 0.12);
+}

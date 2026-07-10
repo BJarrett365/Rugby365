@@ -1,0 +1,957 @@
+{
+  "_meta": {
+    "endpoint": "match_7565_player_stat",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7565/player-stat",
+    "status": 200,
+    "bytes": 11034,
+    "captured_at": "2026-07-10T10:00:06Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "player match stats",
+    "data": {
+      "Goals": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Kick fromhand metres": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "82",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "120",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "50",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Metres": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "14",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "20",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "92",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "22",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "26",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Minutes played": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "40",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "41",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "71",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "59",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "16",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Missed goals": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Missed tackles": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Offloads": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "8",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "4",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Penalty goals": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Red cards": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Tackles": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "7",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "12",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "5",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Tries": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Try assists": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ],
+      "Yellow cards": [
+        {
+          "match_id": 7565,
+          "player_id": 4628,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 4628,
+            "name": "Evan Minto"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 5810,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5810,
+            "name": "Deian Gwynne"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6285,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6285,
+            "name": "Tom Bowen"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 6510,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 6510,
+            "name": "Steffan Emanuel"
+          }
+        },
+        {
+          "match_id": 7565,
+          "player_id": 8411,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 8411,
+            "name": "Carwyn Jones"
+          }
+        }
+      ]
+    }
+  }
+}

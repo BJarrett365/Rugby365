@@ -1,0 +1,44 @@
+/**
+ * Planet Rugby CMS design tokens.
+ * Scoped to .admin-shell — public site tokens in :root are unchanged.
+ */
+.admin-shell {
+  /* Core palette */
+  --pr-navy: #12343c;
+  --pr-dark-teal: #173b42;
+  --pr-teal: #294d4f;
+  --pr-teal-light: #365c5e;
+  --pr-gold: #e7bc63;
+  --pr-gold-hover: #f0cb7a;
+  --pr-green: #54b989;
+  --pr-white: #f7f7f5;
+  --pr-grey: #a7adac;
+  --pr-border: rgba(255, 255, 255, 0.12);
+  --pr-border-strong: rgba(255, 255, 255, 0.18);
+  --pr-track: #0e3037;
+  --pr-teal-row-alt: #315759;
+  --pr-error: #d46a6a;
+  --pr-error-muted: #b85c5c;
+
+  /* Map legacy CMS variables inside admin */
+  --background: var(--pr-dark-teal);
+  --foreground: var(--pr-white);
+  --card: var(--pr-teal);
+  --border: var(--pr-border);
+  --accent: var(--pr-gold);
+
+  /* Typography */
+  --pr-font:
+    Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  --pr-text-page-title: clamp(1.875rem, 2vw + 1rem, 2.125rem);
+  --pr-text-section: clamp(1.375rem, 1vw + 1rem, 1.625rem);
+  --pr-text-card-heading: 1.125rem;
+  --pr-text-body: 1rem;
+  --pr-text-small: 0.8125rem;
+
+  /* Radius */
+  --pr-radius-sm: 6px;
+  --pr-radius-md: 8px;
+  --pr-radius-lg: 10px;
+  --pr-radius-pill: 999px;
+}

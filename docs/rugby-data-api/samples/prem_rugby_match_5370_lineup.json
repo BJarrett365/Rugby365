@@ -1,0 +1,732 @@
+{
+  "_meta": {
+    "endpoint": "prem_rugby_match_5370_lineup",
+    "status": 200,
+    "bytes": 7786,
+    "captured_at": "2026-07-10T10:02:41Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/5370/lineup"
+  },
+  "response": {
+    "status": 200,
+    "message": "match lineups",
+    "data": {
+      "match_id": 5370,
+      "home_team": {
+        "id": 270,
+        "sg": "bath-270",
+        "nm": "Bath",
+        "sn": null,
+        "lineup": [
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 1,
+            "sno": 1,
+            "isb": 0,
+            "player_id": 5408,
+            "player": {
+              "id": 5408,
+              "nm": "Beno Obano",
+              "sg": "beno-obano-5408",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 2,
+            "sno": 2,
+            "isb": 0,
+            "player_id": 5360,
+            "player": {
+              "id": 5360,
+              "nm": "Kepueli Tuipulotu",
+              "sg": "kepueli-tuipulotu-5360",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 3,
+            "sno": 3,
+            "isb": 0,
+            "player_id": 5366,
+            "player": {
+              "id": 5366,
+              "nm": "Thomas du Toit",
+              "sg": "thomas-du-toit-5366",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54513,
+                  "ty": "Try",
+                  "player_id": 5366,
+                  "min": 8
+                },
+                {
+                  "id": 54522,
+                  "ty": "Try",
+                  "player_id": 5366,
+                  "min": 13
+                },
+                {
+                  "id": 54588,
+                  "ty": "Try",
+                  "player_id": 5366,
+                  "min": 49
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 4,
+            "sno": 4,
+            "isb": 0,
+            "player_id": 2795,
+            "player": {
+              "id": 2795,
+              "nm": "Ted Hill",
+              "sg": "ted-hill-2795",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 5,
+            "sno": 5,
+            "isb": 0,
+            "player_id": 5373,
+            "player": {
+              "id": 5373,
+              "nm": "Charlie Ewels",
+              "sg": "charlie-ewels-5373",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 6,
+            "sno": 6,
+            "isb": 0,
+            "player_id": 5379,
+            "player": {
+              "id": 5379,
+              "nm": "Josh Bayliss",
+              "sg": "josh-bayliss-5379",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 7,
+            "sno": 7,
+            "isb": 0,
+            "player_id": 5359,
+            "player": {
+              "id": 5359,
+              "nm": "Sam Underhill",
+              "sg": "sam-underhill-5359",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 8,
+            "sno": 8,
+            "isb": 0,
+            "player_id": 5382,
+            "player": {
+              "id": 5382,
+              "nm": "Alfie Barbeary",
+              "sg": "alfie-barbeary-5382",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 9,
+            "sno": 9,
+            "isb": 0,
+            "player_id": 5399,
+            "player": {
+              "id": 5399,
+              "nm": "Ben Spencer",
+              "sg": "ben-spencer-5399",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 10,
+            "sno": 10,
+            "isb": 0,
+            "player_id": 5328,
+            "player": {
+              "id": 5328,
+              "nm": "Santiago Carreras",
+              "sg": "santiago-carreras-5328",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54514,
+                  "ty": "Missed conversion",
+                  "player_id": 5328,
+                  "min": 9
+                },
+                {
+                  "id": 54523,
+                  "ty": "Conversion",
+                  "player_id": 5328,
+                  "min": 14
+                },
+                {
+                  "id": 54550,
+                  "ty": "Missed conversion",
+                  "player_id": 5328,
+                  "min": 33
+                },
+                {
+                  "id": 54589,
+                  "ty": "Conversion",
+                  "player_id": 5328,
+                  "min": 50
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 11,
+            "sno": 11,
+            "isb": 0,
+            "player_id": 5224,
+            "player": {
+              "id": 5224,
+              "nm": "Henry Arundell",
+              "sg": "henry-arundell-5224",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 12,
+            "sno": 12,
+            "isb": 0,
+            "player_id": 5416,
+            "player": {
+              "id": 5416,
+              "nm": "Max Ojomoh",
+              "sg": "max-ojomoh-5416",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 13,
+            "sno": 13,
+            "isb": 0,
+            "player_id": 2797,
+            "player": {
+              "id": 2797,
+              "nm": "Ollie Lawrence",
+              "sg": "ollie-lawrence-2797",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 14,
+            "sno": 14,
+            "isb": 0,
+            "player_id": 5446,
+            "player": {
+              "id": 5446,
+              "nm": "Joe Cokanasiga",
+              "sg": "joe-cokanasiga-5446",
+              "cards": [
+                {
+                  "id": 2202,
+                  "ty": "Yellow card",
+                  "player_id": 5446,
+                  "min": "77"
+                }
+              ],
+              "rugby_goals": [
+                {
+                  "id": 54548,
+                  "ty": "Try",
+                  "player_id": 5446,
+                  "min": 32
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 270,
+            "pos": "",
+            "or": 15,
+            "sno": 15,
+            "isb": 0,
+            "player_id": 5397,
+            "player": {
+              "id": 5397,
+              "nm": "Tom De Glanville",
+              "sg": "tom-de-glanville-5397",
+              "cards": [],
+              "rugby_goals": []
+            }
+          }
+        ],
+        "substitutions": [
+          {
+            "id": 28224,
+            "team_id": 270,
+            "pin_id": 5363,
+            "pin_nm": "Cameron Redpath",
+            "pout_id": 2797,
+            "pout_nm": "Ollie Lawrence",
+            "mins": 63,
+            "sno": 22
+          },
+          {
+            "id": 28226,
+            "team_id": 270,
+            "pin_id": 5364,
+            "pin_nm": "Francois van Wyk",
+            "pout_id": 5408,
+            "pout_nm": "Beno Obano",
+            "mins": 64,
+            "sno": 17
+          },
+          {
+            "id": 28235,
+            "team_id": 270,
+            "pin_id": 5427,
+            "pin_nm": "Dan Frost",
+            "pout_id": 5360,
+            "pout_nm": "Kepueli Tuipulotu",
+            "mins": 67,
+            "sno": 16
+          },
+          {
+            "id": 28240,
+            "team_id": 270,
+            "pin_id": 5411,
+            "pin_nm": "Ross Molony",
+            "pout_id": 5373,
+            "pout_nm": "Charlie Ewels",
+            "mins": 69,
+            "sno": 19
+          },
+          {
+            "id": 28241,
+            "team_id": 270,
+            "pin_id": 5412,
+            "pin_nm": "Miles Reid",
+            "pout_id": 5382,
+            "pout_nm": "Alfie Barbeary",
+            "mins": 69,
+            "sno": 23
+          },
+          {
+            "id": 28244,
+            "team_id": 270,
+            "pin_id": 5401,
+            "pin_nm": "Ewan Richards",
+            "pout_id": 5379,
+            "pout_nm": "Josh Bayliss",
+            "mins": 72,
+            "sno": 20
+          },
+          {
+            "id": 28249,
+            "team_id": 270,
+            "pin_id": 5559,
+            "pin_nm": "Billy Sela",
+            "pout_id": 5366,
+            "pout_nm": "Thomas du Toit",
+            "mins": 75,
+            "sno": 18
+          }
+        ]
+      },
+      "away_team": {
+        "id": 273,
+        "sg": "leicester-tigers-273",
+        "nm": "Leicester Tigers",
+        "sn": null,
+        "lineup": [
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 1,
+            "sno": 1,
+            "isb": 0,
+            "player_id": 2899,
+            "player": {
+              "id": 2899,
+              "nm": "Nicky Smith",
+              "sg": "nicky-smith-2899",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 2,
+            "sno": 2,
+            "isb": 0,
+            "player_id": 5355,
+            "player": {
+              "id": 5355,
+              "nm": "Jamie Blamire",
+              "sg": "jamie-blamire-5355",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 3,
+            "sno": 3,
+            "isb": 0,
+            "player_id": 2770,
+            "player": {
+              "id": 2770,
+              "nm": "Joe Heyes",
+              "sg": "joe-heyes-2770",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 4,
+            "sno": 4,
+            "isb": 0,
+            "player_id": 5313,
+            "player": {
+              "id": 5313,
+              "nm": "Cameron Henderson",
+              "sg": "cameron-henderson-5313",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 5,
+            "sno": 5,
+            "isb": 0,
+            "player_id": 2788,
+            "player": {
+              "id": 2788,
+              "nm": "Oliver Chessum",
+              "sg": "oliver-chessum-2788",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 6,
+            "sno": 6,
+            "isb": 0,
+            "player_id": 5321,
+            "player": {
+              "id": 5321,
+              "nm": "Hanro Liebenberg",
+              "sg": "hanro-liebenberg-5321",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 7,
+            "sno": 7,
+            "isb": 0,
+            "player_id": 2908,
+            "player": {
+              "id": 2908,
+              "nm": "Tommy Reffell",
+              "sg": "tommy-reffell-2908",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 8,
+            "sno": 8,
+            "isb": 0,
+            "player_id": 5459,
+            "player": {
+              "id": 5459,
+              "nm": "Olly Cracknell",
+              "sg": "olly-cracknell-5459",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 9,
+            "sno": 9,
+            "isb": 0,
+            "player_id": 2943,
+            "player": {
+              "id": 2943,
+              "nm": "Jack Van Poortvliet",
+              "sg": "jack-van-poortvliet-2943",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54558,
+                  "ty": "Try",
+                  "player_id": 2943,
+                  "min": 38
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 10,
+            "sno": 10,
+            "isb": 0,
+            "player_id": 1695,
+            "player": {
+              "id": 1695,
+              "nm": "James O'Connor",
+              "sg": "james-oconnor-1695",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54501,
+                  "ty": "Conversion",
+                  "player_id": 1695,
+                  "min": 4
+                },
+                {
+                  "id": 54541,
+                  "ty": "Penalty",
+                  "player_id": 1695,
+                  "min": 25
+                },
+                {
+                  "id": 54560,
+                  "ty": "Conversion",
+                  "player_id": 1695,
+                  "min": 39
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 11,
+            "sno": 11,
+            "isb": 0,
+            "player_id": 6047,
+            "player": {
+              "id": 6047,
+              "nm": "Gabriel Hamer-Webb",
+              "sg": "gabriel-hamer-webb-6047",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 12,
+            "sno": 12,
+            "isb": 0,
+            "player_id": 5410,
+            "player": {
+              "id": 5410,
+              "nm": "Orlando Bailey",
+              "sg": "orlando-bailey-5410",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54500,
+                  "ty": "Try",
+                  "player_id": 5410,
+                  "min": 3
+                },
+                {
+                  "id": 54635,
+                  "ty": "Missed conversion",
+                  "player_id": 5410,
+                  "min": 79
+                }
+              ]
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 13,
+            "sno": 13,
+            "isb": 0,
+            "player_id": 5571,
+            "player": {
+              "id": 5571,
+              "nm": "Will Wand",
+              "sg": "will-wand-5571",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 14,
+            "sno": 14,
+            "isb": 0,
+            "player_id": 5305,
+            "player": {
+              "id": 5305,
+              "nm": "Adam Radwan",
+              "sg": "adam-radwan-5305",
+              "cards": [],
+              "rugby_goals": []
+            }
+          },
+          {
+            "team_id": 273,
+            "pos": "",
+            "or": 15,
+            "sno": 15,
+            "isb": 0,
+            "player_id": 6397,
+            "player": {
+              "id": 6397,
+              "nm": "George Pearson",
+              "sg": "george-pearson-6397",
+              "cards": [],
+              "rugby_goals": [
+                {
+                  "id": 54633,
+                  "ty": "Try",
+                  "player_id": 6397,
+                  "min": 78
+                }
+              ]
+            }
+          }
+        ],
+        "substitutions": [
+          {
+            "id": 28186,
+            "team_id": 273,
+            "pin_id": 2863,
+            "pin_nm": "George Martin",
+            "pout_id": 5313,
+            "pout_nm": "Cameron Henderson",
+            "mins": 41,
+            "sno": 19
+          },
+          {
+            "id": 28187,
+            "team_id": 273,
+            "pin_id": 5309,
+            "pin_nm": "Solomone Kata",
+            "pout_id": 1695,
+            "pout_nm": "James O'Connor",
+            "mins": 41,
+            "sno": 22
+          },
+          {
+            "id": 28201,
+            "team_id": 273,
+            "pin_id": 5682,
+            "pin_nm": "Hamish Watson",
+            "pout_id": 5459,
+            "pout_nm": "Olly Cracknell",
+            "mins": 54,
+            "sno": 20
+          },
+          {
+            "id": 28216,
+            "team_id": 273,
+            "pin_id": 5503,
+            "pin_nm": "Izaia Perese",
+            "pout_id": 6047,
+            "pout_nm": "Gabriel Hamer-Webb",
+            "mins": 60,
+            "sno": 23
+          },
+          {
+            "id": 28230,
+            "team_id": 273,
+            "pin_id": 5320,
+            "pin_nm": "Charlie Clare",
+            "pout_id": 5355,
+            "pout_nm": "Jamie Blamire",
+            "mins": 60,
+            "sno": 16
+          },
+          {
+            "id": 28232,
+            "team_id": 273,
+            "pin_id": 4379,
+            "pin_nm": "Archie Van der Flier",
+            "pout_id": 2899,
+            "pout_nm": "Nicky Smith",
+            "mins": 64,
+            "sno": 17
+          },
+          {
+            "id": 28233,
+            "team_id": 273,
+            "pin_id": 2791,
+            "pin_nm": "Will Hurd",
+            "pout_id": 2770,
+            "pout_nm": "Joe Heyes",
+            "mins": 67,
+            "sno": 18
+          }
+        ]
+      }
+    }
+  }
+}

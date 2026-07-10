@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "endpoint": "match_7581_lineup",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7581/lineup",
+    "status": 200,
+    "bytes": 281,
+    "captured_at": "2026-07-10T10:00:07Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "match lineups",
+    "data": {
+      "match_id": 7581,
+      "home_team": {
+        "id": 208,
+        "sg": "argentina-u20-208",
+        "nm": "Argentina U20",
+        "sn": null,
+        "lineup": [],
+        "substitutions": []
+      },
+      "away_team": {
+        "id": 200,
+        "sg": "ireland-u20-200",
+        "nm": "Ireland U20",
+        "sn": null,
+        "lineup": [],
+        "substitutions": []
+      }
+    }
+  }
+}

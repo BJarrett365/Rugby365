@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "endpoint": "team_243_header",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/team/243/header",
+    "status": 200,
+    "bytes": 181,
+    "captured_at": "2026-07-10T10:00:12Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "Team header",
+    "data": {
+      "id": 243,
+      "nm": "England",
+      "sg": "england-243",
+      "cn": "National",
+      "cid": 907,
+      "gender": null,
+      "fid": 60,
+      "mang": null
+    },
+    "tabs": [
+      "upcoming",
+      "results"
+    ]
+  }
+}

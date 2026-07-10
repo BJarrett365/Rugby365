@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "endpoint": "league_47_table",
+    "status": 200,
+    "bytes": 72,
+    "captured_at": "2026-07-10T10:01:07Z",
+    "auth": "none",
+    "note": "Gallagher Premiership sample"
+  },
+  "response": {
+    "status": 200,
+    "message": "Tournament Table",
+    "live_team_ids": [],
+    "data": []
+  }
+}

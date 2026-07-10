@@ -1,0 +1,1443 @@
+{
+  "_meta": {
+    "endpoint": "country_leagues",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/country/leagues?q=",
+    "status": 200,
+    "bytes": 29320,
+    "captured_at": "2026-07-10T09:59:58Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "countries",
+    "data": [
+      {
+        "id": 48,
+        "nm": "England",
+        "name": null,
+        "cid": 907,
+        "fid": 60,
+        "tournaments": [
+          {
+            "id": 203,
+            "sl": "gallaghe-premiership-playoff-203",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "Gallaghe Premiership Playoff",
+            "nm": "England Gallaghe Premiership Playoff"
+          },
+          {
+            "id": 47,
+            "sl": "gallagher-premiership-47",
+            "sea": "2024/25",
+            "category_id": 907,
+            "name": "Gallagher Premiership",
+            "nm": "England Gallagher Premiership"
+          },
+          {
+            "id": 55,
+            "sl": "gallagher-premiership-playoffs-55",
+            "sea": "2024/25",
+            "category_id": 907,
+            "name": "Gallagher Premiership Playoffs",
+            "nm": "England Gallagher Premiership Playoffs"
+          },
+          {
+            "id": 104,
+            "sl": "prem-rugby-104",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "PREM Rugby",
+            "nm": "England PREM Rugby"
+          },
+          {
+            "id": 106,
+            "sl": "prem-rugby-cup-106",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "PREM Rugby Cup",
+            "nm": "England PREM Rugby Cup"
+          },
+          {
+            "id": 56,
+            "sl": "premiership-rugby-cup-56",
+            "sea": "2024/25",
+            "category_id": 907,
+            "name": "Premiership Rugby Cup",
+            "nm": "England Premiership Rugby Cup"
+          },
+          {
+            "id": 57,
+            "sl": "premiership-rugby-cup-final-stage-57",
+            "sea": "2024/25",
+            "category_id": 907,
+            "name": "Premiership Rugby Cup Final Stage",
+            "nm": "England Premiership Rugby Cup Final Stage"
+          },
+          {
+            "id": 155,
+            "sl": "premiership-rugby-cup-final-stage-155",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "Premiership Rugby Cup Final Stage",
+            "nm": "England Premiership Rugby Cup Final Stage"
+          },
+          {
+            "id": 156,
+            "sl": "premiership-womens-rugby-playoffw-156",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "Premiership Women's Rugby Playoff(w)",
+            "nm": "England Premiership Women's Rugby Playoff(w)"
+          },
+          {
+            "id": 125,
+            "sl": "premiership-womens-rugbyw-125",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "Premiership Women's Rugby(w)",
+            "nm": "England Premiership Women's Rugby(w)"
+          },
+          {
+            "id": 48,
+            "sl": "rfu-championship-48",
+            "sea": "2024/25",
+            "category_id": 907,
+            "name": "RFU Championship",
+            "nm": "England RFU Championship"
+          },
+          {
+            "id": 95,
+            "sl": "rfu-championship-95",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "RFU Championship",
+            "nm": "England RFU Championship"
+          },
+          {
+            "id": 185,
+            "sl": "rfu-championship-playoff-185",
+            "sea": "2025/26",
+            "category_id": 907,
+            "name": "RFU Championship Playoff",
+            "nm": "England RFU Championship Playoff"
+          },
+          {
+            "id": 30,
+            "sl": "the-varsity-match-30",
+            "sea": "2025",
+            "category_id": 907,
+            "name": "The Varsity Match",
+            "nm": "England The Varsity Match"
+          }
+        ]
+      },
+      {
+        "id": 11659,
+        "nm": "France",
+        "name": null,
+        "cid": 250,
+        "fid": 71,
+        "tournaments": [
+          {
+            "id": 51,
+            "sl": "pro-d2-51",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Pro D2",
+            "nm": "France Pro D2"
+          },
+          {
+            "id": 96,
+            "sl": "pro-d2-96",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Pro D2",
+            "nm": "France Pro D2"
+          },
+          {
+            "id": 52,
+            "sl": "pro-d2-playoff-52",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Pro D2 Playoff",
+            "nm": "France Pro D2 Playoff"
+          },
+          {
+            "id": 187,
+            "sl": "pro-d2-playoff-187",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Pro D2 Playoff",
+            "nm": "France Pro D2 Playoff"
+          },
+          {
+            "id": 53,
+            "sl": "pro-d2-qualification-53",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Pro D2 Qualification",
+            "nm": "France Pro D2 Qualification"
+          },
+          {
+            "id": 189,
+            "sl": "pro-d2-qualification-189",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Pro D2 Qualification",
+            "nm": "France Pro D2 Qualification"
+          },
+          {
+            "id": 49,
+            "sl": "top-14-49",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Top 14",
+            "nm": "France Top 14"
+          },
+          {
+            "id": 94,
+            "sl": "top-14-94",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Top 14",
+            "nm": "France Top 14"
+          },
+          {
+            "id": 83,
+            "sl": "top-14-playoff-83",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Top 14 Playoff",
+            "nm": "France Top 14 Playoff"
+          },
+          {
+            "id": 204,
+            "sl": "top-14-playoff-204",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Top 14 Playoff",
+            "nm": "France Top 14 Playoff"
+          },
+          {
+            "id": 84,
+            "sl": "top-14-qualification-84",
+            "sea": "2024/25",
+            "category_id": 250,
+            "name": "Top 14 Qualification",
+            "nm": "France Top 14 Qualification"
+          },
+          {
+            "id": 205,
+            "sl": "top-14-qualification-205",
+            "sea": "2025/26",
+            "category_id": 250,
+            "name": "Top 14 Qualification",
+            "nm": "France Top 14 Qualification"
+          }
+        ]
+      },
+      {
+        "id": 57,
+        "nm": "International",
+        "name": null,
+        "cid": 916,
+        "fid": 99,
+        "tournaments": [
+          {
+            "id": 31,
+            "sl": "british-irish-lions-tour-31",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "British & Irish Lions Tour",
+            "nm": "International British & Irish Lions Tour"
+          },
+          {
+            "id": 61,
+            "sl": "european-rugby-challenge-cup-final-stage-61",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Final Stage",
+            "nm": "International European Rugby Challenge Cup Final Stage"
+          },
+          {
+            "id": 139,
+            "sl": "european-rugby-challenge-cup-final-stage-139",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Final Stage",
+            "nm": "International European Rugby Challenge Cup Final Stage"
+          },
+          {
+            "id": 58,
+            "sl": "european-rugby-challenge-cup-pool-1-58",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 1",
+            "nm": "International European Rugby Challenge Cup Pool 1"
+          },
+          {
+            "id": 97,
+            "sl": "european-rugby-challenge-cup-pool-1-97",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 1",
+            "nm": "International European Rugby Challenge Cup Pool 1"
+          },
+          {
+            "id": 59,
+            "sl": "european-rugby-challenge-cup-pool-2-59",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 2",
+            "nm": "International European Rugby Challenge Cup Pool 2"
+          },
+          {
+            "id": 98,
+            "sl": "european-rugby-challenge-cup-pool-2-98",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 2",
+            "nm": "International European Rugby Challenge Cup Pool 2"
+          },
+          {
+            "id": 60,
+            "sl": "european-rugby-challenge-cup-pool-3-60",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 3",
+            "nm": "International European Rugby Challenge Cup Pool 3"
+          },
+          {
+            "id": 99,
+            "sl": "european-rugby-challenge-cup-pool-3-99",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 3",
+            "nm": "International European Rugby Challenge Cup Pool 3"
+          },
+          {
+            "id": 66,
+            "sl": "european-rugby-champions-cup-final-stage-66",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Final Stage",
+            "nm": "International European Rugby Champions Cup Final Stage"
+          },
+          {
+            "id": 138,
+            "sl": "european-rugby-champions-cup-final-stage-138",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Final Stage",
+            "nm": "International European Rugby Champions Cup Final Stage"
+          },
+          {
+            "id": 62,
+            "sl": "european-rugby-champions-cup-pool-1-62",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 1",
+            "nm": "International European Rugby Champions Cup Pool 1"
+          },
+          {
+            "id": 100,
+            "sl": "european-rugby-champions-cup-pool-1-100",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 1",
+            "nm": "International European Rugby Champions Cup Pool 1"
+          },
+          {
+            "id": 63,
+            "sl": "european-rugby-champions-cup-pool-2-63",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 2",
+            "nm": "International European Rugby Champions Cup Pool 2"
+          },
+          {
+            "id": 101,
+            "sl": "european-rugby-champions-cup-pool-2-101",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 2",
+            "nm": "International European Rugby Champions Cup Pool 2"
+          },
+          {
+            "id": 64,
+            "sl": "european-rugby-champions-cup-pool-3-64",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 3",
+            "nm": "International European Rugby Champions Cup Pool 3"
+          },
+          {
+            "id": 102,
+            "sl": "european-rugby-champions-cup-pool-3-102",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 3",
+            "nm": "International European Rugby Champions Cup Pool 3"
+          },
+          {
+            "id": 65,
+            "sl": "european-rugby-champions-cup-pool-4-65",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 4",
+            "nm": "International European Rugby Champions Cup Pool 4"
+          },
+          {
+            "id": 103,
+            "sl": "european-rugby-champions-cup-pool-4-103",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 4",
+            "nm": "International European Rugby Champions Cup Pool 4"
+          },
+          {
+            "id": 32,
+            "sl": "international-matches-32",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "International Matches",
+            "nm": "International International Matches"
+          },
+          {
+            "id": 206,
+            "sl": "international-matches-206",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "International Matches",
+            "nm": "International International Matches"
+          },
+          {
+            "id": 23,
+            "sl": "international-matchesw-23",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "International Matches(w)",
+            "nm": "International International Matches(w)"
+          },
+          {
+            "id": 109,
+            "sl": "pacific-nations-cup-final-stage-109",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Pacific Nations Cup Final Stage",
+            "nm": "International Pacific Nations Cup Final Stage"
+          },
+          {
+            "id": 110,
+            "sl": "pacific-nations-cup-placement-stage-110",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Pacific Nations Cup Placement Stage",
+            "nm": "International Pacific Nations Cup Placement Stage"
+          },
+          {
+            "id": 77,
+            "sl": "pacific-nations-cup-pool-a-77",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Pacific Nations Cup Pool A",
+            "nm": "International Pacific Nations Cup Pool A"
+          },
+          {
+            "id": 78,
+            "sl": "pacific-nations-cup-pool-b-78",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Pacific Nations Cup Pool B",
+            "nm": "International Pacific Nations Cup Pool B"
+          },
+          {
+            "id": 33,
+            "sl": "rugby-europe-championship-final-stage-33",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Final Stage",
+            "nm": "International Rugby Europe Championship Final Stage"
+          },
+          {
+            "id": 143,
+            "sl": "rugby-europe-championship-final-stage-143",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Final Stage",
+            "nm": "International Rugby Europe Championship Final Stage"
+          },
+          {
+            "id": 34,
+            "sl": "rugby-europe-championship-placement-matches-34",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Placement Matches",
+            "nm": "International Rugby Europe Championship Placement Matches"
+          },
+          {
+            "id": 142,
+            "sl": "rugby-europe-championship-placement-matches-142",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Placement Matches",
+            "nm": "International Rugby Europe Championship Placement Matches"
+          },
+          {
+            "id": 35,
+            "sl": "rugby-europe-championship-pool-a-35",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Pool A",
+            "nm": "International Rugby Europe Championship Pool A"
+          },
+          {
+            "id": 140,
+            "sl": "rugby-europe-championship-pool-a-140",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Pool A",
+            "nm": "International Rugby Europe Championship Pool A"
+          },
+          {
+            "id": 36,
+            "sl": "rugby-europe-championship-pool-b-36",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Pool B",
+            "nm": "International Rugby Europe Championship Pool B"
+          },
+          {
+            "id": 141,
+            "sl": "rugby-europe-championship-pool-b-141",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Rugby Europe Championship Pool B",
+            "nm": "International Rugby Europe Championship Pool B"
+          },
+          {
+            "id": 37,
+            "sl": "six-nations-37",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Six Nations",
+            "nm": "International Six Nations"
+          },
+          {
+            "id": 81,
+            "sl": "six-nations-81",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Six Nations",
+            "nm": "International Six Nations"
+          },
+          {
+            "id": 38,
+            "sl": "six-nations-u20-38",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Six Nations U20",
+            "nm": "International Six Nations U20"
+          },
+          {
+            "id": 82,
+            "sl": "six-nations-u20-82",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Six Nations U20",
+            "nm": "International Six Nations U20"
+          },
+          {
+            "id": 115,
+            "sl": "six-nations-womenw-115",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Six Nations Women(w)",
+            "nm": "International Six Nations Women(w)"
+          },
+          {
+            "id": 24,
+            "sl": "six-nationsw-24",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Six Nations(w)",
+            "nm": "International Six Nations(w)"
+          },
+          {
+            "id": 8,
+            "sl": "super-rugby-pacific-8",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "Super Rugby Pacific",
+            "nm": "International Super Rugby Pacific"
+          },
+          {
+            "id": 114,
+            "sl": "super-rugby-pacific-114",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Super Rugby Pacific",
+            "nm": "International Super Rugby Pacific"
+          },
+          {
+            "id": 197,
+            "sl": "super-rugby-pacific-playoff-197",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "Super Rugby Pacific Playoff",
+            "nm": "International Super Rugby Pacific Playoff"
+          },
+          {
+            "id": 39,
+            "sl": "the-rugby-championship-39",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "The Rugby Championship",
+            "nm": "International The Rugby Championship"
+          },
+          {
+            "id": 40,
+            "sl": "u20-world-championship-final-stage-40",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "U20 World Championship Final Stage",
+            "nm": "International U20 World Championship Final Stage"
+          },
+          {
+            "id": 220,
+            "sl": "u20-world-championship-final-stage-220",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Final Stage",
+            "nm": "International U20 World Championship Final Stage"
+          },
+          {
+            "id": 41,
+            "sl": "u20-world-championship-placement-matches-41",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "U20 World Championship Placement Matches",
+            "nm": "International U20 World Championship Placement Matches"
+          },
+          {
+            "id": 221,
+            "sl": "u20-world-championship-placement-matches-221",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Placement Matches",
+            "nm": "International U20 World Championship Placement Matches"
+          },
+          {
+            "id": 42,
+            "sl": "u20-world-championship-pool-a-42",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "U20 World Championship Pool A",
+            "nm": "International U20 World Championship Pool A"
+          },
+          {
+            "id": 193,
+            "sl": "u20-world-championship-pool-a-193",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Pool A",
+            "nm": "International U20 World Championship Pool A"
+          },
+          {
+            "id": 43,
+            "sl": "u20-world-championship-pool-b-43",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "U20 World Championship Pool B",
+            "nm": "International U20 World Championship Pool B"
+          },
+          {
+            "id": 194,
+            "sl": "u20-world-championship-pool-b-194",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Pool B",
+            "nm": "International U20 World Championship Pool B"
+          },
+          {
+            "id": 44,
+            "sl": "u20-world-championship-pool-c-44",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "U20 World Championship Pool C",
+            "nm": "International U20 World Championship Pool C"
+          },
+          {
+            "id": 195,
+            "sl": "u20-world-championship-pool-c-195",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Pool C",
+            "nm": "International U20 World Championship Pool C"
+          },
+          {
+            "id": 196,
+            "sl": "u20-world-championship-pool-d-196",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "U20 World Championship Pool D",
+            "nm": "International U20 World Championship Pool D"
+          },
+          {
+            "id": 54,
+            "sl": "united-rugby-championship-54",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "United Rugby Championship",
+            "nm": "International United Rugby Championship"
+          },
+          {
+            "id": 188,
+            "sl": "united-rugby-championship-188",
+            "sea": "2026/27",
+            "category_id": 916,
+            "name": "United Rugby Championship",
+            "nm": "International United Rugby Championship"
+          },
+          {
+            "id": 50,
+            "sl": "united-rugby-championship-playoff-50",
+            "sea": "2024/25",
+            "category_id": 916,
+            "name": "United Rugby Championship Playoff",
+            "nm": "International United Rugby Championship Playoff"
+          },
+          {
+            "id": 80,
+            "sl": "united-rugby-championship-playoff-80",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "United Rugby Championship Playoff",
+            "nm": "International United Rugby Championship Playoff"
+          },
+          {
+            "id": 172,
+            "sl": "world-cup-final-stage-172",
+            "sea": "2023",
+            "category_id": 916,
+            "name": "World Cup Final Stage",
+            "nm": "International World Cup Final Stage"
+          },
+          {
+            "id": 25,
+            "sl": "world-cup-final-stagew-25",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "World Cup Final Stage(w)",
+            "nm": "International World Cup Final Stage(w)"
+          },
+          {
+            "id": 168,
+            "sl": "world-cup-pool-a-168",
+            "sea": "2023",
+            "category_id": 916,
+            "name": "World Cup Pool A",
+            "nm": "International World Cup Pool A"
+          },
+          {
+            "id": 26,
+            "sl": "world-cup-pool-aw-26",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "World Cup Pool A(w)",
+            "nm": "International World Cup Pool A(w)"
+          },
+          {
+            "id": 169,
+            "sl": "world-cup-pool-b-169",
+            "sea": "2023",
+            "category_id": 916,
+            "name": "World Cup Pool B",
+            "nm": "International World Cup Pool B"
+          },
+          {
+            "id": 27,
+            "sl": "world-cup-pool-bw-27",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "World Cup Pool B(w)",
+            "nm": "International World Cup Pool B(w)"
+          },
+          {
+            "id": 170,
+            "sl": "world-cup-pool-c-170",
+            "sea": "2023",
+            "category_id": 916,
+            "name": "World Cup Pool C",
+            "nm": "International World Cup Pool C"
+          },
+          {
+            "id": 28,
+            "sl": "world-cup-pool-cw-28",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "World Cup Pool C(w)",
+            "nm": "International World Cup Pool C(w)"
+          },
+          {
+            "id": 171,
+            "sl": "world-cup-pool-d-171",
+            "sea": "2023",
+            "category_id": 916,
+            "name": "World Cup Pool D",
+            "nm": "International World Cup Pool D"
+          },
+          {
+            "id": 29,
+            "sl": "world-cup-pool-dw-29",
+            "sea": "2025",
+            "category_id": 916,
+            "name": "World Cup Pool D(w)",
+            "nm": "International World Cup Pool D(w)"
+          },
+          {
+            "id": 184,
+            "sl": "world-rugby-nations-championship-184",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "World Rugby Nations Championship",
+            "nm": "International World Rugby Nations Championship"
+          },
+          {
+            "id": 219,
+            "sl": "world-rugby-nations-cup-219",
+            "sea": "2026",
+            "category_id": 916,
+            "name": "World Rugby Nations Cup",
+            "nm": "International World Rugby Nations Cup"
+          },
+          {
+            "id": 144,
+            "sl": "world-rugby-sevens-series-australia-144",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Australia",
+            "nm": "International World Rugby Sevens Series - Australia"
+          },
+          {
+            "id": 145,
+            "sl": "world-rugby-sevens-series-australia-final-stage-145",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Australia - Final Stage",
+            "nm": "International World Rugby Sevens Series - Australia - Final Stage"
+          },
+          {
+            "id": 146,
+            "sl": "world-rugby-sevens-series-australia-placement-matches-146",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Australia - Placement Matches",
+            "nm": "International World Rugby Sevens Series - Australia - Placement Matches"
+          },
+          {
+            "id": 166,
+            "sl": "world-rugby-sevens-series-canada-final-stage-166",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Canada - Final Stage",
+            "nm": "International World Rugby Sevens Series - Canada - Final Stage"
+          },
+          {
+            "id": 167,
+            "sl": "world-rugby-sevens-series-canada-placement-matches-167",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Canada - Placement Matches",
+            "nm": "International World Rugby Sevens Series - Canada - Placement Matches"
+          },
+          {
+            "id": 177,
+            "sl": "world-rugby-sevens-series-hong-kong-177",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Hong Kong",
+            "nm": "International World Rugby Sevens Series - Hong Kong"
+          },
+          {
+            "id": 180,
+            "sl": "world-rugby-sevens-series-hong-kong-final-stage-180",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Hong Kong - Final Stage",
+            "nm": "International World Rugby Sevens Series - Hong Kong - Final Stage"
+          },
+          {
+            "id": 181,
+            "sl": "world-rugby-sevens-series-hong-kong-placement-matches-181",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Hong Kong - Placement Matches",
+            "nm": "International World Rugby Sevens Series - Hong Kong - Placement Matches"
+          },
+          {
+            "id": 135,
+            "sl": "world-rugby-sevens-series-singapore-135",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Singapore",
+            "nm": "International World Rugby Sevens Series - Singapore"
+          },
+          {
+            "id": 136,
+            "sl": "world-rugby-sevens-series-singapore-final-stage-136",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Singapore - Final Stage",
+            "nm": "International World Rugby Sevens Series - Singapore - Final Stage"
+          },
+          {
+            "id": 137,
+            "sl": "world-rugby-sevens-series-singapore-placement-matches-137",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - Singapore - Placement Matches",
+            "nm": "International World Rugby Sevens Series - Singapore - Placement Matches"
+          },
+          {
+            "id": 130,
+            "sl": "world-rugby-sevens-series-south-africa-130",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - South Africa",
+            "nm": "International World Rugby Sevens Series - South Africa"
+          },
+          {
+            "id": 131,
+            "sl": "world-rugby-sevens-series-south-africa-final-stage-131",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - South Africa - Final Stage",
+            "nm": "International World Rugby Sevens Series - South Africa - Final Stage"
+          },
+          {
+            "id": 132,
+            "sl": "world-rugby-sevens-series-south-africa-placement-matches-132",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series - South Africa - Placement Matches",
+            "nm": "International World Rugby Sevens Series - South Africa - Placement Matches"
+          },
+          {
+            "id": 164,
+            "sl": "world-rugby-sevens-series-canada-164",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Canada",
+            "nm": "International World Rugby Sevens Series Canada"
+          },
+          {
+            "id": 165,
+            "sl": "world-rugby-sevens-series-canada-womenw-165",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Canada Women(w)",
+            "nm": "International World Rugby Sevens Series Canada Women(w)"
+          },
+          {
+            "id": 122,
+            "sl": "world-rugby-sevens-series-dubai-122",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Dubai",
+            "nm": "International World Rugby Sevens Series Dubai"
+          },
+          {
+            "id": 124,
+            "sl": "world-rugby-sevens-series-dubai-final-stage-124",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Dubai Final Stage",
+            "nm": "International World Rugby Sevens Series Dubai Final Stage"
+          },
+          {
+            "id": 123,
+            "sl": "world-rugby-sevens-series-dubai-placement-matches-123",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Dubai Placement Matches",
+            "nm": "International World Rugby Sevens Series Dubai Placement Matches"
+          },
+          {
+            "id": 198,
+            "sl": "world-rugby-sevens-series-france-198",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France",
+            "nm": "International World Rugby Sevens Series France"
+          },
+          {
+            "id": 199,
+            "sl": "world-rugby-sevens-series-france-final-stage-199",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France Final Stage",
+            "nm": "International World Rugby Sevens Series France Final Stage"
+          },
+          {
+            "id": 200,
+            "sl": "world-rugby-sevens-series-france-placement-matches-200",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France Placement Matches",
+            "nm": "International World Rugby Sevens Series France Placement Matches"
+          },
+          {
+            "id": 202,
+            "sl": "world-rugby-sevens-series-france-women-placementw-202",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France Women Placement(w)",
+            "nm": "International World Rugby Sevens Series France Women Placement(w)"
+          },
+          {
+            "id": 201,
+            "sl": "world-rugby-sevens-series-france-women-playoffsw-201",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France Women Playoffs(w)",
+            "nm": "International World Rugby Sevens Series France Women Playoffs(w)"
+          },
+          {
+            "id": 190,
+            "sl": "world-rugby-sevens-series-france-womenw-190",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series France Women(w)",
+            "nm": "International World Rugby Sevens Series France Women(w)"
+          },
+          {
+            "id": 182,
+            "sl": "world-rugby-sevens-series-valladolid-182",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Valladolid",
+            "nm": "International World Rugby Sevens Series Valladolid"
+          },
+          {
+            "id": 191,
+            "sl": "world-rugby-sevens-series-valladolid-final-stage-191",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Valladolid Final Stage",
+            "nm": "International World Rugby Sevens Series Valladolid Final Stage"
+          },
+          {
+            "id": 192,
+            "sl": "world-rugby-sevens-series-valladolid-placement-matches-192",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Rugby Sevens Series Valladolid Placement Matches",
+            "nm": "International World Rugby Sevens Series Valladolid Placement Matches"
+          },
+          {
+            "id": 174,
+            "sl": "world-sevens-series-usa-174",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Sevens Series - USA",
+            "nm": "International World Sevens Series - USA"
+          },
+          {
+            "id": 175,
+            "sl": "world-sevens-series-usa-final-stage-175",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Sevens Series USA - Final Stage",
+            "nm": "International World Sevens Series USA - Final Stage"
+          },
+          {
+            "id": 176,
+            "sl": "world-sevens-series-usa-placement-matches-176",
+            "sea": "2025/26",
+            "category_id": 916,
+            "name": "World Sevens Series USA - Placement Matches",
+            "nm": "International World Sevens Series USA - Placement Matches"
+          }
+        ]
+      },
+      {
+        "id": 158,
+        "nm": "New Zealand",
+        "name": null,
+        "cid": 554,
+        "fid": 155,
+        "tournaments": [
+          {
+            "id": 107,
+            "sl": "heartland-championships-107",
+            "sea": "2025",
+            "category_id": 554,
+            "name": "Heartland Championships",
+            "nm": "New Zealand Heartland Championships"
+          },
+          {
+            "id": 217,
+            "sl": "heartland-championships-217",
+            "sea": "2026",
+            "category_id": 554,
+            "name": "Heartland Championships",
+            "nm": "New Zealand Heartland Championships"
+          },
+          {
+            "id": 121,
+            "sl": "heartland-championships-playoffs-121",
+            "sea": "2025",
+            "category_id": 554,
+            "name": "Heartland Championships Playoffs",
+            "nm": "New Zealand Heartland Championships Playoffs"
+          },
+          {
+            "id": 45,
+            "sl": "npc-45",
+            "sea": "2025",
+            "category_id": 554,
+            "name": "NPC",
+            "nm": "New Zealand NPC"
+          },
+          {
+            "id": 183,
+            "sl": "npc-183",
+            "sea": "2026",
+            "category_id": 554,
+            "name": "NPC",
+            "nm": "New Zealand NPC"
+          },
+          {
+            "id": 120,
+            "sl": "npc-playoff-120",
+            "sea": "2025",
+            "category_id": 554,
+            "name": "NPC Playoff",
+            "nm": "New Zealand NPC Playoff"
+          }
+        ]
+      },
+      {
+        "id": 246,
+        "nm": "Scotland",
+        "name": null,
+        "cid": 921,
+        "fid": 192,
+        "tournaments": [
+          {
+            "id": 157,
+            "sl": "premiership-play-offs-157",
+            "sea": "2025/26",
+            "category_id": 921,
+            "name": "Premiership Play Offs",
+            "nm": "Scotland Premiership Play Offs"
+          },
+          {
+            "id": 79,
+            "sl": "scottish-premiership-79",
+            "sea": "2025/26",
+            "category_id": 921,
+            "name": "Scottish Premiership",
+            "nm": "Scotland Scottish Premiership"
+          },
+          {
+            "id": 216,
+            "sl": "scottish-premiership-216",
+            "sea": "2026/27",
+            "category_id": 921,
+            "name": "Scottish Premiership",
+            "nm": "Scotland Scottish Premiership"
+          }
+        ]
+      },
+      {
+        "id": 76,
+        "nm": "South Africa",
+        "name": null,
+        "cid": 710,
+        "fid": 202,
+        "tournaments": [
+          {
+            "id": 76,
+            "sl": "currie-cup-76",
+            "sea": "2025",
+            "category_id": 710,
+            "name": "Currie Cup",
+            "nm": "South Africa Currie Cup"
+          },
+          {
+            "id": 218,
+            "sl": "currie-cup-218",
+            "sea": "2026",
+            "category_id": 710,
+            "name": "Currie Cup",
+            "nm": "South Africa Currie Cup"
+          },
+          {
+            "id": 111,
+            "sl": "currie-cup-playoffs-111",
+            "sea": "2025",
+            "category_id": 710,
+            "name": "Currie Cup Playoffs",
+            "nm": "South Africa Currie Cup Playoffs"
+          }
+        ]
+      },
+      {
+        "id": 79,
+        "nm": "USA",
+        "name": null,
+        "cid": 840,
+        "fid": 227,
+        "tournaments": [
+          {
+            "id": 46,
+            "sl": "major-league-rugby-46",
+            "sea": "2025",
+            "category_id": 840,
+            "name": "Major League Rugby",
+            "nm": "USA Major League Rugby"
+          },
+          {
+            "id": 75,
+            "sl": "major-league-rugby-playoff-75",
+            "sea": "2025",
+            "category_id": 840,
+            "name": "Major League Rugby Playoff",
+            "nm": "USA Major League Rugby Playoff"
+          }
+        ]
+      },
+      {
+        "id": 90591,
+        "nm": "Wales",
+        "name": null,
+        "cid": 925,
+        "fid": 234,
+        "tournaments": [
+          {
+            "id": 74,
+            "sl": "championship-east-74",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "Championship East",
+            "nm": "Wales Championship East"
+          },
+          {
+            "id": 90,
+            "sl": "championship-east-90",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "Championship East",
+            "nm": "Wales Championship East"
+          },
+          {
+            "id": 209,
+            "sl": "championship-east-209",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "Championship East",
+            "nm": "Wales Championship East"
+          },
+          {
+            "id": 73,
+            "sl": "championship-west-73",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "Championship West",
+            "nm": "Wales Championship West"
+          },
+          {
+            "id": 91,
+            "sl": "championship-west-91",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "Championship West",
+            "nm": "Wales Championship West"
+          },
+          {
+            "id": 210,
+            "sl": "championship-west-210",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "Championship West",
+            "nm": "Wales Championship West"
+          },
+          {
+            "id": 67,
+            "sl": "national-league-div-1-east-67",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "National League Div 1 East",
+            "nm": "Wales National League Div 1 East"
+          },
+          {
+            "id": 85,
+            "sl": "national-league-div-1-east-85",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "National League Div 1 East",
+            "nm": "Wales National League Div 1 East"
+          },
+          {
+            "id": 68,
+            "sl": "national-league-div-1-east-central-68",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "National League Div 1 East Central",
+            "nm": "Wales National League Div 1 East Central"
+          },
+          {
+            "id": 88,
+            "sl": "national-league-div-1-east-central-88",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "National League Div 1 East Central",
+            "nm": "Wales National League Div 1 East Central"
+          },
+          {
+            "id": 69,
+            "sl": "national-league-div-1-north-69",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "National League Div 1 North",
+            "nm": "Wales National League Div 1 North"
+          },
+          {
+            "id": 86,
+            "sl": "national-league-div-1-north-86",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "National League Div 1 North",
+            "nm": "Wales National League Div 1 North"
+          },
+          {
+            "id": 70,
+            "sl": "national-league-div-1-west-70",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "National League Div 1 West",
+            "nm": "Wales National League Div 1 West"
+          },
+          {
+            "id": 87,
+            "sl": "national-league-div-1-west-87",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "National League Div 1 West",
+            "nm": "Wales National League Div 1 West"
+          },
+          {
+            "id": 71,
+            "sl": "national-league-div-1-west-central-71",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "National League Div 1 West Central",
+            "nm": "Wales National League Div 1 West Central"
+          },
+          {
+            "id": 89,
+            "sl": "national-league-div-1-west-central-89",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "National League Div 1 West Central",
+            "nm": "Wales National League Div 1 West Central"
+          },
+          {
+            "id": 211,
+            "sl": "national-league-div-1-east-211",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "National League Div. 1 East",
+            "nm": "Wales National League Div. 1 East"
+          },
+          {
+            "id": 212,
+            "sl": "national-league-div-1-east-central-212",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "National League Div. 1 East Central",
+            "nm": "Wales National League Div. 1 East Central"
+          },
+          {
+            "id": 213,
+            "sl": "national-league-div-1-north-213",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "National League Div. 1 North",
+            "nm": "Wales National League Div. 1 North"
+          },
+          {
+            "id": 214,
+            "sl": "national-league-div-1-west-214",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "National League Div. 1 West",
+            "nm": "Wales National League Div. 1 West"
+          },
+          {
+            "id": 215,
+            "sl": "national-league-div-1-west-central-215",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "National League Div. 1 West Central",
+            "nm": "Wales National League Div. 1 West Central"
+          },
+          {
+            "id": 72,
+            "sl": "premiership-72",
+            "sea": "2024/25",
+            "category_id": 925,
+            "name": "Premiership",
+            "nm": "Wales Premiership"
+          },
+          {
+            "id": 207,
+            "sl": "premiership-207",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "Premiership",
+            "nm": "Wales Premiership"
+          },
+          {
+            "id": 93,
+            "sl": "super-rygbi-cymru-93",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "Super Rygbi Cymru",
+            "nm": "Wales Super Rygbi Cymru"
+          },
+          {
+            "id": 208,
+            "sl": "super-rygbi-cymru-208",
+            "sea": "2026/27",
+            "category_id": 925,
+            "name": "Super Rygbi Cymru",
+            "nm": "Wales Super Rygbi Cymru"
+          },
+          {
+            "id": 179,
+            "sl": "super-rygbi-cymru-playoff-179",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "Super Rygbi Cymru Playoff",
+            "nm": "Wales Super Rygbi Cymru Playoff"
+          },
+          {
+            "id": 92,
+            "sl": "wales-premiership-92",
+            "sea": "2025/26",
+            "category_id": 925,
+            "name": "Wales Premiership",
+            "nm": "Wales Wales Premiership"
+          }
+        ]
+      }
+    ]
+  }
+}

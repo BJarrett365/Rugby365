@@ -1,0 +1,8053 @@
+{
+  "_meta": {
+    "endpoint": "prem_rugby_match_5370_player_stat",
+    "status": 200,
+    "bytes": 95949,
+    "captured_at": "2026-07-10T10:02:42Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/5370/player-stat"
+  },
+  "response": {
+    "status": 200,
+    "message": "player match stats",
+    "data": {
+      "Goals": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Kick fromhand metres": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "12",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "21",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "342",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "12",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "120",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "378",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "69",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "86",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "273",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "154",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "27",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Kick fromhand metres",
+          "group": "Kicking",
+          "value": "52",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Metres": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "8",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "8",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "5",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "11",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "5",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "7",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "15",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "22",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "13",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "19",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "10",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "25",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "15",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "14",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "12",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "8",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "14",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "20",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "9",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "6",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "43",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "6",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "12",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "17",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "24",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "36",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "8",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Metres",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Minutes played": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "41",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "68",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "12",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "64",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "40",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "65",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "15",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "40",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "41",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "19",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "61",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "68",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "16",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "15",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "75",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "70",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "73",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "70",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "7",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "65",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "12",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "78",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "54",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "19",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "5",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "80",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "26",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Minutes played",
+          "group": "Base",
+          "value": "61",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Missed goals": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Missed goals",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Missed tackles": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Missed tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Offloads": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Offloads",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "7",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "5",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "60",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "4",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "40",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "6",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Passes",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Penalty goals": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Penalty goals",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Red cards": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Red cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Tackles": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "10",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "10",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "22",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "10",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "7",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "15",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "6",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "7",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "13",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "16",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "14",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "2",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "16",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "10",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "8",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "9",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "13",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "9",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "16",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "5",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "4",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Tackles",
+          "group": "Defence",
+          "value": "3",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Tries": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "3",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Tries",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Try assists": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "1",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Try assists",
+          "group": "Attack",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ],
+      "Yellow cards": [
+        {
+          "match_id": 5370,
+          "player_id": 1695,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 1695,
+            "name": "James O'Connor"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2770,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2770,
+            "name": "Joe Heyes"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2788,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2788,
+            "name": "Oliver Chessum"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2791,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2791,
+            "name": "Will Hurd"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2795,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2795,
+            "name": "Ted Hill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2797,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 2797,
+            "name": "Ollie Lawrence"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2863,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2863,
+            "name": "George Martin"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2899,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2899,
+            "name": "Nicky Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2908,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2908,
+            "name": "Tommy Reffell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 2943,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 2943,
+            "name": "Jack Van Poortvliet"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 4379,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 4379,
+            "name": "Archie Van der Flier"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5224,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5224,
+            "name": "Henry Arundell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5305,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5305,
+            "name": "Adam Radwan"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5309,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5309,
+            "name": "Solomone Kata"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5313,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5313,
+            "name": "Cameron Henderson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5320,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5320,
+            "name": "Charlie Clare"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5321,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5321,
+            "name": "Hanro Liebenberg"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5328,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5328,
+            "name": "Santiago Carreras"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5354,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5354,
+            "name": "Tom Carr-Smith"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5355,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5355,
+            "name": "Jamie Blamire"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5359,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5359,
+            "name": "Sam Underhill"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5360,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5360,
+            "name": "Kepueli Tuipulotu"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5363,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5363,
+            "name": "Cameron Redpath"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5364,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5364,
+            "name": "Francois van Wyk"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5366,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5366,
+            "name": "Thomas du Toit"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5373,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5373,
+            "name": "Charlie Ewels"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5379,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5379,
+            "name": "Josh Bayliss"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5382,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5382,
+            "name": "Alfie Barbeary"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5397,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5397,
+            "name": "Tom De Glanville"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5399,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5399,
+            "name": "Ben Spencer"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5401,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5401,
+            "name": "Ewan Richards"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5408,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5408,
+            "name": "Beno Obano"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5410,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5410,
+            "name": "Orlando Bailey"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5411,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5411,
+            "name": "Ross Molony"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5412,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5412,
+            "name": "Miles Reid"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5416,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5416,
+            "name": "Max Ojomoh"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5427,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5427,
+            "name": "Dan Frost"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5446,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "1",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5446,
+            "name": "Joe Cokanasiga"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5459,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5459,
+            "name": "Olly Cracknell"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5503,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5503,
+            "name": "Izaia Perese"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5559,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 1,
+          "is_deleted": 0,
+          "player": {
+            "id": 5559,
+            "name": "Billy Sela"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5571,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5571,
+            "name": "Will Wand"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 5682,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 5682,
+            "name": "Hamish Watson"
+          }
+        },
+        {
+          "match_id": 5370,
+          "player_id": 6047,
+          "type": "Yellow cards",
+          "group": "Error",
+          "value": "0",
+          "is_home": 0,
+          "is_deleted": 0,
+          "player": {
+            "id": 6047,
+            "name": "Gabriel Hamer-Webb"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Rugby365",
+  "short_name": "Rugby365",
+  "description": "Rugby Union Match Tracker & Commentary",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

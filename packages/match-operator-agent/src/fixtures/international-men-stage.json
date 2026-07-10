@@ -1,0 +1,151 @@
+{
+  "matches": [
+    {
+      "pid": 1,
+      "s_id": 14,
+      "s_code": "rugby_union",
+      "c_id": "3a53e4b3-f4f9-4715-9b52-8db7d4d130ba",
+      "c_name": "International",
+      "c_flag": "1/3a53e4b3-f4f9-4715-9b52-8db7d4d130ba",
+      "c_code": "international",
+      "st_id": "d6846855-ab4e-4a4d-b931-99b32e93ed8c",
+      "st_name": "Men",
+      "st_code": "men",
+      "format": 0,
+      "id": "1-4307586",
+      "pids": [
+        {
+          "pid": 1,
+          "id": "1-4307586"
+        },
+        {
+          "pid": 2,
+          "id": "2-5649505"
+        }
+      ],
+      "ut": 20260627030239,
+      "status_txt": "FT",
+      "status": 6,
+      "p_status": 3,
+      "o_status": 2,
+      "po_status": 1,
+      "elapsed_t": 1,
+      "start": 20260620130000,
+      "a_start": 20260620130144,
+      "a_end": 20260620150528,
+      "cov": 0,
+      "score": [
+        80,
+        31
+      ],
+      "ht_score": [
+        40,
+        26
+      ],
+      "ft_score": [
+        80,
+        31
+      ],
+      "highlighted": 0,
+      "can_end_with_draw": 1,
+      "season": "2026",
+      "teams": [
+        {
+          "id": "1-68123",
+          "name": "South Africa",
+          "gender": 1,
+          "cid": "1-28",
+          "cname": "South Africa",
+          "cflag": "2/28",
+          "pos": 0,
+          "idx": 0,
+          "kn": 1
+        },
+        {
+          "id": "1-68121",
+          "name": "Barbarians",
+          "gender": 1,
+          "cid": "1-11",
+          "cname": "International",
+          "cflag": "2/11",
+          "pos": 1,
+          "idx": 0,
+          "kn": 1
+        }
+      ]
+    },
+    {
+      "pid": 1,
+      "s_id": 14,
+      "s_code": "rugby_union",
+      "c_id": "3a53e4b3-f4f9-4715-9b52-8db7d4d130ba",
+      "c_name": "International",
+      "c_flag": "1/3a53e4b3-f4f9-4715-9b52-8db7d4d130ba",
+      "c_code": "international",
+      "st_id": "d6846855-ab4e-4a4d-b931-99b32e93ed8c",
+      "st_name": "Men",
+      "st_code": "men",
+      "format": 0,
+      "id": "1-4307588",
+      "pids": [
+        {
+          "pid": 1,
+          "id": "1-4307588"
+        },
+        {
+          "pid": 2,
+          "id": "2-5649546"
+        }
+      ],
+      "ut": 20260627144320,
+      "status_txt": "2nd half",
+      "status": 3,
+      "p_status": 10,
+      "o_status": 1,
+      "po_status": 1,
+      "elapsed_t": 1,
+      "start": 20260627130000,
+      "a_start": 20260627130207,
+      "cov": 0,
+      "score": [
+        17,
+        26
+      ],
+      "ht_score": [
+        5,
+        14
+      ],
+      "ft_score": [
+        17,
+        26
+      ],
+      "highlighted": 0,
+      "can_end_with_draw": 1,
+      "season": "2026",
+      "teams": [
+        {
+          "id": "1-68121",
+          "name": "Barbarians",
+          "gender": 1,
+          "cid": "1-11",
+          "cname": "International",
+          "cflag": "2/11",
+          "pos": 0,
+          "idx": 0,
+          "kn": 1
+        },
+        {
+          "id": "1-68122",
+          "name": "Wales",
+          "gender": 1,
+          "cid": "1-58",
+          "cname": "Wales",
+          "cflag": "2/58",
+          "pos": 1,
+          "idx": 0,
+          "kn": 1
+        }
+      ]
+    }
+  ]
+}

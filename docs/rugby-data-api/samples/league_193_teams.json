@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "endpoint": "league_193_teams",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/193/teams",
+    "status": 200,
+    "bytes": 1281,
+    "captured_at": "2026-07-10T10:00:10Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "League teams",
+    "data": [
+      {
+        "label": "Pool A",
+        "teams": [
+          {
+            "id": 210,
+            "name": "Georgia U20"
+          },
+          {
+            "id": 205,
+            "name": "South Africa U20"
+          },
+          {
+            "id": 536,
+            "name": "Uruguay U20"
+          },
+          {
+            "id": 201,
+            "name": "Wales U20"
+          }
+        ]
+      },
+      {
+        "label": "Pool B",
+        "teams": [
+          {
+            "id": 203,
+            "name": "Italy U20"
+          },
+          {
+            "id": 537,
+            "name": "Japan U20"
+          },
+          {
+            "id": 209,
+            "name": "New Zealand U20"
+          },
+          {
+            "id": 202,
+            "name": "Scotland U20"
+          }
+        ]
+      },
+      {
+        "label": "Pool C",
+        "teams": [
+          {
+            "id": 208,
+            "name": "Argentina U20"
+          },
+          {
+            "id": 199,
+            "name": "England U20"
+          },
+          {
+            "id": 200,
+            "name": "Ireland U20"
+          },
+          {
+            "id": 539,
+            "name": "USA U20"
+          }
+        ]
+      },
+      {
+        "label": "Pool D",
+        "teams": [
+          {
+            "id": 206,
+            "name": "Australia U20"
+          },
+          {
+            "id": 538,
+            "name": "Fiji U20"
+          },
+          {
+            "id": 204,
+            "name": "France U20"
+          },
+          {
+            "id": 207,
+            "name": "Spain U20"
+          }
+        ]
+      },
+      {
+        "label": "Final Stage",
+        "teams": [
+          {
+            "id": 199,
+            "name": "England U20"
+          },
+          {
+            "id": 204,
+            "name": "France U20"
+          },
+          {
+            "id": 209,
+            "name": "New Zealand U20"
+          },
+          {
+            "id": 205,
+            "name": "South Africa U20"
+          }
+        ]
+      },
+      {
+        "label": "U20 World Championship Placement Matches",
+        "teams": [
+          {
+            "id": 208,
+            "name": "Argentina U20"
+          },
+          {
+            "id": 206,
+            "name": "Australia U20"
+          },
+          {
+            "id": 538,
+            "name": "Fiji U20"
+          },
+          {
+            "id": 210,
+            "name": "Georgia U20"
+          },
+          {
+            "id": 200,
+            "name": "Ireland U20"
+          },
+          {
+            "id": 203,
+            "name": "Italy U20"
+          },
+          {
+            "id": 537,
+            "name": "Japan U20"
+          },
+          {
+            "id": 202,
+            "name": "Scotland U20"
+          },
+          {
+            "id": 207,
+            "name": "Spain U20"
+          },
+          {
+            "id": 539,
+            "name": "USA U20"
+          },
+          {
+            "id": 536,
+            "name": "Uruguay U20"
+          },
+          {
+            "id": 201,
+            "name": "Wales U20"
+          }
+        ]
+      }
+    ]
+  }
+}

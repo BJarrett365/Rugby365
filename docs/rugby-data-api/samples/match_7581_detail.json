@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "endpoint": "match_7581_detail",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7581/detail",
+    "status": 200,
+    "bytes": 569,
+    "captured_at": "2026-07-10T10:00:05Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "match detail",
+    "tabs": [
+      "info",
+      "stats",
+      "standings",
+      "h2h"
+    ],
+    "data": {
+      "id": 7581,
+      "aimId": null,
+      "dt": "2026-07-02 11:30:00",
+      "st": "Finished",
+      "cp": "Finished",
+      "ft": "62-40",
+      "ht": "31-7",
+      "et": "",
+      "ps": null,
+      "cfs": "62-40",
+      "mins": "0",
+      "tournament_id": 195,
+      "competitors": {
+        "match_id": 7581,
+        "htid": 208,
+        "htn": "Argentina U20",
+        "atn": "Ireland U20",
+        "atid": 200,
+        "htf": [
+          "L",
+          "W",
+          "W",
+          "L",
+          "W"
+        ],
+        "atf": [
+          "W",
+          "L",
+          "L",
+          "W",
+          "W"
+        ]
+      },
+      "tournament": {
+        "id": 195,
+        "nm": "U20 World Championship Pool C",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-pool-c-195",
+        "sea": "2026"
+      }
+    }
+  }
+}

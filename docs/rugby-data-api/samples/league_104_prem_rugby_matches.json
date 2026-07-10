@@ -1,0 +1,3351 @@
+{
+  "_meta": {
+    "endpoint": "league_104_prem_rugby_matches",
+    "status": 200,
+    "bytes": 41232,
+    "captured_at": "2026-07-10T10:02:46Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/104/matches?match_type=finished"
+  },
+  "response": {
+    "status": 200,
+    "message": "League Detail matches",
+    "data": [
+      {
+        "d": "2026-06-20",
+        "matches": [
+          {
+            "id": 7663,
+            "dt": "2026-06-20 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-17",
+            "ro": "Final",
+            "ht": "14-10",
+            "et": "",
+            "ps": null,
+            "cfs": "26-17",
+            "mins": "0",
+            "tournament_id": 203,
+            "competitors": {
+              "match_id": 7663,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 203,
+              "nm": "Gallaghe Premiership Playoff",
+              "sg": "gallaghe-premiership-playoff-203",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-06-13",
+        "matches": [
+          {
+            "id": 7662,
+            "dt": "2026-06-13 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-27",
+            "ro": "Semi Finals",
+            "ht": "26-10",
+            "et": "",
+            "ps": null,
+            "cfs": "26-27",
+            "mins": "0",
+            "tournament_id": 203,
+            "competitors": {
+              "match_id": 7662,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 203,
+              "nm": "Gallaghe Premiership Playoff",
+              "sg": "gallaghe-premiership-playoff-203",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-06-12",
+        "matches": [
+          {
+            "id": 7661,
+            "dt": "2026-06-12 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-31",
+            "ro": "Semi Finals",
+            "ht": "26-19",
+            "et": "",
+            "ps": null,
+            "cfs": "45-31",
+            "mins": "0",
+            "tournament_id": 203,
+            "competitors": {
+              "match_id": 7661,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 203,
+              "nm": "Gallaghe Premiership Playoff",
+              "sg": "gallaghe-premiership-playoff-203",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-06-06",
+        "matches": [
+          {
+            "id": 5338,
+            "dt": "2026-06-06 14:15:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "32-12",
+            "ro": "Round 18",
+            "ht": "8-5",
+            "et": "",
+            "ps": null,
+            "cfs": "32-12",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5338,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5341,
+            "dt": "2026-06-06 14:15:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-17",
+            "ro": "Round 18",
+            "ht": "26-12",
+            "et": "",
+            "ps": null,
+            "cfs": "38-17",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5341,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5306,
+            "dt": "2026-06-06 14:15:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "54-21",
+            "ro": "Round 18",
+            "ht": "35-14",
+            "et": "",
+            "ps": null,
+            "cfs": "54-21",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5306,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5370,
+            "dt": "2026-06-06 14:15:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "24-22",
+            "ro": "Round 18",
+            "ht": "17-17",
+            "et": "",
+            "ps": null,
+            "cfs": "24-22",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5370,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5312,
+            "dt": "2026-06-06 14:15:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-31",
+            "ro": "Round 18",
+            "ht": "12-12",
+            "et": "",
+            "ps": null,
+            "cfs": "38-31",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5312,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-31",
+        "matches": [
+          {
+            "id": 5297,
+            "dt": "2026-05-31 14:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-35",
+            "ro": "Round 17",
+            "ht": "14-13",
+            "et": "",
+            "ps": null,
+            "cfs": "26-35",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5297,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-30",
+        "matches": [
+          {
+            "id": 5302,
+            "dt": "2026-05-30 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-42",
+            "ro": "Round 17",
+            "ht": "10-35",
+            "et": "",
+            "ps": null,
+            "cfs": "45-42",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5302,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5321,
+            "dt": "2026-05-30 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-32",
+            "ro": "Round 17",
+            "ht": "19-19",
+            "et": "",
+            "ps": null,
+            "cfs": "36-32",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5321,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5346,
+            "dt": "2026-05-30 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-12",
+            "ro": "Round 17",
+            "ht": "12-0",
+            "et": "",
+            "ps": null,
+            "cfs": "26-12",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5346,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-29",
+        "matches": [
+          {
+            "id": 5361,
+            "dt": "2026-05-29 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "21-19",
+            "ro": "Round 17",
+            "ht": "7-19",
+            "et": "",
+            "ps": null,
+            "cfs": "21-19",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5361,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-17",
+        "matches": [
+          {
+            "id": 5365,
+            "dt": "2026-05-17 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-47",
+            "ro": "Round 16",
+            "ht": "12-28",
+            "et": "",
+            "ps": null,
+            "cfs": "33-47",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5365,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-16",
+        "matches": [
+          {
+            "id": 5300,
+            "dt": "2026-05-16 17:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "30-14",
+            "ro": "Round 16",
+            "ht": "18-0",
+            "et": "",
+            "ps": null,
+            "cfs": "30-14",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5300,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5352,
+            "dt": "2026-05-16 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "41-24",
+            "ro": "Round 16",
+            "ht": "14-24",
+            "et": "",
+            "ps": null,
+            "cfs": "41-24",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5352,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5317,
+            "dt": "2026-05-16 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "69-12",
+            "ro": "Round 16",
+            "ht": "31-0",
+            "et": "",
+            "ps": null,
+            "cfs": "69-12",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5317,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-15",
+        "matches": [
+          {
+            "id": 5362,
+            "dt": "2026-05-15 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "94-33",
+            "ro": "Round 16",
+            "ht": "61-14",
+            "et": "",
+            "ps": null,
+            "cfs": "94-33",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5362,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-10",
+        "matches": [
+          {
+            "id": 5351,
+            "dt": "2026-05-10 14:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "35-12",
+            "ro": "Round 15",
+            "ht": "13-5",
+            "et": "",
+            "ps": null,
+            "cfs": "35-12",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5351,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5357,
+            "dt": "2026-05-10 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-76",
+            "ro": "Round 15",
+            "ht": "10-45",
+            "et": "",
+            "ps": null,
+            "cfs": "17-76",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5357,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-09",
+        "matches": [
+          {
+            "id": 5339,
+            "dt": "2026-05-09 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-41",
+            "ro": "Round 15",
+            "ht": "21-34",
+            "et": "",
+            "ps": null,
+            "cfs": "26-41",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5339,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5301,
+            "dt": "2026-05-09 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "41-17",
+            "ro": "Round 15",
+            "ht": "19-5",
+            "et": "",
+            "ps": null,
+            "cfs": "41-17",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5301,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-05-08",
+        "matches": [
+          {
+            "id": 5337,
+            "dt": "2026-05-08 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "21-15",
+            "ro": "Round 15",
+            "ht": "7-12",
+            "et": "",
+            "ps": null,
+            "cfs": "21-15",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5337,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-26",
+        "matches": [
+          {
+            "id": 5334,
+            "dt": "2026-04-26 14:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-31",
+            "ro": "Round 14",
+            "ht": "26-12",
+            "et": "",
+            "ps": null,
+            "cfs": "34-31",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5334,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-25",
+        "matches": [
+          {
+            "id": 5305,
+            "dt": "2026-04-25 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "41-38",
+            "ro": "Round 14",
+            "ht": "26-14",
+            "et": "",
+            "ps": null,
+            "cfs": "41-38",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5305,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5320,
+            "dt": "2026-04-25 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-15",
+            "ro": "Round 14",
+            "ht": "12-12",
+            "et": "",
+            "ps": null,
+            "cfs": "19-15",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5320,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5345,
+            "dt": "2026-04-25 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-52",
+            "ro": "Round 14",
+            "ht": "21-24",
+            "et": "",
+            "ps": null,
+            "cfs": "33-52",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5345,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-24",
+        "matches": [
+          {
+            "id": 5294,
+            "dt": "2026-04-24 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-52",
+            "ro": "Round 14",
+            "ht": "5-21",
+            "et": "",
+            "ps": null,
+            "cfs": "19-52",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5294,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-19",
+        "matches": [
+          {
+            "id": 5358,
+            "dt": "2026-04-19 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-85",
+            "ro": "Round 13",
+            "ht": "0-38",
+            "et": "",
+            "ps": null,
+            "cfs": "19-85",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5358,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-18",
+        "matches": [
+          {
+            "id": 5349,
+            "dt": "2026-04-18 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "48-15",
+            "ro": "Round 13",
+            "ht": "21-8",
+            "et": "",
+            "ps": null,
+            "cfs": "48-15",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5349,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5299,
+            "dt": "2026-04-18 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "28-35",
+            "ro": "Round 13",
+            "ht": "14-14",
+            "et": "",
+            "ps": null,
+            "cfs": "28-35",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5299,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5296,
+            "dt": "2026-04-18 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "62-3",
+            "ro": "Round 13",
+            "ht": "31-3",
+            "et": "",
+            "ps": null,
+            "cfs": "62-3",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5296,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-04-17",
+        "matches": [
+          {
+            "id": 5293,
+            "dt": "2026-04-17 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "53-12",
+            "ro": "Round 13",
+            "ht": "33-12",
+            "et": "",
+            "ps": null,
+            "cfs": "53-12",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5293,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-29",
+        "matches": [
+          {
+            "id": 5336,
+            "dt": "2026-03-29 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-31",
+            "ro": "Round 12",
+            "ht": "19-7",
+            "et": "",
+            "ps": null,
+            "cfs": "26-31",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5336,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-28",
+        "matches": [
+          {
+            "id": 5367,
+            "dt": "2026-03-28 18:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-21",
+            "ro": "Round 12",
+            "ht": "7-14",
+            "et": "",
+            "ps": null,
+            "cfs": "17-21",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5367,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5330,
+            "dt": "2026-03-28 15:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "14-18",
+            "ro": "Round 12",
+            "ht": "7-5",
+            "et": "",
+            "ps": null,
+            "cfs": "14-18",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5330,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5314,
+            "dt": "2026-03-28 13:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-36",
+            "ro": "Round 12",
+            "ht": "5-29",
+            "et": "",
+            "ps": null,
+            "cfs": "17-36",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5314,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-27",
+        "matches": [
+          {
+            "id": 5360,
+            "dt": "2026-03-27 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "14-38",
+            "ro": "Round 12",
+            "ht": "7-31",
+            "et": "",
+            "ps": null,
+            "cfs": "14-38",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5360,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-22",
+        "matches": [
+          {
+            "id": 5377,
+            "dt": "2026-03-22 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-19",
+            "ro": "Round 11",
+            "ht": "17-12",
+            "et": "",
+            "ps": null,
+            "cfs": "33-19",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5377,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-21",
+        "matches": [
+          {
+            "id": 5342,
+            "dt": "2026-03-21 15:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-14",
+            "ro": "Round 11",
+            "ht": "19-7",
+            "et": "",
+            "ps": null,
+            "cfs": "26-14",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5342,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5356,
+            "dt": "2026-03-21 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-26",
+            "ro": "Round 11",
+            "ht": "14-7",
+            "et": "",
+            "ps": null,
+            "cfs": "19-26",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5356,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5343,
+            "dt": "2026-03-21 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "28-27",
+            "ro": "Round 11",
+            "ht": "14-12",
+            "et": "",
+            "ps": null,
+            "cfs": "28-27",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5343,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-03-20",
+        "matches": [
+          {
+            "id": 5315,
+            "dt": "2026-03-20 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "62-15",
+            "ro": "Round 11",
+            "ht": "31-15",
+            "et": "",
+            "ps": null,
+            "cfs": "62-15",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5315,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-01-24",
+        "matches": [
+          {
+            "id": 5348,
+            "dt": "2026-01-24 17:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "29-43",
+            "ro": "Round 10",
+            "ht": "10-14",
+            "et": "",
+            "ps": null,
+            "cfs": "29-43",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5348,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5298,
+            "dt": "2026-01-24 15:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "7-34",
+            "ro": "Round 10",
+            "ht": "0-17",
+            "et": "",
+            "ps": null,
+            "cfs": "7-34",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5298,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5355,
+            "dt": "2026-01-24 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "3-8",
+            "ro": "Round 10",
+            "ht": "3-5",
+            "et": "",
+            "ps": null,
+            "cfs": "3-8",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5355,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5318,
+            "dt": "2026-01-24 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "73-14",
+            "ro": "Round 10",
+            "ht": "28-7",
+            "et": "",
+            "ps": null,
+            "cfs": "73-14",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5318,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-01-23",
+        "matches": [
+          {
+            "id": 5350,
+            "dt": "2026-01-23 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-30",
+            "ro": "Round 10",
+            "ht": "21-19",
+            "et": "",
+            "ps": null,
+            "cfs": "26-30",
+            "mins": "0",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5350,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-01-04",
+        "matches": [
+          {
+            "id": 5333,
+            "dt": "2026-01-04 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-28",
+            "ro": "Round 9",
+            "ht": "26-7",
+            "et": "",
+            "ps": null,
+            "cfs": "36-28",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5333,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-01-03",
+        "matches": [
+          {
+            "id": 5309,
+            "dt": "2026-01-03 17:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "66-21",
+            "ro": "Round 9",
+            "ht": "33-14",
+            "et": "",
+            "ps": null,
+            "cfs": "66-21",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5309,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5340,
+            "dt": "2026-01-03 15:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-26",
+            "ro": "Round 9",
+            "ht": "26-14",
+            "et": "",
+            "ps": null,
+            "cfs": "33-26",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5340,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-01-02",
+        "matches": [
+          {
+            "id": 5380,
+            "dt": "2026-01-02 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "25-19",
+            "ro": "Round 9",
+            "ht": "15-5",
+            "et": "",
+            "ps": null,
+            "cfs": "25-19",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5380,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5374,
+            "dt": "2026-01-02 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-17",
+            "ro": "Round 9",
+            "ht": "7-7",
+            "et": "",
+            "ps": null,
+            "cfs": "19-17",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5374,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-28",
+        "matches": [
+          {
+            "id": 5295,
+            "dt": "2025-12-28 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "24-10",
+            "ro": "Round 8",
+            "ht": "14-7",
+            "et": "",
+            "ps": null,
+            "cfs": "24-10",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5295,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-27",
+        "matches": [
+          {
+            "id": 5328,
+            "dt": "2025-12-27 17:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "21-41",
+            "ro": "Round 8",
+            "ht": "14-14",
+            "et": "",
+            "ps": null,
+            "cfs": "21-41",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5328,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5307,
+            "dt": "2025-12-27 15:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "21-30",
+            "ro": "Round 8",
+            "ht": "14-17",
+            "et": "",
+            "ps": null,
+            "cfs": "21-30",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5307,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5327,
+            "dt": "2025-12-27 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-27",
+            "ro": "Round 8",
+            "ht": "12-17",
+            "et": "",
+            "ps": null,
+            "cfs": "36-27",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5327,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-26",
+        "matches": [
+          {
+            "id": 5369,
+            "dt": "2025-12-26 17:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "43-17",
+            "ro": "Round 8",
+            "ht": "12-17",
+            "et": "",
+            "ps": null,
+            "cfs": "43-17",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5369,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-21",
+        "matches": [
+          {
+            "id": 5373,
+            "dt": "2025-12-21 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "14-50",
+            "ro": "Round 7",
+            "ht": "14-19",
+            "et": "",
+            "ps": null,
+            "cfs": "14-50",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5373,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-20",
+        "matches": [
+          {
+            "id": 5319,
+            "dt": "2025-12-20 18:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "14-40",
+            "ro": "Round 7",
+            "ht": "0-19",
+            "et": "",
+            "ps": null,
+            "cfs": "14-40",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5319,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5375,
+            "dt": "2025-12-20 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "47-21",
+            "ro": "Round 7",
+            "ht": "26-7",
+            "et": "",
+            "ps": null,
+            "cfs": "47-21",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5375,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5363,
+            "dt": "2025-12-20 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "24-30",
+            "ro": "Round 7",
+            "ht": "12-13",
+            "et": "",
+            "ps": null,
+            "cfs": "24-30",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5363,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-12-19",
+        "matches": [
+          {
+            "id": 5359,
+            "dt": "2025-12-19 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-14",
+            "ro": "Round 7",
+            "ht": "19-0",
+            "et": "",
+            "ps": null,
+            "cfs": "45-14",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5359,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-11-30",
+        "matches": [
+          {
+            "id": 5329,
+            "dt": "2025-11-30 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "29-36",
+            "ro": "Round 6",
+            "ht": "22-17",
+            "et": "",
+            "ps": null,
+            "cfs": "29-36",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5329,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-11-29",
+        "matches": [
+          {
+            "id": 5353,
+            "dt": "2025-11-29 17:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "46-12",
+            "ro": "Round 6",
+            "ht": "35-0",
+            "et": "",
+            "ps": null,
+            "cfs": "46-12",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5353,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5311,
+            "dt": "2025-11-29 15:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-15",
+            "ro": "Round 6",
+            "ht": "14-12",
+            "et": "",
+            "ps": null,
+            "cfs": "26-15",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5311,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-11-28",
+        "matches": [
+          {
+            "id": 5379,
+            "dt": "2025-11-28 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-39",
+            "ro": "Round 6",
+            "ht": "10-17",
+            "et": "",
+            "ps": null,
+            "cfs": "17-39",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5379,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5368,
+            "dt": "2025-11-28 19:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-27",
+            "ro": "Round 6",
+            "ht": "19-6",
+            "et": "",
+            "ps": null,
+            "cfs": "26-27",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5368,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-25",
+        "matches": [
+          {
+            "id": 5316,
+            "dt": "2025-10-25 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-35",
+            "ro": "Round 5",
+            "ht": "22-7",
+            "et": "",
+            "ps": null,
+            "cfs": "36-35",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5316,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5372,
+            "dt": "2025-10-25 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "40-15",
+            "ro": "Round 5",
+            "ht": "19-15",
+            "et": "",
+            "ps": null,
+            "cfs": "40-15",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5372,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5344,
+            "dt": "2025-10-25 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "52-14",
+            "ro": "Round 5",
+            "ht": "35-0",
+            "et": "",
+            "ps": null,
+            "cfs": "52-14",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5344,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5376,
+            "dt": "2025-10-25 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "39-12",
+            "ro": "Round 5",
+            "ht": "27-12",
+            "et": "",
+            "ps": null,
+            "cfs": "39-12",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5376,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-24",
+        "matches": [
+          {
+            "id": 5364,
+            "dt": "2025-10-24 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "43-31",
+            "ro": "Round 5",
+            "ht": "17-19",
+            "et": "",
+            "ps": null,
+            "cfs": "43-31",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5364,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-19",
+        "matches": [
+          {
+            "id": 5325,
+            "dt": "2025-10-19 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-0",
+            "ro": "Round 4",
+            "ht": "24-0",
+            "et": "",
+            "ps": null,
+            "cfs": "38-0",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5325,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-18",
+        "matches": [
+          {
+            "id": 5354,
+            "dt": "2025-10-18 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "65-14",
+            "ro": "Round 4",
+            "ht": "22-14",
+            "et": "",
+            "ps": null,
+            "cfs": "65-14",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5354,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5313,
+            "dt": "2025-10-18 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "22-20",
+            "ro": "Round 4",
+            "ht": "12-17",
+            "et": "",
+            "ps": null,
+            "cfs": "22-20",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5313,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-17",
+        "matches": [
+          {
+            "id": 5326,
+            "dt": "2025-10-17 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "19-36",
+            "ro": "Round 4",
+            "ht": "12-21",
+            "et": "",
+            "ps": null,
+            "cfs": "19-36",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5326,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5304,
+            "dt": "2025-10-17 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-49",
+            "ro": "Round 4",
+            "ht": "20-21",
+            "et": "",
+            "ps": null,
+            "cfs": "34-49",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5304,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-12",
+        "matches": [
+          {
+            "id": 5378,
+            "dt": "2025-10-12 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "20-14",
+            "ro": "Round 3",
+            "ht": "10-7",
+            "et": "",
+            "ps": null,
+            "cfs": "20-14",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5378,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-11",
+        "matches": [
+          {
+            "id": 5332,
+            "dt": "2025-10-11 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-17",
+            "ro": "Round 3",
+            "ht": "28-7",
+            "et": "",
+            "ps": null,
+            "cfs": "38-17",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5332,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5366,
+            "dt": "2025-10-11 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "32-26",
+            "ro": "Round 3",
+            "ht": "17-13",
+            "et": "",
+            "ps": null,
+            "cfs": "32-26",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5366,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5308,
+            "dt": "2025-10-11 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "18-14",
+            "ro": "Round 3",
+            "ht": "8-14",
+            "et": "",
+            "ps": null,
+            "cfs": "18-14",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5308,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-10",
+        "matches": [
+          {
+            "id": 5324,
+            "dt": "2025-10-10 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "57-5",
+            "ro": "Round 3",
+            "ht": "31-0",
+            "et": "",
+            "ps": null,
+            "cfs": "57-5",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5324,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-05",
+        "matches": [
+          {
+            "id": 5310,
+            "dt": "2025-10-05 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "35-37",
+            "ro": "Round 2",
+            "ht": "7-31",
+            "et": "",
+            "ps": null,
+            "cfs": "35-37",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5310,
+              "htid": 272,
+              "htn": "Gloucester",
+              "atn": "Northampton Saints",
+              "atid": 266
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-04",
+        "matches": [
+          {
+            "id": 5292,
+            "dt": "2025-10-04 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "50-17",
+            "ro": "Round 2",
+            "ht": "31-0",
+            "et": "",
+            "ps": null,
+            "cfs": "50-17",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5292,
+              "htid": 268,
+              "htn": "Saracens",
+              "atn": "Bristol Bears",
+              "atid": 265
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5335,
+            "dt": "2025-10-04 14:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "29-19",
+            "ro": "Round 2",
+            "ht": "0-16",
+            "et": "",
+            "ps": null,
+            "cfs": "29-19",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5335,
+              "htid": 273,
+              "htn": "Leicester Tigers",
+              "atn": "Harlequins",
+              "atid": 274
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5347,
+            "dt": "2025-10-04 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-15",
+            "ro": "Round 2",
+            "ht": "24-10",
+            "et": "",
+            "ps": null,
+            "cfs": "38-15",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5347,
+              "htid": 269,
+              "htn": "Exeter Chiefs",
+              "atn": "Newcastle Red Bulls",
+              "atid": 271
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-10-03",
+        "matches": [
+          {
+            "id": 5322,
+            "dt": "2025-10-03 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "28-16",
+            "ro": "Round 2",
+            "ht": "21-9",
+            "et": "",
+            "ps": null,
+            "cfs": "28-16",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5322,
+              "htid": 270,
+              "htn": "Bath",
+              "atn": "Sale Sharks",
+              "atid": 267
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-09-28",
+        "matches": [
+          {
+            "id": 5331,
+            "dt": "2025-09-28 14:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "42-24",
+            "ro": "Round 1",
+            "ht": "17-17",
+            "et": "",
+            "ps": null,
+            "cfs": "42-24",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5331,
+              "htid": 265,
+              "htn": "Bristol Bears",
+              "atn": "Leicester Tigers",
+              "atid": 273
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5381,
+            "dt": "2025-09-28 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-33",
+            "ro": "Round 1",
+            "ht": "33-7",
+            "et": "",
+            "ps": null,
+            "cfs": "33-33",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5381,
+              "htid": 266,
+              "htn": "Northampton Saints",
+              "atn": "Exeter Chiefs",
+              "atid": 269
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-09-26",
+        "matches": [
+          {
+            "id": 5371,
+            "dt": "2025-09-26 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-39",
+            "ro": "Round 1",
+            "ht": "10-15",
+            "et": "",
+            "ps": null,
+            "cfs": "17-39",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5371,
+              "htid": 271,
+              "htn": "Newcastle Red Bulls",
+              "atn": "Saracens",
+              "atid": 268
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          },
+          {
+            "id": 5303,
+            "dt": "2025-09-26 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "31-47",
+            "ro": "Round 1",
+            "ht": "17-14",
+            "et": "",
+            "ps": null,
+            "cfs": "31-47",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5303,
+              "htid": 274,
+              "htn": "Harlequins",
+              "atn": "Bath",
+              "atid": 270
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2025-09-25",
+        "matches": [
+          {
+            "id": 5323,
+            "dt": "2025-09-25 18:45:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "27-10",
+            "ro": "Round 1",
+            "ht": "5-10",
+            "et": "",
+            "ps": null,
+            "cfs": "27-10",
+            "mins": "",
+            "tournament_id": 104,
+            "competitors": {
+              "match_id": 5323,
+              "htid": 267,
+              "htn": "Sale Sharks",
+              "atn": "Gloucester",
+              "atid": 272
+            },
+            "tournament": {
+              "id": 104,
+              "nm": "PREM Rugby",
+              "sg": "prem-rugby-104",
+              "category_id": 907,
+              "rugbyCategory": {
+                "id": 48,
+                "nm": "England",
+                "fb_category_id": 907,
+                "fid": 60
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

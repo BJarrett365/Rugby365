@@ -1,0 +1,499 @@
+{
+  "_meta": {
+    "endpoint": "team_243_matches",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/team/243/matches?type=finished",
+    "status": 200,
+    "bytes": 5860,
+    "captured_at": "2026-07-10T10:00:12Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "team matches",
+    "data": [
+      {
+        "id": 184,
+        "nm": "World Rugby Nations Championship",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21697,
+        "sg": "world-rugby-nations-championship-184",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7675,
+            "aimId": null,
+            "dt": "2026-07-04 15:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-21",
+            "ht": "17-14",
+            "et": "",
+            "ps": null,
+            "cfs": "45-21",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7675,
+              "htid": 257,
+              "htn": "South Africa",
+              "atn": "England",
+              "atid": 243
+            }
+          }
+        ]
+      },
+      {
+        "id": 81,
+        "nm": "Six Nations",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21699,
+        "sg": "six-nations-81",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 3767,
+            "aimId": null,
+            "dt": "2026-03-14 20:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "48-46",
+            "ht": "24-27",
+            "et": "",
+            "ps": null,
+            "cfs": "48-46",
+            "mins": "0",
+            "tournament_id": 81,
+            "competitors": {
+              "match_id": 3767,
+              "htid": 241,
+              "htn": "France",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 3770,
+            "aimId": null,
+            "dt": "2026-03-07 16:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "23-18",
+            "ht": "10-12",
+            "et": "",
+            "ps": null,
+            "cfs": "23-18",
+            "mins": "0",
+            "tournament_id": 81,
+            "competitors": {
+              "match_id": 3770,
+              "htid": 240,
+              "htn": "Italy",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 3771,
+            "aimId": null,
+            "dt": "2026-02-21 14:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "21-42",
+            "ht": "7-22",
+            "et": "",
+            "ps": null,
+            "cfs": "21-42",
+            "mins": "0",
+            "tournament_id": 81,
+            "competitors": {
+              "match_id": 3771,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Ireland",
+              "atid": 238
+            }
+          },
+          {
+            "id": 3775,
+            "aimId": null,
+            "dt": "2026-02-14 16:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "31-20",
+            "ht": "24-10",
+            "et": "",
+            "ps": null,
+            "cfs": "31-20",
+            "mins": "0",
+            "tournament_id": 81,
+            "competitors": {
+              "match_id": 3775,
+              "htid": 239,
+              "htn": "Scotland",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 3762,
+            "aimId": null,
+            "dt": "2026-02-07 16:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "48-7",
+            "ht": "29-0",
+            "et": "",
+            "ps": null,
+            "cfs": "48-7",
+            "mins": "0",
+            "tournament_id": 81,
+            "competitors": {
+              "match_id": 3762,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Wales",
+              "atid": 242
+            }
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "nm": "International Matches",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21697,
+        "sg": "international-matches-32",
+        "sea": "2025",
+        "matches": [
+          {
+            "id": 1741,
+            "aimId": null,
+            "dt": "2025-11-23 16:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "27-23",
+            "ht": "17-3",
+            "et": "",
+            "ps": null,
+            "cfs": "27-23",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1741,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Argentina",
+              "atid": 183
+            }
+          },
+          {
+            "id": 1732,
+            "aimId": null,
+            "dt": "2025-11-15 15:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-19",
+            "ht": "11-12",
+            "et": "",
+            "ps": null,
+            "cfs": "33-19",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1732,
+              "htid": 243,
+              "htn": "England",
+              "atn": "New Zealand",
+              "atid": 254
+            }
+          },
+          {
+            "id": 1760,
+            "aimId": null,
+            "dt": "2025-11-08 17:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-18",
+            "ht": "14-13",
+            "et": "",
+            "ps": null,
+            "cfs": "38-18",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1760,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Fiji",
+              "atid": 253
+            }
+          },
+          {
+            "id": 1752,
+            "aimId": null,
+            "dt": "2025-11-01 15:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "25-7",
+            "ht": "10-7",
+            "et": "",
+            "ps": null,
+            "cfs": "25-7",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1752,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Australia",
+              "atid": 252
+            }
+          },
+          {
+            "id": 1748,
+            "aimId": null,
+            "dt": "2025-07-19 22:05:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "5-40",
+            "ht": "0-19",
+            "et": "",
+            "ps": null,
+            "cfs": "5-40",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1748,
+              "htid": 256,
+              "htn": "USA",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 1745,
+            "aimId": null,
+            "dt": "2025-07-12 19:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "17-22",
+            "ht": "17-14",
+            "et": "",
+            "ps": null,
+            "cfs": "17-22",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1745,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 1749,
+            "aimId": null,
+            "dt": "2025-07-05 19:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "12-35",
+            "ht": "0-3",
+            "et": "",
+            "ps": null,
+            "cfs": "12-35",
+            "mins": "0",
+            "tournament_id": 32,
+            "competitors": {
+              "match_id": 1749,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "England",
+              "atid": 243
+            }
+          }
+        ]
+      },
+      {
+        "id": 172,
+        "nm": "World Cup Final Stage",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21915,
+        "sg": "world-cup-final-stage-172",
+        "sea": "2023",
+        "matches": [
+          {
+            "id": 6928,
+            "aimId": null,
+            "dt": "2023-10-27 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "23-26",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "23-26",
+            "mins": "0",
+            "tournament_id": 172,
+            "competitors": {
+              "match_id": 6928,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 6925,
+            "aimId": null,
+            "dt": "2023-10-20 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "15-16",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "15-16",
+            "mins": "0",
+            "tournament_id": 172,
+            "competitors": {
+              "match_id": 6925,
+              "htid": 243,
+              "htn": "England",
+              "atn": "South Africa",
+              "atid": 257
+            }
+          },
+          {
+            "id": 6923,
+            "aimId": null,
+            "dt": "2023-10-15 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "30-24",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "30-24",
+            "mins": "0",
+            "tournament_id": 172,
+            "competitors": {
+              "match_id": 6923,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Fiji",
+              "atid": 253
+            }
+          }
+        ]
+      },
+      {
+        "id": 171,
+        "nm": "World Cup Pool D",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21915,
+        "sg": "world-cup-pool-d-171",
+        "sea": "2023",
+        "matches": [
+          {
+            "id": 6966,
+            "aimId": null,
+            "dt": "2023-10-07 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "18-17",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "18-17",
+            "mins": "0",
+            "tournament_id": 171,
+            "competitors": {
+              "match_id": 6966,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Samoa",
+              "atid": 258
+            }
+          },
+          {
+            "id": 6963,
+            "aimId": null,
+            "dt": "2023-09-23 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "71-0",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "71-0",
+            "mins": "0",
+            "tournament_id": 171,
+            "competitors": {
+              "match_id": 6963,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Chile",
+              "atid": 194
+            }
+          },
+          {
+            "id": 6961,
+            "aimId": null,
+            "dt": "2023-09-17 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-12",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "34-12",
+            "mins": "0",
+            "tournament_id": 171,
+            "competitors": {
+              "match_id": 6961,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Japan",
+              "atid": 255
+            }
+          },
+          {
+            "id": 6958,
+            "aimId": null,
+            "dt": "2023-09-09 12:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "27-10",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "27-10",
+            "mins": "0",
+            "tournament_id": 171,
+            "competitors": {
+              "match_id": 6958,
+              "htid": 243,
+              "htn": "England",
+              "atn": "Argentina",
+              "atid": 183
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

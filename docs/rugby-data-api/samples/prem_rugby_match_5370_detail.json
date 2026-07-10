@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "endpoint": "prem_rugby_match_5370_detail",
+    "status": 200,
+    "bytes": 541,
+    "captured_at": "2026-07-10T10:02:37Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/5370/detail"
+  },
+  "response": {
+    "status": 200,
+    "message": "match detail",
+    "tabs": [
+      "info",
+      "stats",
+      "lineup",
+      "standings",
+      "h2h"
+    ],
+    "data": {
+      "id": 5370,
+      "aimId": null,
+      "dt": "2026-06-06 14:15:00",
+      "st": "Finished",
+      "cp": "Finished",
+      "ft": "24-22",
+      "ht": "17-17",
+      "et": "",
+      "ps": null,
+      "cfs": "24-22",
+      "mins": "0",
+      "tournament_id": 104,
+      "competitors": {
+        "match_id": 5370,
+        "htid": 270,
+        "htn": "Bath",
+        "atn": "Leicester Tigers",
+        "atid": 273,
+        "htf": [
+          "L",
+          "W",
+          "L",
+          "W",
+          "L"
+        ],
+        "atf": [
+          "L",
+          "L",
+          "L",
+          "W",
+          "W"
+        ]
+      },
+      "tournament": {
+        "id": 104,
+        "nm": "PREM Rugby",
+        "fid": 60,
+        "cid": 907,
+        "lso": 1000,
+        "lid": 21709,
+        "sg": "prem-rugby-104",
+        "sea": "2025/26"
+      }
+    }
+  }
+}

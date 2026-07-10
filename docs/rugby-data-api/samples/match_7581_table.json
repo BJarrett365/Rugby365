@@ -1,0 +1,1537 @@
+{
+  "_meta": {
+    "endpoint": "match_7581_table",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7581/table?type=all",
+    "status": 200,
+    "bytes": 12060,
+    "captured_at": "2026-07-10T10:00:08Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "Tournament Table",
+    "data": {
+      "table": {
+        "home": [
+          {
+            "tid": 196,
+            "team_id": 204,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 136,
+            "cc": 76,
+            "df": 60,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 204,
+              "nm": "France U20",
+              "sn": null,
+              "sg": "france-u20-204"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 206,
+            "pc": 2,
+            "pl": 2,
+            "wo": 2,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 143,
+            "cc": 39,
+            "df": 104,
+            "pts": 10,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 206,
+              "nm": "Australia U20",
+              "sn": null,
+              "sg": "australia-u20-206"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 207,
+            "pc": 3,
+            "pl": 1,
+            "wo": 0,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 26,
+            "cc": 29,
+            "df": -3,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 207,
+              "nm": "Spain U20",
+              "sn": null,
+              "sg": "spain-u20-207"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 538,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 538,
+              "nm": "Fiji U20",
+              "sn": null,
+              "sg": "fiji-u20-538"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 208,
+            "pc": 1,
+            "pl": 3,
+            "wo": 2,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 178,
+            "cc": 94,
+            "df": 84,
+            "pts": 12,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 208,
+              "nm": "Argentina U20",
+              "sn": null,
+              "sg": "argentina-u20-208"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 199,
+            "pc": 2,
+            "pl": 2,
+            "wo": 2,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 102,
+            "cc": 67,
+            "df": 35,
+            "pts": 10,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "L",
+              "W"
+            ],
+            "team": {
+              "id": 199,
+              "nm": "England U20",
+              "sn": null,
+              "sg": "england-u20-199"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 200,
+            "pc": 3,
+            "pl": 1,
+            "wo": 1,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 73,
+            "cc": 22,
+            "df": 51,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 200,
+              "nm": "Ireland U20",
+              "sn": null,
+              "sg": "ireland-u20-200"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 539,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 539,
+              "nm": "USA U20",
+              "sn": null,
+              "sg": "usa-u20-539"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 209,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 119,
+            "cc": 62,
+            "df": 57,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 209,
+              "nm": "New Zealand U20",
+              "sn": null,
+              "sg": "new-zealand-u20-209"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 203,
+            "pc": 2,
+            "pl": 2,
+            "wo": 1,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 73,
+            "cc": 63,
+            "df": 10,
+            "pts": 7,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "L",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 203,
+              "nm": "Italy U20",
+              "sn": null,
+              "sg": "italy-u20-203"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 202,
+            "pc": 3,
+            "pl": 1,
+            "wo": 1,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 43,
+            "cc": 32,
+            "df": 11,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 202,
+              "nm": "Scotland U20",
+              "sn": null,
+              "sg": "scotland-u20-202"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 537,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 537,
+              "nm": "Japan U20",
+              "sn": null,
+              "sg": "japan-u20-537"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 205,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 189,
+            "cc": 45,
+            "df": 144,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 205,
+              "nm": "South Africa U20",
+              "sn": null,
+              "sg": "south-africa-u20-205"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 201,
+            "pc": 2,
+            "pl": 2,
+            "wo": 2,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 72,
+            "cc": 24,
+            "df": 48,
+            "pts": 9,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 201,
+              "nm": "Wales U20",
+              "sn": null,
+              "sg": "wales-u20-201"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 210,
+            "pc": 3,
+            "pl": 1,
+            "wo": 1,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 56,
+            "cc": 3,
+            "df": 53,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 210,
+              "nm": "Georgia U20",
+              "sn": null,
+              "sg": "georgia-u20-210"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 536,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 536,
+              "nm": "Uruguay U20",
+              "sn": null,
+              "sg": "uruguay-u20-536"
+            }
+          }
+        ],
+        "away": [
+          {
+            "tid": 196,
+            "team_id": 538,
+            "pc": 1,
+            "pl": 3,
+            "wo": 1,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 61,
+            "cc": 124,
+            "df": -63,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 538,
+              "nm": "Fiji U20",
+              "sn": null,
+              "sg": "fiji-u20-538"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 206,
+            "pc": 2,
+            "pl": 1,
+            "wo": 0,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 29,
+            "cc": 34,
+            "df": -5,
+            "pts": 2,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 206,
+              "nm": "Australia U20",
+              "sn": null,
+              "sg": "australia-u20-206"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 207,
+            "pc": 3,
+            "pl": 2,
+            "wo": 0,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 54,
+            "cc": 147,
+            "df": -93,
+            "pts": 2,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 207,
+              "nm": "Spain U20",
+              "sn": null,
+              "sg": "spain-u20-207"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 204,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 204,
+              "nm": "France U20",
+              "sn": null,
+              "sg": "france-u20-204"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 199,
+            "pc": 1,
+            "pl": 1,
+            "wo": 1,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 40,
+            "cc": 38,
+            "df": 2,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "L",
+              "W"
+            ],
+            "team": {
+              "id": 199,
+              "nm": "England U20",
+              "sn": null,
+              "sg": "england-u20-199"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 200,
+            "pc": 2,
+            "pl": 2,
+            "wo": 0,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 67,
+            "cc": 96,
+            "df": -29,
+            "pts": 3,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 200,
+              "nm": "Ireland U20",
+              "sn": null,
+              "sg": "ireland-u20-200"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 539,
+            "pc": 3,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 76,
+            "cc": 219,
+            "df": -143,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 539,
+              "nm": "USA U20",
+              "sn": null,
+              "sg": "usa-u20-539"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 208,
+            "pc": 4,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 208,
+              "nm": "Argentina U20",
+              "sn": null,
+              "sg": "argentina-u20-208"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 202,
+            "pc": 1,
+            "pl": 2,
+            "wo": 1,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 64,
+            "cc": 68,
+            "df": -4,
+            "pts": 6,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 202,
+              "nm": "Scotland U20",
+              "sn": null,
+              "sg": "scotland-u20-202"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 537,
+            "pc": 2,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 78,
+            "cc": 122,
+            "df": -44,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 537,
+              "nm": "Japan U20",
+              "sn": null,
+              "sg": "japan-u20-537"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 209,
+            "pc": 3,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 209,
+              "nm": "New Zealand U20",
+              "sn": null,
+              "sg": "new-zealand-u20-209"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 203,
+            "pc": 4,
+            "pl": 1,
+            "wo": 0,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 15,
+            "cc": 45,
+            "df": -30,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "L",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 203,
+              "nm": "Italy U20",
+              "sn": null,
+              "sg": "italy-u20-203"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 210,
+            "pc": 1,
+            "pl": 2,
+            "wo": 0,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 29,
+            "cc": 58,
+            "df": -29,
+            "pts": 2,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 210,
+              "nm": "Georgia U20",
+              "sn": null,
+              "sg": "georgia-u20-210"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 201,
+            "pc": 2,
+            "pl": 1,
+            "wo": 0,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 33,
+            "cc": 52,
+            "df": -19,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 201,
+              "nm": "Wales U20",
+              "sn": null,
+              "sg": "wales-u20-201"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 205,
+            "pc": 3,
+            "pl": 0,
+            "wo": 0,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 0,
+            "cc": 0,
+            "df": 0,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 205,
+              "nm": "South Africa U20",
+              "sn": null,
+              "sg": "south-africa-u20-205"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 536,
+            "pc": 4,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 10,
+            "cc": 207,
+            "df": -197,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 536,
+              "nm": "Uruguay U20",
+              "sn": null,
+              "sg": "uruguay-u20-536"
+            }
+          }
+        ],
+        "all": [
+          {
+            "tid": 196,
+            "team_id": 204,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 136,
+            "cc": 76,
+            "df": 60,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 204,
+              "nm": "France U20",
+              "sn": null,
+              "sg": "france-u20-204"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 206,
+            "pc": 2,
+            "pl": 3,
+            "wo": 2,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 172,
+            "cc": 73,
+            "df": 99,
+            "pts": 12,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 206,
+              "nm": "Australia U20",
+              "sn": null,
+              "sg": "australia-u20-206"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 538,
+            "pc": 3,
+            "pl": 3,
+            "wo": 1,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 61,
+            "cc": 124,
+            "df": -63,
+            "pts": 5,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 538,
+              "nm": "Fiji U20",
+              "sn": null,
+              "sg": "fiji-u20-538"
+            }
+          },
+          {
+            "tid": 196,
+            "team_id": 207,
+            "pc": 4,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 80,
+            "cc": 176,
+            "df": -96,
+            "pts": 3,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 207,
+              "nm": "Spain U20",
+              "sn": null,
+              "sg": "spain-u20-207"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 199,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 142,
+            "cc": 105,
+            "df": 37,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "L",
+              "W"
+            ],
+            "team": {
+              "id": 199,
+              "nm": "England U20",
+              "sn": null,
+              "sg": "england-u20-199"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 208,
+            "pc": 2,
+            "pl": 3,
+            "wo": 2,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 178,
+            "cc": 94,
+            "df": 84,
+            "pts": 12,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 208,
+              "nm": "Argentina U20",
+              "sn": null,
+              "sg": "argentina-u20-208"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 200,
+            "pc": 3,
+            "pl": 3,
+            "wo": 1,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 140,
+            "cc": 118,
+            "df": 22,
+            "pts": 8,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 200,
+              "nm": "Ireland U20",
+              "sn": null,
+              "sg": "ireland-u20-200"
+            }
+          },
+          {
+            "tid": 195,
+            "team_id": 539,
+            "pc": 4,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 76,
+            "cc": 219,
+            "df": -143,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 539,
+              "nm": "USA U20",
+              "sn": null,
+              "sg": "usa-u20-539"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 209,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 119,
+            "cc": 62,
+            "df": 57,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 209,
+              "nm": "New Zealand U20",
+              "sn": null,
+              "sg": "new-zealand-u20-209"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 202,
+            "pc": 2,
+            "pl": 3,
+            "wo": 2,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 107,
+            "cc": 100,
+            "df": 7,
+            "pts": 11,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 202,
+              "nm": "Scotland U20",
+              "sn": null,
+              "sg": "scotland-u20-202"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 203,
+            "pc": 3,
+            "pl": 3,
+            "wo": 1,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 88,
+            "cc": 108,
+            "df": -20,
+            "pts": 7,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "L",
+              "W",
+              "L"
+            ],
+            "team": {
+              "id": 203,
+              "nm": "Italy U20",
+              "sn": null,
+              "sg": "italy-u20-203"
+            }
+          },
+          {
+            "tid": 194,
+            "team_id": 537,
+            "pc": 4,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 78,
+            "cc": 122,
+            "df": -44,
+            "pts": 1,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 537,
+              "nm": "Japan U20",
+              "sn": null,
+              "sg": "japan-u20-537"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 205,
+            "pc": 1,
+            "pl": 3,
+            "wo": 3,
+            "lo": 0,
+            "cl": null,
+            "dr": 0,
+            "sc": 189,
+            "cc": 45,
+            "df": 144,
+            "pts": 15,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 205,
+              "nm": "South Africa U20",
+              "sn": null,
+              "sg": "south-africa-u20-205"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 201,
+            "pc": 2,
+            "pl": 3,
+            "wo": 2,
+            "lo": 1,
+            "cl": null,
+            "dr": 0,
+            "sc": 105,
+            "cc": 76,
+            "df": 29,
+            "pts": 10,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "W",
+              "W",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 201,
+              "nm": "Wales U20",
+              "sn": null,
+              "sg": "wales-u20-201"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 210,
+            "pc": 3,
+            "pl": 3,
+            "wo": 1,
+            "lo": 2,
+            "cl": null,
+            "dr": 0,
+            "sc": 85,
+            "cc": 61,
+            "df": 24,
+            "pts": 7,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "W",
+              "L",
+              "L",
+              "W",
+              "W"
+            ],
+            "team": {
+              "id": 210,
+              "nm": "Georgia U20",
+              "sn": null,
+              "sg": "georgia-u20-210"
+            }
+          },
+          {
+            "tid": 193,
+            "team_id": 536,
+            "pc": 4,
+            "pl": 3,
+            "wo": 0,
+            "lo": 3,
+            "cl": null,
+            "dr": 0,
+            "sc": 10,
+            "cc": 207,
+            "df": -197,
+            "pts": 0,
+            "wo_aet": 0,
+            "lo_aet": 0,
+            "wo_ap": 0,
+            "lo_ap": 0,
+            "ded": 0,
+            "lfm": [
+              "L",
+              "L",
+              "L"
+            ],
+            "team": {
+              "id": 536,
+              "nm": "Uruguay U20",
+              "sn": null,
+              "sg": "uruguay-u20-536"
+            }
+          }
+        ]
+      },
+      "teams": [
+        208,
+        200
+      ]
+    }
+  }
+}

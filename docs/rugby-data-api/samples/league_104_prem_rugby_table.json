@@ -1,0 +1,310 @@
+{
+  "_meta": {
+    "endpoint": "league_104_prem_rugby_table",
+    "status": 200,
+    "bytes": 1887,
+    "captured_at": "2026-07-10T10:02:49Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/104/table"
+  },
+  "response": {
+    "status": 200,
+    "message": "Tournament Table",
+    "live_team_ids": [],
+    "data": [
+      [
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Northampton Saints",
+          "tid": 266,
+          "pos": 1,
+          "plc": 1,
+          "mt": 18,
+          "wo": 14,
+          "lo": 3,
+          "dr": 1,
+          "pts": 74,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "W",
+            "L",
+            "W",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "W",
+            "L",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Bath",
+          "tid": 270,
+          "pos": 2,
+          "plc": 2,
+          "mt": 18,
+          "wo": 13,
+          "lo": 5,
+          "dr": 0,
+          "pts": 69,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Exeter Chiefs",
+          "tid": 269,
+          "pos": 3,
+          "plc": 3,
+          "mt": 18,
+          "wo": 11,
+          "lo": 6,
+          "dr": 1,
+          "pts": 65,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "L",
+            "W"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Leicester Tigers",
+          "tid": 273,
+          "pos": 4,
+          "plc": 4,
+          "mt": 18,
+          "wo": 12,
+          "lo": 6,
+          "dr": 0,
+          "pts": 63,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Saracens",
+          "tid": 268,
+          "pos": 5,
+          "plc": 5,
+          "mt": 18,
+          "wo": 10,
+          "lo": 8,
+          "dr": 0,
+          "pts": 57,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Bristol Bears",
+          "tid": 265,
+          "pos": 6,
+          "plc": 6,
+          "mt": 18,
+          "wo": 11,
+          "lo": 7,
+          "dr": 0,
+          "pts": 54,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "L",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Sale Sharks",
+          "tid": 267,
+          "pos": 7,
+          "plc": 7,
+          "mt": 18,
+          "wo": 5,
+          "lo": 13,
+          "dr": 0,
+          "pts": 36,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "L",
+            "L",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "L",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Gloucester",
+          "tid": 272,
+          "pos": 8,
+          "plc": 8,
+          "mt": 18,
+          "wo": 5,
+          "lo": 13,
+          "dr": 0,
+          "pts": 32,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Harlequins",
+          "tid": 274,
+          "pos": 9,
+          "plc": 9,
+          "mt": 18,
+          "wo": 6,
+          "lo": 12,
+          "dr": 0,
+          "pts": 31,
+          "nrr": "",
+          "LFM": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "grp": "PREM Rugby",
+          "tnm": "Newcastle Red Bulls",
+          "tid": 271,
+          "pos": 10,
+          "plc": 10,
+          "mt": 18,
+          "wo": 2,
+          "lo": 16,
+          "dr": 0,
+          "pts": 12,
+          "nrr": "",
+          "LFM": [
+            "L",
+            "W",
+            "L",
+            "L",
+            "L",
+            "L"
+          ],
+          "prem": [
+            "L",
+            "W",
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        }
+      ]
+    ]
+  }
+}

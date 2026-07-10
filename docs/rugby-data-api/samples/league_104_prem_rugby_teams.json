@@ -1,0 +1,83 @@
+{
+  "_meta": {
+    "endpoint": "league_104_prem_rugby_teams",
+    "status": 200,
+    "bytes": 599,
+    "captured_at": "2026-07-10T10:02:48Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/104/teams"
+  },
+  "response": {
+    "status": 200,
+    "message": "League teams",
+    "data": [
+      {
+        "label": "PREM Rugby",
+        "teams": [
+          {
+            "id": 270,
+            "name": "Bath"
+          },
+          {
+            "id": 265,
+            "name": "Bristol Bears"
+          },
+          {
+            "id": 269,
+            "name": "Exeter Chiefs"
+          },
+          {
+            "id": 272,
+            "name": "Gloucester"
+          },
+          {
+            "id": 274,
+            "name": "Harlequins"
+          },
+          {
+            "id": 273,
+            "name": "Leicester Tigers"
+          },
+          {
+            "id": 271,
+            "name": "Newcastle Red Bulls"
+          },
+          {
+            "id": 266,
+            "name": "Northampton Saints"
+          },
+          {
+            "id": 267,
+            "name": "Sale Sharks"
+          },
+          {
+            "id": 268,
+            "name": "Saracens"
+          }
+        ]
+      },
+      {
+        "label": "Gallaghe Premiership Playoff",
+        "teams": [
+          {
+            "id": 270,
+            "name": "Bath"
+          },
+          {
+            "id": 269,
+            "name": "Exeter Chiefs"
+          },
+          {
+            "id": 273,
+            "name": "Leicester Tigers"
+          },
+          {
+            "id": 266,
+            "name": "Northampton Saints"
+          }
+        ]
+      }
+    ]
+  }
+}

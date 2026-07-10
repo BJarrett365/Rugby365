@@ -1,0 +1,5 @@
+{
+  "/(site)/matches/page": "app/(site)/matches/page.js",
+  "/(site)/competitions/[slug]/table/page": "app/(site)/competitions/[slug]/table/page.js",
+  "/admin/page": "app/admin/page.js"
+}

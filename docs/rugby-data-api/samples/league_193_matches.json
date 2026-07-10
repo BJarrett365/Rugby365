@@ -1,0 +1,826 @@
+{
+  "_meta": {
+    "endpoint": "league_193_matches",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/league/193/matches?match_type=finished",
+    "status": 200,
+    "bytes": 11307,
+    "captured_at": "2026-07-10T10:00:08Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "League Detail matches",
+    "data": [
+      {
+        "d": "2026-07-07",
+        "matches": [
+          {
+            "id": 7566,
+            "dt": "2026-07-07 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "49-3",
+            "ro": "Round 3",
+            "ht": "28-3",
+            "et": "",
+            "ps": null,
+            "cfs": "49-3",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7566,
+              "htid": 210,
+              "htn": "Georgia U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7588,
+            "dt": "2026-07-07 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-29",
+            "ro": "Round 3",
+            "ht": "18-17",
+            "et": "",
+            "ps": null,
+            "cfs": "26-29",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7588,
+              "htid": 207,
+              "htn": "Spain U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7567,
+            "dt": "2026-07-07 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "52-33",
+            "ro": "Round 3",
+            "ht": "26-14",
+            "et": "",
+            "ps": null,
+            "cfs": "52-33",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7567,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "Wales U20",
+              "atid": 201
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7585,
+            "dt": "2026-07-07 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-29",
+            "ro": "Round 3",
+            "ht": "22-12",
+            "et": "",
+            "ps": null,
+            "cfs": "34-29",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7585,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "Australia U20",
+              "atid": 206
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7575,
+            "dt": "2026-07-07 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "43-32",
+            "ro": "Round 3",
+            "ht": "26-15",
+            "et": "",
+            "ps": null,
+            "cfs": "43-32",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7575,
+              "htid": 202,
+              "htn": "Scotland U20",
+              "atn": "Japan U20",
+              "atid": 537
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7579,
+            "dt": "2026-07-07 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-40",
+            "ro": "Round 3",
+            "ht": "12-28",
+            "et": "",
+            "ps": null,
+            "cfs": "38-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7579,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "England U20",
+              "atid": 199
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7572,
+            "dt": "2026-07-07 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-15",
+            "ro": "Round 3",
+            "ht": "26-10",
+            "et": "",
+            "ps": null,
+            "cfs": "45-15",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7572,
+              "htid": 209,
+              "htn": "New Zealand U20",
+              "atn": "Italy U20",
+              "atid": 203
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7582,
+            "dt": "2026-07-07 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "73-22",
+            "ro": "Round 3",
+            "ht": "45-3",
+            "et": "",
+            "ps": null,
+            "cfs": "73-22",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7582,
+              "htid": 200,
+              "htn": "Ireland U20",
+              "atn": "USA U20",
+              "atid": 539
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-07-02",
+        "matches": [
+          {
+            "id": 7570,
+            "dt": "2026-07-02 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-5",
+            "ro": "Round 2",
+            "ht": "12-5",
+            "et": "",
+            "ps": null,
+            "cfs": "33-5",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7570,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "Georgia U20",
+              "atid": 210
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7573,
+            "dt": "2026-07-02 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "41-25",
+            "ro": "Round 2",
+            "ht": "17-11",
+            "et": "",
+            "ps": null,
+            "cfs": "41-25",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7573,
+              "htid": 203,
+              "htn": "Italy U20",
+              "atn": "Japan U20",
+              "atid": 537
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7571,
+            "dt": "2026-07-02 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-26",
+            "ro": "Round 2",
+            "ht": "17-7",
+            "et": "",
+            "ps": null,
+            "cfs": "36-26",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7571,
+              "htid": 209,
+              "htn": "New Zealand U20",
+              "atn": "Scotland U20",
+              "atid": 202
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7577,
+            "dt": "2026-07-02 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "68-40",
+            "ro": "Round 2",
+            "ht": "42-14",
+            "et": "",
+            "ps": null,
+            "cfs": "68-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7577,
+              "htid": 199,
+              "htn": "England U20",
+              "atn": "USA U20",
+              "atid": 539
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7581,
+            "dt": "2026-07-02 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "62-40",
+            "ro": "Round 2",
+            "ht": "31-7",
+            "et": "",
+            "ps": null,
+            "cfs": "62-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7581,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "Ireland U20",
+              "atid": 200
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7583,
+            "dt": "2026-07-02 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "53-17",
+            "ro": "Round 2",
+            "ht": "36-3",
+            "et": "",
+            "ps": null,
+            "cfs": "53-17",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7583,
+              "htid": 206,
+              "htn": "Australia U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7565,
+            "dt": "2026-07-02 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "47-0",
+            "ro": "Round 2",
+            "ht": "26-0",
+            "et": "",
+            "ps": null,
+            "cfs": "47-0",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7565,
+              "htid": 201,
+              "htn": "Wales U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7584,
+            "dt": "2026-07-02 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "57-32",
+            "ro": "Round 2",
+            "ht": "17-20",
+            "et": "",
+            "ps": null,
+            "cfs": "57-32",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7584,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "Spain U20",
+              "atid": 207
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          }
+        ]
+      },
+      {
+        "d": "2026-06-27",
+        "matches": [
+          {
+            "id": 7568,
+            "dt": "2026-06-27 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "104-7",
+            "ro": "Round 1",
+            "ht": "50-0",
+            "et": "",
+            "ps": null,
+            "cfs": "104-7",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7568,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7587,
+            "dt": "2026-06-27 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "90-22",
+            "ro": "Round 1",
+            "ht": "49-0",
+            "et": "",
+            "ps": null,
+            "cfs": "90-22",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7587,
+              "htid": 206,
+              "htn": "Australia U20",
+              "atn": "Spain U20",
+              "atid": 207
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7569,
+            "dt": "2026-06-27 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "25-24",
+            "ro": "Round 1",
+            "ht": "15-12",
+            "et": "",
+            "ps": null,
+            "cfs": "25-24",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7569,
+              "htid": 201,
+              "htn": "Wales U20",
+              "atn": "Georgia U20",
+              "atid": 210
+            },
+            "tournament": {
+              "id": 193,
+              "nm": "U20 World Championship Pool A",
+              "sg": "u20-world-championship-pool-a-193",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7586,
+            "dt": "2026-06-27 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-15",
+            "ro": "Round 1",
+            "ht": "33-0",
+            "et": "",
+            "ps": null,
+            "cfs": "45-15",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7586,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            },
+            "tournament": {
+              "id": 196,
+              "nm": "U20 World Championship Pool D",
+              "sg": "u20-world-championship-pool-d-196",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7574,
+            "dt": "2026-06-27 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-21",
+            "ro": "Round 1",
+            "ht": "21-21",
+            "et": "",
+            "ps": null,
+            "cfs": "38-21",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7574,
+              "htid": 209,
+              "htn": "New Zealand U20",
+              "atn": "Japan U20",
+              "atid": 537
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7578,
+            "dt": "2026-06-27 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-27",
+            "ro": "Round 1",
+            "ht": "24-12",
+            "et": "",
+            "ps": null,
+            "cfs": "34-27",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7578,
+              "htid": 199,
+              "htn": "England U20",
+              "atn": "Ireland U20",
+              "atid": 200
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7576,
+            "dt": "2026-06-27 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "32-38",
+            "ro": "Round 1",
+            "ht": "14-19",
+            "et": "",
+            "ps": null,
+            "cfs": "32-38",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7576,
+              "htid": 203,
+              "htn": "Italy U20",
+              "atn": "Scotland U20",
+              "atid": 202
+            },
+            "tournament": {
+              "id": 194,
+              "nm": "U20 World Championship Pool B",
+              "sg": "u20-world-championship-pool-b-194",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          },
+          {
+            "id": 7580,
+            "dt": "2026-06-27 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "78-14",
+            "ro": "Round 1",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "78-14",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7580,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "USA U20",
+              "atid": 539
+            },
+            "tournament": {
+              "id": 195,
+              "nm": "U20 World Championship Pool C",
+              "sg": "u20-world-championship-pool-c-195",
+              "category_id": 916,
+              "rugbyCategory": {
+                "id": 57,
+                "nm": "International",
+                "fb_category_id": 916,
+                "fid": 99
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

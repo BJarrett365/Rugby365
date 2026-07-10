@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "endpoint": "match_7581_stat",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/7581/stat",
+    "status": 200,
+    "bytes": 1422,
+    "captured_at": "2026-07-10T10:00:06Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "message": "match stats",
+    "data": {
+      "Match Summary": {
+        "tries": {
+          "ht": "8",
+          "at": "6"
+        },
+        "goals": {
+          "ht": "10",
+          "at": "5"
+        },
+        "drop_goals": {
+          "ht": "-",
+          "at": "-"
+        },
+        "carries": {
+          "ht": "0",
+          "at": "0"
+        },
+        "metres": {
+          "ht": "771",
+          "at": "516"
+        },
+        "tackles": {
+          "ht": "144",
+          "at": "93"
+        },
+        "yellow_cards": {
+          "ht": "1",
+          "at": "1"
+        },
+        "red_cards": {
+          "ht": "0",
+          "at": "0"
+        }
+      },
+      "Kicking": {
+        "attacking_kicks": {
+          "ht": "0",
+          "at": "0"
+        },
+        "drop_goals": {
+          "ht": "0",
+          "at": "0"
+        },
+        "forty_twenty": {
+          "ht": "0",
+          "at": "0"
+        },
+        "kick_gen_play": {
+          "ht": "0",
+          "at": "0"
+        },
+        "kicking_metres": {
+          "ht": "604",
+          "at": "446"
+        },
+        "penalties": {
+          "ht": "0",
+          "at": "0"
+        }
+      },
+      "Possession": {
+        "average_gain": {
+          "ht": "0",
+          "at": "0"
+        },
+        "possession_percentage": {
+          "ht": "44",
+          "at": "56"
+        }
+      },
+      "Attack": {
+        "carries": {
+          "ht": "0",
+          "at": "0"
+        },
+        "clean_breaks": {
+          "ht": "9",
+          "at": "6"
+        },
+        "goals": {
+          "ht": "10",
+          "at": "5"
+        },
+        "metres": {
+          "ht": "771",
+          "at": "516"
+        },
+        "offloads": {
+          "ht": "9",
+          "at": "9"
+        },
+        "passes": {
+          "ht": "103",
+          "at": "186"
+        },
+        "penalty_goals": {
+          "ht": "2",
+          "at": "0"
+        },
+        "run_from_dummy_half": {
+          "ht": "0",
+          "at": "0"
+        },
+        "tries": {
+          "ht": "8",
+          "at": "6"
+        },
+        "try_assists": {
+          "ht": "7",
+          "at": "5"
+        }
+      },
+      "Error": {
+        "handling_errors": {
+          "ht": "0",
+          "at": "0"
+        },
+        "missed_goals": {
+          "ht": "0",
+          "at": "1"
+        },
+        "red_cards": {
+          "ht": "0",
+          "at": "0"
+        },
+        "yellow_cards": {
+          "ht": "1",
+          "at": "1"
+        }
+      },
+      "Defence": {
+        "marker_tackles": {
+          "ht": "0",
+          "at": "0"
+        },
+        "tackle_busts": {
+          "ht": "0",
+          "at": "0"
+        },
+        "tackles": {
+          "ht": "144",
+          "at": "93"
+        },
+        "tackles_efficiency_percentage": {
+          "ht": "0",
+          "at": "0"
+        },
+        "tackles_missed": {
+          "ht": "29",
+          "at": "32"
+        }
+      },
+      "Set piece": {
+        "scrums_lost": {
+          "ht": "0",
+          "at": "0"
+        },
+        "scrums_won": {
+          "ht": "0",
+          "at": "0"
+        }
+      }
+    }
+  }
+}

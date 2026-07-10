@@ -1,0 +1,472 @@
+{
+  "_meta": {
+    "endpoint": "prem_rugby_match_5370_info",
+    "status": 200,
+    "bytes": 4552,
+    "captured_at": "2026-07-10T10:02:36Z",
+    "auth": "none",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/match/5370/info"
+  },
+  "response": {
+    "status": 200,
+    "message": "Match info",
+    "data": {
+      "match_id": 5370,
+      "datetime": "2026-06-06 14:15:00",
+      "status": "Finished",
+      "events": {
+        "first_half_events": [
+          {
+            "ty": "Try",
+            "mins": 3,
+            "isH": 0,
+            "pl": {
+              "name": "Bailey Orlando",
+              "id": 5410
+            },
+            "sc": "0-5"
+          },
+          {
+            "ty": "Conversion",
+            "mins": 4,
+            "isH": 0,
+            "pl": {
+              "name": "O'Connor James",
+              "id": 1695
+            },
+            "sc": "0-7"
+          },
+          {
+            "ty": "Try",
+            "mins": 8,
+            "isH": 1,
+            "pl": {
+              "name": "Toit Thomas du",
+              "id": 5366
+            },
+            "sc": "5-7"
+          },
+          {
+            "ty": "Missed conversion",
+            "mins": 9,
+            "isH": 1,
+            "pl": {
+              "name": "Carreras Santiago",
+              "id": 5328
+            },
+            "sc": "5-7"
+          },
+          {
+            "ty": "Try",
+            "mins": 13,
+            "isH": 1,
+            "pl": {
+              "name": "Toit Thomas du",
+              "id": 5366
+            },
+            "sc": "10-7"
+          },
+          {
+            "ty": "Conversion",
+            "mins": 14,
+            "isH": 1,
+            "pl": {
+              "name": "Carreras Santiago",
+              "id": 5328
+            },
+            "sc": "12-7"
+          },
+          {
+            "ty": "Penalty",
+            "mins": 25,
+            "isH": 0,
+            "pl": {
+              "name": "O'Connor James",
+              "id": 1695
+            },
+            "sc": "12-10"
+          },
+          {
+            "ty": "Try",
+            "mins": 32,
+            "isH": 1,
+            "pl": {
+              "name": "Cokanasiga Joe",
+              "id": 5446
+            },
+            "sc": "17-10"
+          },
+          {
+            "ty": "Missed conversion",
+            "mins": 33,
+            "isH": 1,
+            "pl": {
+              "name": "Carreras Santiago",
+              "id": 5328
+            },
+            "sc": "17-10"
+          },
+          {
+            "ty": "Try",
+            "mins": 38,
+            "isH": 0,
+            "pl": {
+              "name": "Poortvliet Jack Van",
+              "id": 2943
+            },
+            "sc": "17-15"
+          },
+          {
+            "ty": "Conversion",
+            "mins": 39,
+            "isH": 0,
+            "pl": {
+              "name": "O'Connor James",
+              "id": 1695
+            },
+            "sc": "17-17"
+          }
+        ],
+        "second_half_events": [
+          {
+            "ty": "SUB",
+            "mins": 41,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 2863,
+            "piNm": "George Martin",
+            "poId": 5313,
+            "poNm": "Cameron Henderson"
+          },
+          {
+            "ty": "SUB",
+            "mins": 41,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 5309,
+            "piNm": "Solomone Kata",
+            "poId": 1695,
+            "poNm": "James O'Connor"
+          },
+          {
+            "ty": "Try",
+            "mins": 49,
+            "isH": 1,
+            "pl": {
+              "name": "Toit Thomas du",
+              "id": 5366
+            },
+            "sc": "22-17"
+          },
+          {
+            "ty": "Conversion",
+            "mins": 50,
+            "isH": 1,
+            "pl": {
+              "name": "Carreras Santiago",
+              "id": 5328
+            },
+            "sc": "24-17"
+          },
+          {
+            "ty": "SUB",
+            "mins": 54,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 5682,
+            "piNm": "Hamish Watson",
+            "poId": 5459,
+            "poNm": "Olly Cracknell"
+          },
+          {
+            "ty": "SUB",
+            "mins": 60,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 5503,
+            "piNm": "Izaia Perese",
+            "poId": 6047,
+            "poNm": "Gabriel Hamer-Webb"
+          },
+          {
+            "ty": "SUB",
+            "mins": 60,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 5320,
+            "piNm": "Charlie Clare",
+            "poId": 5355,
+            "poNm": "Jamie Blamire"
+          },
+          {
+            "ty": "SUB",
+            "mins": 63,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5363,
+            "piNm": "Cameron Redpath",
+            "poId": 2797,
+            "poNm": "Ollie Lawrence"
+          },
+          {
+            "ty": "SUB",
+            "mins": 64,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5364,
+            "piNm": "Francois van Wyk",
+            "poId": 5408,
+            "poNm": "Beno Obano"
+          },
+          {
+            "ty": "SUB",
+            "mins": 64,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 4379,
+            "piNm": "Archie Van der Flier",
+            "poId": 2899,
+            "poNm": "Nicky Smith"
+          },
+          {
+            "ty": "SUB",
+            "mins": 67,
+            "isH": 0,
+            "pl": null,
+            "sc": null,
+            "piId": 2791,
+            "piNm": "Will Hurd",
+            "poId": 2770,
+            "poNm": "Joe Heyes"
+          },
+          {
+            "ty": "SUB",
+            "mins": 67,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5427,
+            "piNm": "Dan Frost",
+            "poId": 5360,
+            "poNm": "Kepueli Tuipulotu"
+          },
+          {
+            "ty": "SUB",
+            "mins": 69,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5411,
+            "piNm": "Ross Molony",
+            "poId": 5373,
+            "poNm": "Charlie Ewels"
+          },
+          {
+            "ty": "SUB",
+            "mins": 69,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5412,
+            "piNm": "Miles Reid",
+            "poId": 5382,
+            "poNm": "Alfie Barbeary"
+          },
+          {
+            "ty": "SUB",
+            "mins": 72,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5401,
+            "piNm": "Ewan Richards",
+            "poId": 5379,
+            "poNm": "Josh Bayliss"
+          },
+          {
+            "ty": "SUB",
+            "mins": 75,
+            "isH": 1,
+            "pl": null,
+            "sc": null,
+            "piId": 5559,
+            "piNm": "Billy Sela",
+            "poId": 5366,
+            "poNm": "Thomas du Toit"
+          },
+          {
+            "ty": "Yellow card",
+            "mins": "77",
+            "isH": 1,
+            "pl": {
+              "name": "Cokanasiga Joe",
+              "id": 5446
+            },
+            "sc": null
+          },
+          {
+            "ty": "Try",
+            "mins": 78,
+            "isH": 0,
+            "pl": {
+              "name": "Pearson George",
+              "id": 6397
+            },
+            "sc": "24-22"
+          },
+          {
+            "ty": "Missed conversion",
+            "mins": 79,
+            "isH": 0,
+            "pl": {
+              "name": "Bailey Orlando",
+              "id": 5410
+            },
+            "sc": "24-22"
+          }
+        ]
+      },
+      "homeTeam": "Bath",
+      "awayTeam": "Leicester Tigers",
+      "match_summary": {
+        "tries": {
+          "ht": "4",
+          "at": "3"
+        },
+        "goals": {
+          "ht": "2",
+          "at": "3"
+        },
+        "drop_goals": {
+          "ht": "-",
+          "at": "-"
+        },
+        "carries": {
+          "ht": "0",
+          "at": "0"
+        },
+        "metres": {
+          "ht": "187",
+          "at": "257"
+        },
+        "tackles": {
+          "ht": "154",
+          "at": "127"
+        },
+        "yellow_cards": {
+          "ht": "1",
+          "at": "0"
+        },
+        "red_cards": {
+          "ht": "0",
+          "at": "0"
+        }
+      },
+      "form": [
+        {
+          "team": "Bath",
+          "lfm": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "L"
+          ],
+          "matches": [
+            {
+              "htn": "Bath",
+              "htid": 270,
+              "atn": "Exeter Chiefs",
+              "atid": 269,
+              "ft": "26-27"
+            },
+            {
+              "htn": "Bath",
+              "htid": 270,
+              "atn": "Leicester Tigers",
+              "atid": 273,
+              "ft": "24-22"
+            },
+            {
+              "htn": "Bristol Bears",
+              "htid": 265,
+              "atn": "Bath",
+              "atid": 270,
+              "ft": "21-19"
+            },
+            {
+              "htn": "Bath",
+              "htid": 270,
+              "atn": "Newcastle Red Bulls",
+              "atid": 271,
+              "ft": "69-12"
+            },
+            {
+              "htn": "Exeter Chiefs",
+              "htid": 269,
+              "atn": "Bath",
+              "atid": 270,
+              "ft": "35-12"
+            }
+          ]
+        },
+        {
+          "team": "Leicester Tigers",
+          "lfm": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "W"
+          ],
+          "matches": [
+            {
+              "htn": "Northampton Saints",
+              "htid": 266,
+              "atn": "Leicester Tigers",
+              "atid": 273,
+              "ft": "45-31"
+            },
+            {
+              "htn": "Bath",
+              "htid": 270,
+              "atn": "Leicester Tigers",
+              "atid": 273,
+              "ft": "24-22"
+            },
+            {
+              "htn": "Leicester Tigers",
+              "htid": 273,
+              "atn": "Exeter Chiefs",
+              "atid": 269,
+              "ft": "26-35"
+            },
+            {
+              "htn": "Sale Sharks",
+              "htid": 267,
+              "atn": "Leicester Tigers",
+              "atid": 273,
+              "ft": "33-47"
+            },
+            {
+              "htn": "Leicester Tigers",
+              "htid": 273,
+              "atn": "Northampton Saints",
+              "atid": 266,
+              "ft": "41-17"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

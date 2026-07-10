@@ -1,0 +1,1557 @@
+{
+  "_meta": {
+    "endpoint": "matches_2026-07-08",
+    "method": "GET",
+    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
+    "path": "/api/v1/rugby-union/matches?type=all&date=2026-07-08",
+    "status": 200,
+    "bytes": 18453,
+    "captured_at": "2026-07-10T10:00:01Z",
+    "auth": "none",
+    "user_agent": "browser"
+  },
+  "response": {
+    "status": 200,
+    "data": [
+      {
+        "id": 194,
+        "nm": "International - U20 World Championship Pool B",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-pool-b-194",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7571,
+            "aimId": null,
+            "dt": "2026-07-02 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "36-26",
+            "ht": "17-7",
+            "et": "",
+            "ps": null,
+            "cfs": "36-26",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7571,
+              "htid": 209,
+              "htn": "New Zealand U20",
+              "atn": "Scotland U20",
+              "atid": 202
+            }
+          },
+          {
+            "id": 7573,
+            "aimId": null,
+            "dt": "2026-07-02 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "41-25",
+            "ht": "17-11",
+            "et": "",
+            "ps": null,
+            "cfs": "41-25",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7573,
+              "htid": 203,
+              "htn": "Italy U20",
+              "atn": "Japan U20",
+              "atid": 537
+            }
+          },
+          {
+            "id": 7572,
+            "aimId": null,
+            "dt": "2026-07-07 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-15",
+            "ht": "26-10",
+            "et": "",
+            "ps": null,
+            "cfs": "45-15",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7572,
+              "htid": 209,
+              "htn": "New Zealand U20",
+              "atn": "Italy U20",
+              "atid": 203
+            }
+          },
+          {
+            "id": 7575,
+            "aimId": null,
+            "dt": "2026-07-07 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "43-32",
+            "ht": "26-15",
+            "et": "",
+            "ps": null,
+            "cfs": "43-32",
+            "mins": "0",
+            "tournament_id": 194,
+            "competitors": {
+              "match_id": 7575,
+              "htid": 202,
+              "htn": "Scotland U20",
+              "atn": "Japan U20",
+              "atid": 537
+            }
+          }
+        ]
+      },
+      {
+        "id": 195,
+        "nm": "International - U20 World Championship Pool C",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-pool-c-195",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7581,
+            "aimId": null,
+            "dt": "2026-07-02 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "62-40",
+            "ht": "31-7",
+            "et": "",
+            "ps": null,
+            "cfs": "62-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7581,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "Ireland U20",
+              "atid": 200
+            }
+          },
+          {
+            "id": 7577,
+            "aimId": null,
+            "dt": "2026-07-02 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "68-40",
+            "ht": "42-14",
+            "et": "",
+            "ps": null,
+            "cfs": "68-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7577,
+              "htid": 199,
+              "htn": "England U20",
+              "atn": "USA U20",
+              "atid": 539
+            }
+          },
+          {
+            "id": 7582,
+            "aimId": null,
+            "dt": "2026-07-07 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "73-22",
+            "ht": "45-3",
+            "et": "",
+            "ps": null,
+            "cfs": "73-22",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7582,
+              "htid": 200,
+              "htn": "Ireland U20",
+              "atn": "USA U20",
+              "atid": 539
+            }
+          },
+          {
+            "id": 7579,
+            "aimId": null,
+            "dt": "2026-07-07 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-40",
+            "ht": "12-28",
+            "et": "",
+            "ps": null,
+            "cfs": "38-40",
+            "mins": "0",
+            "tournament_id": 195,
+            "competitors": {
+              "match_id": 7579,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "England U20",
+              "atid": 199
+            }
+          }
+        ]
+      },
+      {
+        "id": 193,
+        "nm": "International - U20 World Championship Pool A",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-pool-a-193",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7565,
+            "aimId": null,
+            "dt": "2026-07-02 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "47-0",
+            "ht": "26-0",
+            "et": "",
+            "ps": null,
+            "cfs": "47-0",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7565,
+              "htid": 201,
+              "htn": "Wales U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            }
+          },
+          {
+            "id": 7570,
+            "aimId": null,
+            "dt": "2026-07-02 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "33-5",
+            "ht": "12-5",
+            "et": "",
+            "ps": null,
+            "cfs": "33-5",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7570,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "Georgia U20",
+              "atid": 210
+            }
+          },
+          {
+            "id": 7567,
+            "aimId": null,
+            "dt": "2026-07-07 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "52-33",
+            "ht": "26-14",
+            "et": "",
+            "ps": null,
+            "cfs": "52-33",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7567,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "Wales U20",
+              "atid": 201
+            }
+          },
+          {
+            "id": 7566,
+            "aimId": null,
+            "dt": "2026-07-07 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "49-3",
+            "ht": "28-3",
+            "et": "",
+            "ps": null,
+            "cfs": "49-3",
+            "mins": "0",
+            "tournament_id": 193,
+            "competitors": {
+              "match_id": 7566,
+              "htid": 210,
+              "htn": "Georgia U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            }
+          }
+        ]
+      },
+      {
+        "id": 196,
+        "nm": "International - U20 World Championship Pool D",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-pool-d-196",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7584,
+            "aimId": null,
+            "dt": "2026-07-02 09:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "57-32",
+            "ht": "17-20",
+            "et": "",
+            "ps": null,
+            "cfs": "57-32",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7584,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "Spain U20",
+              "atid": 207
+            }
+          },
+          {
+            "id": 7583,
+            "aimId": null,
+            "dt": "2026-07-02 11:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "53-17",
+            "ht": "36-3",
+            "et": "",
+            "ps": null,
+            "cfs": "53-17",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7583,
+              "htid": 206,
+              "htn": "Australia U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            }
+          },
+          {
+            "id": 7585,
+            "aimId": null,
+            "dt": "2026-07-07 14:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-29",
+            "ht": "22-12",
+            "et": "",
+            "ps": null,
+            "cfs": "34-29",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7585,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "Australia U20",
+              "atid": 206
+            }
+          },
+          {
+            "id": 7588,
+            "aimId": null,
+            "dt": "2026-07-07 16:30:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "26-29",
+            "ht": "18-17",
+            "et": "",
+            "ps": null,
+            "cfs": "26-29",
+            "mins": "0",
+            "tournament_id": 196,
+            "competitors": {
+              "match_id": 7588,
+              "htid": 207,
+              "htn": "Spain U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            }
+          }
+        ]
+      },
+      {
+        "id": 184,
+        "nm": "International - World Rugby Nations Championship",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21697,
+        "sg": "world-rugby-nations-championship-184",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7679,
+            "aimId": null,
+            "dt": "2026-07-04 07:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "34-32",
+            "ht": "19-13",
+            "et": "",
+            "ps": null,
+            "cfs": "34-32",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7679,
+              "htid": 254,
+              "htn": "New Zealand",
+              "atn": "France",
+              "atid": 241
+            }
+          },
+          {
+            "id": 7678,
+            "aimId": null,
+            "dt": "2026-07-04 08:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "27-10",
+            "ht": "17-10",
+            "et": "",
+            "ps": null,
+            "cfs": "27-10",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7678,
+              "htid": 255,
+              "htn": "Japan",
+              "atn": "Italy",
+              "atid": 240
+            }
+          },
+          {
+            "id": 7680,
+            "aimId": null,
+            "dt": "2026-07-04 10:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "31-33",
+            "ht": "24-19",
+            "et": "",
+            "ps": null,
+            "cfs": "31-33",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7680,
+              "htid": 252,
+              "htn": "Australia",
+              "atn": "Ireland",
+              "atid": 238
+            }
+          },
+          {
+            "id": 7676,
+            "aimId": null,
+            "dt": "2026-07-04 13:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "24-39",
+            "ht": "10-10",
+            "et": "",
+            "ps": null,
+            "cfs": "24-39",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7676,
+              "htid": 253,
+              "htn": "Fiji",
+              "atn": "Wales",
+              "atid": 242
+            }
+          },
+          {
+            "id": 7675,
+            "aimId": null,
+            "dt": "2026-07-04 15:40:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "45-21",
+            "ht": "17-14",
+            "et": "",
+            "ps": null,
+            "cfs": "45-21",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7675,
+              "htid": 257,
+              "htn": "South Africa",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 7677,
+            "aimId": null,
+            "dt": "2026-07-04 19:10:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "38-47",
+            "ht": "10-19",
+            "et": "",
+            "ps": null,
+            "cfs": "38-47",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7677,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "Scotland",
+              "atid": 239
+            }
+          },
+          {
+            "id": 7356,
+            "aimId": null,
+            "dt": "2026-07-11 09:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7356,
+              "htid": 255,
+              "htn": "Japan",
+              "atn": "Ireland",
+              "atid": 238
+            }
+          },
+          {
+            "id": 7357,
+            "aimId": null,
+            "dt": "2026-07-11 12:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7357,
+              "htid": 253,
+              "htn": "Fiji",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 7358,
+            "aimId": null,
+            "dt": "2026-07-11 14:40:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7358,
+              "htid": 257,
+              "htn": "South Africa",
+              "atn": "Scotland",
+              "atid": 239
+            }
+          },
+          {
+            "id": 7354,
+            "aimId": null,
+            "dt": "2026-07-11 16:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7354,
+              "htid": 254,
+              "htn": "New Zealand",
+              "atn": "Italy",
+              "atid": 240
+            }
+          },
+          {
+            "id": 7359,
+            "aimId": null,
+            "dt": "2026-07-11 18:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7359,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "Wales",
+              "atid": 242
+            }
+          },
+          {
+            "id": 7355,
+            "aimId": null,
+            "dt": "2026-07-11 18:30:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7355,
+              "htid": 252,
+              "htn": "Australia",
+              "atn": "France",
+              "atid": 241
+            }
+          },
+          {
+            "id": 7362,
+            "aimId": null,
+            "dt": "2026-07-18 09:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7362,
+              "htid": 252,
+              "htn": "Australia",
+              "atn": "Italy",
+              "atid": 240
+            }
+          },
+          {
+            "id": 7363,
+            "aimId": null,
+            "dt": "2026-07-18 12:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7363,
+              "htid": 253,
+              "htn": "Fiji",
+              "atn": "Scotland",
+              "atid": 239
+            }
+          },
+          {
+            "id": 7364,
+            "aimId": null,
+            "dt": "2026-07-18 14:40:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7364,
+              "htid": 257,
+              "htn": "South Africa",
+              "atn": "Wales",
+              "atid": 242
+            }
+          },
+          {
+            "id": 7365,
+            "aimId": null,
+            "dt": "2026-07-18 18:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7365,
+              "htid": 183,
+              "htn": "Argentina",
+              "atn": "England",
+              "atid": 243
+            }
+          },
+          {
+            "id": 7360,
+            "aimId": null,
+            "dt": "2026-07-18 18:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7360,
+              "htid": 254,
+              "htn": "New Zealand",
+              "atn": "Ireland",
+              "atid": 238
+            }
+          },
+          {
+            "id": 7361,
+            "aimId": null,
+            "dt": "2026-07-18 19:40:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 184,
+            "competitors": {
+              "match_id": 7361,
+              "htid": 255,
+              "htn": "Japan",
+              "atn": "France",
+              "atid": 241
+            }
+          }
+        ]
+      },
+      {
+        "id": 219,
+        "nm": "International - World Rugby Nations Cup",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 22035,
+        "sg": "world-rugby-nations-cup-219",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 8943,
+            "aimId": null,
+            "dt": "2026-07-05 01:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "30-29",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "30-29",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8943,
+              "htid": 256,
+              "htn": "USA",
+              "atn": "Portugal",
+              "atid": 187
+            }
+          },
+          {
+            "id": 8963,
+            "aimId": null,
+            "dt": "2026-07-05 01:00:00",
+            "st": "Finished",
+            "cp": "Finished",
+            "ft": "42-42",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "42-42",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8963,
+              "htid": 259,
+              "htn": "Canada",
+              "atn": "Spain",
+              "atid": 251
+            }
+          },
+          {
+            "id": 8970,
+            "aimId": null,
+            "dt": "2026-07-11 17:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8970,
+              "htid": 192,
+              "htn": "Uruguay",
+              "atn": "Romania",
+              "atid": 186
+            }
+          },
+          {
+            "id": 8969,
+            "aimId": null,
+            "dt": "2026-07-11 19:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8969,
+              "htid": 258,
+              "htn": "Samoa",
+              "atn": "Georgia",
+              "atid": 188
+            }
+          },
+          {
+            "id": 8959,
+            "aimId": null,
+            "dt": "2026-07-11 21:45:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8959,
+              "htid": 191,
+              "htn": "Tonga",
+              "atn": "Spain",
+              "atid": 251
+            }
+          },
+          {
+            "id": 8956,
+            "aimId": null,
+            "dt": "2026-07-11 22:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8956,
+              "htid": 194,
+              "htn": "Chile",
+              "atn": "Hong Kong",
+              "atid": 520
+            }
+          },
+          {
+            "id": 8955,
+            "aimId": null,
+            "dt": "2026-07-11 23:30:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8955,
+              "htid": 256,
+              "htn": "USA",
+              "atn": "Zimbabwe",
+              "atid": 189
+            }
+          },
+          {
+            "id": 8950,
+            "aimId": null,
+            "dt": "2026-07-12 01:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8950,
+              "htid": 259,
+              "htn": "Canada",
+              "atn": "Portugal",
+              "atid": 187
+            }
+          },
+          {
+            "id": 8952,
+            "aimId": null,
+            "dt": "2026-07-18 14:30:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8952,
+              "htid": 258,
+              "htn": "Samoa",
+              "atn": "Romania",
+              "atid": 186
+            }
+          },
+          {
+            "id": 8953,
+            "aimId": null,
+            "dt": "2026-07-18 17:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8953,
+              "htid": 192,
+              "htn": "Uruguay",
+              "atn": "Hong Kong",
+              "atid": 520
+            }
+          },
+          {
+            "id": 8948,
+            "aimId": null,
+            "dt": "2026-07-18 19:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8948,
+              "htid": 194,
+              "htn": "Chile",
+              "atn": "Georgia",
+              "atid": 188
+            }
+          },
+          {
+            "id": 8967,
+            "aimId": null,
+            "dt": "2026-07-18 20:45:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8967,
+              "htid": 191,
+              "htn": "Tonga",
+              "atn": "Portugal",
+              "atid": 187
+            }
+          },
+          {
+            "id": 8957,
+            "aimId": null,
+            "dt": "2026-07-18 23:30:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8957,
+              "htid": 256,
+              "htn": "USA",
+              "atn": "Spain",
+              "atid": 251
+            }
+          },
+          {
+            "id": 8947,
+            "aimId": null,
+            "dt": "2026-07-19 00:00:00",
+            "st": "Result only",
+            "cp": "Result only",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 219,
+            "competitors": {
+              "match_id": 8947,
+              "htid": 259,
+              "htn": "Canada",
+              "atn": "Zimbabwe",
+              "atid": 189
+            }
+          }
+        ]
+      },
+      {
+        "id": 221,
+        "nm": "International - U20 World Championship Placement Matches",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-placement-matches-221",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 8984,
+            "aimId": null,
+            "dt": "2026-07-12 14:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "0-0",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8984,
+              "htid": 208,
+              "htn": "Argentina U20",
+              "atn": "Scotland U20",
+              "atid": 202
+            }
+          },
+          {
+            "id": 8992,
+            "aimId": null,
+            "dt": "2026-07-12 14:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8992,
+              "htid": 537,
+              "htn": "Japan U20",
+              "atn": "USA U20",
+              "atid": 539
+            }
+          },
+          {
+            "id": 8987,
+            "aimId": null,
+            "dt": "2026-07-12 16:30:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8987,
+              "htid": 206,
+              "htn": "Australia U20",
+              "atn": "Wales U20",
+              "atid": 201
+            }
+          },
+          {
+            "id": 8993,
+            "aimId": null,
+            "dt": "2026-07-12 16:30:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8993,
+              "htid": 207,
+              "htn": "Spain U20",
+              "atn": "Uruguay U20",
+              "atid": 536
+            }
+          },
+          {
+            "id": 8985,
+            "aimId": null,
+            "dt": "2026-07-13 14:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8985,
+              "htid": 210,
+              "htn": "Georgia U20",
+              "atn": "Italy U20",
+              "atid": 203
+            }
+          },
+          {
+            "id": 8988,
+            "aimId": null,
+            "dt": "2026-07-13 16:30:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 221,
+            "competitors": {
+              "match_id": 8988,
+              "htid": 200,
+              "htn": "Ireland U20",
+              "atn": "Fiji U20",
+              "atid": 538
+            }
+          }
+        ]
+      },
+      {
+        "id": 220,
+        "nm": "International - U20 World Championship Final Stage",
+        "fid": 99,
+        "cid": 916,
+        "lso": 1000,
+        "lid": 21702,
+        "sg": "u20-world-championship-final-stage-220",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 8980,
+            "aimId": null,
+            "dt": "2026-07-13 14:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 220,
+            "competitors": {
+              "match_id": 8980,
+              "htid": 204,
+              "htn": "France U20",
+              "atn": "New Zealand U20",
+              "atid": 209
+            }
+          },
+          {
+            "id": 8983,
+            "aimId": null,
+            "dt": "2026-07-13 16:30:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 220,
+            "competitors": {
+              "match_id": 8983,
+              "htid": 205,
+              "htn": "South Africa U20",
+              "atn": "England U20",
+              "atid": 199
+            }
+          }
+        ]
+      },
+      {
+        "id": 218,
+        "nm": "South Africa - Currie Cup",
+        "fid": 202,
+        "cid": 710,
+        "lso": 1000,
+        "lid": 21743,
+        "sg": "currie-cup-218",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 8905,
+            "aimId": null,
+            "dt": "2026-07-17 15:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8905,
+              "htid": 413,
+              "htn": "Pumas",
+              "atn": "Sharks",
+              "atid": 302
+            }
+          },
+          {
+            "id": 8906,
+            "aimId": null,
+            "dt": "2026-07-17 17:05:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8906,
+              "htid": 305,
+              "htn": "Stormers",
+              "atn": "Griquas",
+              "atid": 412
+            }
+          },
+          {
+            "id": 8907,
+            "aimId": null,
+            "dt": "2026-07-19 11:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8907,
+              "htid": 318,
+              "htn": "Cheetahs",
+              "atn": "Lions",
+              "atid": 312
+            }
+          },
+          {
+            "id": 8908,
+            "aimId": null,
+            "dt": "2026-07-19 13:05:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8908,
+              "htid": 410,
+              "htn": "Boland Cavaliers",
+              "atn": "Bulls",
+              "atid": 307
+            }
+          },
+          {
+            "id": 8909,
+            "aimId": null,
+            "dt": "2026-07-24 15:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8909,
+              "htid": 318,
+              "htn": "Cheetahs",
+              "atn": "Sharks",
+              "atid": 302
+            }
+          },
+          {
+            "id": 8910,
+            "aimId": null,
+            "dt": "2026-07-25 13:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8910,
+              "htid": 312,
+              "htn": "Lions",
+              "atn": "Pumas",
+              "atid": 413
+            }
+          },
+          {
+            "id": 8911,
+            "aimId": null,
+            "dt": "2026-07-25 15:05:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8911,
+              "htid": 412,
+              "htn": "Griquas",
+              "atn": "Bulls",
+              "atid": 307
+            }
+          },
+          {
+            "id": 8912,
+            "aimId": null,
+            "dt": "2026-07-26 13:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8912,
+              "htid": 410,
+              "htn": "Boland Cavaliers",
+              "atn": "Stormers",
+              "atid": 305
+            }
+          },
+          {
+            "id": 8913,
+            "aimId": null,
+            "dt": "2026-07-31 17:00:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 218,
+            "competitors": {
+              "match_id": 8913,
+              "htid": 412,
+              "htn": "Griquas",
+              "atn": "Cheetahs",
+              "atid": 318
+            }
+          }
+        ]
+      },
+      {
+        "id": 183,
+        "nm": "New Zealand - NPC",
+        "fid": 155,
+        "cid": 554,
+        "lso": 1000,
+        "lid": 21703,
+        "sg": "npc-183",
+        "sea": "2026",
+        "matches": [
+          {
+            "id": 7265,
+            "aimId": null,
+            "dt": "2026-07-30 07:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 183,
+            "competitors": {
+              "match_id": 7265,
+              "htid": 215,
+              "htn": "Waikato",
+              "atn": "Bay of Plenty",
+              "atid": 220
+            }
+          },
+          {
+            "id": 7313,
+            "aimId": null,
+            "dt": "2026-07-31 07:10:00",
+            "st": "NSY",
+            "cp": "NSY",
+            "ft": "",
+            "ht": "",
+            "et": "",
+            "ps": null,
+            "cfs": "",
+            "mins": "0",
+            "tournament_id": 183,
+            "competitors": {
+              "match_id": 7313,
+              "htid": 216,
+              "htn": "Tasman",
+              "atn": "North Harbour",
+              "atid": 223
+            }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "message": "Matches",
+      "header": true,
+      "pagination": {
+        "pagination": {
+          "total": 0,
+          "per_page": 0,
+          "current_page": 1,
+          "last_page": 1
+        }
+      }
+    }
+  }
+}

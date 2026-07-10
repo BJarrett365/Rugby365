@@ -1,0 +1,285 @@
+[
+  {
+    "name": "countries_list",
+    "status": 200,
+    "bytes": 9484,
+    "file": "countries_list.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "country_leagues",
+    "status": 200,
+    "bytes": 29320,
+    "file": "country_leagues.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "league_193_header",
+    "status": 200,
+    "bytes": 234,
+    "file": "league_193_header.json",
+    "top_keys": [
+      "status",
+      "message",
+      "tabs",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "league_193_matches",
+    "status": 200,
+    "bytes": 11307,
+    "file": "league_193_matches.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "league_193_news",
+    "status": 200,
+    "bytes": 119,
+    "file": "league_193_news.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data",
+      "pagination"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "league_193_table",
+    "status": 200,
+    "bytes": 2645,
+    "file": "league_193_table.json",
+    "top_keys": [
+      "status",
+      "message",
+      "live_team_ids",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "league_193_teams",
+    "status": 200,
+    "bytes": 1281,
+    "file": "league_193_teams.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7565_player_stat",
+    "status": 200,
+    "bytes": 11034,
+    "file": "match_7565_player_stat.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7581_detail",
+    "status": 200,
+    "bytes": 569,
+    "file": "match_7581_detail.json",
+    "top_keys": [
+      "status",
+      "message",
+      "tabs",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7581_info",
+    "status": 200,
+    "bytes": 1409,
+    "file": "match_7581_info.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7581_lineup",
+    "status": 200,
+    "bytes": 281,
+    "file": "match_7581_lineup.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7581_stat",
+    "status": 200,
+    "bytes": 1422,
+    "file": "match_7581_stat.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "match_7581_table",
+    "status": 200,
+    "bytes": 12060,
+    "file": "match_7581_table.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "matches_2026-07-08",
+    "status": 200,
+    "bytes": 18453,
+    "file": "matches_2026-07-08.json",
+    "top_keys": [
+      "status",
+      "data",
+      "metadata"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "matches_count_2026-07-08",
+    "status": 200,
+    "bytes": 103,
+    "file": "matches_count_2026-07-08.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "news_leagues",
+    "status": 200,
+    "bytes": 2060,
+    "file": "news_leagues.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "search",
+    "status": 403,
+    "bytes": 748,
+    "file": "search.json",
+    "top_keys": [
+      "type",
+      "title",
+      "status",
+      "detail",
+      "instance",
+      "error_code",
+      "error_name",
+      "error_category",
+      "ray_id",
+      "timestamp",
+      "zone",
+      "cloudflare_error",
+      "retryable",
+      "owner_action_required",
+      "what_you_should_do",
+      "footer"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "search_bath",
+    "status": 200,
+    "bytes": 115,
+    "file": "search_bath.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "team_243_header",
+    "status": 200,
+    "bytes": 181,
+    "file": "team_243_header.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data",
+      "tabs"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "team_243_matches",
+    "status": 200,
+    "bytes": 5860,
+    "file": "team_243_matches.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "team_243_news",
+    "status": 200,
+    "bytes": 119,
+    "file": "team_243_news.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data",
+      "pagination"
+    ],
+    "auth": "none"
+  },
+  {
+    "name": "teams",
+    "status": 200,
+    "bytes": 18113,
+    "file": "teams.json",
+    "top_keys": [
+      "status",
+      "message",
+      "data"
+    ],
+    "auth": "none"
+  }
+]

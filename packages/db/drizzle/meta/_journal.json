@@ -1,0 +1,251 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1782563029228,
+      "tag": "0000_tricky_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782564000000,
+      "tag": "0001_agent_sandbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782565000000,
+      "tag": "0002_commentary_research",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782566000000,
+      "tag": "0003_fixture_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782567000000,
+      "tag": "0004_fixture_provider_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782568000000,
+      "tag": "0005_entity_unique_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782569000000,
+      "tag": "0006_player_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782570000000,
+      "tag": "0007_cms_referees_transfers",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782571000000,
+      "tag": "0008_venues_stats_transfers",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782572000000,
+      "tag": "0009_seasons_standings",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782573000000,
+      "tag": "0010_fixture_round",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782574000000,
+      "tag": "0011_wikipedia_archive",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782575000000,
+      "tag": "0012_champions_cup",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782576000000,
+      "tag": "0013_venue_wikipedia",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782577000000,
+      "tag": "0014_transfer_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1782578000000,
+      "tag": "0015_player_season_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782579000000,
+      "tag": "0016_team_match_stats",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782580000000,
+      "tag": "0017_premiership_2025_26_transfers",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782581000000,
+      "tag": "0018_coaches_and_legends",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1782582000000,
+      "tag": "0019_player_rugbypass_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1782583000000,
+      "tag": "0020_world_rankings",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1782584000000,
+      "tag": "0021_ai_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1782585000000,
+      "tag": "0022_player_bio_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782586000000,
+      "tag": "0023_person_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782587000000,
+      "tag": "0024_player_bio_variants",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1782588000000,
+      "tag": "0025_player_availability",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782589000000,
+      "tag": "0026_fixture_coaches",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1782590000000,
+      "tag": "0027_nations_championship",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1782591000000,
+      "tag": "0028_team_hemisphere",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1782592000000,
+      "tag": "0029_season_canonical",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782593000000,
+      "tag": "0030_player_career_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782594000000,
+      "tag": "0031_player_team_memberships",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782596000000,
+      "tag": "0032_premiership_season_repair",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782597000000,
+      "tag": "0033_player_match_ratings",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1782598000000,
+      "tag": "0034_squad_audit",
+      "breakpoints": true
+    }
+  ]
+}
