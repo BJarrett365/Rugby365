@@ -1,0 +1,188 @@
+"use client";
+
+import type { RugbyTableHemisphereGroup, RugbyTableStandingRow } from "@/lib/table-lab/table-types";
+
+function movementArrow(movement: RugbyTableStandingRow["movement"]): string {
+  if (movement === "up") return "▲";
+  if (movement === "down") return "▼";
+  if (movement === "same") return "–";
+  return "";
+}
+
+function isLiveRow(row: RugbyTableStandingRow): boolean {
+  return Boolean(row.liveCurrentScore || row.liveMatchLabel || row.liveStatus === "live");
+}
+
+function LiveScoreBadge({ row }: { row: RugbyTableStandingRow }) {
+  if (!row.liveCurrentScore) return null;
+  const [forScore, againstScore] = row.liveCurrentScore.split(/[-–:]/).map((part) => part.trim());
+  const forNum = Number(forScore);
+  const againstNum = Number(againstScore);
+  const winning =
+    Number.isFinite(forNum) && Number.isFinite(againstNum) ? forNum > againstNum : null;
+  const tone =
+    winning === true ? "live-table__badge--win" : winning === false ? "live-table__badge--lose" : "";
+
+  return (
+    <span className={`live-table__badge ${tone}`} title={row.liveMatchLabel ?? "Live score"}>
+      {row.liveCurrentScore.replace("-", ":").replace("–", ":")}
+    </span>
+  );
+}
+
+function StandingsTable({
+  title,
+  rows,
+  showMovement,
+}: {
+  title?: string;
+  rows: RugbyTableStandingRow[];
+  showMovement: boolean;
+}) {
+  if (!rows.length) {
+    return <p className="text-sm text-zinc-500 m-0">No standings rows yet.</p>;
+  }
+
+  return (
+    <div className="live-table__card">
+      {title ? <h3 className="live-table__title">{title}</h3> : null}
+      <div className="live-table__wrap">
+        <table className="live-table__table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              {showMovement ? <th scope="col" aria-label="Movement" /> : null}
+              <th scope="col">Team</th>
+              <th scope="col">P</th>
+              <th scope="col">W</th>
+              <th scope="col">D</th>
+              <th scope="col">L</th>
+              <th scope="col">PD</th>
+              <th scope="col">BP</th>
+              <th scope="col">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const live = isLiveRow(row);
+              return (
+                <tr
+                  key={row.teamId}
+                  className={live ? "live-table__row--live" : undefined}
+                  data-live={live ? "true" : undefined}
+                >
+                  <td className="live-table__rank">{row.rank}</td>
+                  {showMovement ? (
+                    <td
+                      className={`live-table__move live-table__move--${row.movement ?? "same"}`}
+                      title={row.movementLabel ?? row.movement ?? undefined}
+                    >
+                      {movementArrow(row.movement)}
+                    </td>
+                  ) : null}
+                  <td className="live-table__team">
+                    <span className="live-table__team-name">{row.teamName}</span>
+                    <LiveScoreBadge row={row} />
+                    {row.liveMatchClock ? (
+                      <span className="live-table__clock">{row.liveMatchClock}</span>
+                    ) : null}
+                  </td>
+                  <td>{row.played}</td>
+                  <td>{row.won}</td>
+                  <td>{row.drawn}</td>
+                  <td>{row.lost}</td>
+                  <td>
+                    {row.pointsDiff > 0 ? `+${row.pointsDiff}` : row.pointsDiff}
+                  </td>
+                  <td>{row.bonusPoints}</td>
+                  <td className="live-table__pts">{row.leaguePoints}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export function CompetitionLiveTable({
+  rows,
+  hemisphereGroups,
+  showMovement = true,
+  liveMatchCount,
+  note,
+}: {
+  rows: RugbyTableStandingRow[];
+  hemisphereGroups?: RugbyTableHemisphereGroup[];
+  showMovement?: boolean;
+  liveMatchCount?: number | null;
+  note?: string | null;
+}) {
+  const liveRows = rows.filter(isLiveRow);
+  const liveMatchCards = (() => {
+    const seen = new Set<string>();
+    const cards: Array<{ key: string; title: string; score: string; clock: string }> = [];
+    for (const row of liveRows) {
+      const key = row.liveMatchLabel ?? `${row.teamId}:${row.liveCurrentScore ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const opponent =
+        row.liveMatchLabel?.replace(/^vs\s+/i, "").replace(/\s+\d+[-–:]\d+\s*$/, "").trim() ||
+        "Opponent";
+      cards.push({
+        key,
+        title: `${row.teamName} vs ${opponent}`,
+        score: row.liveCurrentScore ?? "–",
+        clock: row.liveMatchClock ?? row.liveStatus ?? "In play",
+      });
+    }
+    return cards;
+  })();
+
+  return (
+    <div className="live-table">
+      {liveMatchCards.length > 0 ? (
+        <div className="live-table__live-strip" aria-live="polite">
+          <span className="live-table__live-pill">Live</span>
+          <div className="live-table__live-matches">
+            {liveMatchCards.map((match) => (
+              <div key={match.key} className="live-table__live-match">
+                <strong>{match.title}</strong>
+                <span>{match.score.replace("-", " : ").replace("–", " : ")}</span>
+                <span className="live-table__live-meta">{match.clock}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {note || liveMatchCount != null ? (
+        <p className="live-table__note">
+          {note}
+          {liveMatchCount != null
+            ? `${note ? " · " : ""}${liveMatchCount} live match${liveMatchCount === 1 ? "" : "es"}`
+            : ""}
+        </p>
+      ) : null}
+
+      {hemisphereGroups && hemisphereGroups.length > 0 ? (
+        <div className="space-y-4">
+          <StandingsTable title="Full table" rows={rows} showMovement={showMovement} />
+          <div className="grid gap-4 lg:grid-cols-2">
+            {hemisphereGroups.map((group) => (
+              <StandingsTable
+                key={group.hemisphere}
+                title={group.label}
+                rows={group.rows}
+                showMovement={showMovement}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <StandingsTable rows={rows} showMovement={showMovement} />
+      )}
+    </div>
+  );
+}

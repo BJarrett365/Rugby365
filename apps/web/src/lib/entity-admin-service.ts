@@ -931,6 +931,15 @@ export async function updatePlayer(
     squadNumber: number | null;
     bioSummary: string | null;
     careerStatus?: string;
+    isPublic?: boolean;
+    publishStatus?: string;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
+    ogImageUrl?: string | null;
+    imageUrl?: string | null;
+    publicIntroOverride?: string | null;
+    preferredFoot?: string | null;
+    statusOverride?: string | null;
   }>,
 ) {
   const db = getDb();
@@ -990,9 +999,49 @@ export async function updatePlayer(
       ...(input.careerStatus !== undefined
         ? { careerStatus: normalizePlayerCareerStatus(input.careerStatus) }
         : {}),
+      ...(input.isPublic !== undefined ? { isPublic: Boolean(input.isPublic) } : {}),
+      ...(input.publishStatus !== undefined
+        ? {
+            publishStatus: ["published", "draft", "hidden"].includes(input.publishStatus)
+              ? input.publishStatus
+              : existing.publishStatus,
+          }
+        : {}),
+      ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle?.trim() || null } : {}),
+      ...(input.seoDescription !== undefined
+        ? { seoDescription: input.seoDescription?.trim() || null }
+        : {}),
+      ...(input.ogImageUrl !== undefined ? { ogImageUrl: input.ogImageUrl?.trim() || null } : {}),
+      ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl?.trim() || null } : {}),
+      ...(input.publicIntroOverride !== undefined
+        ? { publicIntroOverride: input.publicIntroOverride?.trim() || null }
+        : {}),
+      ...(input.preferredFoot !== undefined
+        ? { preferredFoot: input.preferredFoot?.trim() || null }
+        : {}),
+      ...(input.statusOverride !== undefined
+        ? { statusOverride: input.statusOverride?.trim() || null }
+        : {}),
+      profileUpdatedAt: new Date(),
     })
     .where(eq(players.id, id))
     .returning();
+
+  // Club change: discover new Planet Rugby images without replacing an approved primary.
+  if (
+    input.clubName !== undefined &&
+    existing.clubName &&
+    nextClub &&
+    nextClub !== existing.clubName
+  ) {
+    try {
+      const { refreshPlayerPlanetRugbyImages } = await import("./player-image-service");
+      await refreshPlayerPlanetRugbyImages(id, "club_change");
+    } catch {
+      // Non-blocking enrichment
+    }
+  }
+
   return row;
 }
 
@@ -1199,6 +1248,9 @@ export async function createPlayerTransfer(input: {
     notes: input.notes,
     sourceProvider: "manual",
   });
+  if (!transfer) {
+    throw new Error("Transfer skipped — destination matches the current club (no change).");
+  }
   return transfer;
 }
 

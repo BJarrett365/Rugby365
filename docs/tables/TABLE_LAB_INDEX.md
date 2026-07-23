@@ -37,7 +37,7 @@ Legend:
 | `first_half` | First Half Table | `first-half-table` | [first-half-table.md](./instructions/first-half-table.md) | Live |
 | `second_half` | Second Half Table | `second-half-table` | [second-half-table.md](./instructions/second-half-table.md) | Live |
 | `final_20_minutes` | Final 20 Minutes Table | `final-20-minutes-table` | [final-20-minutes-table.md](./instructions/final-20-minutes-table.md) | Live |
-| `custom_match_period` | Table By Custom Match Period | `custom-match-period` | — | Partial |
+| `custom_match_period` | Table By Custom Match Period | `custom-match-period` | — | Planned / Hidden |
 
 ---
 
@@ -58,7 +58,7 @@ Legend:
 | `conceding_first` | Table When Conceding First | `table-when-conceding-first` | [table-when-conceding-first.md](./instructions/table-when-conceding-first.md) | Implemented |
 | `points_gained_losing` | Points Gained From Losing Positions | `points-gained-from-losing-positions` | [points-gained-from-losing-positions.md](./instructions/points-gained-from-losing-positions.md) | Implemented |
 | `points_lost_winning` | Points Lost From Winning Positions | `points-lost-from-winning-positions` | [points-lost-from-winning-positions.md](./instructions/points-lost-from-winning-positions.md) | Implemented |
-| `points_gained_drawn` | Points Gained From Drawn Positions | `points-gained-drawn` | — | Planned |
+| `points_gained_drawn` | Points Gained From Drawn Positions | `points-gained-drawn` | — | Planned / Hidden |
 | `comeback` | Comeback Table | `comeback-table` | [comeback-table.md](./instructions/comeback-table.md) | Complete |
 | `lead_protection` | Lead Protection Table | `lead-protection-table` | [lead-protection-table.md](./instructions/lead-protection-table.md) | Complete |
 

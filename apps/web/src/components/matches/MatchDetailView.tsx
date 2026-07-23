@@ -2,15 +2,20 @@ import Link from "next/link";
 import type { MatchDetailPageData } from "@/lib/match-detail-service";
 import {
   KeyEventsPanel,
-  KeyPlayerStatsPanel,
+  MatchDetailsCard,
   MatchSummaryPanel,
-  MatchTeamStatsPanel,
-  PlayerStatsPanel,
+  PlayerStatsTabPanel,
+  TeamStatsTabPanel,
 } from "./MatchDetailSections";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import type { MatchDetailTab } from "@/lib/match-detail-tabs";
 import { TeamProfileLinkFromContext } from "./EntityProfileLinks";
-import { MatchLineupsWithRatings } from "./MatchLineupsWithRatings";
+import { LineupsPitchView } from "./LineupsPitchView";
+import { MatchEventTimelineStrip } from "./MatchEventTimelineStrip";
+import { MatchCentreSidebar } from "./MatchCentreSidebar";
+import { MatchHeadToHeadPublic } from "./MatchHeadToHeadPublic";
+import { MatchLiveTablesPanel } from "./MatchLiveTablesPanel";
+import { TeamCrest } from "./TeamCrest";
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso);
@@ -25,28 +30,11 @@ function formatKickoff(iso: string): string {
 }
 
 function statusLabel(status: string): string {
-  if (status === "Result") return "Full time";
-  if (status === "Fixture") return "Scheduled";
+  const s = status.toLowerCase();
+  if (s === "result" || s === "finished" || s === "complete" || s === "ft") return "FT";
+  if (s === "fixture" || s === "scheduled" || s === "upcoming") return "Scheduled";
+  if (s.includes("live") || s === "first half" || s === "second half" || s === "half time") return "Live";
   return status;
-}
-
-function RecentFormBlock({ label, data }: { label: string; data: Record<string, unknown> | undefined }) {
-  if (!data || typeof data !== "object") return null;
-  const entries = Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== "");
-  if (entries.length === 0) return null;
-  return (
-    <div className="match-detail-form">
-      <h3 className="match-detail-section__title">{label}</h3>
-      <dl className="match-detail-form__grid">
-        {entries.slice(0, 8).map(([key, value]) => (
-          <div key={key}>
-            <dt>{key.replace(/_/g, " ")}</dt>
-            <dd>{String(value)}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
 }
 
 function MatchDetailEditPanel({
@@ -129,28 +117,36 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
   const { detail, lineups, matchStats, playerStats, planetRugbyUrl, cmsFixture, entities } = data;
   const keyEvents = detail.key_events ?? [];
   const mappedPlayers = Object.keys(entities.playersByExternalId).length;
+  const homeImageUrl = entities.homeTeam?.imageUrl ?? detail.home_team_icon ?? null;
+  const awayImageUrl = entities.awayTeam?.imageUrl ?? detail.away_team_icon ?? null;
 
   if (tab === "stats") {
     return (
-      <>
-        <section className="match-detail-section">
-          <h2 className="match-detail-section__heading">Match stats</h2>
-          <MatchTeamStatsPanel matchStats={matchStats} />
-        </section>
-        <PlayerStatsPanel
-          playerStats={playerStats}
-          homeName={detail.home_team_name}
-          awayName={detail.away_team_name}
-          entities={entities}
-        />
-        <KeyPlayerStatsPanel
-          playerStats={playerStats}
-          homeName={detail.home_team_name}
-          awayName={detail.away_team_name}
-          entities={entities}
-        />
-      </>
+      <TeamStatsTabPanel
+        matchStats={matchStats}
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
+        homeImageUrl={homeImageUrl}
+        awayImageUrl={awayImageUrl}
+      />
     );
+  }
+
+  if (tab === "player-stats") {
+    return (
+      <PlayerStatsTabPanel
+        playerStats={playerStats}
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
+        homeImageUrl={homeImageUrl}
+        awayImageUrl={awayImageUrl}
+        entities={entities}
+      />
+    );
+  }
+
+  if (tab === "tables") {
+    return <MatchLiveTablesPanel tableContext={data.tableContext} />;
   }
 
   if (tab === "lineups") {
@@ -158,7 +154,7 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
       return <p className="match-detail-empty">Lineups are not available for this match yet.</p>;
     }
     return (
-      <MatchLineupsWithRatings
+      <LineupsPitchView
         lineups={lineups}
         entities={entities}
         ratings={data.matchRatings}
@@ -170,76 +166,16 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
   }
 
   if (tab === "head-to-head") {
-    const h2h = detail.head_to_head ?? [];
-    const lastFive = detail.last_five_meetings ?? [];
-    if (h2h.length === 0 && lastFive.length === 0) {
-      return <p className="match-detail-empty">Head-to-head data is not available for this match yet.</p>;
-    }
     return (
-      <>
-        {h2h.length > 0 && (
-          <section className="match-detail-section">
-            <h2 className="match-detail-section__heading">Overall record</h2>
-            {h2h.map((row, i) => (
-              <div key={i} className="match-detail-h2h cms-card">
-                <p className="match-detail-h2h__comp m-0 text-sm text-zinc-400">
-                  {String(row.competition_name ?? detail.competition_name)}
-                </p>
-                <div className="match-detail-h2h__wins">
-                  <div>
-                    <span className="match-detail-h2h__num">{String(row.home_team_wins ?? "—")}</span>
-                    <span className="match-detail-h2h__label">{detail.home_team_name} wins</span>
-                  </div>
-                  <div>
-                    <span className="match-detail-h2h__num">{String(row.away_team_wins ?? "—")}</span>
-                    <span className="match-detail-h2h__label">{detail.away_team_name} wins</span>
-                  </div>
-                </div>
-                {(row.home_team_avg_tries || row.away_team_avg_tries) && (
-                  <dl className="match-detail-h2h__avg">
-                    <div>
-                      <dt>Avg tries</dt>
-                      <dd>
-                        {String(row.home_team_avg_tries ?? "—")} · {String(row.away_team_avg_tries ?? "—")}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Avg carries</dt>
-                      <dd>
-                        {String(row.home_team_avg_carries ?? "—")} · {String(row.away_team_avg_carries ?? "—")}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Avg tackles</dt>
-                      <dd>
-                        {String(row.home_team_avg_tackles ?? "—")} · {String(row.away_team_avg_tackles ?? "—")}
-                      </dd>
-                    </div>
-                  </dl>
-                )}
-              </div>
-            ))}
-          </section>
-        )}
-        {lastFive.length > 0 && (
-          <section className="match-detail-section">
-            <h2 className="match-detail-section__heading">Last five meetings</h2>
-            <ul className="match-detail-meetings">
-              {lastFive.map((row, i) => (
-                <li key={i} className="match-detail-meetings__item cms-card">
-                  {Object.entries(row)
-                    .filter(([, v]) => v != null && v !== "")
-                    .map(([key, value]) => (
-                      <span key={key}>
-                        <strong>{key.replace(/_/g, " ")}:</strong> {String(value)}
-                      </span>
-                    ))}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </>
+      <MatchHeadToHeadPublic
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
+        homeImageUrl={homeImageUrl}
+        awayImageUrl={awayImageUrl}
+        headToHead={detail.head_to_head ?? []}
+        lastFiveMeetings={detail.last_five_meetings ?? []}
+        competitionName={detail.competition_name}
+      />
     );
   }
 
@@ -258,18 +194,24 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
 
   return (
     <>
+      <MatchDetailsCard
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
+        homeScore={detail.home_team_score}
+        awayScore={detail.away_team_score}
+        status={detail.status}
+        scoringDetail={detail.detail as Record<string, unknown> | undefined}
+        matchStats={matchStats}
+        entities={entities}
+      />
       <MatchSummaryPanel
         homeName={detail.home_team_name}
         awayName={detail.away_team_name}
+        homeImageUrl={homeImageUrl}
+        awayImageUrl={awayImageUrl}
         matchStats={matchStats}
-        scoringDetail={detail.detail as Record<string, unknown> | undefined}
-        entities={entities}
       />
       <KeyEventsPanel events={keyEvents} homeTeamId={detail.home_team_id} entities={entities} />
-      <section className="match-detail-section match-detail-section--grid">
-        <RecentFormBlock label={detail.home_team_name} data={detail.home_recent_results} />
-        <RecentFormBlock label={detail.away_team_name} data={detail.away_recent_results} />
-      </section>
       {(data.rugby365PotmName || data.officialPotmName) && (
         <section className="match-detail-section">
           <h2 className="match-detail-section__heading">Player of the Match</h2>
@@ -287,23 +229,6 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
           </div>
         </section>
       )}
-      {lineups && (
-        <MatchLineupsWithRatings
-          lineups={lineups}
-          entities={entities}
-          ratings={data.matchRatings}
-          rugby365PotmName={data.rugby365PotmName}
-          officialPotmName={data.officialPotmName}
-          matchStatus={detail.status}
-        />
-      )}
-      <MatchTeamStatsPanel matchStats={matchStats} />
-      <PlayerStatsPanel
-        playerStats={playerStats}
-        homeName={detail.home_team_name}
-        awayName={detail.away_team_name}
-        entities={entities}
-      />
     </>
   );
 }
@@ -315,70 +240,101 @@ export function MatchDetailView({
   data: MatchDetailPageData;
   activeTab?: MatchDetailTab;
 }) {
-  const { detail, planetRugbyUrl, kickoffAt, cmsFixture, entities } = data;
+  const { detail, kickoffAt, entities } = data;
   const mainRef = detail.referee?.find((r) => /referee/i.test(r.role)) ?? detail.referee?.[0];
+  const teamsLabel = `${detail.home_team_name} v ${detail.away_team_name}`;
+  const homeImageUrl = entities.homeTeam?.imageUrl ?? detail.home_team_icon ?? null;
+  const awayImageUrl = entities.awayTeam?.imageUrl ?? detail.away_team_icon ?? null;
+  const keyEvents = detail.key_events ?? [];
 
   return (
-    <div className="match-detail">
-      <nav className="match-detail__nav">
-        <Link href="/matches" className="match-detail__back">
-          ← All matches
-        </Link>
-        <div className="match-detail__actions">
-          {cmsFixture && activeTab !== "edit" && (
-            <Link href={`/admin/matches/${cmsFixture.id}/edit`} className="cms-btn cms-btn--secondary">
-              Edit
-            </Link>
-          )}
-          {cmsFixture && (
-            <Link href={`/matches/${cmsFixture.slug}/commentary`} className="cms-btn cms-btn--secondary">
-              Live commentary
-            </Link>
-          )}
-          <a href={planetRugbyUrl} target="_blank" rel="noreferrer" className="cms-btn cms-btn--secondary">
-            Planet Rugby
-          </a>
-        </div>
+    <div className="pr-match-centre match-detail">
+      <nav aria-label="Breadcrumb">
+        <ol className="pr-mc-breadcrumbs">
+          <li>
+            <Link href="/">Home</Link>
+          </li>
+          <li className="pr-mc-breadcrumbs__sep" aria-hidden>
+            &gt;
+          </li>
+          <li>
+            <Link href="/matches">Scores &amp; Fixtures</Link>
+          </li>
+          <li className="pr-mc-breadcrumbs__sep" aria-hidden>
+            &gt;
+          </li>
+          <li>
+            <span>{detail.competition_name}</span>
+          </li>
+          <li className="pr-mc-breadcrumbs__sep" aria-hidden>
+            &gt;
+          </li>
+          <li className="pr-mc-breadcrumbs__current">{teamsLabel}</li>
+        </ol>
       </nav>
 
-      <header className="match-detail-hero">
-        <p className="match-detail-hero__comp">{detail.competition_name}</p>
-        {detail.round && <p className="match-detail-hero__round">{detail.round}</p>}
-        <div className="match-detail-hero__scoreboard">
-          <div className="match-detail-hero__team">
-            <span className="match-detail-hero__name">
-              <TeamProfileLinkFromContext
-                name={detail.home_team_name}
-                externalId={detail.home_team_id}
-                context={entities}
-                side="home"
-              />
-            </span>
-            <span className="match-detail-hero__score">{detail.home_team_score}</span>
-          </div>
-          <span className="match-detail-hero__vs">{statusLabel(detail.status)}</span>
-          <div className="match-detail-hero__team match-detail-hero__team--away">
-            <span className="match-detail-hero__name">
-              <TeamProfileLinkFromContext
-                name={detail.away_team_name}
-                externalId={detail.away_team_id}
-                context={entities}
-                side="away"
-              />
-            </span>
-            <span className="match-detail-hero__score">{detail.away_team_score}</span>
-          </div>
+      <div className="pr-mc-shell">
+        <div className="pr-mc-main">
+          <header className="pr-mc-header">
+            <h1 className="pr-mc-header__title">
+              {teamsLabel}
+              <span className="pr-mc-header__title-meta">
+                {" "}
+                [{detail.competition_name}]
+                {kickoffAt ? ` · ${formatKickoff(kickoffAt)}` : ""}
+                {detail.venue_name ? ` · ${detail.venue_name}` : ""}
+                {" · "}
+                {statusLabel(detail.status)}
+              </span>
+            </h1>
+            <div className="pr-mc-header__board">
+              <div className="pr-mc-header__team">
+                <TeamCrest name={detail.home_team_name} imageUrl={homeImageUrl} size="lg" />
+                <span className="pr-mc-header__name">
+                  <TeamProfileLinkFromContext
+                    name={detail.home_team_name}
+                    externalId={detail.home_team_id}
+                    context={entities}
+                    side="home"
+                  />
+                </span>
+              </div>
+              <div className="pr-mc-header__centre">
+                <span className="pr-mc-header__status">{statusLabel(detail.status)}</span>
+                <span className="pr-mc-header__score">
+                  {detail.home_team_score} – {detail.away_team_score}
+                </span>
+                <MatchEventTimelineStrip events={keyEvents} homeTeamId={detail.home_team_id} />
+              </div>
+              <div className="pr-mc-header__team">
+                <TeamCrest name={detail.away_team_name} imageUrl={awayImageUrl} size="lg" />
+                <span className="pr-mc-header__name">
+                  <TeamProfileLinkFromContext
+                    name={detail.away_team_name}
+                    externalId={detail.away_team_id}
+                    context={entities}
+                    side="away"
+                  />
+                </span>
+              </div>
+            </div>
+            {mainRef?.name ? (
+              <p className="pr-mc-header__meta">Ref: {mainRef.name}</p>
+            ) : null}
+          </header>
+
+          <MatchDetailTabs activeTab={activeTab} />
+
+          <MatchDetailPanel tab={activeTab} data={data} />
         </div>
-        <p className="match-detail-hero__meta">
-          {formatKickoff(kickoffAt)}
-          {detail.venue_name ? ` · ${detail.venue_name}` : ""}
-          {mainRef?.name ? ` · ${mainRef.name}` : ""}
-        </p>
-      </header>
 
-      <MatchDetailTabs activeTab={activeTab} />
-
-      <MatchDetailPanel tab={activeTab} data={data} />
+        <MatchCentreSidebar
+          matchDate={detail.date}
+          competitionName={detail.competition_name}
+          competitionId={detail.competition_id}
+          currentMatchId={detail.match_id}
+        />
+      </div>
     </div>
   );
 }

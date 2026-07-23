@@ -1,9 +1,11 @@
-# Rugby Data API — Phase 2 Capture & Mapping Audit
+# Rugby Data API — Capture, Mapping & Client Foundation
 
-**Status:** Capture + planning only. No production sync. No migrations.  
+**Status:** Phase 2 audit complete. Phase 2–3 foundation in code (mapping tables, client, raw capture). No production bulk sync.  
 **Captured:** 2026-07-10  
 **Base URL (dev):** `https://cms-planetrugby-players-investigator-for-barrie.hneeds.com`  
-**Config:** `RUGBY_DATA_API_BASE_URL`, `RUGBY_DATA_API_TOKEN` (server-only; never `NEXT_PUBLIC_*`)
+**Config:** `RUGBY_DATA_API_BASE_URL`, `RUGBY_DATA_API_TOKEN` (server-only; never `NEXT_PUBLIC_*`)  
+**Keys UI:** `/admin/keys/rugby-data`  
+**Migration:** `0035_data_integration_foundation`
 
 ## Re-capture
 

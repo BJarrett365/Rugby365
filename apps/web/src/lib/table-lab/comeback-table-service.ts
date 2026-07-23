@@ -7,12 +7,19 @@ import {
   filterByKickoffRange,
   matchLeaguePoints,
 } from "./rugby-table-metrics-service";
-import {
-  parseLosingPositionFilter,
-  perspectiveQualifiesForLosingPositionFilter,
-  type LosingPositionFilter,
-} from "./points-gained-losing-table-service";
+import { perspectiveQualifiesForLosingPositionFilter } from "./points-gained-losing-table-service";
 import { uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  parseComebackFromFilter,
+  parseComebackSortBy,
+  parseMinimumDeficitPoints,
+  parseMinimumDeficitPreset,
+  comebackFromFilterLabel,
+  minimumDeficitLabel,
+  type ComebackFromFilter,
+  type ComebackSortBy,
+  type MinimumDeficitPreset,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -20,88 +27,15 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type ComebackFromFilter = LosingPositionFilter;
-
-export type MinimumDeficitPreset = "any" | "3" | "7" | "10" | "14" | "custom";
-
-export type ComebackSortBy =
-  | "comeback_wins"
-  | "total_successful_comebacks"
-  | "comeback_success_pct"
-  | "largest_deficit_overcome"
-  | "table_points_gained"
-  | "largest_comeback"
-  | "final_20_comebacks";
-
-export function parseComebackFromFilter(value: string | null | undefined): ComebackFromFilter {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (
-    normalized === "comeback_from_half_time" ||
-    normalized === "behind_at_half_time"
-  ) {
-    return "half_time";
-  }
-  if (normalized === "comeback_from_after_sixty" || normalized === "behind_after_60") {
-    return "after_sixty";
-  }
-  return parseLosingPositionFilter(value);
-}
-
-export function parseMinimumDeficitPreset(
-  value: string | null | undefined,
-): MinimumDeficitPreset {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "3" || normalized === "3_plus" || normalized === "3+") return "3";
-  if (normalized === "7" || normalized === "7_plus" || normalized === "7+") return "7";
-  if (normalized === "10" || normalized === "10_plus" || normalized === "10+") return "10";
-  if (normalized === "14" || normalized === "14_plus" || normalized === "14+") return "14";
-  if (normalized === "custom") return "custom";
-  return "any";
-}
-
-export function parseMinimumDeficitPoints(
-  preset: MinimumDeficitPreset,
-  customValue: string | number | null | undefined,
-): number {
-  if (preset === "custom") {
-    const parsed = Number(customValue);
-    return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
-  }
-  if (preset === "any") return 0;
-  return Number(preset);
-}
-
-export function parseComebackSortBy(value: string | null | undefined): ComebackSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "total_successful_comebacks" || normalized === "total_comebacks") {
-    return "total_successful_comebacks";
-  }
-  if (normalized === "comeback_success_pct" || normalized === "success_pct") {
-    return "comeback_success_pct";
-  }
-  if (normalized === "largest_deficit_overcome" || normalized === "largest_comeback") {
-    return normalized === "largest_comeback" ? "largest_comeback" : "largest_deficit_overcome";
-  }
-  if (normalized === "table_points_gained" || normalized === "points_gained") {
-    return "table_points_gained";
-  }
-  if (normalized === "final_20_comebacks" || normalized === "final_twenty_comebacks") {
-    return "final_20_comebacks";
-  }
-  return "comeback_wins";
-}
-
-export function comebackFromFilterLabel(filter: ComebackFromFilter): string {
-  if (filter === "half_time") return "Behind at half-time";
-  if (filter === "after_sixty") return "Behind after 60 minutes";
-  return "Behind at any time";
-}
-
-export function minimumDeficitLabel(preset: MinimumDeficitPreset, points: number): string {
-  if (preset === "custom" && points > 0) return `${points}+ points`;
-  if (preset === "any") return "Any deficit";
-  return `${preset}+ points`;
-}
+export type { ComebackFromFilter, ComebackSortBy, MinimumDeficitPreset };
+export {
+  parseComebackFromFilter,
+  parseComebackSortBy,
+  parseMinimumDeficitPoints,
+  parseMinimumDeficitPreset,
+  comebackFromFilterLabel,
+  minimumDeficitLabel,
+};
 
 export function perspectiveQualifiesForComebackTable(
   row: TeamFixturePerspective,
@@ -323,15 +257,15 @@ export function buildComebackTableStandings(input: {
     const comebackSuccessPct =
       acc.matchesBehind > 0
         ? Math.round((totalSuccessfulComebacks / acc.matchesBehind) * 1000) / 10
-        : undefined;
+        : null;
     const comebackWinPct =
       acc.matchesBehind > 0
         ? Math.round((acc.comebackWins / acc.matchesBehind) * 1000) / 10
-        : undefined;
+        : null;
     const comebackDrawPct =
       acc.matchesBehind > 0
         ? Math.round((acc.comebackDraws / acc.matchesBehind) * 1000) / 10
-        : undefined;
+        : null;
     const averageDeficitOvercome =
       acc.deficitsOvercome.length > 0
         ? Math.round(

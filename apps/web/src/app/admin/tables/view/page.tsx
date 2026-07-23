@@ -6,37 +6,24 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { TableLabMetaPanel, TableLabResultsTable } from "@/components/admin/TableLabPanels";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { defaultCompetitionId } from "@/lib/competition-list-utils";
-import { isNationsChampionshipSlug } from "@/lib/nations-championship-hemisphere";
 import {
   DEFAULT_FORM_MATCH_COUNT,
   FORM_MATCH_COUNT_PRESETS,
   isPresetFormMatchCount,
   parseFormMatchCount,
-} from "@/lib/table-lab/form-table-service";
-import { parseMinMatchesPlayed } from "@/lib/table-lab/home-table-service";
-import { parseCalendarYear } from "@/lib/table-lab/calendar-year-table-service";
-import {
-  parseAsOfDateParam,
-  shiftDateOnly,
-  defaultBetweenDatesRange,
-  parseDateOnlyParam,
-} from "@/lib/table-lab/table-date-utils";
-import { parseLiveTableBoolean } from "@/lib/table-lab/live-table-service";
-import { parseIncludeExtraTime } from "@/lib/table-lab/final-twenty-minutes-table-service";
-import { parseOppositionPositionRule } from "@/lib/table-lab/v-top-half-table-service";
-import {
+  parseMinMatchesPlayed,
+  parseCalendarYear,
+  parseLiveTableBoolean,
+  parseIncludeExtraTime,
+  parseOppositionPositionRule,
   parsePointsLostWinningSortBy,
   parseWinningPositionFilter,
   type PointsLostWinningSortBy,
   type WinningPositionFilter,
-} from "@/lib/table-lab/points-lost-winning-table-service";
-import {
   parseLosingPositionFilter,
   parsePointsGainedLosingSortBy,
   type LosingPositionFilter,
   type PointsGainedLosingSortBy,
-} from "@/lib/table-lab/points-gained-losing-table-service";
-import {
   parseComebackFromFilter,
   parseComebackSortBy,
   parseMinimumDeficitPoints,
@@ -44,8 +31,6 @@ import {
   type ComebackFromFilter,
   type ComebackSortBy,
   type MinimumDeficitPreset,
-} from "@/lib/table-lab/comeback-table-service";
-import {
   parseLeadPositionFilter,
   parseLeadProtectionSortBy,
   parseMinimumLeadPoints,
@@ -53,8 +38,6 @@ import {
   type LeadPositionFilter,
   type LeadProtectionSortBy,
   type MinimumLeadPreset,
-} from "@/lib/table-lab/lead-protection-table-service";
-import {
   parseTriesMatchRangeCount,
   parseTriesMatchRangePreset,
   parseTriesScoredPeriod,
@@ -62,37 +45,31 @@ import {
   type TriesMatchRangePreset,
   type TriesScoredPeriod,
   type TriesScoredSortBy,
-} from "@/lib/table-lab/tries-scored-table-service";
-import {
   parseTriesConcededSortBy,
   type TriesConcededSortBy,
-} from "@/lib/table-lab/tries-conceded-table-service";
-import {
   parseBothTeamsScoredTriesSortBy,
   type BothTeamsScoredTriesSortBy,
-} from "@/lib/table-lab/both-teams-scored-tries-table-service";
-import {
   parseWinningBonusPointsSortBy,
   parseWinningBonusTypeFilter,
   type WinningBonusPointsSortBy,
   type WinningBonusTypeFilter,
-} from "@/lib/table-lab/winning-bonus-points-table-service";
-import {
   parseConcedingFirstSortBy,
   type ConcedingFirstSortBy,
-} from "@/lib/table-lab/conceding-first-table-service";
-import {
   parseFirstScoreTypeFilter,
   parseScoringFirstSortBy,
   type ScoringFirstSortBy,
-} from "@/lib/table-lab/scoring-first-table-service";
-import type { FirstScoreTypeFilter } from "@/lib/table-lab/first-score-utils";
-import {
   parseAllTimeSeasonRangeMode,
   parseAllTimeSortBy,
   parseAllTimeTeamStatus,
   parseSeasonYearParam,
-} from "@/lib/table-lab/all-time-premiership-service";
+} from "@/lib/table-lab/table-lab-param-parsers";
+import {
+  parseAsOfDateParam,
+  shiftDateOnly,
+  defaultBetweenDatesRange,
+  parseDateOnlyParam,
+} from "@/lib/table-lab/table-date-utils";
+import type { FirstScoreTypeFilter } from "@/lib/table-lab/first-score-utils";
 import type {
   AllTimePremiershipSortBy,
   AllTimeSeasonRangeMode,
@@ -117,14 +94,16 @@ type CompetitionRow = {
   activeSeason?: { id: string } | null;
 };
 
-function defaultTableIdForCompetition(slug: string | undefined): string {
-  return isNationsChampionshipSlug(slug) ? "hemisphere_table" : "full_table";
+function defaultTableIdForCompetition(_slug: string | undefined): string {
+  // Nations Championship full_table is enriched with hemisphereGroups → Full / North / South.
+  return "full_table";
 }
 
 type SeasonRow = {
   id: string;
   label: string;
   competitionId?: string;
+  year?: number;
   isActive?: boolean;
   displayLabel?: string;
   status?: "current" | "previous" | "historical";
@@ -171,7 +150,15 @@ function defaultSeasonId(seasonRows: SeasonRow[], preferredId?: string | null) {
   if (preferredId && seasonRows.some((row) => row.id === preferredId)) {
     return preferredId;
   }
-  return seasonRows.find((row) => row.isActive)?.id ?? seasonRows[0]?.id ?? "";
+  const currentYear =
+    new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+  return (
+    seasonRows.find((row) => row.year === currentYear)?.id ??
+    seasonRows.find((row) => row.status === "current")?.id ??
+    seasonRows.find((row) => row.isActive)?.id ??
+    seasonRows[0]?.id ??
+    ""
+  );
 }
 
 type FormMatchPreset = (typeof FORM_MATCH_COUNT_PRESETS)[number] | "custom";

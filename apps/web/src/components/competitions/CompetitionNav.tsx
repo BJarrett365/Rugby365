@@ -7,6 +7,7 @@ const TABS = [
   { suffix: "/fixtures", label: "Fixtures" },
   { suffix: "/results", label: "Results" },
   { suffix: "/table", label: "Table" },
+  { suffix: "/stats", label: "Player stats" },
 ] as const;
 
 export function CompetitionNav({ slug }: { slug: string }) {

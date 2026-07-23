@@ -20,6 +20,11 @@ import {
   type StandingsAccumulator,
 } from "./rugby-table-metrics-service";
 import { countTeamMatches, uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  concedingFirstSortByLabel,
+  parseConcedingFirstSortBy,
+  type ConcedingFirstSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -27,39 +32,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type ConcedingFirstSortBy =
-  | "league_points"
-  | "comeback_wins"
-  | "comeback_win_pct"
-  | "points_gained_after_conceding_first";
-
-export function parseConcedingFirstSortBy(
-  value: string | null | undefined,
-): ConcedingFirstSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "comeback_wins" || normalized === "comeback_wins_count") {
-    return "comeback_wins";
-  }
-  if (normalized === "comeback_win_pct" || normalized === "comeback%") {
-    return "comeback_win_pct";
-  }
-  if (
-    normalized === "points_gained_after_conceding_first" ||
-    normalized === "points_gained"
-  ) {
-    return "points_gained_after_conceding_first";
-  }
-  return "league_points";
-}
-
-export function concedingFirstSortByLabel(sortBy: ConcedingFirstSortBy): string {
-  if (sortBy === "comeback_wins") return "Comeback wins";
-  if (sortBy === "comeback_win_pct") return "Comeback win %";
-  if (sortBy === "points_gained_after_conceding_first") {
-    return "Points gained after conceding first";
-  }
-  return "Table points";
-}
+export type { ConcedingFirstSortBy };
+export { concedingFirstSortByLabel, parseConcedingFirstSortBy };
 
 type ConcedingFirstAccumulator = StandingsAccumulator & {
   firstConcededMinutes: number[];
@@ -120,7 +94,7 @@ export function enrichConcedingFirstRows(
   return rows.map((row) => {
     const totalMatches = totalMatchesByTeam.get(row.teamId) ?? 0;
     const matchesConcedingFirstPct =
-      totalMatches > 0 ? Math.round((row.played / totalMatches) * 1000) / 10 : undefined;
+      totalMatches > 0 ? Math.round((row.played / totalMatches) * 1000) / 10 : null;
 
     return {
       ...row,
@@ -128,10 +102,10 @@ export function enrichConcedingFirstRows(
       extra: {
         ...row.extra,
         matchesConcedingFirstPct,
-        comebackWinPct: row.extra?.comebackWinPct,
+        comebackWinPct: row.extra?.comebackWinPct ?? null,
         pointsGainedAfterConcedingFirst: row.leaguePoints,
-        avgFirstConcededMinute: row.extra?.avgFirstConcededMinute,
-        comebackWins: row.extra?.comebackWins,
+        avgFirstConcededMinute: row.extra?.avgFirstConcededMinute ?? null,
+        comebackWins: row.extra?.comebackWins ?? null,
       },
     };
   });
@@ -255,7 +229,7 @@ export function buildConcedingFirstTableStandings(input: {
           ) / 10
         : null;
     const comebackWinPct =
-      row.played > 0 ? Math.round((acc.comebackWins / row.played) * 1000) / 10 : undefined;
+      row.played > 0 ? Math.round((acc.comebackWins / row.played) * 1000) / 10 : null;
 
     return {
       ...row,

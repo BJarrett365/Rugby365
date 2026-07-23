@@ -29,9 +29,9 @@ Transfer management in Rugby365 SDMS covers manual records, Wikipedia imports, p
 
 ## Wikipedia import
 
-Default audit season: **2025–26**. Imports add transfer history only — they never overwrite player current clubs.
+Default audit season: **2026–27**. Imports add transfer history only — they never overwrite player current clubs.
 
-Default source: [2025–26 Premiership Rugby transfers](https://en.wikipedia.org/wiki/List_of_2025%E2%80%9326_Premiership_Rugby_transfers)
+Default source: [2026–27 Premiership Rugby transfers](https://en.wikipedia.org/wiki/List_of_2026%E2%80%9327_Premiership_Rugby_transfers)
 
 Seasons **2013–14** through **2026–27** are available in the admin dropdown (`PREMIERSHIP_TRANSFER_SOURCES` in `premiership-transfer-constants.ts`).
 

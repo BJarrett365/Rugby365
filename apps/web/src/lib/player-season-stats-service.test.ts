@@ -5,7 +5,12 @@ import {
   filterPlayerSeasonStatsRows,
   type PlayerSeasonStatsRow,
 } from "./player-season-stats-service";
-import { aggregatePerformanceStats, attackScore, defenceScore } from "@rugby365/import-sdk";
+import {
+  aggregatePerformanceStats,
+  attackScore,
+  defenceScore,
+  emptyParsedPlayerMatchPerformance,
+} from "@rugby365/import-sdk";
 
 function sampleRow(overrides: Partial<PlayerSeasonStatsRow> = {}): PlayerSeasonStatsRow {
   return {
@@ -90,8 +95,36 @@ describe("player match stat aggregation helpers", () => {
       { seasonId: "s1", seasonLabel: "2025/26", competitionId: "c2", competitionName: "Champions Cup" },
     ]);
 
-    expect(options.seasons.map((s) => s.label)).toEqual(["2025/26", "2024/25"]);
+    expect(options.seasons.map((s) => s.label)).toEqual([
+      "2025/26 · Premiership",
+      "2025/26 · Champions Cup",
+      "2024/25",
+    ]);
     expect(options.competitions.map((c) => c.name)).toEqual(["Champions Cup", "Premiership"]);
+  });
+
+  it("collapses duplicate International competition and season imports", () => {
+    const options = buildSeasonStatsFilterOptions([
+      {
+        seasonId: "s-a",
+        seasonLabel: "2026–27",
+        competitionId: "c-a",
+        competitionName: "International Matches",
+      },
+      {
+        seasonId: "s-b",
+        seasonLabel: "2026–27",
+        competitionId: "c-b",
+        competitionName: "International Matches",
+      },
+    ]);
+
+    expect(options.competitions).toHaveLength(1);
+    expect(options.competitions[0]?.name).toBe("International");
+    expect(options.competitions[0]?.aliasIds.sort()).toEqual(["c-a", "c-b"]);
+    expect(options.seasons).toHaveLength(1);
+    expect(options.seasons[0]?.label).toBe("2026–27");
+    expect(options.seasons[0]?.aliasIds.sort()).toEqual(["s-a", "s-b"]);
   });
 
   it("filters player rows by season and competition", () => {
@@ -105,15 +138,24 @@ describe("player match stat aggregation helpers", () => {
     expect(filterPlayerSeasonStatsRows(rows, { competitionId: "c2" })).toHaveLength(1);
     expect(filterPlayerSeasonStatsRows(rows, { seasonId: "s1", competitionId: "c1" })).toHaveLength(1);
   });
+
+  it("filters across competition aliases", () => {
+    const rows = [
+      sampleRow({ id: "1", seasonId: "s1", competitionId: "c-a", competitionName: "International Matches" }),
+      sampleRow({ id: "2", seasonId: "s2", competitionId: "c-b", competitionName: "International Matches" }),
+    ];
+    const options = buildSeasonStatsFilterOptions(rows);
+    expect(
+      filterPlayerSeasonStatsRows(rows, { competitionId: options.competitions[0]!.id }, options),
+    ).toHaveLength(2);
+  });
 });
 
 describe("player-season-stats aggregation", () => {
   it("sums core and attack/defence metrics across appearances", () => {
     const totals = aggregatePerformanceStats([
       {
-        externalPlayerId: "p1",
-        playerName: "A",
-        side: "home",
+        ...emptyParsedPlayerMatchPerformance("p1", "A", "home"),
         minutesPlayed: 40,
         carries: 5,
         metresCarried: 20,
@@ -126,33 +168,20 @@ describe("player-season-stats aggregation", () => {
         lineBreaks: 1,
         defendersBeaten: 2,
         touches: 7,
-        postContactMetres: 0,
-        ruckArrivalEffectiveness: 0,
         passes: 2,
-        offloads: 0,
         tries: 1,
         points: 5,
       },
       {
-        externalPlayerId: "p1",
-        playerName: "A",
-        side: "home",
+        ...emptyParsedPlayerMatchPerformance("p1", "A", "home"),
         minutesPlayed: 40,
         carries: 7,
         metresCarried: 30,
         tacklesMade: 4,
         tacklesCompleted: 4,
-        missedTackles: 0,
-        dominantTackles: 0,
-        turnoversWon: 0,
-        tryAssists: 0,
-        lineBreaks: 0,
         defendersBeaten: 1,
         touches: 8,
-        postContactMetres: 0,
-        ruckArrivalEffectiveness: 0,
         passes: 1,
-        offloads: 0,
         tries: 0,
         points: 0,
       },
@@ -162,6 +191,6 @@ describe("player-season-stats aggregation", () => {
     expect(totals.carries).toBe(12);
     expect(totals.metresCarried).toBe(50);
     expect(totals.tacklesCompleted).toBe(9);
-    expect(attackScore(totals)).toBeGreaterThan(defenceScore({ ...totals, appearances: 2 }));
+    expect(attackScore(totals)).toBeGreaterThan(defenceScore(totals));
   });
 });

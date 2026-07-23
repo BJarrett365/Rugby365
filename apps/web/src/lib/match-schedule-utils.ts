@@ -1,5 +1,11 @@
 import { canonicalCompetitionDisplayName } from "./competition-list-utils";
 
+export type ScheduleTeam = {
+  name: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+};
+
 export type ScheduleFixture = {
   id: string;
   slug: string;
@@ -12,10 +18,12 @@ export type ScheduleFixture = {
   kickoffAt: string | null;
   status: string;
   round: string | null;
+  /** Stadium / ground name when available from SDMS or CMS. */
+  venue: string | null;
   homeScore: number;
   awayScore: number;
-  homeTeam: { name: string; slug?: string | null } | null;
-  awayTeam: { name: string; slug?: string | null } | null;
+  homeTeam: ScheduleTeam | null;
+  awayTeam: ScheduleTeam | null;
   externalMatchId?: string | null;
   planetRugbyUrl?: string | null;
   source?: "db" | "sdms";
@@ -156,6 +164,42 @@ export function formatDateHeader(key: string): string {
     .toUpperCase();
 }
 
+/** Planet Rugby public list date, e.g. "Saturday 11th July 2026". */
+export function formatPublicDateHeader(key: string): string {
+  const d = parseDateKey(key);
+  const weekday = d.toLocaleDateString("en-GB", { weekday: "long" });
+  const day = d.getDate();
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+        ? "nd"
+        : day % 10 === 3 && day !== 13
+          ? "rd"
+          : "th";
+  const rest = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  return `${weekday} ${day}${suffix} ${rest}`;
+}
+
+export function teamInitials(name: string | null | undefined): string {
+  if (!name?.trim()) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
+/** Center-left status for public fixtures rows. */
+export function publicMatchStatusLabel(
+  status: string,
+  kickoffAt: string | null,
+  matchDate?: string | null,
+): string {
+  if (status === "full_time") return "Result";
+  if (status === "live") return "Live";
+  if (status === "postponed") return "PP";
+  return formatKickoffTime(kickoffAt, matchDate);
+}
+
 export function formatStripDay(key: string, todayKey: string): { top: string; bottom: string } {
   const d = parseDateKey(key);
   const month = d.toLocaleDateString("en-GB", { month: "short" });
@@ -254,11 +298,27 @@ export function buildMatchDetailPath(input: {
   return `/matches/${input.matchId}/${compSlug}/${input.competitionId}/${input.homeTeamSlug}-v-${input.awayTeamSlug}/${input.matchDate}`;
 }
 
+/** Prefer Planet Rugby Match Centre URL over commentary when a PR match URL is stored. */
 export function matchDetailHref(fixture: ScheduleFixture): string | null {
-  const matchId = fixture.externalMatchId ?? (fixture.source === "sdms" ? fixture.id.replace(/^sdms:/, "") : null);
-  const homeSlug = fixture.homeTeam?.slug;
-  const awaySlug = fixture.awayTeam?.slug;
-  const compId = fixture.sdmsCompetitionId;
+  if (fixture.planetRugbyUrl) {
+    try {
+      const path = new URL(fixture.planetRugbyUrl).pathname;
+      const parts = path.split("/").filter(Boolean);
+      const matchesIdx = parts.indexOf("matches");
+      if (matchesIdx >= 0 && parts[matchesIdx + 1] && parts.length >= matchesIdx + 6) {
+        return `/${parts.slice(matchesIdx).join("/")}`;
+      }
+    } catch {
+      /* ignore bad URLs */
+    }
+  }
+
+  const matchId =
+    fixture.externalMatchId ??
+    (fixture.source === "sdms" ? fixture.id.replace(/^sdms:/, "") : null);
+  const homeSlug = fixture.homeTeam?.slug || slugifySegment(fixture.homeTeam?.name ?? "");
+  const awaySlug = fixture.awayTeam?.slug || slugifySegment(fixture.awayTeam?.name ?? "");
+  const compId = fixture.sdmsCompetitionId ?? fixture.competitionId;
   if (!matchId || !homeSlug || !awaySlug || !compId || !fixture.competitionName || !fixture.matchDate) {
     return null;
   }

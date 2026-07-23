@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { CompetitionLiveTable } from "@/components/competitions/CompetitionLiveTable";
 import { LeagueTable } from "@/components/competitions/LeagueTable";
 import { PlayoffFixtures } from "@/components/competitions/PlayoffFixtures";
-import { isNationsChampionshipSlug } from "@/lib/nations-championship-hemisphere";
-import { splitRowsByHemisphere } from "@/lib/table-lab/table-hemisphere-shared";
-import { getRugbyTableDefinition } from "@/lib/table-lab/table-definition-service";
+import type { RugbyTableResult } from "@/lib/table-lab/table-types";
 
 type View = "overall" | "home" | "away";
 
@@ -24,12 +23,6 @@ type Standing = {
   bonusPoints: number;
   points: number;
   form: string | null;
-};
-
-type Champion = {
-  winner: string;
-  label: string;
-  wikipediaUrl?: string;
 };
 
 type PlayoffFixture = {
@@ -59,16 +52,35 @@ export function CompetitionTableClient({
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
   const [view, setView] = useState<View>(initialView);
+  const [liveResult, setLiveResult] = useState<RugbyTableResult | null>(null);
   const [standings, setStandings] = useState<Standing[]>([]);
-  const [champion, setChampion] = useState<Champion | null>(null);
   const [playoffFixtures, setPlayoffFixtures] = useState<PlayoffFixture[]>([]);
-  const [playedMismatch, setPlayedMismatch] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
+
     const params = new URLSearchParams({ view });
     if (seasonLabel) params.set("season", seasonLabel);
+
+    const liveRes = await fetch(`/api/competitions/by-slug/${slug}/live-table?${params}`);
+    const liveData = await liveRes.json();
+
+    if (liveRes.ok && liveData.result?.rows?.length) {
+      setCompetitionId(liveData.competition?.id ?? "");
+      setCompetitionName(liveData.competition?.name ?? slug);
+      setSeasons(liveData.seasons ?? []);
+      if (!seasonLabel && liveData.season?.label) setSeasonLabel(liveData.season.label);
+      setLiveResult(liveData.result as RugbyTableResult);
+      setStandings([]);
+      setPlayoffFixtures([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback to synced standings when live calc has no rows.
     const res = await fetch(`/api/competitions/by-slug/${slug}/standings?${params}`);
     const data = await res.json();
     if (res.ok) {
@@ -76,6 +88,7 @@ export function CompetitionTableClient({
       setCompetitionName(data.competition?.name ?? slug);
       setSeasons(data.seasons ?? []);
       if (!seasonLabel && data.season?.label) setSeasonLabel(data.season.label);
+      setLiveResult(null);
       setStandings(
         (data.standings ?? []).map((r: Record<string, unknown>) => ({
           rank: r.rank as number,
@@ -91,7 +104,6 @@ export function CompetitionTableClient({
           form: (r.form as string | null) ?? null,
         })),
       );
-      setChampion((data.champion as Champion | null) ?? null);
       setPlayoffFixtures(
         (data.playoffFixtures ?? []).map((row: Record<string, unknown>) => ({
           id: row.id as string,
@@ -104,41 +116,33 @@ export function CompetitionTableClient({
           awayScore: row.awayScore as number,
         })),
       );
-      setPlayedMismatch(Boolean(data.playedMismatch));
+    } else {
+      setError(liveData.error ?? data.error ?? "Failed to load table");
+      setLiveResult(null);
+      setStandings([]);
     }
     setLoading(false);
   }, [slug, seasonLabel, view]);
 
   useEffect(() => {
-    load().catch(() => setLoading(false));
+    load().catch(() => {
+      setError("Failed to load table");
+      setLoading(false);
+    });
   }, [load]);
 
-  const tableLabHref = competitionId
-    ? `/admin/tables/view?competitionId=${encodeURIComponent(competitionId)}`
-    : "/admin/tables/view";
+  // Soft refresh while matches are live.
+  useEffect(() => {
+    if (!liveResult?.liveMatchCount) return;
+    const id = window.setInterval(() => {
+      load().catch(() => undefined);
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [liveResult?.liveMatchCount, load]);
 
-  const nationsChampionship = isNationsChampionshipSlug(slug);
-  const hemisphereDefinition = getRugbyTableDefinition("hemisphere_table");
-  const hemisphereGroups =
-    nationsChampionship && hemisphereDefinition && standings.length > 0
-      ? splitRowsByHemisphere(
-          standings.map((row) => ({
-            rank: row.rank,
-            teamId: row.teamSlug,
-            teamName: row.teamName,
-            played: row.played,
-            won: row.won,
-            drawn: row.draw,
-            lost: row.lost,
-            pointsFor: 0,
-            pointsAgainst: 0,
-            pointsDiff: row.pointsDiff,
-            bonusPoints: row.bonusPoints,
-            leaguePoints: row.points,
-          })),
-          hemisphereDefinition,
-        )
-      : [];
+  const tableLabHref = competitionId
+    ? `/admin/tables/view?type=live-table&competitionId=${encodeURIComponent(competitionId)}`
+    : "/admin/tables/view";
 
   return (
     <div>
@@ -157,7 +161,7 @@ export function CompetitionTableClient({
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
                 }`}
               >
-                {option}
+                {option === "overall" ? "Total" : option}
               </button>
             ))}
           </div>
@@ -186,67 +190,35 @@ export function CompetitionTableClient({
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <p className="text-sm text-zinc-500 m-0">
-          {competitionName} · {view} table
+          {competitionName || slug} · {view === "overall" ? "Total" : view} standings
           {seasonLabel ? ` · ${seasonLabel}` : ""}
+          {liveResult ? " · Live table" : ""}
         </p>
-        <Link href={tableLabHref} className="cms-btn cms-btn--secondary text-xs">
-          Advanced tables
-        </Link>
-      </div>
-
-      {champion ? (
-        <div className="cms-card mb-4 border-emerald-900/50 bg-emerald-950/20">
-          <p className="text-lg font-semibold text-emerald-300 m-0">
-            Winner: {champion.winner}
-            <span className="text-zinc-500 font-normal text-sm ml-2">{champion.label}</span>
-          </p>
-          {champion.wikipediaUrl ? (
-            <a
-              href={champion.wikipediaUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-zinc-500 hover:text-zinc-300 mt-2 inline-block"
-            >
-              Wikipedia season page
-            </a>
-          ) : null}
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/competitions/${slug}/stats${seasonLabel ? `?season=${encodeURIComponent(seasonLabel)}` : ""}`}
+            className="cms-btn cms-btn--secondary text-xs"
+          >
+            Player stats
+          </Link>
+          <Link href={tableLabHref} className="cms-btn cms-btn--secondary text-xs">
+            Advanced tables
+          </Link>
         </div>
-      ) : null}
-
-      {playedMismatch ? (
-        <p className="text-sm text-amber-500/90 mb-4 m-0">
-          Teams have different games played — table may be incomplete. Re-sync this season from
-          LiveSport or SDMS.
-        </p>
-      ) : null}
+      </div>
 
       {loading ? (
         <p className="text-zinc-500 text-sm">Loading table…</p>
-      ) : nationsChampionship && hemisphereGroups.length > 0 ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {hemisphereGroups.map((group) => (
-            <div key={group.hemisphere} className="cms-card overflow-x-auto">
-              <h2 className="text-base font-semibold m-0 mb-3">{group.label}</h2>
-              <LeagueTable
-                rows={group.rows.map((row) => ({
-                  rank: row.rank,
-                  teamName: row.teamName,
-                  teamSlug: row.teamId,
-                  played: row.played,
-                  won: row.won,
-                  draw: row.drawn,
-                  lost: row.lost,
-                  pointsDiff: row.pointsDiff,
-                  bonusPoints: row.bonusPoints,
-                  points: row.leaguePoints,
-                  form: null,
-                }))}
-                showForm={false}
-                compact
-              />
-            </div>
-          ))}
-        </div>
+      ) : error ? (
+        <p className="text-amber-400 text-sm">{error}</p>
+      ) : liveResult ? (
+        <CompetitionLiveTable
+          rows={liveResult.rows}
+          hemisphereGroups={liveResult.hemisphereGroups}
+          showMovement={liveResult.showMovement !== false}
+          liveMatchCount={liveResult.liveMatchCount}
+          note={liveResult.liveTableCalculationNote ?? liveResult.filterSummary}
+        />
       ) : (
         <>
           <div className="cms-card overflow-x-auto">

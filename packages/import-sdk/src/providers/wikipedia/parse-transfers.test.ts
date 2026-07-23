@@ -54,6 +54,29 @@ describe("parsePremiershipTransferDocument", () => {
     expect(flat.filter((t) => t.playerName === "Dan du Preez")).toHaveLength(1);
   });
 
+  it("collapses the same move listed as In and Out under different clubs", () => {
+    const dual = `
+## Bath
+### Players in
+- Dan du Preez from Sale Sharks
+## Sale Sharks
+### Players out
+- Dan du Preez to Bath
+`;
+    const flat = flattenPremiershipTransfers(parsePremiershipTransferDocument(dual));
+    expect(flat.filter((t) => t.playerName === "Dan du Preez")).toHaveLength(1);
+  });
+
+  it("skips no-op same-club permanent moves", () => {
+    const same = `
+## Bath
+### Players in
+- Someone from Bath
+`;
+    const flat = flattenPremiershipTransfers(parsePremiershipTransferDocument(same));
+    expect(flat.filter((t) => t.playerName === "Someone")).toHaveLength(0);
+  });
+
   it("builds stable import keys", () => {
     const doc = parsePremiershipTransferDocument(SAMPLE);
     const transfer = doc.clubs[0]!.playersIn[0]!;
@@ -67,7 +90,7 @@ describe("parsePremiershipTransferDocument", () => {
 === Players in ===
 * {{flagicon|RSA}} [[Handré Pollard]] from [[Leicester Tigers]]
 === Players out ===
-* {{flagicon|ENG}} [[Ollie Lawrence]] to [[Bath Rugby|Bath]]
+* {{flagicon|ENG}} [[Ollie Lawrence]] to [[Gloucester Rugby|Gloucester]]
 `;
     const doc = parsePremiershipTransferWikitext(wikitext);
     const pollard = doc.clubs[0]!.playersIn[0];
@@ -75,7 +98,7 @@ describe("parsePremiershipTransferDocument", () => {
     expect(pollard?.playerName).toBe("Handré Pollard");
     expect(pollard?.fromClub).toBe("Leicester Tigers");
     expect(lawrence?.playerName).toBe("Ollie Lawrence");
-    expect(lawrence?.toClub).toBe("Bath");
+    expect(lawrence?.toClub).toBe("Gloucester");
   });
 
   it("parses current Wikipedia transfer list formatting with refs and permanent markers", () => {

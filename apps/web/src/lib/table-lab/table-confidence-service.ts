@@ -65,6 +65,13 @@ function buildCoverageBySource(
   );
   coverageBySource.half_time_scores = pct(withHalfTime.length, perspectives.length);
 
+  const withSixty = perspectives.filter(
+    (row) =>
+      row.sixtyMinuteScoreVerified === true ||
+      (hasValue(row.scoreAtSixtyFor) && hasValue(row.scoreAtSixtyAgainst)),
+  );
+  coverageBySource.sixty_minute_scores = pct(withSixty.length, perspectives.length);
+
   const withEvents = perspectives.filter((row) => hasValue(row.scoredFirst));
   coverageBySource.match_events = pct(withEvents.length, perspectives.length);
 

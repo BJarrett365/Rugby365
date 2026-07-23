@@ -4,7 +4,14 @@ export const DEFAULT_TABLE_COMPETITION_SLUG = "premiership";
 /** Single display label for international fixtures (drops redundant "Matches" suffix). */
 export function canonicalCompetitionDisplayName(name: string): string {
   const trimmed = name.trim();
-  if (trimmed.toLowerCase() === "international matches") return "International";
+  const lower = trimmed.toLowerCase();
+  if (
+    lower === "international matches" ||
+    lower === "internationals" ||
+    lower === "international match"
+  ) {
+    return "International";
+  }
   return trimmed;
 }
 
@@ -15,7 +22,7 @@ type CompetitionPickerRow = {
   activeSeason?: { id: string; isActive?: boolean } | null;
 };
 
-function competitionPickerScore(row: CompetitionPickerRow): number {
+export function competitionPickerScore(row: CompetitionPickerRow): number {
   let score = 0;
   if (row.activeSeason?.isActive) score += 100;
   if (row.activeSeason) score += 50;

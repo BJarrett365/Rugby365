@@ -35,12 +35,14 @@ function linkFromTeam(row: {
   slug: string;
   name: string;
   externalProviderId: string | null;
+  imageUrl?: string | null;
 }): CmsEntityLink {
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     externalProviderId: row.externalProviderId,
+    imageUrl: row.imageUrl ?? null,
   };
 }
 
@@ -78,6 +80,7 @@ export async function loadTeamsByExternalIds(externalIds: string[]): Promise<Map
       slug: teams.slug,
       name: teams.name,
       externalProviderId: teams.externalProviderId,
+      imageUrl: teams.imageUrl,
     })
     .from(teams)
     .where(inArray(teams.externalProviderId, ids));
@@ -110,7 +113,7 @@ function collectPlayerExternalIds(input: {
 
   if (input.playerStats) {
     for (const side of ["home", "away"] as const) {
-      for (const category of ["attack", "defend", "kicking"] as const) {
+      for (const category of ["attack", "defend", "kicking", "errors", "carries"] as const) {
         for (const row of input.playerStats[side][category]?.detail_list ?? []) {
           if (row.player_id) ids.add(row.player_id);
         }

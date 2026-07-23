@@ -4,6 +4,7 @@ import {
   getFixtureSquad,
   removeFixtureSquadPlayer,
   syncSquadFromMatchSnapshot,
+  updateFixtureSquadPlayer,
 } from "@/lib/entity-admin-service";
 import { apiErrorResponse } from "@/lib/api-errors";
 
@@ -40,6 +41,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ fixture
     return NextResponse.json({ squadPlayer: row }, { status: 201 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update squad";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ fixtureId: string }> }) {
+  try {
+    await params;
+    const body = (await req.json()) as Record<string, unknown>;
+    const squadPlayerId = String(body.squadPlayerId ?? body.id ?? "");
+    if (!squadPlayerId) {
+      return NextResponse.json({ error: "squadPlayerId required" }, { status: 400 });
+    }
+    const row = await updateFixtureSquadPlayer(squadPlayerId, {
+      ...(body.jerseyNumber !== undefined ? { jerseyNumber: Number(body.jerseyNumber) } : {}),
+      ...(body.squadRole !== undefined ? { squadRole: String(body.squadRole) } : {}),
+      ...(body.positionName !== undefined ? { positionName: String(body.positionName) } : {}),
+      ...(body.clubName !== undefined ? { clubName: String(body.clubName) } : {}),
+      ...(body.teamId !== undefined ? { teamId: String(body.teamId) } : {}),
+    });
+    return NextResponse.json({ squadPlayer: row });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to update squad player";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

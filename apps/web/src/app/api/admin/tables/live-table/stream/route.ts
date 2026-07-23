@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { competitionSeasons, fixtures } from "@rugby365/db";
 import { getDb } from "@/lib/db";
-import { kickoffInSeason, parseSeasonStartYear } from "@/lib/season-label-utils";
+import { parseSeasonStartYear } from "@/lib/season-label-utils";
+import {
+  fixtureBelongsToSeason,
+  seasonKindFromCompetitionType,
+} from "@/lib/fixture-season-resolve";
+import { getCompetitionById } from "@/lib/competition-admin-service";
 import { isLiveFixtureStatus } from "@/lib/table-lab/live-table-service";
 
 const POLL_MS = 12_000;
@@ -32,6 +37,8 @@ export async function GET(req: Request) {
           .where(eq(competitionSeasons.id, seasonId))
           .limit(1);
         const startYear = season?.year ?? parseSeasonStartYear(season?.label ?? "");
+        const competition = await getCompetitionById(competitionId);
+        const seasonKind = seasonKindFromCompetitionType(competition?.competitionType);
         const rows = await db
           .select({
             id: fixtures.id,
@@ -41,14 +48,21 @@ export async function GET(req: Request) {
             awayScore: fixtures.awayScore,
             matchMinute: fixtures.matchMinute,
             period: fixtures.period,
+            seasonId: fixtures.seasonId,
           })
           .from(fixtures)
           .where(eq(fixtures.competitionId, competitionId));
 
         const liveRows = rows.filter((row) => {
           if (!isLiveFixtureStatus(row.status)) return false;
-          if (startYear == null) return true;
-          return kickoffInSeason(row.kickoffAt, startYear);
+          if (startYear == null || !season) return true;
+          return fixtureBelongsToSeason({
+            fixtureSeasonId: row.seasonId,
+            kickoffAt: row.kickoffAt,
+            seasonId: season.id,
+            seasonYear: startYear,
+            seasonKind,
+          });
         });
 
         const fingerprint = liveRows

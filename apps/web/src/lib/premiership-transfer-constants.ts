@@ -28,7 +28,7 @@ export const PREMIERSHIP_TRANSFERS_WIKI_URL_2025_26 = premiershipTransferWikiUrl
 export const PREMIERSHIP_TRANSFERS_WIKI_URL_2026_27 = premiershipTransferWikiUrl("2026–27");
 
 /** Default audit season for Premiership transfer review. */
-export const DEFAULT_PREMIERSHIP_TRANSFER_SEASON: PremiershipTransferSeasonLabel = "2025–26";
+export const DEFAULT_PREMIERSHIP_TRANSFER_SEASON: PremiershipTransferSeasonLabel = "2026–27";
 
 export const PREMIERSHIP_TRANSFERS_WIKI_URL = premiershipTransferWikiUrl(DEFAULT_PREMIERSHIP_TRANSFER_SEASON);
 

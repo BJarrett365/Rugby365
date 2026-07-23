@@ -13,6 +13,12 @@ export type SeasonChampionEntry = {
 /** Gallagher Premiership champions — winner is playoff/champion, not regular-season table leader. */
 export const PREMIERSHIP_CHAMPIONS: SeasonChampionEntry[] = [
   {
+    startYear: 2026,
+    label: formatSeasonRangeLabel(2026),
+    winner: "TBD",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/2026%E2%80%9327_Premiership_Rugby",
+  },
+  {
     startYear: 2025,
     label: formatSeasonRangeLabel(2025),
     winner: "Northampton Saints",

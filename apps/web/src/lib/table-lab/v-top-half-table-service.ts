@@ -20,28 +20,10 @@ import type {
 
 export type { OppositionPositionRule };
 
-export function parseOppositionPositionRule(
-  value: string | null | undefined,
-): OppositionPositionRule {
-  const normalized = (value ?? "").trim().toLowerCase().replace(/-/g, "_");
-  if (normalized === "at_match" || normalized === "position_at_match") {
-    return "position_at_match";
-  }
-  if (
-    normalized === "final" ||
-    normalized === "final_season" ||
-    normalized === "final_season_position"
-  ) {
-    return "final_season_position";
-  }
-  return "current_position";
-}
-
-export function oppositionPositionRuleLabel(rule: OppositionPositionRule): string {
-  if (rule === "position_at_match") return "Position at time of match";
-  if (rule === "final_season_position") return "Final season position";
-  return "Current position";
-}
+export {
+  oppositionPositionRuleLabel,
+  parseOppositionPositionRule,
+} from "./table-lab-param-parsers";
 
 export function topHalfCutoff(teamCount: number): number {
   if (teamCount <= 0) return 0;

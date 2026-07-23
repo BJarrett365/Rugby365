@@ -14,6 +14,7 @@ export type RugbyTableDataSource =
   | "fixtures"
   | "match_scores"
   | "half_time_scores"
+  | "sixty_minute_scores"
   | "match_events"
   | "team_match_stats"
   | "competition_scoring_rules"
@@ -37,6 +38,8 @@ export type RugbyTableDefinition = {
   advancedData: RugbyTableDataSource[];
   /** Column shown as the primary metric for non-standard tables */
   metricLabel?: string;
+  /** When true, omit from Table Lab menu listings until implemented. */
+  hiddenFromMenu?: boolean;
 };
 
 export type FormResult = "W" | "D" | "L";
@@ -159,6 +162,8 @@ export type RugbyTableBuildContext = {
   triesScoredPeriod?: import("./tries-scored-table-service").TriesScoredPeriod;
   triesMatchRangePreset?: import("./tries-scored-table-service").TriesMatchRangePreset;
   triesMatchRangeCustom?: number;
+  /** Resolved match-range count after parsing preset/custom filters. */
+  triesMatchRangeCount?: number | null;
   triesScoredSortBy?: import("./tries-scored-table-service").TriesScoredSortBy;
   triesConcededSortBy?: import("./tries-conceded-table-service").TriesConcededSortBy;
   bothTeamsScoredTriesSortBy?: import("./both-teams-scored-tries-table-service").BothTeamsScoredTriesSortBy;

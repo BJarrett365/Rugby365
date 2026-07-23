@@ -7,24 +7,19 @@ import type {
   SeasonStatsFilterOptions,
   TeamSeasonStatsRow,
 } from "@/lib/player-season-stats-service";
+import { buildSeasonStatsFilterOptions } from "@/lib/player-season-stats-filters";
 
 export type { PlayerSeasonStatsRow, TeamSeasonStatsRow, SeasonStatsFilterOptions };
 
-function deriveFilterOptions(rows: Array<{ seasonId: string; seasonLabel: string; competitionId: string; competitionName: string }>): SeasonStatsFilterOptions {
-  const seasons = new Map<string, string>();
-  const competitions = new Map<string, string>();
-  for (const row of rows) {
-    seasons.set(row.seasonId, row.seasonLabel);
-    competitions.set(row.competitionId, row.competitionName);
-  }
-  return {
-    seasons: [...seasons.entries()]
-      .map(([id, label]) => ({ id, label }))
-      .sort((a, b) => b.label.localeCompare(a.label)),
-    competitions: [...competitions.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  };
+function deriveFilterOptions(
+  rows: Array<{
+    seasonId: string;
+    seasonLabel: string;
+    competitionId: string;
+    competitionName: string;
+  }>,
+): SeasonStatsFilterOptions {
+  return buildSeasonStatsFilterOptions(rows);
 }
 
 function SeasonStatsFiltersBar({
@@ -208,15 +203,29 @@ export function PlayerSeasonStatsSection({
 
   const resolvedFilterOptions = filterOptions ?? deriveFilterOptions(rows);
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter((row) => {
-        if (seasonId && row.seasonId !== seasonId) return false;
-        if (competitionId && row.competitionId !== competitionId) return false;
-        return true;
-      }),
-    [rows, seasonId, competitionId],
-  );
+  const filteredRows = useMemo(() => {
+    const seasonAliases =
+      resolvedFilterOptions.seasons.find((s) => s.id === seasonId)?.aliasIds ?? [];
+    const competitionAliases =
+      resolvedFilterOptions.competitions.find((c) => c.id === competitionId)?.aliasIds ?? [];
+    return rows.filter((row) => {
+      if (
+        seasonId &&
+        row.seasonId !== seasonId &&
+        !seasonAliases.includes(row.seasonId)
+      ) {
+        return false;
+      }
+      if (
+        competitionId &&
+        row.competitionId !== competitionId &&
+        !competitionAliases.includes(row.competitionId)
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [rows, seasonId, competitionId, resolvedFilterOptions]);
 
   const body =
     rows.length > 0 ? (

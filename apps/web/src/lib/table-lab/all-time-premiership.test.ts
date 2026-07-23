@@ -206,7 +206,7 @@ describe("all-time premiership table", () => {
 
     expect(home.matchCount).toBe(2);
     expect(away.matchCount).toBe(2);
-    expect(home.rows.find((row) => row.teamName === "Bath")?.played).toBe(1);
+    expect(home.rows.find((row) => row.teamName === "Bath Rugby")?.played).toBe(1);
   });
 
   it("filters current and former teams", () => {
@@ -251,7 +251,7 @@ describe("all-time premiership table", () => {
       sortBy: "league_points",
     });
 
-    expect(current.rows.every((row) => row.teamName === "Bath")).toBe(true);
+    expect(current.rows.every((row) => row.teamName === "Bath Rugby")).toBe(true);
     expect(former.rows.every((row) => row.teamName === "Wasps")).toBe(true);
   });
 
@@ -331,7 +331,7 @@ describe("all-time premiership table", () => {
     });
 
     expect(built.coverage.triesCoveragePct).toBe(50);
-    const bath = built.rows.find((row) => row.teamName === "Bath");
+    const bath = built.rows.find((row) => row.teamName === "Bath Rugby");
     expect(bath?.triesFor).toBe(3);
   });
 

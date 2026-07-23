@@ -133,6 +133,30 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 : Number(body.squadNumber),
           }
         : {}),
+      ...(body.careerStatus !== undefined ? { careerStatus: String(body.careerStatus) } : {}),
+      ...(body.isPublic !== undefined ? { isPublic: Boolean(body.isPublic) } : {}),
+      ...(body.publishStatus !== undefined ? { publishStatus: String(body.publishStatus) } : {}),
+      ...(body.seoTitle !== undefined
+        ? { seoTitle: body.seoTitle ? String(body.seoTitle) : null }
+        : {}),
+      ...(body.seoDescription !== undefined
+        ? { seoDescription: body.seoDescription ? String(body.seoDescription) : null }
+        : {}),
+      ...(body.ogImageUrl !== undefined
+        ? { ogImageUrl: body.ogImageUrl ? String(body.ogImageUrl) : null }
+        : {}),
+      ...(body.imageUrl !== undefined
+        ? { imageUrl: body.imageUrl ? String(body.imageUrl) : null }
+        : {}),
+      ...(body.publicIntroOverride !== undefined
+        ? { publicIntroOverride: body.publicIntroOverride ? String(body.publicIntroOverride) : null }
+        : {}),
+      ...(body.preferredFoot !== undefined
+        ? { preferredFoot: body.preferredFoot ? String(body.preferredFoot) : null }
+        : {}),
+      ...(body.statusOverride !== undefined
+        ? { statusOverride: body.statusOverride ? String(body.statusOverride) : null }
+        : {}),
     });
     return NextResponse.json({ player });
   } catch (e) {

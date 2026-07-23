@@ -8,18 +8,21 @@ import {
   matchLeaguePoints,
 } from "./rugby-table-metrics-service";
 import {
-  parseMinimumDeficitPoints,
-  parseMinimumDeficitPreset,
-  type MinimumDeficitPreset,
-} from "./comeback-table-service";
-import {
-  parseWinningPositionFilter,
   pointsLostFromWinningPosition,
   perspectiveQualifiesForWinningPositionFilter,
   winningPositionFilterLabel,
-  type WinningPositionFilter,
 } from "./points-lost-winning-table-service";
 import { uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  parseLeadPositionFilter,
+  parseLeadProtectionSortBy,
+  parseMinimumLeadPoints,
+  parseMinimumLeadPreset,
+  minimumLeadLabel,
+  type LeadPositionFilter,
+  type LeadProtectionSortBy,
+  type MinimumLeadPreset,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -27,76 +30,14 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type LeadPositionFilter = WinningPositionFilter;
-export type MinimumLeadPreset = MinimumDeficitPreset;
-
-export type LeadProtectionSortBy =
-  | "lead_protection_pct"
-  | "most_wins_after_leading"
-  | "fewest_points_lost"
-  | "fewest_losses_after_leading"
-  | "largest_lead_lost"
-  | "sixty_minute_lead_protection_pct";
-
-export function parseLeadPositionFilter(value: string | null | undefined): LeadPositionFilter {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "lead_position_half_time" || normalized === "lead_at_half_time") {
-    return "half_time";
-  }
-  if (normalized === "lead_position_after_sixty" || normalized === "lead_after_60") {
-    return "after_sixty";
-  }
-  return parseWinningPositionFilter(value);
-}
-
-export function parseMinimumLeadPreset(value: string | null | undefined): MinimumLeadPreset {
-  return parseMinimumDeficitPreset(value);
-}
-
-export function parseMinimumLeadPoints(
-  preset: MinimumLeadPreset,
-  customValue: string | number | null | undefined,
-): number {
-  return parseMinimumDeficitPoints(preset, customValue);
-}
-
-export function parseLeadProtectionSortBy(
-  value: string | null | undefined,
-): LeadProtectionSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (
-    normalized === "most_wins_after_leading" ||
-    normalized === "wins_after_leading"
-  ) {
-    return "most_wins_after_leading";
-  }
-  if (normalized === "fewest_points_lost" || normalized === "fewest_lost") {
-    return "fewest_points_lost";
-  }
-  if (
-    normalized === "fewest_losses_after_leading" ||
-    normalized === "fewest_losses"
-  ) {
-    return "fewest_losses_after_leading";
-  }
-  if (normalized === "largest_lead_lost" || normalized === "largest_lead") {
-    return "largest_lead_lost";
-  }
-  if (
-    normalized === "sixty_minute_lead_protection_pct" ||
-    normalized === "sixty_minute_protection" ||
-    normalized === "best_60_minute_lead_protection"
-  ) {
-    return "sixty_minute_lead_protection_pct";
-  }
-  return "lead_protection_pct";
-}
-
-export function minimumLeadLabel(preset: MinimumLeadPreset, points: number): string {
-  if (preset === "custom" && points > 0) return `${points}+ points`;
-  if (preset === "any") return "Any lead";
-  return `${preset}+ points`;
-}
+export type { LeadPositionFilter, LeadProtectionSortBy, MinimumLeadPreset };
+export {
+  parseLeadPositionFilter,
+  parseLeadProtectionSortBy,
+  parseMinimumLeadPoints,
+  parseMinimumLeadPreset,
+  minimumLeadLabel,
+};
 
 export function perspectiveQualifiesForLeadProtectionTable(
   row: TeamFixturePerspective,
@@ -335,7 +276,7 @@ export function buildLeadProtectionTableStandings(input: {
     const leadProtectionPct =
       acc.matchesLed > 0
         ? Math.round((acc.winsAfterLeading / acc.matchesLed) * 1000) / 10
-        : undefined;
+        : null;
     const sixtyMinuteLeadProtectionPct =
       acc.matchesAheadAtSixty > 0
         ? Math.round((acc.winsWhenAheadAtSixty / acc.matchesAheadAtSixty) * 1000) / 10

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dedupeAllEntities, dedupePlayers, dedupeTeams } from "@/lib/entity-dedup-service";
+import { mergeDuplicateCompetitions } from "@/lib/competition-dedupe-service";
 import { apiErrorResponse } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
@@ -13,8 +14,13 @@ export async function POST(request: Request) {
     if (scope === "teams") {
       return NextResponse.json({ teams: await dedupeTeams() });
     }
+    if (scope === "competitions") {
+      return NextResponse.json({ competitions: await mergeDuplicateCompetitions() });
+    }
 
-    return NextResponse.json(await dedupeAllEntities());
+    const entities = await dedupeAllEntities();
+    const competitions = await mergeDuplicateCompetitions();
+    return NextResponse.json({ ...entities, competitions });
   } catch (e) {
     return apiErrorResponse(e, "Failed to dedupe entities");
   }

@@ -1,3 +1,4 @@
+import "server-only";
 import {
   competitionSeasons,
   competitions,
@@ -9,7 +10,11 @@ import {
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { detectNeutralVenueFromSnapshot, resolveHemisphereFromDb, normalizeTeamType } from "../team-hemisphere-utils";
-import { kickoffInSeason, parseSeasonStartYear, usesDomesticSeasonCatalog } from "../season-label-utils";
+import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "../season-label-utils";
+import {
+  fixtureBelongsToSeason,
+  seasonKindFromCompetitionType,
+} from "../fixture-season-resolve";
 import {
   getCompetitionById,
   getSeasonStandings,
@@ -276,7 +281,17 @@ async function loadPerspectives(input: {
   if (season) {
     const startYear = season.year ?? parseSeasonStartYear(season.label);
     if (startYear != null) {
-      completed = completed.filter((row) => kickoffInSeason(row.kickoffAt, startYear));
+      const competition = await getCompetitionById(season.competitionId);
+      const seasonKind = seasonKindFromCompetitionType(competition?.competitionType);
+      completed = completed.filter((row) =>
+        fixtureBelongsToSeason({
+          fixtureSeasonId: row.seasonId,
+          kickoffAt: row.kickoffAt,
+          seasonId: season.id,
+          seasonYear: startYear,
+          seasonKind,
+        }),
+      );
     }
   }
 
@@ -834,6 +849,14 @@ export async function calculateRugbyTable(
   const definition = getRugbyTableDefinition(tableId);
   if (!definition) {
     throw new Error(`Unknown table type: ${tableId}`);
+  }
+
+  if (definition.id === "custom_match_period" || definition.id === "points_gained_drawn") {
+    return emptyResult(definition, context, [
+      definition.id === "custom_match_period"
+        ? "Custom match period is not implemented yet — this table is hidden from the menu until a real minute-range calculator ships."
+        : "Points gained from drawn positions is not implemented yet — this table is hidden from the menu until a dedicated calculator ships.",
+    ]);
   }
 
   let perspectives = await loadPerspectives({
@@ -1895,8 +1918,8 @@ export async function calculateRugbyTable(
       matchRangePreset: triesMatchRangePreset,
       minMatchesPlayed,
       sortBy: triesConcededSortBy,
-      dateFrom: context.dateFrom,
-      dateTo: context.dateTo,
+      dateFrom: from,
+      dateTo: to,
     });
 
     if (built.completedMatchCount === 0) {
@@ -2012,8 +2035,8 @@ export async function calculateRugbyTable(
       matchRangePreset: triesMatchRangePreset,
       minMatchesPlayed,
       sortBy: bothTeamsScoredTriesSortBy,
-      dateFrom: context.dateFrom,
-      dateTo: context.dateTo,
+      dateFrom: from,
+      dateTo: to,
     });
 
     if (built.completedMatchCount === 0) {
@@ -2129,8 +2152,8 @@ export async function calculateRugbyTable(
       bonusType: winningBonusTypeFilter,
       minMatchesPlayed,
       sortBy: winningBonusPointsSortBy,
-      dateFrom: context.dateFrom,
-      dateTo: context.dateTo,
+      dateFrom: from,
+      dateTo: to,
     });
 
     if (built.bonusNotApplicable) {
@@ -2941,12 +2964,12 @@ export async function calculateRugbyTable(
 
   switch (definition.id) {
     case "custom_match_period":
-      warnings.push("Custom period scoring requires timed match events; using final 20 minutes proxy when events exist.");
-      rows = buildStandingsFromPerspectives(
-        filterPerspectives(perspectives, (row) => row.finalTwentyFor != null),
-        (row) => row.finalTwentyFor,
-      );
-      break;
+    case "points_gained_drawn":
+      return emptyResult(definition, context, [
+        definition.id === "custom_match_period"
+          ? "Custom match period is not implemented yet — this table is hidden from the menu until a real minute-range calculator ships."
+          : "Points gained from drawn positions is not implemented yet — this table is hidden from the menu until a dedicated calculator ships.",
+      ], perspectives);
     case "tries_conceded_defence":
       rows = buildMetricStandings(
         filterPerspectives(perspectives, (row) => row.triesAgainst != null),

@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { buildSeasonStatsFilterOptions } from "@/lib/player-season-stats-filters";
 import type { PlayerSeasonStatsRow } from "@/lib/player-season-stats-service";
 import { PlayerMatchStatsSection } from "@/components/admin/MatchStatsPanel";
 import { PlayerSeasonStatsSection } from "@/components/admin/SeasonStatsPanel";
 import { PlayerAvailabilityPanel } from "@/components/admin/PlayerAvailabilityPanel";
-
-type FilterOptions = {
-  seasons: Array<{ id: string; label: string }>;
-  competitions: Array<{ id: string; name: string }>;
-};
 
 export function PlayerDataSection({
   playerId,
@@ -18,22 +14,10 @@ export function PlayerDataSection({
   playerId: string;
   seasonRows: PlayerSeasonStatsRow[];
 }) {
-  const filterOptions = useMemo<FilterOptions>(() => {
-    const seasons = new Map<string, string>();
-    const competitions = new Map<string, string>();
-    for (const row of seasonRows) {
-      seasons.set(row.seasonId, row.seasonLabel);
-      competitions.set(row.competitionId, row.competitionName);
-    }
-    return {
-      seasons: [...seasons.entries()]
-        .map(([id, label]) => ({ id, label }))
-        .sort((a, b) => b.label.localeCompare(a.label)),
-      competitions: [...competitions.entries()]
-        .map(([id, name]) => ({ id, name }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    };
-  }, [seasonRows]);
+  const filterOptions = useMemo(
+    () => buildSeasonStatsFilterOptions(seasonRows),
+    [seasonRows],
+  );
 
   const [seasonId, setSeasonId] = useState("");
   const [competitionId, setCompetitionId] = useState("");
@@ -44,15 +28,29 @@ export function PlayerDataSection({
     }
   }, [filterOptions.seasons, seasonId]);
 
-  const filteredSeasonRows = useMemo(
-    () =>
-      seasonRows.filter((row) => {
-        if (seasonId && row.seasonId !== seasonId) return false;
-        if (competitionId && row.competitionId !== competitionId) return false;
-        return true;
-      }),
-    [seasonRows, seasonId, competitionId],
-  );
+  const filteredSeasonRows = useMemo(() => {
+    const seasonAliases =
+      filterOptions.seasons.find((s) => s.id === seasonId)?.aliasIds ?? [];
+    const competitionAliases =
+      filterOptions.competitions.find((c) => c.id === competitionId)?.aliasIds ?? [];
+    return seasonRows.filter((row) => {
+      if (
+        seasonId &&
+        row.seasonId !== seasonId &&
+        !seasonAliases.includes(row.seasonId)
+      ) {
+        return false;
+      }
+      if (
+        competitionId &&
+        row.competitionId !== competitionId &&
+        !competitionAliases.includes(row.competitionId)
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [seasonRows, seasonId, competitionId, filterOptions.seasons, filterOptions.competitions]);
 
   return (
     <div className="space-y-4 mb-4">

@@ -1,15 +1,17 @@
-import { desc, eq } from "drizzle-orm";
-import { fixtures, matchEvents } from "@rugby365/db";
+import { and, desc, eq } from "drizzle-orm";
+import { fixturePlayers, fixtures, matchEvents, playerMatchPerformanceStats } from "@rugby365/db";
 import {
   combineKickoffIso,
   fetchSdmsLineups,
   fetchSdmsMatchDetail,
+  fetchSdmsPreviousMeetings,
   isPlanetRugbyMatchUrl,
   mapSdmsLineups,
   parsePlanetRugbyMatchUrl,
   sdmsEventTypeToMatchEvent,
   sdmsKeyEventPayload,
   type MappedLineups,
+  type SdmsKeyEvent,
 } from "@rugby365/import-sdk";
 import type { Sport365Lineups } from "@rugby365/match-operator-agent";
 import { enrichFixtureEventPlayers } from "./fixture-player-map";
@@ -36,7 +38,8 @@ function mappedLineupsToSport365(lineups: MappedLineups): Sport365Lineups {
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half|live|first|second/i.test(status)) return "live";
+  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
 }
 
@@ -64,18 +67,57 @@ async function importSdmsKeyEvents(
   homeTeamProviderId?: string,
   awayTeamProviderId?: string,
   replaceExisting = false,
+  keyEvents?: SdmsKeyEvent[] | null,
 ): Promise<number> {
-  const detail = await fetchSdmsMatchDetail(matchId);
-  const events = detail?.key_events ?? [];
+  const events =
+    keyEvents ??
+    (await fetchSdmsMatchDetail(matchId))?.key_events ??
+    [];
   if (events.length === 0) return 0;
 
   const db = getDb();
-  if (replaceExisting) {
-    const existing = await db.select().from(matchEvents).where(eq(matchEvents.fixtureId, fixtureId));
-    for (const row of existing) {
-      if (row.sourceProvider === SDMS_PROVIDER) {
-        await db.delete(matchEvents).where(eq(matchEvents.id, row.id));
-      }
+  const existingRows = await db.select().from(matchEvents).where(eq(matchEvents.fixtureId, fixtureId));
+  const sdmsRows = existingRows.filter((row) => row.sourceProvider === SDMS_PROVIDER);
+
+  const incoming: Array<{
+    sdmsId: string;
+    eventType: string;
+    minute: number;
+    second: number;
+    teamId: string | null;
+    payload: ReturnType<typeof sdmsKeyEventPayload>;
+  }> = [];
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    const eventType = sdmsEventTypeToMatchEvent(event.type);
+    if (!eventType) continue;
+    const payload = sdmsKeyEventPayload(event, matchId, i);
+    const teamId =
+      event.team_id === homeTeamProviderId
+        ? homeTeamId
+        : event.team_id === awayTeamProviderId
+          ? awayTeamId
+          : null;
+    incoming.push({
+      sdmsId: payload.sdms_event_id,
+      eventType,
+      minute: event.minute ?? 0,
+      second: event.second ?? 0,
+      teamId,
+      payload,
+    });
+  }
+
+  const incomingIds = new Set(incoming.map((row) => row.sdmsId));
+
+  // Drop stale SDMS rows (including legacy index-based ids like matchId:12)
+  // so re-import restores missing conversions after feed growth/reorder.
+  for (const row of sdmsRows) {
+    const payload = row.payload as Record<string, unknown>;
+    const id = typeof payload.sdms_event_id === "string" ? payload.sdms_event_id : "";
+    if (replaceExisting || !id || !incomingIds.has(id)) {
+      await db.delete(matchEvents).where(eq(matchEvents.id, row.id));
     }
   }
 
@@ -89,28 +131,16 @@ async function importSdmsKeyEvents(
   let sequenceNo = last?.sequenceNo ?? 0;
 
   const values = [];
-  for (let i = 0; i < events.length; i++) {
-    const event = events[i];
-    const eventType = sdmsEventTypeToMatchEvent(event.type);
-    if (!eventType) continue;
-    const sdmsId = `${matchId}:${i}`;
-    if (known.has(sdmsId)) continue;
-
-    const teamId =
-      event.team_id === homeTeamProviderId
-        ? homeTeamId
-        : event.team_id === awayTeamProviderId
-          ? awayTeamId
-          : null;
-
+  for (const row of incoming) {
+    if (known.has(row.sdmsId)) continue;
     sequenceNo += 1;
     values.push({
       fixtureId,
-      eventType,
-      minute: event.minute ?? 0,
-      second: event.second ?? 0,
-      teamId,
-      payload: sdmsKeyEventPayload(event, matchId, i),
+      eventType: row.eventType,
+      minute: row.minute,
+      second: row.second,
+      teamId: row.teamId,
+      payload: row.payload,
       sourceProvider: SDMS_PROVIDER,
       sequenceNo,
     });
@@ -137,6 +167,8 @@ export async function enrichFixtureFromSdmsMatch(
   options: {
     planetRugbyUrl?: string;
     replaceEvents?: boolean;
+    /** Skip SDMS attack/defend/kicking/errors/carries import (events-only repair). */
+    skipPerformanceStats?: boolean;
   } = {},
 ): Promise<PlanetRugbyMatchImportResult> {
   const fixture = await getFixtureById(fixtureId);
@@ -145,11 +177,16 @@ export async function enrichFixtureFromSdmsMatch(
     throw new Error("Fixture must have home and away teams before SDMS enrich.");
   }
 
-  const [detail, lineupsRaw] = await Promise.all([
+  const [detail, lineupsRaw, previousMeetings] = await Promise.all([
     fetchSdmsMatchDetail(matchId),
     fetchSdmsLineups(matchId),
+    fetchSdmsPreviousMeetings(matchId),
   ]);
   if (!detail) throw new Error(`SDMS match detail not found: ${matchId}`);
+
+  if (previousMeetings.length > 0) {
+    detail.last_five_meetings = previousMeetings;
+  }
 
   const lineups = lineupsRaw
     ? mapSdmsLineups(
@@ -251,18 +288,21 @@ export async function enrichFixtureFromSdmsMatch(
     detail.home_team_id,
     detail.away_team_id,
     options.replaceEvents ?? false,
+    detail.key_events,
   );
 
   await linkFixtureEventPlayerIds(fixtureId);
   await syncFixturePlayerStats(fixtureId);
 
   let playerStatsImported = 0;
-  try {
-    const { importMatchPerformanceStats } = await import("./planet-rugby-player-stats-import-service");
-    const statsResult = await importMatchPerformanceStats(fixtureId, matchId);
-    playerStatsImported = statsResult.playersProcessed;
-  } catch {
-    /* performance stats optional when SDMS feed unavailable */
+  if (options.skipPerformanceStats !== true) {
+    try {
+      const { importMatchPerformanceStats } = await import("./planet-rugby-player-stats-import-service");
+      const statsResult = await importMatchPerformanceStats(fixtureId, matchId);
+      playerStatsImported = statsResult.playersProcessed;
+    } catch {
+      /* performance stats optional when SDMS feed unavailable */
+    }
   }
 
   return {
@@ -274,6 +314,70 @@ export async function enrichFixtureFromSdmsMatch(
     hasHeadToHead: Boolean(detail.head_to_head?.length),
     hasStats: Boolean(detail.summary) || playerStatsImported > 0,
   };
+}
+
+async function syncMatchPerformanceScoringFromFixturePlayers(fixtureId: string): Promise<number> {
+  const db = getDb();
+  const squad = await db
+    .select({
+      playerId: fixturePlayers.playerId,
+      teamId: fixturePlayers.teamId,
+      tries: fixturePlayers.tries,
+      points: fixturePlayers.points,
+    })
+    .from(fixturePlayers)
+    .where(eq(fixturePlayers.fixtureId, fixtureId));
+
+  let updated = 0;
+  for (const row of squad) {
+    const patched = await db
+      .update(playerMatchPerformanceStats)
+      .set({
+        tries: row.tries,
+        points: row.points,
+        syncedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(playerMatchPerformanceStats.fixtureId, fixtureId),
+          eq(playerMatchPerformanceStats.playerId, row.playerId),
+        ),
+      )
+      .returning({ id: playerMatchPerformanceStats.id });
+    updated += patched.length;
+  }
+  return updated;
+}
+
+/**
+ * Lightweight repair: refresh SDMS key events + fixture_players scoring only.
+ * Use for bulk conversion/try fixes without re-pulling full performance stats.
+ */
+export async function repairSdmsFixtureScoringEvents(
+  fixtureId: string,
+  matchId: string,
+): Promise<{ eventsImported: number; linked: number; performanceScoringUpdated: number }> {
+  const fixture = await getFixtureById(fixtureId);
+  if (!fixture?.homeTeamId || !fixture.awayTeamId) {
+    throw new Error("Fixture must have home and away teams.");
+  }
+  const detail = await fetchSdmsMatchDetail(matchId);
+  if (!detail) throw new Error(`SDMS match detail not found: ${matchId}`);
+
+  const eventsImported = await importSdmsKeyEvents(
+    fixtureId,
+    matchId,
+    fixture.homeTeamId,
+    fixture.awayTeamId,
+    detail.home_team_id,
+    detail.away_team_id,
+    true,
+    detail.key_events,
+  );
+  const linked = await linkFixtureEventPlayerIds(fixtureId);
+  await syncFixturePlayerStats(fixtureId);
+  const performanceScoringUpdated = await syncMatchPerformanceScoringFromFixturePlayers(fixtureId);
+  return { eventsImported, linked, performanceScoringUpdated };
 }
 
 export async function importFixtureFromPlanetRugbyMatchUrl(
@@ -301,7 +405,7 @@ export async function importFixtureFromPlanetRugbyMatchUrl(
 
 export async function enrichFixturesFromSdmsRows(
   matchIds: string[],
-  options: { delayMs?: number } = {},
+  options: { delayMs?: number; replaceEvents?: boolean } = {},
 ): Promise<{ enriched: number; failed: number; results: PlanetRugbyMatchImportResult[] }> {
   const results: PlanetRugbyMatchImportResult[] = [];
   let enriched = 0;
@@ -315,7 +419,9 @@ export async function enrichFixturesFromSdmsRows(
         failed += 1;
         continue;
       }
-      const result = await enrichFixtureFromSdmsMatch(fixture.id, matchId);
+      const result = await enrichFixtureFromSdmsMatch(fixture.id, matchId, {
+        replaceEvents: options.replaceEvents ?? true,
+      });
       results.push(result);
       enriched += 1;
     } catch {

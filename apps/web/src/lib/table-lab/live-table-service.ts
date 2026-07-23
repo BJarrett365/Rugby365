@@ -10,6 +10,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
+export { parseLiveTableBoolean } from "./table-lab-param-parsers";
+
 export type LiveTableMovement = "up" | "down" | "same";
 
 const COMPLETED_STATUSES = new Set(["full_time", "finished", "completed", "ft"]);
@@ -23,18 +25,6 @@ const LIVE_STATUSES = new Set([
 ]);
 const SCHEDULED_STATUSES = new Set(["scheduled", "not_started", "fixture", "upcoming"]);
 const IGNORED_STATUSES = new Set(["postponed", "cancelled", "suspended"]);
-
-export function parseLiveTableBoolean(
-  value: string | boolean | null | undefined,
-  defaultValue: boolean,
-): boolean {
-  if (value == null) return defaultValue;
-  if (typeof value === "boolean") return value;
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "1" || normalized === "true" || normalized === "yes") return true;
-  if (normalized === "0" || normalized === "false" || normalized === "no") return false;
-  return defaultValue;
-}
 
 export function isCompletedFixtureStatus(status: string): boolean {
   return COMPLETED_STATUSES.has(status.toLowerCase());

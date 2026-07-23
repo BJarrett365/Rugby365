@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { competitions, playerCareerStints, players, teams } from "@rugby365/db";
 import {
+  fetchWikidataPlayerProfile,
   findWikipediaPlayerArticleTitles,
   parseNationalityFromBirthPlace,
   parseWikipediaArchive,
@@ -13,6 +14,7 @@ import { getDb } from "./db";
 import { resolvePlayer, resolveTeam } from "./entity-resolve-service";
 import { normalizeSlug } from "./fixture-admin-service";
 import { countryNameLooksLikeClubTeam } from "./player-profile-fields";
+import { normalizeSocialAccounts, type PlayerSocialAccounts } from "./player-profile-utils";
 import { getWikimediaEnterpriseAccessToken } from "./wikimedia-enterprise-client";
 
 export type PlayerArchiveEnrichResult = {
@@ -20,7 +22,23 @@ export type PlayerArchiveEnrichResult = {
   playerId: string;
   wikipediaUrl?: string;
   careerStints?: number;
+  fieldsUpdated?: string[];
   reason?: string;
+};
+
+export type ApplyWikipediaPlayerOptions = {
+  /**
+   * When true, keep existing CMS club/nation/position when set.
+   * With fillMissingOnly, bio fields also only fill blanks.
+   */
+  mergeLiveFields: boolean;
+  /**
+   * Only write empty fields. Never overwrite DOB/place/height/weight/socials/bio.
+   * Does not replace career stints. Does not create players.
+   */
+  fillMissingOnly?: boolean;
+  /** Replace career stints table (default true unless fillMissingOnly). */
+  upsertCareer?: boolean;
 };
 
 function namesLikelyMatch(playerName: string, archiveName: string): boolean {
@@ -49,6 +67,63 @@ async function resolveInternationalTeamId(countryName: string | null | undefined
   if (!countryName?.trim()) return null;
   const team = await resolveTeam({ name: countryName.trim(), createIfMissing: false });
   return team?.id ?? null;
+}
+
+function pickString(existing: string | null | undefined, incoming: string | null | undefined): string | undefined {
+  const current = existing?.trim();
+  if (current) return undefined;
+  const next = incoming?.trim();
+  return next || undefined;
+}
+
+function pickNumber(existing: number | null | undefined, incoming: number | null | undefined): number | undefined {
+  if (existing != null && existing > 0) return undefined;
+  if (incoming != null && incoming > 0) return incoming;
+  return undefined;
+}
+
+function mergeSocialAccountsMissingOnly(
+  existingRaw: unknown,
+  incoming: PlayerSocialAccounts,
+): { next: PlayerSocialAccounts; updatedKeys: string[] } | null {
+  const existing = normalizeSocialAccounts(existingRaw);
+  const updatedKeys: string[] = [];
+  const next: PlayerSocialAccounts = { ...existing };
+
+  for (const key of ["twitter", "instagram", "facebook", "tiktok", "website"] as const) {
+    if (existing[key]?.trim()) continue;
+    const value = incoming[key]?.trim();
+    if (!value) continue;
+    next[key] = value;
+    updatedKeys.push(key);
+  }
+
+  if (updatedKeys.length === 0) return null;
+  return { next, updatedKeys };
+}
+
+async function attachWikidataProfile(archive: WikipediaPlayerArchive): Promise<WikipediaPlayerArchive> {
+  if (!archive.wikidataId) return archive;
+  const needsBio =
+    !archive.birthDate ||
+    !archive.birthPlace ||
+    archive.heightCm == null ||
+    archive.weightKg == null;
+  const needsSocial = !archive.twitter || !archive.instagram || !archive.facebook || !archive.website;
+  if (!needsBio && !needsSocial) return archive;
+
+  const profile = await fetchWikidataPlayerProfile(archive.wikidataId);
+  return {
+    ...archive,
+    birthDate: archive.birthDate ?? profile.birthDate,
+    birthPlace: archive.birthPlace ?? profile.birthPlace,
+    heightCm: archive.heightCm ?? profile.heightCm,
+    weightKg: archive.weightKg ?? profile.weightKg,
+    twitter: archive.twitter ?? profile.twitter,
+    instagram: archive.instagram ?? profile.instagram,
+    facebook: archive.facebook ?? profile.facebook,
+    website: archive.website ?? profile.website,
+  };
 }
 
 export async function previewWikipediaArchive(input: {
@@ -102,19 +177,23 @@ async function upsertPlayerCareerStints(
 async function applyWikipediaPlayerArchive(
   playerId: string,
   archive: WikipediaPlayerArchive,
-  options: { mergeLiveFields: boolean },
-): Promise<{ entityId: string; slug: string }> {
+  options: ApplyWikipediaPlayerOptions,
+): Promise<{ entityId: string; slug: string; fieldsUpdated: string[] }> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
   if (!player) throw new Error("Player not found");
 
+  const fillMissingOnly = Boolean(options.fillMissingOnly);
+  const upsertCareer = options.upsertCareer ?? !fillMissingOnly;
   const positions = archive.positions?.length ? archive.positions : undefined;
   const positionName = positions?.[0] ?? archive.positions?.join(", ");
+  const fieldsUpdated: string[] = [];
 
   let clubTeamId: string | null = player.clubTeamId;
   if (archive.currentTeam && !player.clubTeamId) {
-    const club = await resolveTeam({ name: archive.currentTeam, createIfMissing: true });
+    const club = await resolveTeam({ name: archive.currentTeam, createIfMissing: !fillMissingOnly });
     clubTeamId = club?.id ?? null;
+    if (clubTeamId && clubTeamId !== player.clubTeamId) fieldsUpdated.push("clubTeamId");
   }
 
   const archiveNationality = nationalityFromPlayerArchive(archive);
@@ -122,59 +201,172 @@ async function applyWikipediaPlayerArchive(
   let internationalTeamId = player.internationalTeamId;
   if (hasIntlCaps && archiveNationality && !player.internationalTeamId) {
     internationalTeamId = await resolveInternationalTeamId(archiveNationality);
+    if (internationalTeamId) fieldsUpdated.push("internationalTeamId");
   }
 
-  const archivePatch = {
-    fullName: archive.fullName ?? null,
-    birthDate: archive.birthDate ?? null,
-    birthPlace: archive.birthPlace ?? null,
-    heightCm: archive.heightCm ?? null,
-    weightKg: archive.weightKg ?? null,
-    school: archive.school ?? null,
-    relatives: archive.relatives ?? null,
-    positions: positions ?? null,
-    imageUrl: archive.imageUrl ?? null,
-    bioSummary: archive.bioSummary ?? null,
-    wikipediaUrl: archive.wikipediaUrl,
-    wikidataId: archive.wikidataId ?? null,
-    archiveSyncedAt: new Date(),
-  };
+  const socialMerge = mergeSocialAccountsMissingOnly(player.socialAccounts, {
+    twitter: archive.twitter ?? null,
+    instagram: archive.instagram ?? null,
+    facebook: archive.facebook ?? null,
+    website: archive.website ?? null,
+  });
 
-  const patch = options.mergeLiveFields
-    ? {
-        ...archivePatch,
-        positionName: player.positionName ?? positionName ?? null,
-        clubName: player.clubName ?? archive.currentTeam ?? null,
-        clubTeamId,
-        countryName:
-          player.countryName ??
-          (archiveNationality && !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
-            ? archiveNationality
-            : null),
-        internationalTeamId,
+  let patch: Record<string, unknown>;
+
+  if (fillMissingOnly || options.mergeLiveFields) {
+    patch = {
+      wikipediaUrl: player.wikipediaUrl ?? archive.wikipediaUrl,
+      wikidataId: player.wikidataId ?? archive.wikidataId ?? null,
+      archiveSyncedAt: new Date(),
+      positionName: player.positionName ?? positionName ?? null,
+      clubName: player.clubName ?? archive.currentTeam ?? null,
+      clubTeamId,
+      countryName:
+        player.countryName ??
+        (archiveNationality &&
+        !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
+          ? archiveNationality
+          : null),
+      internationalTeamId,
+    };
+
+    const fullName = pickString(player.fullName, archive.fullName);
+    if (fullName) {
+      patch.fullName = fullName;
+      fieldsUpdated.push("fullName");
+    }
+
+    const birthDate = pickString(
+      player.birthDate ? String(player.birthDate) : null,
+      archive.birthDate,
+    );
+    if (birthDate) {
+      patch.birthDate = birthDate;
+      fieldsUpdated.push("birthDate");
+    }
+
+    const birthPlace = pickString(player.birthPlace, archive.birthPlace);
+    if (birthPlace) {
+      patch.birthPlace = birthPlace;
+      fieldsUpdated.push("birthPlace");
+    }
+
+    const heightCm = pickNumber(player.heightCm, archive.heightCm);
+    if (heightCm != null) {
+      patch.heightCm = heightCm;
+      fieldsUpdated.push("heightCm");
+    }
+
+    const weightKg = pickNumber(player.weightKg, archive.weightKg);
+    if (weightKg != null) {
+      patch.weightKg = weightKg;
+      fieldsUpdated.push("weightKg");
+    }
+
+    if (fillMissingOnly) {
+      const school = pickString(player.school, archive.school);
+      if (school) {
+        patch.school = school;
+        fieldsUpdated.push("school");
       }
-    : {
-        name: archive.name,
-        ...archivePatch,
-        positionName: positionName ?? null,
-        clubName: archive.currentTeam ?? null,
-        clubTeamId,
-        countryName: archiveNationality,
-        internationalTeamId,
-        sourceProvider: "wikipedia" as const,
-      };
+      const relatives = pickString(player.relatives, archive.relatives);
+      if (relatives) {
+        patch.relatives = relatives;
+        fieldsUpdated.push("relatives");
+      }
+      const imageUrl = pickString(player.imageUrl, archive.imageUrl);
+      if (imageUrl) {
+        patch.imageUrl = imageUrl;
+        fieldsUpdated.push("imageUrl");
+      }
+      const bioSummary = pickString(player.bioSummary, archive.bioSummary);
+      if (bioSummary) {
+        patch.bioSummary = bioSummary;
+        fieldsUpdated.push("bioSummary");
+      }
+      if (!player.positions?.length && positions?.length) {
+        patch.positions = positions;
+        fieldsUpdated.push("positions");
+      }
+    } else {
+      // Legacy enrich merge: still refresh archive-ish fields when incoming exists,
+      // but only fill blanks for the bio fields the operator asked to protect.
+      patch.fullName = player.fullName ?? archive.fullName ?? null;
+      patch.birthDate = player.birthDate ?? archive.birthDate ?? null;
+      patch.birthPlace = player.birthPlace ?? archive.birthPlace ?? null;
+      patch.heightCm = player.heightCm ?? archive.heightCm ?? null;
+      patch.weightKg = player.weightKg ?? archive.weightKg ?? null;
+      patch.school = player.school ?? archive.school ?? null;
+      patch.relatives = player.relatives ?? archive.relatives ?? null;
+      patch.positions = player.positions?.length ? player.positions : (positions ?? null);
+      patch.imageUrl = player.imageUrl ?? archive.imageUrl ?? null;
+      patch.bioSummary = player.bioSummary ?? archive.bioSummary ?? null;
+    }
+
+    if (!player.wikipediaUrl && archive.wikipediaUrl) fieldsUpdated.push("wikipediaUrl");
+    if (!player.wikidataId && archive.wikidataId) fieldsUpdated.push("wikidataId");
+    if (!player.positionName && positionName) fieldsUpdated.push("positionName");
+    if (!player.clubName && archive.currentTeam) fieldsUpdated.push("clubName");
+    if (
+      !player.countryName &&
+      archiveNationality &&
+      !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
+    ) {
+      fieldsUpdated.push("countryName");
+    }
+  } else {
+    patch = {
+      name: archive.name,
+      fullName: archive.fullName ?? null,
+      birthDate: archive.birthDate ?? null,
+      birthPlace: archive.birthPlace ?? null,
+      heightCm: archive.heightCm ?? null,
+      weightKg: archive.weightKg ?? null,
+      school: archive.school ?? null,
+      relatives: archive.relatives ?? null,
+      positions: positions ?? null,
+      imageUrl: archive.imageUrl ?? null,
+      bioSummary: archive.bioSummary ?? null,
+      wikipediaUrl: archive.wikipediaUrl,
+      wikidataId: archive.wikidataId ?? null,
+      archiveSyncedAt: new Date(),
+      positionName: positionName ?? null,
+      clubName: archive.currentTeam ?? null,
+      clubTeamId,
+      countryName: archiveNationality,
+      internationalTeamId,
+      sourceProvider: "wikipedia" as const,
+    };
+    fieldsUpdated.push(
+      "fullName",
+      "birthDate",
+      "birthPlace",
+      "heightCm",
+      "weightKg",
+      "wikipediaUrl",
+      "wikidataId",
+    );
+  }
+
+  if (socialMerge) {
+    patch.socialAccounts = socialMerge.next;
+    fieldsUpdated.push(...socialMerge.updatedKeys.map((k) => `social.${k}`));
+  }
 
   const [updated] = await db.update(players).set(patch).where(eq(players.id, playerId)).returning();
-  await upsertPlayerCareerStints(updated.id, archive, archive.wikipediaUrl);
+  if (upsertCareer) {
+    await upsertPlayerCareerStints(updated.id, archive, archive.wikipediaUrl);
+  }
   const { repairPlayerProfileFromSquads } = await import("./player-profile-fields");
   await repairPlayerProfileFromSquads(playerId);
-  return { entityId: updated.id, slug: updated.slug };
+  return { entityId: updated.id, slug: updated.slug, fieldsUpdated: [...new Set(fieldsUpdated)] };
 }
 
-/** Look up Wikipedia by player name and merge archive bio + career into an existing player. */
+/** Look up Wikipedia by stored URL (preferred) or name and merge into an existing player only. */
 export async function enrichPlayerFromWikipedia(
   playerId: string,
   playerName?: string,
+  options?: { fillMissingOnly?: boolean },
 ): Promise<PlayerArchiveEnrichResult> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
@@ -182,39 +374,55 @@ export async function enrichPlayerFromWikipedia(
     return { enriched: false, playerId, reason: "player_not_found" };
   }
 
+  const fillMissingOnly = Boolean(options?.fillMissingOnly);
   const name = (playerName ?? player.name).trim();
   if (!name || name.length < 3) {
     return { enriched: false, playerId, reason: "name_too_short" };
   }
 
   const accessToken = await getWikimediaEnterpriseAccessToken();
-  const candidates = prioritizePlayerArticleTitles(
-    await findWikipediaPlayerArticleTitles(name),
-    name,
+  const candidates: string[] = [];
+  if (player.wikipediaUrl?.trim()) {
+    candidates.push(player.wikipediaUrl.trim());
+  }
+  candidates.push(
+    ...prioritizePlayerArticleTitles(await findWikipediaPlayerArticleTitles(name), name).filter(
+      (title) => !candidates.includes(title),
+    ),
   );
 
   for (const title of candidates) {
     try {
-      const parsed = await parseWikipediaArchive({
+      const parsedRaw = await parseWikipediaArchive({
         articleTitleOrUrl: title,
         entityType: "player",
         accessToken,
       });
 
-      if (parsed.entityType !== "player") continue;
-      if (!namesLikelyMatch(name, parsed.name)) continue;
+      if (parsedRaw.entityType !== "player") continue;
+      if (!namesLikelyMatch(name, parsedRaw.name)) continue;
 
-      await applyWikipediaPlayerArchive(playerId, parsed, { mergeLiveFields: true });
+      const parsed = await attachWikidataProfile(parsedRaw);
+      const applied = await applyWikipediaPlayerArchive(playerId, parsed, {
+        mergeLiveFields: true,
+        fillMissingOnly,
+        upsertCareer: !fillMissingOnly,
+      });
       const careerStints =
         (parsed.clubCareer?.length ?? 0) +
         (parsed.cupCareer?.length ?? 0) +
         (parsed.internationalCareer?.length ?? 0);
 
       return {
-        enriched: true,
+        enriched: applied.fieldsUpdated.length > 0 || !fillMissingOnly,
         playerId,
         wikipediaUrl: parsed.wikipediaUrl,
-        careerStints,
+        careerStints: fillMissingOnly ? undefined : careerStints,
+        fieldsUpdated: applied.fieldsUpdated,
+        reason:
+          applied.fieldsUpdated.length === 0
+            ? "matched_no_new_data"
+            : undefined,
       };
     } catch {
       continue;

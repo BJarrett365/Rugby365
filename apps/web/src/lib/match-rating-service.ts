@@ -625,6 +625,7 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
       selectionBadge: selection.badge,
       isRugby365Potm: false,
       sourceProvider: "rugby365",
+      modelVersion: MATCH_RATING_MODEL,
       calculatedAt: new Date(),
       updatedAt: new Date(),
     };

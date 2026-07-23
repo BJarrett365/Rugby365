@@ -25,7 +25,7 @@ type MatchEventLike = {
   eventType: string;
   teamId: string | null;
   minute: number;
-  payload?: Record<string, unknown> | null;
+  payload?: unknown;
 };
 
 export function secondHalfScoresFromEvents(input: {

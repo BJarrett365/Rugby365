@@ -6,8 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { GroupedTeamSelect } from "@/components/admin/GroupedTeamSelect";
 import { PlayerDataSection } from "@/components/admin/PlayerDataSection";
+import { PlayerPlanetRugbyImagesPanel } from "@/components/admin/PlayerPlanetRugbyImagesPanel";
+import { PlayerImageLearningPanel } from "@/components/admin/PlayerImageLearningPanel";
 import { WikipediaCareerTables } from "@/components/admin/WikipediaCareerTables";
 import { PlayerLegendSection } from "@/components/admin/PlayerLegendSection";
+import { PlayerTransferConflictWarning } from "@/components/admin/PlayerTransferConflictWarning";
+import { PlayerDevelopmentChartCmsPanel } from "@/components/admin/PlayerDevelopmentChartCmsPanel";
+import { PlayerRadarCmsPanel } from "@/components/admin/PlayerRadarCmsPanel";
 import type { PlayerSeasonStatsRow } from "@/lib/player-season-stats-service";
 import { wikipediaCareerTotals } from "@/lib/player-career-stint-utils";
 import type { LegendRow } from "@/lib/legend-admin-service";
@@ -234,6 +239,13 @@ export default function EditPlayerPage() {
     socialFacebook: "",
     socialWebsite: "",
     careerStatus: "active" as PlayerCareerStatus,
+    isPublic: true,
+    publishStatus: "published",
+    seoTitle: "",
+    seoDescription: "",
+    publicIntroOverride: "",
+    preferredFoot: "",
+    imageUrl: "",
   });
   const [transferForm, setTransferForm] = useState({
     transferType: "club" as "club" | "international",
@@ -289,6 +301,13 @@ export default function EditPlayerPage() {
         socialFacebook: socialAccounts?.facebook ?? "",
         socialWebsite: socialAccounts?.website ?? "",
         careerStatus: (player.careerStatus ?? "active") as PlayerCareerStatus,
+        isPublic: player.isPublic !== false,
+        publishStatus: String(player.publishStatus ?? "published"),
+        seoTitle: String(player.seoTitle ?? ""),
+        seoDescription: String(player.seoDescription ?? ""),
+        publicIntroOverride: String(player.publicIntroOverride ?? ""),
+        preferredFoot: String(player.preferredFoot ?? ""),
+        imageUrl: String(player.imageUrl ?? ""),
       });
     }
     setProfile((profile as PlayerProfile | null) ?? null);
@@ -376,6 +395,12 @@ export default function EditPlayerPage() {
         birthDate: values.birthDate || null,
         birthPlace: values.birthPlace || null,
         fullName: values.fullName || null,
+        seoTitle: values.seoTitle || null,
+        seoDescription: values.seoDescription || null,
+        publicIntroOverride: values.publicIntroOverride || null,
+        preferredFoot: values.preferredFoot || null,
+        isPublic: values.isPublic,
+        publishStatus: values.publishStatus,
         socialAccounts: {
           twitter: values.socialTwitter || null,
           instagram: values.socialInstagram || null,
@@ -458,7 +483,22 @@ export default function EditPlayerPage() {
 
   return (
     <>
-      <PageHeader eyebrow="CMS" title="Edit player" />
+      <PageHeader
+        eyebrow="CMS"
+        title="Edit player"
+        actions={
+          values.slug ? (
+            <Link
+              href={`/players/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null
+        }
+      />
 
       <AiAssistPanel entityType="player" entityId={id} onApplied={() => void load()} />
 
@@ -655,6 +695,15 @@ export default function EditPlayerPage() {
           </p>
         )}
       </div>
+
+      <PlayerPlanetRugbyImagesPanel
+        playerId={id}
+        currentImageUrl={values.imageUrl || null}
+        onPrimaryChanged={(imageUrl) =>
+          setValues((v) => ({ ...v, imageUrl: imageUrl ?? "" }))
+        }
+      />
+      <PlayerImageLearningPanel />
 
       <PlayerDataSection playerId={id} seasonRows={seasonStats} />
 
@@ -973,10 +1022,81 @@ export default function EditPlayerPage() {
             onChange={(e) => setValues((v) => ({ ...v, externalProviderId: e.target.value }))}
           />
         </label>
+
+        <div className="col-span-full border-t border-white/10 pt-4 mt-2">
+          <h3 className="font-semibold m-0 mb-3">Public profile</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm text-zinc-400">Publish status</span>
+              <select
+                className="cms-select w-full mt-1"
+                value={values.publishStatus}
+                onChange={(e) => setValues((v) => ({ ...v, publishStatus: e.target.value }))}
+              >
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                checked={values.isPublic}
+                onChange={(e) => setValues((v) => ({ ...v, isPublic: e.target.checked }))}
+              />
+              <span className="text-sm text-zinc-300">Visible on public site</span>
+            </label>
+            <label className="block">
+              <span className="text-sm text-zinc-400">Preferred foot</span>
+              <input
+                className="cms-input w-full mt-1"
+                value={values.preferredFoot}
+                onChange={(e) => setValues((v) => ({ ...v, preferredFoot: e.target.value }))}
+                placeholder="Left / Right / Either"
+              />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm text-zinc-400">SEO title</span>
+              <input
+                className="cms-input w-full mt-1"
+                value={values.seoTitle}
+                onChange={(e) => setValues((v) => ({ ...v, seoTitle: e.target.value }))}
+              />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm text-zinc-400">SEO description</span>
+              <textarea
+                className="cms-input w-full mt-1 min-h-[4rem]"
+                value={values.seoDescription}
+                onChange={(e) => setValues((v) => ({ ...v, seoDescription: e.target.value }))}
+              />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm text-zinc-400">Public introduction override</span>
+              <textarea
+                className="cms-input w-full mt-1 min-h-[5rem]"
+                value={values.publicIntroOverride}
+                onChange={(e) => setValues((v) => ({ ...v, publicIntroOverride: e.target.value }))}
+                placeholder="Leave blank to use the structured intro generated from profile data."
+              />
+            </label>
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           <button type="submit" disabled={saving} className="cms-btn cms-btn--primary">
             {saving ? "Saving…" : "Save"}
           </button>
+          {values.slug ? (
+            <Link
+              href={`/players/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
           <Link href="/admin/players" className="cms-btn cms-btn--secondary">
             Back
           </Link>
@@ -1046,6 +1166,8 @@ export default function EditPlayerPage() {
         )}
       </div>
 
+      <PlayerTransferConflictWarning transfers={transfers} />
+
       {(careerTimeline.length > 0 || transfers.length > 0) && (
         <div className="cms-card mb-4 overflow-x-auto">
           <h3 className="font-semibold m-0">Career timeline</h3>
@@ -1088,6 +1210,9 @@ export default function EditPlayerPage() {
           </table>
         </div>
       )}
+
+      <PlayerDevelopmentChartCmsPanel playerId={id} playerSlug={values.slug || null} />
+      <PlayerRadarCmsPanel playerId={id} playerSlug={values.slug || null} />
 
       <PlayerLegendSection
         playerId={id}

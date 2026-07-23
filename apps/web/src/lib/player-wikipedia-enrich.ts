@@ -8,9 +8,13 @@ export function schedulePlayerWikipediaEnrich(playerId: string, playerName: stri
   });
 }
 
-export async function enrichPlayerFromWikipediaAndWait(playerId: string, playerName?: string) {
+export async function enrichPlayerFromWikipediaAndWait(
+  playerId: string,
+  playerName?: string,
+  options?: { fillMissingOnly?: boolean },
+) {
   try {
-    return await enrichPlayerFromWikipedia(playerId, playerName);
+    return await enrichPlayerFromWikipedia(playerId, playerName, options);
   } catch {
     return { enriched: false, playerId, reason: "enrich_failed" as const };
   }

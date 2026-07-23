@@ -6,12 +6,15 @@ import {
 } from "./rugby-table-metrics-service";
 import { filterByMinimumMatchesPlayed, parseMinMatchesPlayed } from "./home-table-service";
 import { uniqueFixtureCount } from "./calendar-year-table-service";
+import { parseIncludeExtraTime } from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
   RugbyTableView,
   TeamFixturePerspective,
 } from "./table-types";
+
+export { parseIncludeExtraTime };
 
 const SCORING_EVENT_TYPES = new Set(["try", "conversion", "penalty", "drop_goal"]);
 export const FINAL_TWENTY_MIN_MINUTE = 60;
@@ -23,23 +26,11 @@ export type MatchEventLike = {
   teamId: string | null;
   minute: number;
   second?: number;
-  payload?: Record<string, unknown> | null;
+  payload?: unknown;
 };
 
-export function parseIncludeExtraTime(
-  value: string | boolean | null | undefined,
-  defaultValue = false,
-): boolean {
-  if (value == null) return defaultValue;
-  if (typeof value === "boolean") return value;
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "1" || normalized === "true" || normalized === "yes") return true;
-  if (normalized === "0" || normalized === "false" || normalized === "no") return false;
-  return defaultValue;
-}
-
 export function isExtraTimeEvent(event: MatchEventLike): boolean {
-  const payload = event.payload ?? {};
+  const payload = (event.payload ?? {}) as Record<string, unknown>;
   const period = String(payload.period ?? payload.phase ?? payload.matchPeriod ?? "").toLowerCase();
   if (period.includes("extra")) return true;
   if (event.eventType === "extra_time") return true;

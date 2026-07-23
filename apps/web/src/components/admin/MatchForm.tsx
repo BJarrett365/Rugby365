@@ -28,7 +28,9 @@ export type MatchFormValues = {
   slug: string;
   homeTeamId: string;
   awayTeamId: string;
+  competitionId: string;
   competitionName: string;
+  seasonId: string;
   kickoffAt: string;
   status: string;
   sport365Url: string;
@@ -76,7 +78,9 @@ export function MatchForm({
     slug: initial?.slug ?? "",
     homeTeamId: initial?.homeTeamId ?? "",
     awayTeamId: initial?.awayTeamId ?? "",
+    competitionId: initial?.competitionId ?? "",
     competitionName: initial?.competitionName ?? "",
+    seasonId: initial?.seasonId ?? "",
     kickoffAt: initial?.kickoffAt ?? "",
     status: initial?.status ?? "scheduled",
     sport365Url: initial?.sport365Url ?? "",
@@ -362,6 +366,7 @@ export function MatchForm({
     setError("");
     const payload = {
       ...values,
+      competitionId: values.competitionId || null,
       kickoffAt: values.kickoffAt ? new Date(values.kickoffAt).toISOString() : null,
       sport365Url: values.sport365Url || null,
       planetRugbyUrl: values.planetRugbyUrl || null,
@@ -372,6 +377,8 @@ export function MatchForm({
       awayCoachId: values.awayCoachId || null,
       round: values.round || null,
     };
+    // Server resolves seasonId from competition + kick-off (do not clear via empty form field).
+    delete (payload as { seasonId?: string }).seasonId;
     const url = fixtureId ? `/api/admin/matches/${fixtureId}` : "/api/admin/matches";
     const method = fixtureId ? "PATCH" : "POST";
     const res = await fetch(url, {
@@ -429,6 +436,14 @@ export function MatchForm({
           className="cms-input"
         />
       </label>
+      {values.competitionId || values.seasonId ? (
+        <p className="text-xs text-zinc-500 m-0 -mt-2">
+          {values.competitionId ? `Competition id linked. ` : ""}
+          {values.seasonId
+            ? `Season id: ${values.seasonId.slice(0, 8)}… (re-resolved from kick-off on save when competition is set).`
+            : "Season will resolve from competition + kick-off on save when possible."}
+        </p>
+      ) : null}
 
       <div className="cms-grid-2">
         <label>

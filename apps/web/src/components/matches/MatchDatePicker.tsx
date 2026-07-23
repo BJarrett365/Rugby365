@@ -10,6 +10,7 @@ import {
 } from "./match-schedule-utils";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 function monthGrid(year: number, month: number) {
   const first = new Date(year, month, 1);
@@ -38,6 +39,9 @@ export function MatchDatePicker({
   matchDateKeys,
   onFetchMonthDates,
   stripRadius = 7,
+  variant = "default",
+  hideHeader = false,
+  showMonthStrip = false,
 }: {
   selectedKey: string;
   onSelect: (key: string) => void;
@@ -45,6 +49,11 @@ export function MatchDatePicker({
   /** Load fixture-date highlights when the calendar opens or month changes. */
   onFetchMonthDates?: (year: number, monthIndex: number) => void;
   stripRadius?: number;
+  variant?: "default" | "public";
+  /** When parent renders its own date header bar. */
+  hideHeader?: boolean;
+  /** Planet Rugby-style Jan–Dec month carousel. */
+  showMonthStrip?: boolean;
 }) {
   const todayKey = dateKeyLocal(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -57,14 +66,17 @@ export function MatchDatePicker({
   const calendarRef = useRef<HTMLDivElement>(null);
   const fetchedMonthsRef = useRef(new Set<string>());
 
+  const selectedDate = useMemo(() => parseDateKey(selectedKey), [selectedKey]);
+  const selectedYear = selectedDate.getFullYear();
+  const selectedMonth = selectedDate.getMonth();
+
   const stripDays = useMemo(() => {
-    const selectedDate = parseDateKey(selectedKey);
     const days: string[] = [];
     for (let i = -stripRadius; i <= stripRadius; i++) {
       days.push(dateKeyLocal(addDays(selectedDate, i)));
     }
     return days;
-  }, [selectedKey, stripRadius]);
+  }, [selectedDate, stripRadius]);
 
   const closeCalendar = useCallback(() => setCalendarOpen(false), []);
 
@@ -79,6 +91,14 @@ export function MatchDatePicker({
     const month = d.getMonth();
     setViewMonth((prev) => (prev.year === year && prev.month === month ? prev : { year, month }));
   }, [calendarOpen, selectedKey]);
+
+  useEffect(() => {
+    if (!onFetchMonthDates) return;
+    const monthKey = `${selectedYear}-${selectedMonth}`;
+    if (fetchedMonthsRef.current.has(monthKey)) return;
+    fetchedMonthsRef.current.add(monthKey);
+    onFetchMonthDates(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth, onFetchMonthDates]);
 
   useEffect(() => {
     if (!calendarOpen || !onFetchMonthDates) return;
@@ -105,20 +125,79 @@ export function MatchDatePicker({
 
   const hasFixtures = (key: string) => matchDateKeys?.has(key) ?? false;
 
+  const monthsWithFixtures = useMemo(() => {
+    const set = new Set<number>();
+    if (!matchDateKeys) return set;
+    for (const key of matchDateKeys) {
+      if (!key.startsWith(`${selectedYear}-`)) continue;
+      const month = Number(key.slice(5, 7)) - 1;
+      if (month >= 0 && month <= 11) set.add(month);
+    }
+    return set;
+  }, [matchDateKeys, selectedYear]);
+
+  const jumpToMonth = (monthIndex: number) => {
+    const today = new Date();
+    const day =
+      selectedYear === today.getFullYear() && monthIndex === today.getMonth()
+        ? today.getDate()
+        : 1;
+    const lastDay = new Date(selectedYear, monthIndex + 1, 0).getDate();
+    const safeDay = Math.min(day, lastDay);
+    const mm = String(monthIndex + 1).padStart(2, "0");
+    const dd = String(safeDay).padStart(2, "0");
+    onSelect(`${selectedYear}-${mm}-${dd}`);
+  };
+
+  const rootClass = [
+    "fixtures-date-picker",
+    variant === "public" ? "fixtures-date-picker--public" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="fixtures-date-picker">
-      <button
-        type="button"
-        className="fixtures-date-picker__header"
-        onClick={() => setCalendarOpen((open) => !open)}
-        aria-haspopup="dialog"
-        aria-expanded={calendarOpen}
-      >
-        <span>{formatDateHeader(selectedKey)}</span>
-        <span className="fixtures-date-picker__cal-icon" aria-hidden>
-          📅
-        </span>
-      </button>
+    <div className={rootClass}>
+      {showMonthStrip && (
+        <div className="fixtures-month-strip" role="group" aria-label="Filter by month">
+          {MONTHS.map((label, index) => {
+            const active = selectedMonth === index;
+            const withFixtures = monthsWithFixtures.has(index);
+            return (
+              <button
+                key={label}
+                type="button"
+                className={[
+                  "fixtures-month-pill",
+                  active ? "fixtures-month-pill--active" : "",
+                  withFixtures && !active ? "fixtures-month-pill--has-fixtures" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => jumpToMonth(index)}
+                aria-pressed={active}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!hideHeader && (
+        <button
+          type="button"
+          className="fixtures-date-picker__header"
+          onClick={() => setCalendarOpen((open) => !open)}
+          aria-haspopup="dialog"
+          aria-expanded={calendarOpen}
+        >
+          <span>{formatDateHeader(selectedKey)}</span>
+          <span className="fixtures-date-picker__cal-icon" aria-hidden>
+            📅
+          </span>
+        </button>
+      )}
 
       <div className="fixtures-date-strip" ref={stripRef} role="group" aria-label="Select date">
         {stripDays.map((key) => {

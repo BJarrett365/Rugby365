@@ -23,7 +23,7 @@ export function statsFromEventCounts(
 ): PlayerScoringStats {
   const tries = counts.try ?? 0;
   const conversions = counts.conversion ?? 0;
-  const penalties = counts.penalty_goal ?? 0;
+  const penalties = (counts.penalty_goal ?? 0) + (counts.penalty ?? 0);
   const dropGoals = counts.drop_goal ?? 0;
   return {
     tries,

@@ -8,6 +8,12 @@ import {
   filterByKickoffRange,
 } from "./rugby-table-metrics-service";
 import { uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  parseLosingPositionFilter,
+  parsePointsGainedLosingSortBy,
+  type LosingPositionFilter,
+  type PointsGainedLosingSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -15,47 +21,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type LosingPositionFilter = "any_time" | "half_time" | "after_sixty";
-
-export type PointsGainedLosingSortBy =
-  | "points_gained"
-  | "comeback_wins"
-  | "comeback_win_pct"
-  | "avg_points_gained";
-
-export function parseLosingPositionFilter(
-  value: string | null | undefined,
-): LosingPositionFilter {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "half_time" || normalized === "behind_at_half_time" || normalized === "ht") {
-    return "half_time";
-  }
-  if (
-    normalized === "after_sixty" ||
-    normalized === "behind_after_60" ||
-    normalized === "sixty" ||
-    normalized === "60"
-  ) {
-    return "after_sixty";
-  }
-  return "any_time";
-}
-
-export function parsePointsGainedLosingSortBy(
-  value: string | null | undefined,
-): PointsGainedLosingSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "comeback_wins" || normalized === "comeback_wins_count") {
-    return "comeback_wins";
-  }
-  if (normalized === "comeback_win_pct" || normalized === "comeback%") {
-    return "comeback_win_pct";
-  }
-  if (normalized === "avg_points_gained" || normalized === "avg_points") {
-    return "avg_points_gained";
-  }
-  return "points_gained";
-}
+export type { LosingPositionFilter, PointsGainedLosingSortBy };
+export { parseLosingPositionFilter, parsePointsGainedLosingSortBy };
 
 export function losingPositionFilterLabel(filter: LosingPositionFilter): string {
   if (filter === "half_time") return "Behind at half-time";
@@ -238,11 +205,11 @@ export function buildPointsGainedLosingTableStandings(input: {
     const comebackWinPct =
       acc.matchesBehind > 0
         ? Math.round((acc.comebackWins / acc.matchesBehind) * 1000) / 10
-        : undefined;
+        : null;
     const avgPointsGainedPerMatch =
       acc.matchesBehind > 0
         ? Math.round((acc.pointsGained / acc.matchesBehind) * 100) / 100
-        : undefined;
+        : null;
     const avgMinuteFirstBehind =
       acc.minuteFirstBehind.length > 0
         ? Math.round(

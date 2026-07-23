@@ -1,11 +1,12 @@
 "use client";
 
+import { CompetitionLiveTable } from "@/components/competitions/CompetitionLiveTable";
 import { hemisphereLabel } from "@/lib/team-hemisphere-utils";
 import type { FormResult, RugbyTableHemisphereGroup, RugbyTableResult } from "@/lib/table-lab/table-types";
 import { confidenceLabel } from "@/lib/table-lab/table-confidence-service";
 import { leagueTableOptionalColumns } from "@/lib/table-lab/table-lab-column-utils";
 import { exportStandingsCsv } from "@/lib/table-lab/table-view-utils";
-import { oppositionPositionRuleLabel } from "@/lib/table-lab/v-top-half-table-service";
+import { oppositionPositionRuleLabel } from "@/lib/table-lab/table-lab-param-parsers";
 import { isNationsChampionshipSlug } from "@/lib/nations-championship-hemisphere";
 
 function formatLastUpdated(iso: string | null | undefined): string {
@@ -1506,6 +1507,19 @@ export function TableLabResultsTable({ result }: { result: RugbyTableResult }) {
     );
   }
 
+  // Sport365-style live standings: live strip, purple rows, score badges.
+  if (result.definition.id === "live_table") {
+    return (
+      <CompetitionLiveTable
+        rows={result.rows}
+        hemisphereGroups={result.hemisphereGroups}
+        showMovement={result.showMovement !== false}
+        liveMatchCount={result.liveMatchCount}
+        note={result.liveTableCalculationNote ?? result.filterSummary}
+      />
+    );
+  }
+
   if (result.hemisphereGroups && result.hemisphereGroups.length > 0 && result.definition.id !== "hemisphere_table") {
     return <TableLabHemisphereResults result={result} groups={result.hemisphereGroups} />;
   }
@@ -1520,7 +1534,10 @@ function TableLabHemisphereResults({
   result: RugbyTableResult;
   groups: RugbyTableHemisphereGroup[];
 }) {
-  const optional = leagueTableOptionalColumns(groups.flatMap((group) => group.rows));
+  const optional = leagueTableOptionalColumns([
+    ...result.rows,
+    ...groups.flatMap((group) => group.rows),
+  ]);
   const useCompact =
     (isNationsChampionshipSlug(result.competition?.slug) ||
       result.definition.id === "hemisphere_table") &&
@@ -1528,19 +1545,31 @@ function TableLabHemisphereResults({
     !optional.showTbpLbp;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {groups.map((group) => (
-        <div key={group.hemisphere} className="cms-card overflow-x-auto">
-          <h3 className="text-base font-semibold m-0 mb-3">{group.label}</h3>
-          <TableLabStandingsBody
-            rows={group.rows}
-            result={result}
-            compactLeagueColumns={useCompact}
-            extendedLeagueColumns={!useCompact}
-            optionalColumns={optional}
-          />
-        </div>
-      ))}
+    <div className="space-y-4">
+      <div className="cms-card overflow-x-auto">
+        <h3 className="text-base font-semibold m-0 mb-3">Full table</h3>
+        <TableLabStandingsBody
+          rows={result.rows}
+          result={result}
+          compactLeagueColumns={useCompact}
+          extendedLeagueColumns={!useCompact}
+          optionalColumns={optional}
+        />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {groups.map((group) => (
+          <div key={group.hemisphere} className="cms-card overflow-x-auto">
+            <h3 className="text-base font-semibold m-0 mb-3">{group.label}</h3>
+            <TableLabStandingsBody
+              rows={group.rows}
+              result={result}
+              compactLeagueColumns={useCompact}
+              extendedLeagueColumns={!useCompact}
+              optionalColumns={optional}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

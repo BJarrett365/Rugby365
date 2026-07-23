@@ -9,6 +9,17 @@ import {
 } from "./home-table-service";
 import { filterByKickoffRange, matchLeaguePoints } from "./rugby-table-metrics-service";
 import { uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  parseTriesMatchRangeCount,
+  parseTriesMatchRangePreset,
+  parseTriesScoredPeriod,
+  parseTriesScoredSortBy,
+  triesMatchRangeLabel,
+  triesScoredPeriodLabel,
+  type TriesMatchRangePreset,
+  type TriesScoredPeriod,
+  type TriesScoredSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -16,100 +27,15 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type TriesScoredPeriod = "full_match" | "first_half" | "second_half" | "final_20";
-
-export type TriesMatchRangePreset = "all" | "3" | "5" | "10" | "custom";
-
-export type TriesScoredSortBy =
-  | "tries_scored"
-  | "tries_per_match"
-  | "try_scoring_rate_pct"
-  | "two_plus_tries_pct"
-  | "three_plus_tries_pct"
-  | "four_plus_tries_pct"
-  | "five_plus_tries_pct";
-
-export function parseTriesScoredPeriod(value: string | null | undefined): TriesScoredPeriod {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "first_half" || normalized === "first-half" || normalized === "1h") {
-    return "first_half";
-  }
-  if (normalized === "second_half" || normalized === "second-half" || normalized === "2h") {
-    return "second_half";
-  }
-  if (
-    normalized === "final_20" ||
-    normalized === "final-20" ||
-    normalized === "final_20_minutes" ||
-    normalized === "f20"
-  ) {
-    return "final_20";
-  }
-  return "full_match";
-}
-
-export function parseTriesMatchRangePreset(
-  value: string | null | undefined,
-): TriesMatchRangePreset {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "3" || normalized === "last_3") return "3";
-  if (normalized === "5" || normalized === "last_5") return "5";
-  if (normalized === "10" || normalized === "last_10") return "10";
-  if (normalized === "custom") return "custom";
-  return "all";
-}
-
-export function parseTriesMatchRangeCount(
-  preset: TriesMatchRangePreset,
-  customValue: string | number | null | undefined,
-): number | null {
-  if (preset === "all") return null;
-  if (preset === "custom") {
-    const parsed = Number(customValue);
-    return Number.isFinite(parsed) && parsed > 0 ? Math.min(Math.floor(parsed), 50) : null;
-  }
-  return Number(preset);
-}
-
-export function parseTriesScoredSortBy(value: string | null | undefined): TriesScoredSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "tries_per_match" || normalized === "avg_tries") {
-    return "tries_per_match";
-  }
-  if (normalized === "try_scoring_rate_pct" || normalized === "try_scoring_rate") {
-    return "try_scoring_rate_pct";
-  }
-  if (normalized === "two_plus_tries_pct" || normalized === "2_plus_pct") {
-    return "two_plus_tries_pct";
-  }
-  if (normalized === "three_plus_tries_pct" || normalized === "3_plus_pct") {
-    return "three_plus_tries_pct";
-  }
-  if (normalized === "four_plus_tries_pct" || normalized === "4_plus_pct") {
-    return "four_plus_tries_pct";
-  }
-  if (normalized === "five_plus_tries_pct" || normalized === "5_plus_pct") {
-    return "five_plus_tries_pct";
-  }
-  return "tries_scored";
-}
-
-export function triesScoredPeriodLabel(period: TriesScoredPeriod): string {
-  if (period === "first_half") return "First half";
-  if (period === "second_half") return "Second half";
-  if (period === "final_20") return "Final 20 minutes";
-  return "Full match";
-}
-
-export function triesMatchRangeLabel(
-  preset: TriesMatchRangePreset,
-  count: number | null,
-): string {
-  if (preset === "all") return "All matches";
-  if (preset === "custom" && count) return `Last ${count} matches`;
-  if (count) return `Last ${count} matches`;
-  return "All matches";
-}
+export type { TriesMatchRangePreset, TriesScoredPeriod, TriesScoredSortBy };
+export {
+  parseTriesMatchRangeCount,
+  parseTriesMatchRangePreset,
+  parseTriesScoredPeriod,
+  parseTriesScoredSortBy,
+  triesMatchRangeLabel,
+  triesScoredPeriodLabel,
+};
 
 export function triesForPeriod(
   row: TeamFixturePerspective,
@@ -189,8 +115,8 @@ function createTriesScoredAccumulator(
   };
 }
 
-function pct(numerator: number, denominator: number): number | undefined {
-  if (denominator <= 0) return undefined;
+function pct(numerator: number, denominator: number): number | null {
+  if (denominator <= 0) return null;
   return Math.round((numerator / denominator) * 1000) / 10;
 }
 
@@ -334,7 +260,7 @@ export function buildTriesScoredTableStandings(input: {
     const triesPerMatch =
       acc.matchesPlayed > 0
         ? Math.round((acc.totalTries / acc.matchesPlayed) * 100) / 100
-        : undefined;
+        : null;
 
     return {
       rank: 0,

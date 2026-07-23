@@ -11,10 +11,12 @@ export type SdmsMatchDetail = {
   home_team_name: string;
   home_team_slug: string;
   home_team_score: number;
+  home_team_icon?: string;
   away_team_id?: string;
   away_team_name: string;
   away_team_slug: string;
   away_team_score: number;
+  away_team_icon?: string;
   venue_name?: string;
   round?: string;
   referee?: Array<{ id: string; name: string; role: string }>;
@@ -78,6 +80,8 @@ export type SdmsFixtureRow = {
   away_team_id?: string;
   home_team_score?: number;
   away_team_score?: number;
+  home_team_icon?: string;
+  away_team_icon?: string;
   round?: string;
   venue?: string;
   competition_id?: string;
@@ -105,6 +109,34 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 export async function fetchSdmsMatchDetail(matchId: string): Promise<SdmsMatchDetail | null> {
   const json = await fetchJson<{ data: SdmsMatchDetail }>(`${SDMS_BASE}/match/${matchId}/detail`);
   return json?.data ?? null;
+}
+
+/** Previous meetings list used by Planet Rugby Match Centre Head-to-Head. */
+export async function fetchSdmsPreviousMeetings(
+  matchId: string,
+): Promise<Record<string, unknown>[]> {
+  const json = await fetchJson<{
+    data?: { previous_meetings?: Record<string, unknown>[] } | Record<string, unknown>[];
+  }>(`${SDMS_BASE}/match/${matchId}/previous-meetings`);
+  const data = json?.data;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray(data.previous_meetings)) {
+    return data.previous_meetings;
+  }
+  return [];
+}
+
+/** Competition H2H aggregates (wins / averages). Prefer over detail.head_to_head when present. */
+export async function fetchSdmsHeadToHead(matchId: string): Promise<Record<string, unknown>[]> {
+  const json = await fetchJson<{
+    data?: { head_to_head?: Record<string, unknown>[] } | Record<string, unknown>[];
+  }>(`${SDMS_BASE}/match/${matchId}/h2h`);
+  const data = json?.data;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray(data.head_to_head)) {
+    return data.head_to_head;
+  }
+  return [];
 }
 
 export async function fetchSdmsLineups(matchId: string) {

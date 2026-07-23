@@ -8,7 +8,7 @@ import {
   upsertSeason,
 } from "./competition-admin-service";
 import { getDb } from "./db";
-import { normalizeSlug } from "./fixture-admin-service";
+import { findFixtureBySdmsMatchId, getFixtureById, normalizeSlug } from "./fixture-admin-service";
 import { upsertSdmsFixtureRow } from "./planet-rugby-import-service";
 import { resolveCompetition, SDMS_PROVIDER } from "./entity-resolve-service";
 import { competitionTypeFromPresetSlug } from "./planet-rugby-import-presets";
@@ -209,18 +209,26 @@ export async function autoImportSdmsMatchToCms(
   matchId: string,
   detail: SdmsMatchDetail,
 ): Promise<{ fixtureId: string; created: boolean; enriched: boolean }> {
-  let existing = await findFixtureByExternalMatchId(matchId);
+  const sdmsId = (detail.match_id || matchId).trim();
+  let existing = await findFixtureBySdmsMatchId(sdmsId);
   let created = false;
 
   if (!existing) {
     const fixtureId = await autoImportSdmsFixtureRow(sdmsMatchDetailToFixtureRow(detail));
-    if (!fixtureId) throw new Error(`Failed to auto-import fixture for SDMS match ${matchId}`);
-    existing = await findFixtureByExternalMatchId(matchId);
+    if (!fixtureId) {
+      throw new Error(`Failed to auto-import fixture for SDMS match ${sdmsId}`);
+    }
+    existing =
+      (await findFixtureBySdmsMatchId(sdmsId)) ??
+      (await getFixtureById(fixtureId)) ??
+      null;
     created = true;
   }
 
-  if (!existing) throw new Error(`Fixture missing after auto-import for ${matchId}`);
+  if (!existing) {
+    throw new Error(`Fixture missing after auto-import for ${sdmsId}`);
+  }
 
-  const sync = await syncSdmsMatchEntityLinks(existing.id, matchId, { force: created });
+  const sync = await syncSdmsMatchEntityLinks(existing.id, sdmsId, { force: created });
   return { fixtureId: existing.id, created, enriched: created || sync.synced };
 }

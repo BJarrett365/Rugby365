@@ -18,6 +18,7 @@ import {
   seasonFromDateKey,
   type ScheduleCompetition,
   type ScheduleFixture,
+  type ScheduleTeam,
 } from "@/lib/match-schedule-utils";
 import { listCompetitions } from "./competition-admin-service";
 import { getDb } from "./db";
@@ -27,7 +28,8 @@ import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half|live|first|second/i.test(status)) return "live";
+  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
 }
 
@@ -35,6 +37,18 @@ function dayBoundsInTimezone(dateKey: string, timeZone: string): { start: Date; 
   const start = utcInstantFromZonedWallClock(dateKey, "00:00:00", timeZone);
   const end = utcInstantFromZonedWallClock(addDaysToDateKey(dateKey, 1), "00:00:00", timeZone);
   return { start, end };
+}
+
+function toScheduleTeam(
+  team: { name: string; slug?: string | null; imageUrl?: string | null } | null | undefined,
+  fallbackIcon?: string | null,
+): ScheduleTeam | null {
+  if (!team?.name) return null;
+  return {
+    name: team.name,
+    slug: team.slug ?? null,
+    imageUrl: team.imageUrl ?? fallbackIcon ?? null,
+  };
 }
 
 function mapDbFixture(
@@ -46,14 +60,16 @@ function mapDbFixture(
     kickoffAt: Date | null;
     status: string;
     round: string | null;
+    venueName?: string | null;
     homeScore: number;
     awayScore: number;
     externalMatchId: string | null;
     planetRugbyUrl: string | null;
-    homeTeam: { name: string } | null;
-    awayTeam: { name: string } | null;
+    homeTeam: { name: string; slug?: string | null; imageUrl?: string | null } | null;
+    awayTeam: { name: string; slug?: string | null; imageUrl?: string | null } | null;
   },
   timeZone: string,
+  icons?: { home?: string | null; away?: string | null },
 ): ScheduleFixture {
   const kickoffIso = row.kickoffAt?.toISOString() ?? null;
   const matchDate = kickoffDateKey(kickoffIso, timeZone);
@@ -68,10 +84,11 @@ function mapDbFixture(
     kickoffAt: kickoffIso,
     status: row.status,
     round: row.round,
+    venue: row.venueName?.trim() || null,
     homeScore: row.homeScore,
     awayScore: row.awayScore,
-    homeTeam: row.homeTeam,
-    awayTeam: row.awayTeam,
+    homeTeam: toScheduleTeam(row.homeTeam, icons?.home),
+    awayTeam: toScheduleTeam(row.awayTeam, icons?.away),
     externalMatchId: row.externalMatchId,
     planetRugbyUrl: row.planetRugbyUrl,
     source: "db",
@@ -105,10 +122,23 @@ function mapSdmsRow(
     kickoffAt,
     status: sdmsStatusToFixtureStatus(row.status),
     round: row.round ?? null,
+    venue: row.venue?.trim() || null,
     homeScore: row.home_team_score ?? 0,
     awayScore: row.away_team_score ?? 0,
-    homeTeam: row.home_team_name ? { name: row.home_team_name, slug: row.home_team_slug } : null,
-    awayTeam: row.away_team_name ? { name: row.away_team_name, slug: row.away_team_slug } : null,
+    homeTeam: row.home_team_name
+      ? {
+          name: row.home_team_name,
+          slug: row.home_team_slug,
+          imageUrl: row.home_team_icon ?? null,
+        }
+      : null,
+    awayTeam: row.away_team_name
+      ? {
+          name: row.away_team_name,
+          slug: row.away_team_slug,
+          imageUrl: row.away_team_icon ?? null,
+        }
+      : null,
     externalMatchId: row.match_id,
     planetRugbyUrl: null,
     source: "sdms",
@@ -147,6 +177,7 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
 export async function getScheduleForDate(
   dateKey: string,
   timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
+  options?: { competitionId?: string | null },
 ): Promise<{
   fixtures: ScheduleFixture[];
   competitions: ScheduleCompetition[];
@@ -155,6 +186,7 @@ export async function getScheduleForDate(
   datesWithMatches: string[];
   timeZone: string;
 }> {
+  const competitionIdFilter = options?.competitionId?.trim() || null;
   const season = dateKey.slice(0, 4);
   const { start, end } = sdmsDatetimeRangeForDate(dateKey, timeZone);
 
@@ -217,7 +249,24 @@ export async function getScheduleForDate(
   for (const row of sdmsRows) {
     const dbMatch = dbByExternal.get(row.match_id);
     if (dbMatch) {
-      const mapped = mapDbFixture(dbMatch, timeZone);
+      const mapped = mapDbFixture(dbMatch, timeZone, {
+        home: row.home_team_icon,
+        away: row.away_team_icon,
+      });
+      mapped.sdmsCompetitionId = row.competition_id ?? mapped.sdmsCompetitionId;
+      if (!mapped.competitionName && row.competition_name) {
+        mapped.competitionName = row.competition_name;
+      }
+      if (!mapped.venue && row.venue?.trim()) {
+        mapped.venue = row.venue.trim();
+      }
+      if (mapped.homeTeam && !mapped.homeTeam.slug && row.home_team_slug) {
+        mapped.homeTeam = { ...mapped.homeTeam, slug: row.home_team_slug };
+      }
+      if (mapped.awayTeam && !mapped.awayTeam.slug && row.away_team_slug) {
+        mapped.awayTeam = { ...mapped.awayTeam, slug: row.away_team_slug };
+      }
+      if (!mapped.externalMatchId) mapped.externalMatchId = row.match_id;
       if (fixtureOnCalendarDate(mapped, dateKey)) {
         pushUnique(mapped);
       }
@@ -249,10 +298,16 @@ export async function getScheduleForDate(
     return ta - tb;
   });
 
+  const filtered = competitionIdFilter
+    ? merged.filter((f) => f.competitionId === competitionIdFilter)
+    : merged;
+
   return {
-    fixtures: merged,
+    fixtures: filtered,
     competitions: competitionList,
-    liveCount: sdmsRows.length,
+    liveCount: competitionIdFilter
+      ? filtered.filter((f) => /live|half/i.test(f.status)).length
+      : sdmsRows.length,
     dbCount: dbRowsAfterImport.length,
     datesWithMatches,
     timeZone,

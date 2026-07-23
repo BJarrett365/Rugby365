@@ -81,6 +81,20 @@ describe("table-lab definitions", () => {
     );
   });
 
+  it("hides unimplemented tables from menu listings", () => {
+    const visibleIds = listRugbyTableDefinitions().map((row) => row.id);
+    expect(visibleIds).not.toContain("custom_match_period");
+    expect(visibleIds).not.toContain("points_gained_drawn");
+
+    const hidden = listRugbyTableDefinitions(undefined, { includeHidden: true }).filter(
+      (row) => row.hiddenFromMenu,
+    );
+    expect(hidden.map((row) => row.id).sort()).toEqual([
+      "custom_match_period",
+      "points_gained_drawn",
+    ]);
+  });
+
   it("documents required data for each table", () => {
     const full = getRugbyTableDefinition("full_table");
     expect(full?.requiredData).toContain("fixtures");

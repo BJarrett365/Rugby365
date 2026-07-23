@@ -89,6 +89,11 @@ export const WikipediaPlayerArchiveSchema = z.object({
   currentTeam: z.string().optional(),
   imageUrl: z.string().optional(),
   bioSummary: z.string().optional(),
+  /** Optional social URLs (often from Wikidata, not the wiki infobox). */
+  twitter: z.string().optional(),
+  instagram: z.string().optional(),
+  facebook: z.string().optional(),
+  website: z.string().optional(),
   clubCareer: z.array(WikipediaCareerStintSchema).optional(),
   cupCareer: z.array(WikipediaCareerStintSchema).optional(),
   internationalCareer: z.array(WikipediaCareerStintSchema).optional(),

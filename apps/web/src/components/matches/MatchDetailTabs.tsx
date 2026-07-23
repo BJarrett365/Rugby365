@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MatchDetailTab } from "@/lib/match-detail-tabs";
 
-const TABS: { id: MatchDetailTab; label: string }[] = [
+const PUBLIC_TABS: { id: MatchDetailTab; label: string }[] = [
   { id: "details", label: "Match Details" },
-  { id: "stats", label: "Stats" },
+  { id: "stats", label: "Team Stats" },
+  { id: "player-stats", label: "Player Stats" },
   { id: "lineups", label: "Lineups" },
+  { id: "tables", label: "Tables" },
   { id: "head-to-head", label: "Head-to-Head" },
-  { id: "edit", label: "Edit" },
 ];
 
 export function MatchDetailTabs({ activeTab }: { activeTab: MatchDetailTab }) {
@@ -17,7 +18,7 @@ export function MatchDetailTabs({ activeTab }: { activeTab: MatchDetailTab }) {
 
   return (
     <nav className="match-detail-tabs" aria-label="Match sections">
-      {TABS.map((tab) => {
+      {PUBLIC_TABS.map((tab) => {
         const href = tab.id === "details" ? pathname : `${pathname}?tab=${tab.id}`;
         const isActive = activeTab === tab.id;
         return (

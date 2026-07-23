@@ -8,6 +8,7 @@ import {
   jsonb,
   pgEnum,
   uniqueIndex,
+  index,
   date,
   real,
 } from "drizzle-orm/pg-core";
@@ -186,6 +187,9 @@ export const players = pgTable(
     relatives: text("relatives"),
     positions: jsonb("positions"),
     imageUrl: text("image_url"),
+    /** Approved Planet Rugby (or CMS) primary image — never auto-replaced when set. */
+    primaryImageId: uuid("primary_image_id"),
+    primaryImageApprovedAt: timestamp("primary_image_approved_at", { withTimezone: true }),
     bioSummary: text("bio_summary"),
     wikipediaUrl: text("wikipedia_url"),
     wikidataId: text("wikidata_id"),
@@ -197,6 +201,20 @@ export const players = pgTable(
     rugbypassPlayerId: text("rugbypass_player_id"),
     rugbypassSyncedAt: timestamp("rugbypass_synced_at", { withTimezone: true }),
     careerStatus: text("career_status").notNull().default("active"),
+    /** Public profile: false hides the page even when publish_status is published. */
+    isPublic: boolean("is_public").notNull().default(true),
+    /** published | draft | hidden */
+    publishStatus: text("publish_status").notNull().default("published"),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    ogImageUrl: text("og_image_url"),
+    /** CMS override for the structured public intro paragraph. */
+    publicIntroOverride: text("public_intro_override"),
+    preferredFoot: text("preferred_foot"),
+    /** Optional public status override (injured | suspended | unattached | …). */
+    statusOverride: text("status_override"),
+    profileUpdatedAt: timestamp("profile_updated_at", { withTimezone: true }),
+    lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("players_external_provider_id_unique")
@@ -208,6 +226,97 @@ export const players = pgTable(
     uniqueIndex("players_rugbypass_player_id_unique")
       .on(table.rugbypassPlayerId)
       .where(sql`${table.rugbypassPlayerId} is not null`),
+    index("players_publish_status_idx").on(table.publishStatus),
+  ],
+);
+
+/** Planet Rugby (and CMS) player image candidates, gallery and approved roles. */
+export const playerImages = pgTable(
+  "player_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    canonicalUrl: text("canonical_url"),
+    sourceProvider: text("source_provider").notNull().default("planet_rugby"),
+    sourcePageUrl: text("source_page_url"),
+    sourceArticleTitle: text("source_article_title"),
+    caption: text("caption"),
+    altText: text("alt_text"),
+    credit: text("credit"),
+    photographer: text("photographer"),
+    agency: text("agency"),
+    copyright: text("copyright"),
+    /** planet_rugby | club_supplied | getty | inpho | shutterstock | staff | creative_commons | unknown */
+    licence: text("licence").default("planet_rugby"),
+    title: text("title"),
+    description: text("description"),
+    /** Focal point 0–100 for intelligent crops. */
+    focalX: integer("focal_x"),
+    focalY: integer("focal_y"),
+    widthPx: integer("width_px"),
+    heightPx: integer("height_px"),
+    isAiGenerated: boolean("is_ai_generated").notNull().default(false),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    updatedBy: text("updated_by"),
+    /** headshot | action | international | club | historic | hero | gallery | portrait | celebration | training | injury | retirement */
+    imageType: text("image_type").notNull().default("action"),
+    /** primary | current_club | current_international | career | legend | gallery | none */
+    role: text("role").notNull().default("gallery"),
+    /** high | medium | low */
+    confidence: text("confidence").notNull().default("low"),
+    confidenceScore: integer("confidence_score").notNull().default(0),
+    /** candidate | approved | rejected | incorrect_player | removed */
+    status: text("status").notNull().default("candidate"),
+    isPublic: boolean("is_public").notNull().default(false),
+    matchContext: jsonb("match_context").notNull().default({}),
+    discoveredAt: timestamp("discovered_at", { withTimezone: true }).notNull().defaultNow(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    rejectedReason: text("rejected_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("player_images_player_canonical_unique")
+      .on(table.playerId, table.canonicalUrl)
+      .where(sql`${table.canonicalUrl} is not null`),
+    uniqueIndex("player_images_player_url_unique").on(table.playerId, table.imageUrl),
+    index("player_images_player_status_idx").on(table.playerId, table.status),
+    index("player_images_player_role_idx").on(table.playerId, table.role),
+  ],
+);
+
+/**
+ * Image match learning rules from editor rejections.
+ * Pending until approved — never auto-writes into live scoring without review.
+ */
+export const playerImageLearningRules = pgTable(
+  "player_image_learning_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ruleKey: text("rule_key").notNull(),
+    kind: text("kind").notNull(),
+    pattern: text("pattern").notNull(),
+    penalty: integer("penalty").notNull().default(25),
+    scope: text("scope").notNull().default("global"),
+    playerId: uuid("player_id").references(() => players.id, { onDelete: "cascade" }),
+    sourceImageId: uuid("source_image_id").references(() => playerImages.id, {
+      onDelete: "set null",
+    }),
+    rationale: text("rationale").notNull().default(""),
+    status: text("status").notNull().default("pending"),
+    sourceSnapshot: jsonb("source_snapshot").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: text("reviewed_by"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("player_image_learning_rules_rule_key_unique").on(table.ruleKey),
+    index("player_image_learning_rules_status_idx").on(table.status),
   ],
 );
 
@@ -929,8 +1038,50 @@ export const playerRatings = pgTable("player_ratings", {
   manualOverrideReason: text("manual_override_reason"),
   calculatedAt: timestamp("calculated_at", { withTimezone: true }),
   dataPoints: integer("data_points").notNull().default(0),
+  /** Career rating model id, e.g. career-v1 */
+  modelVersion: text("model_version").notNull().default("career-v1"),
+  /** Public development timeline chart settings (enabled, averages, min minutes, …). */
+  developmentChartSettings: jsonb("development_chart_settings").notNull().default({}),
+  developmentSummaryOverride: text("development_summary_override"),
+  /** Public performance radar settings (enabled, default type, min minutes, …). */
+  radarSettings: jsonb("radar_settings").notNull().default({}),
+  radarSummaryOverride: text("radar_summary_override"),
+  radarSummaryApproved: boolean("radar_summary_approved").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Cached position-percentile radar payloads (rebuilt after season stats / imports).
+ * Lookup uniqueness: player + season + competition + team + scope + min_minutes
+ * (null FKs coalesced in SQL unique index).
+ */
+export const playerRadarCaches = pgTable(
+  "player_radar_caches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "cascade",
+    }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "cascade",
+    }),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    scope: text("scope").notNull().default("all"),
+    positionFamily: text("position_family").notNull(),
+    minMinutes: integer("min_minutes").notNull().default(400),
+    title: text("title").notNull(),
+    cohortSize: integer("cohort_size").notNull().default(0),
+    payload: jsonb("payload").notNull().default({}),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_radar_caches_player_idx").on(table.playerId),
+    index("player_radar_caches_season_idx").on(table.seasonId),
+  ],
+);
 
 /** Per-match Rugby365 Match Ratings (0–10) shown on line-ups. */
 export const playerMatchRatings = pgTable(
@@ -959,6 +1110,9 @@ export const playerMatchRatings = pgTable(
     minutesPlayed: integer("minutes_played").notNull().default(0),
     rating: real("rating"),
     ratingStatus: text("rating_status").notNull().default("unavailable"),
+    /** Match rating model id, e.g. match-v1 */
+    modelVersion: text("model_version").notNull().default("match-v1"),
+    recalculatedAt: timestamp("recalculated_at", { withTimezone: true }),
     performanceBand: text("performance_band"),
     ratingExplanation: text("rating_explanation"),
     positiveImpacts: jsonb("positive_impacts").notNull().default([]),
@@ -1273,6 +1427,9 @@ export const playerInjuries = pgTable("player_injuries", {
   sourceUrl: text("source_url"),
   notes: text("notes"),
   lastVerifiedDate: date("last_verified_date"),
+  /** public | private | unconfirmed — only public+confirmed appear on public profiles. */
+  visibility: text("visibility").notNull().default("public"),
+  verificationStatus: text("verification_status").notNull().default("confirmed"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -1300,6 +1457,9 @@ export const playerSuspensions = pgTable("player_suspensions", {
   sourceUrl: text("source_url"),
   notes: text("notes"),
   lastVerifiedDate: date("last_verified_date"),
+  /** public | private | unconfirmed — only public+confirmed appear on public profiles. */
+  visibility: text("visibility").notNull().default("public"),
+  verificationStatus: text("verification_status").notNull().default("confirmed"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -1384,3 +1544,201 @@ export const squadAuditLog = pgTable("squad_audit_log", {
   afterValue: jsonb("after_value"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Multi-provider crosswalk — sits alongside existing external_* columns; never replaces them. */
+export const providerEntityMappings = pgTable(
+  "provider_entity_mappings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull(),
+    entityType: text("entity_type").notNull(),
+    externalId: text("external_id").notNull(),
+    rugby365Id: uuid("rugby365_id"),
+    externalName: text("external_name"),
+    rugby365Name: text("rugby365_name"),
+    status: text("status").notNull().default("unmapped"),
+    confidence: integer("confidence").notNull().default(0),
+    matchReason: jsonb("match_reason").notNull().default({}),
+    conflictStatus: text("conflict_status"),
+    notes: text("notes"),
+    extras: jsonb("extras").notNull().default({}),
+    confirmedBy: text("confirmed_by"),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("provider_entity_mappings_provider_type_ext_unique").on(
+      table.provider,
+      table.entityType,
+      table.externalId,
+    ),
+    index("provider_entity_mappings_entity_local_idx").on(
+      table.entityType,
+      table.rugby365Id,
+      table.provider,
+    ),
+    index("provider_entity_mappings_status_idx").on(table.status),
+  ],
+);
+
+export const providerRawResponses = pgTable(
+  "provider_raw_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull().default("rugby_data"),
+    endpoint: text("endpoint").notNull(),
+    entityType: text("entity_type"),
+    externalId: text("external_id"),
+    requestParams: jsonb("request_params").notNull().default({}),
+    responseStatus: integer("response_status"),
+    responseTimeMs: integer("response_time_ms"),
+    retrievedAt: timestamp("retrieved_at", { withTimezone: true }).notNull().defaultNow(),
+    payloadHash: text("payload_hash"),
+    importStatus: text("import_status").notNull().default("captured"),
+    errorMessage: text("error_message"),
+    payload: jsonb("payload"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("provider_raw_responses_provider_retrieved_idx").on(table.provider, table.retrievedAt),
+    index("provider_raw_responses_entity_ext_idx").on(table.entityType, table.externalId),
+    index("provider_raw_responses_import_status_idx").on(table.importStatus),
+  ],
+);
+
+export const dataIntegrationJobs = pgTable(
+  "data_integration_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    jobType: text("job_type").notNull(),
+    provider: text("provider").notNull().default("rugby_data"),
+    status: text("status").notNull().default("queued"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    recordsFound: integer("records_found").notNull().default(0),
+    recordsCreated: integer("records_created").notNull().default(0),
+    recordsUpdated: integer("records_updated").notNull().default(0),
+    recordsSkipped: integer("records_skipped").notNull().default(0),
+    conflicts: integer("conflicts").notNull().default(0),
+    errors: integer("errors").notNull().default(0),
+    startedBy: text("started_by").notNull().default("system"),
+    preview: jsonb("preview").notNull().default({}),
+    report: jsonb("report").notNull().default({}),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("data_integration_jobs_status_idx").on(table.status),
+    index("data_integration_jobs_type_idx").on(table.jobType),
+    index("data_integration_jobs_created_idx").on(table.createdAt),
+  ],
+);
+
+export const dataIntegrationConflicts = pgTable(
+  "data_integration_conflicts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    entityId: uuid("entity_id"),
+    field: text("field").notNull(),
+    primaryValue: jsonb("primary_value"),
+    secondaryValue: jsonb("secondary_value"),
+    currentValue: jsonb("current_value"),
+    primaryProvider: text("primary_provider").notNull().default("rugby_data"),
+    secondaryProvider: text("secondary_provider").notNull(),
+    suggestedAction: text("suggested_action").notNull().default("keep_primary"),
+    status: text("status").notNull().default("open"),
+    resolution: text("resolution"),
+    resolvedBy: text("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    jobId: uuid("job_id").references(() => dataIntegrationJobs.id, { onDelete: "set null" }),
+    rawResponseId: uuid("raw_response_id").references(() => providerRawResponses.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("data_integration_conflicts_status_idx").on(table.status),
+    index("data_integration_conflicts_entity_idx").on(table.entityType, table.entityId),
+  ],
+);
+
+export const dataFieldLocks = pgTable(
+  "data_field_locks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    /** "*" = lock entire record against automatic overwrite. */
+    field: text("field").notNull().default("*"),
+    lockedBy: text("locked_by").notNull().default("system"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }).notNull().defaultNow(),
+    reason: text("reason"),
+  },
+  (table) => [
+    uniqueIndex("data_field_locks_entity_field_unique").on(
+      table.entityType,
+      table.entityId,
+      table.field,
+    ),
+    index("data_field_locks_entity_idx").on(table.entityType, table.entityId),
+  ],
+);
+
+export const dataIntegrationAuditLog = pgTable(
+  "data_integration_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type"),
+    entityId: uuid("entity_id"),
+    field: text("field"),
+    oldValue: jsonb("old_value"),
+    newValue: jsonb("new_value"),
+    source: text("source"),
+    action: text("action").notNull(),
+    userLabel: text("user_label").notNull().default("system"),
+    reason: text("reason"),
+    jobId: uuid("job_id").references(() => dataIntegrationJobs.id, { onDelete: "set null" }),
+    rawResponseId: uuid("raw_response_id").references(() => providerRawResponses.id, {
+      onDelete: "set null",
+    }),
+    mappingId: uuid("mapping_id").references(() => providerEntityMappings.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("data_integration_audit_log_entity_idx").on(table.entityType, table.entityId),
+    index("data_integration_audit_log_created_idx").on(table.createdAt),
+    index("data_integration_audit_log_action_idx").on(table.action),
+  ],
+);
+
+export const dataIntegrationMetrics = pgTable(
+  "data_integration_metrics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull().default("rugby_data"),
+    metricDate: date("metric_date").notNull(),
+    totalRequests: integer("total_requests").notNull().default(0),
+    successfulRequests: integer("successful_requests").notNull().default(0),
+    failedRequests: integer("failed_requests").notNull().default(0),
+    totalResponseTimeMs: integer("total_response_time_ms").notNull().default(0),
+    lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+    lastFailureAt: timestamp("last_failure_at", { withTimezone: true }),
+    lastErrorMessage: text("last_error_message"),
+    rateLimitStatus: text("rate_limit_status"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("data_integration_metrics_provider_date_unique").on(
+      table.provider,
+      table.metricDate,
+    ),
+  ],
+);

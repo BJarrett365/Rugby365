@@ -1,10 +1,13 @@
 import { formatFormDateRange } from "./form-table-service";
 import { buildLeagueStandingsFromPerspectives, filterBySide } from "./rugby-table-metrics-service";
+import { parseMinMatchesPlayed } from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
   TeamFixturePerspective,
 } from "./table-types";
+
+export { parseMinMatchesPlayed };
 
 export function homeWinPct(won: number, played: number): number {
   if (played <= 0) return 0;
@@ -59,10 +62,4 @@ export function buildHomeTableStandings(input: {
     rows,
     dateRangeLabel: formatFormDateRange(homePerspectives),
   };
-}
-
-export function parseMinMatchesPlayed(value: string | number | null | undefined): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1) return 1;
-  return Math.min(Math.floor(parsed), 50);
 }

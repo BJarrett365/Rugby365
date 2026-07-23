@@ -4,6 +4,7 @@ import {
   filterBySide,
 } from "./rugby-table-metrics-service";
 import { filterByMinimumMatchesPlayed, parseMinMatchesPlayed } from "./home-table-service";
+import { parseCalendarYear } from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -11,12 +12,7 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export function parseCalendarYear(value: string | number | null | undefined): number {
-  const current = new Date().getFullYear();
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1900 || parsed > 2100) return current;
-  return Math.floor(parsed);
-}
+export { parseCalendarYear };
 
 export function calendarYearDateRangeLabel(year: number): string {
   return `1 January ${year} – 31 December ${year}`;

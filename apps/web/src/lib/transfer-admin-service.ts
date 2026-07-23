@@ -28,6 +28,10 @@ import {
   sanitizeTransferPlayerName,
   sanitizeTransferPlayerNameWithStatus,
 } from "./transfer-display";
+import {
+  findSemanticDuplicateTransfer,
+  isNoOpClubChange,
+} from "./transfer-dedupe";
 import type {
   TransferImportSummary,
   TransferListFilters,
@@ -370,49 +374,94 @@ export async function createTransferRecord(input: CreateTransferInput) {
     fromClub = transferType === "club" ? player.clubName : player.countryName;
   }
 
-  if (input.importKey) {
+  if (
+    isNoOpClubChange({
+      fromTeamId,
+      toTeamId,
+      fromClub,
+      toClub,
+      movementType,
+    })
+  ) {
+    return { transfer: null, updated: false, skipped: true as const };
+  }
+
+  async function applyMembershipAndStatus(transferRow: typeof playerTransfers.$inferSelect) {
+    const { reconcilePlayerCareerStatus } = await import("./player-career-status-service");
+    await reconcilePlayerCareerStatus(input.playerId);
+    const { applyTransferToMemberships } = await import("./player-membership-service");
+    await applyTransferToMemberships({
+      playerId: input.playerId,
+      fromTeamId,
+      toTeamId,
+      seasonId: input.seasonId ?? transferRow.seasonId ?? null,
+      competitionId: input.competitionId ?? transferRow.competitionId ?? null,
+      movementType,
+      effectiveDate: input.effectiveDate ? new Date(input.effectiveDate) : transferRow.effectiveDate,
+      sourceProvider: input.sourceProvider ?? transferRow.sourceProvider,
+      sourceUrl: input.sourceUrl ?? transferRow.sourceUrl,
+    });
+  }
+
+  async function updateExisting(existingId: string) {
     const [existing] = await db
+      .select()
+      .from(playerTransfers)
+      .where(eq(playerTransfers.id, existingId))
+      .limit(1);
+    if (!existing) throw new Error("Transfer not found");
+
+    const nextFromTeamId = fromTeamId ?? existing.fromTeamId;
+    const nextToTeamId = toTeamId ?? existing.toTeamId;
+    const [updated] = await db
+      .update(playerTransfers)
+      .set({
+        fromClub: fromClub ?? existing.fromClub,
+        toClub: toClub ?? existing.toClub,
+        fromTeamId: nextFromTeamId,
+        toTeamId: nextToTeamId,
+        transferType,
+        movementType,
+        seasonId: input.seasonId ?? existing.seasonId,
+        competitionId: input.competitionId ?? existing.competitionId,
+        positionName: input.positionName ?? existing.positionName,
+        effectiveDate: input.effectiveDate ? new Date(input.effectiveDate) : existing.effectiveDate,
+        notes: input.notes?.trim() ?? existing.notes,
+        sourceProvider: input.sourceProvider ?? existing.sourceProvider,
+        sourceUrl: input.sourceUrl ?? existing.sourceUrl,
+        importKey: input.importKey ?? existing.importKey,
+      })
+      .where(eq(playerTransfers.id, existingId))
+      .returning();
+    await applyMembershipAndStatus(updated!);
+    return { transfer: updated!, updated: true as const, skipped: false as const };
+  }
+
+  if (input.importKey) {
+    const [existingByKey] = await db
       .select()
       .from(playerTransfers)
       .where(eq(playerTransfers.importKey, input.importKey))
       .limit(1);
-    if (existing) {
-      const [updated] = await db
-        .update(playerTransfers)
-        .set({
-          fromClub,
-          toClub,
-          fromTeamId,
-          toTeamId,
-          transferType,
-          movementType,
-          seasonId: input.seasonId ?? existing.seasonId,
-          competitionId: input.competitionId ?? existing.competitionId,
-          positionName: input.positionName ?? existing.positionName,
-          effectiveDate: input.effectiveDate ? new Date(input.effectiveDate) : existing.effectiveDate,
-          notes: input.notes?.trim() ?? existing.notes,
-          sourceProvider: input.sourceProvider ?? existing.sourceProvider,
-          sourceUrl: input.sourceUrl ?? existing.sourceUrl,
-        })
-        .where(eq(playerTransfers.id, existing.id))
-        .returning();
-      const { reconcilePlayerCareerStatus } = await import("./player-career-status-service");
-      await reconcilePlayerCareerStatus(input.playerId);
-      const { applyTransferToMemberships } = await import("./player-membership-service");
-      await applyTransferToMemberships({
-        playerId: input.playerId,
-        fromTeamId,
-        toTeamId,
-        seasonId: input.seasonId ?? updated!.seasonId ?? null,
-        competitionId: input.competitionId ?? updated!.competitionId ?? null,
-        movementType,
-        effectiveDate: input.effectiveDate ? new Date(input.effectiveDate) : updated!.effectiveDate,
-        sourceProvider: input.sourceProvider ?? updated!.sourceProvider,
-        sourceUrl: input.sourceUrl ?? updated!.sourceUrl,
-      });
-      return { transfer: updated!, updated: true };
+    if (existingByKey) {
+      return updateExisting(existingByKey.id);
     }
-  } else {
+  }
+
+  const semanticDup = await findSemanticDuplicateTransfer({
+    playerId: input.playerId,
+    seasonId: input.seasonId ?? null,
+    movementType,
+    fromTeamId,
+    toTeamId,
+    fromClub,
+    toClub,
+  });
+  if (semanticDup) {
+    return updateExisting(semanticDup.id);
+  }
+
+  if (!input.importKey) {
     await assertNoDuplicateManualTransfer(input);
   }
 
@@ -482,7 +531,7 @@ export async function createTransferRecord(input: CreateTransferInput) {
     sourceUrl: input.sourceUrl ?? row!.sourceUrl,
   });
 
-  return { transfer: row!, updated: false };
+  return { transfer: row!, updated: false, skipped: false as const };
 }
 
 export async function deleteTransferRecord(id: string) {
@@ -654,41 +703,12 @@ export async function resolvePremiershipSeason(seasonLabel = DEFAULT_PREMIERSHIP
     .limit(1);
   if (!competition) throw new Error("Premiership competition not found");
 
-  let [season] = await db
-    .select()
-    .from(competitionSeasons)
-    .where(and(eq(competitionSeasons.competitionId, competition.id), eq(competitionSeasons.label, seasonLabel)))
-    .limit(1);
-
-  if (!season) {
-    const yearMatch = seasonLabel.match(/^(\d{4})/);
-    const year = yearMatch ? Number.parseInt(yearMatch[1]!, 10) : new Date().getFullYear();
-    const slug = seasonLabel
-      .replace(/\u2013/g, "-")
-      .replace(/[^\d-]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .toLowerCase();
-    [season] = await db
-      .insert(competitionSeasons)
-      .values({
-        competitionId: competition.id,
-        slug: slug || String(year),
-        label: seasonLabel,
-        year,
-        isActive: false,
-        sourceProvider: "wikipedia",
-      })
-      .onConflictDoNothing()
-      .returning();
-
-    if (!season) {
-      [season] = await db
-        .select()
-        .from(competitionSeasons)
-        .where(and(eq(competitionSeasons.competitionId, competition.id), eq(competitionSeasons.label, seasonLabel)))
-        .limit(1);
-    }
-  }
+  const { upsertSeason } = await import("./competition-admin-service");
+  const season = await upsertSeason({
+    competitionId: competition.id,
+    label: seasonLabel,
+    isActive: true,
+  });
 
   return { competition, season: season ?? null };
 }

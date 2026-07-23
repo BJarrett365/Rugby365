@@ -9,8 +9,12 @@ import type {
 
 export type { FormResult };
 
-export const FORM_MATCH_COUNT_PRESETS = [3, 5, 6, 10] as const;
-export const DEFAULT_FORM_MATCH_COUNT = 5;
+export {
+  DEFAULT_FORM_MATCH_COUNT,
+  FORM_MATCH_COUNT_PRESETS,
+  isPresetFormMatchCount,
+  parseFormMatchCount,
+} from "./table-lab-param-parsers";
 
 function compareRecentPerspectives(a: TeamFixturePerspective, b: TeamFixturePerspective): number {
   const at = a.kickoffAt?.getTime() ?? 0;
@@ -108,12 +112,3 @@ export function buildFormTableStandings(input: {
   };
 }
 
-export function parseFormMatchCount(value: string | number | null | undefined): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1) return DEFAULT_FORM_MATCH_COUNT;
-  return Math.min(Math.floor(parsed), 50);
-}
-
-export function isPresetFormMatchCount(value: number): value is (typeof FORM_MATCH_COUNT_PRESETS)[number] {
-  return (FORM_MATCH_COUNT_PRESETS as readonly number[]).includes(value);
-}

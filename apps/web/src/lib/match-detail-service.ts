@@ -1,9 +1,11 @@
 import {
   buildPlanetRugbyMatchUrl,
+  fetchSdmsHeadToHead,
   fetchSdmsLineups,
   fetchSdmsMatchDetail,
   fetchSdmsMatchPlayerStats,
   fetchSdmsMatchStats,
+  fetchSdmsPreviousMeetings,
   mapSdmsLineups,
   sdmsScheduleKickoffIso,
   type MappedLineups,
@@ -11,8 +13,11 @@ import {
   type SdmsMatchPlayerStats,
   type SdmsMatchStatsBundle,
 } from "@rugby365/import-sdk";
+import { and, eq, or } from "drizzle-orm";
+import { competitions, competitionSeasons } from "@rugby365/db";
+import { getDb } from "./db";
 import { buildMatchEntityContext, type MatchEntityContext } from "./entity-lookup-service";
-import { findFixtureByExternalMatchId } from "./fixture-admin-service";
+import { findFixtureBySdmsMatchId, getFixtureById } from "./fixture-admin-service";
 import {
   listFixtureSquadPlayerIds,
   syncSdmsMatchEntityLinks,
@@ -27,6 +32,9 @@ import {
 } from "./match-rating-service";
 import { autoImportSdmsMatchToCms } from "./sdms-auto-import-service";
 import { CAREER_RATING_MODEL, MATCH_RATING_MODEL, isFixtureRatingsPublished } from "./match-rating-math";
+import type { MatchTableContext } from "./match-table-context";
+
+export type { MatchTableContext } from "./match-table-context";
 
 export type MatchDetailPageData = {
   detail: SdmsMatchDetail;
@@ -42,20 +50,100 @@ export type MatchDetailPageData = {
     entitySyncRan: boolean;
     autoImported: boolean;
   } | null;
+  tableContext: MatchTableContext | null;
   entities: MatchEntityContext;
   matchRatings: MatchRatingDisplay[];
   rugby365PotmName: string | null;
   officialPotmName: string | null;
 };
 
+async function resolveMatchTableContext(
+  detail: SdmsMatchDetail,
+  cmsFixtureRow: { competitionId: string | null; seasonId: string | null } | null,
+): Promise<MatchTableContext | null> {
+  const db = getDb();
+  const sdmsCompId = String(detail.competition_id ?? "").trim();
+
+  let competitionId = cmsFixtureRow?.competitionId ?? null;
+  let seasonId = cmsFixtureRow?.seasonId ?? null;
+  let competitionName = detail.competition_name;
+  let competitionSlug: string | null = null;
+
+  if (competitionId) {
+    const [row] = await db
+      .select({
+        id: competitions.id,
+        name: competitions.name,
+        slug: competitions.slug,
+      })
+      .from(competitions)
+      .where(eq(competitions.id, competitionId))
+      .limit(1);
+    if (row) {
+      competitionName = row.name;
+      competitionSlug = row.slug;
+    }
+  } else if (sdmsCompId) {
+    const [row] = await db
+      .select({
+        id: competitions.id,
+        name: competitions.name,
+        slug: competitions.slug,
+      })
+      .from(competitions)
+      .where(
+        or(eq(competitions.sdmsCompCode, sdmsCompId), eq(competitions.externalProviderId, sdmsCompId)),
+      )
+      .limit(1);
+    if (row) {
+      competitionId = row.id;
+      competitionName = row.name;
+      competitionSlug = row.slug;
+    }
+  }
+
+  if (!competitionId) return null;
+
+  if (!seasonId) {
+    const [active] = await db
+      .select({ id: competitionSeasons.id })
+      .from(competitionSeasons)
+      .where(
+        and(
+          eq(competitionSeasons.competitionId, competitionId),
+          eq(competitionSeasons.isActive, true),
+          eq(competitionSeasons.isDeprecated, false),
+        ),
+      )
+      .limit(1);
+    seasonId = active?.id ?? null;
+  }
+
+  return {
+    competitionId,
+    seasonId,
+    competitionSlug,
+    competitionName,
+  };
+}
+
 export async function getMatchDetailForPage(matchId: string): Promise<MatchDetailPageData | null> {
-  const [detail, lineupsRaw, matchStats, playerStats] = await Promise.all([
+  const [detail, lineupsRaw, matchStats, playerStats, previousMeetings, headToHead] = await Promise.all([
     fetchSdmsMatchDetail(matchId),
     fetchSdmsLineups(matchId),
     fetchSdmsMatchStats(matchId),
     fetchSdmsMatchPlayerStats(matchId),
+    fetchSdmsPreviousMeetings(matchId),
+    fetchSdmsHeadToHead(matchId),
   ]);
   if (!detail) return null;
+
+  if (previousMeetings.length > 0) {
+    detail.last_five_meetings = previousMeetings;
+  }
+  if (headToHead.length > 0) {
+    detail.head_to_head = headToHead;
+  }
 
   const lineups = lineupsRaw
     ? mapSdmsLineups(
@@ -78,18 +166,35 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
 
   await ensureSdmsProvidersRegistered(detail, lineups);
 
-  let cmsFixtureRow = await findFixtureByExternalMatchId(matchId);
+  let cmsFixtureRow = await findFixtureBySdmsMatchId(matchId);
   let entitySyncRan = false;
   let autoImported = false;
 
   if (!cmsFixtureRow) {
-    const imported = await autoImportSdmsMatchToCms(matchId, detail);
-    cmsFixtureRow = await findFixtureByExternalMatchId(matchId);
-    entitySyncRan = imported.enriched;
-    autoImported = imported.created;
+    try {
+      const imported = await autoImportSdmsMatchToCms(matchId, detail);
+      cmsFixtureRow =
+        (await findFixtureBySdmsMatchId(matchId)) ??
+        (await getFixtureById(imported.fixtureId)) ??
+        null;
+      entitySyncRan = imported.enriched;
+      autoImported = imported.created;
+    } catch (error) {
+      console.warn(
+        `[match-detail] auto-import failed for ${matchId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
   } else {
-    const sync = await syncSdmsMatchEntityLinks(cmsFixtureRow.id, matchId);
-    entitySyncRan = sync.synced;
+    try {
+      const sync = await syncSdmsMatchEntityLinks(cmsFixtureRow.id, matchId);
+      entitySyncRan = sync.synced;
+    } catch (error) {
+      console.warn(
+        `[match-detail] entity sync failed for ${matchId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
 
   const squadPlayerIds = cmsFixtureRow ? await listFixtureSquadPlayerIds(cmsFixtureRow.id) : [];
@@ -191,6 +296,8 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     }
   }
 
+  const tableContext = await resolveMatchTableContext(detail, cmsFixtureRow);
+
   return {
     detail,
     lineups,
@@ -207,6 +314,7 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
           autoImported,
         }
       : null,
+    tableContext,
     entities,
     matchRatings,
     rugby365PotmName,

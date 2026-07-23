@@ -17,6 +17,21 @@ export function formatSeasonRangeLabel(startYear: number): string {
   return `${startYear}${SEASON_LABEL_DASH}${endShort}`;
 }
 
+/** Club = cross-year label; international/tournament = calendar/tournament year. */
+export function formatSeasonLabelForKind(
+  year: number,
+  kind: "club" | "international" | "tournament",
+): string {
+  return kind === "club" ? formatSeasonRangeLabel(year) : String(year);
+}
+
+export function seasonSlugForKind(
+  year: number,
+  kind: "club" | "international" | "tournament",
+): string {
+  return kind === "club" ? seasonSlugFromStartYear(year) : String(year);
+}
+
 export function parseSeasonStartYear(label: string): number | null {
   const trimmed = label.trim();
   if (!trimmed) return null;

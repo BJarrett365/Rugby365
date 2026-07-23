@@ -13,6 +13,7 @@ export * from "./providers/wikipedia/parse-url";
 export * from "./providers/wikipedia/parse-infobox";
 export * from "./providers/wikipedia/WikipediaArchiveAdapter";
 export * from "./providers/wikipedia/search-player";
+export * from "./providers/wikipedia/fetch-wikidata-socials";
 export * from "./providers/wikipedia/search-venue";
 export * from "./providers/wikipedia/parse-stadium-capacity-list";
 export * from "./providers/wikipedia/parse-transfers";

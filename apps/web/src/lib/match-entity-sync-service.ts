@@ -20,6 +20,7 @@ export async function ensureSdmsProvidersRegistered(
           externalProviderId: detail.home_team_id,
           createIfMissing: true,
           sourceProvider: SDMS_PROVIDER,
+          imageUrl: detail.home_team_icon,
         })
       : Promise.resolve(null),
     detail.away_team_id
@@ -28,6 +29,7 @@ export async function ensureSdmsProvidersRegistered(
           externalProviderId: detail.away_team_id,
           createIfMissing: true,
           sourceProvider: SDMS_PROVIDER,
+          imageUrl: detail.away_team_icon,
         })
       : Promise.resolve(null),
   ]);

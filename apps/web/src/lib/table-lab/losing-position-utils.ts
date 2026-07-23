@@ -93,7 +93,7 @@ function sortTimelineEvents(events: LosingPositionTimelineEvent[]): LosingPositi
 }
 
 function pointsForEvent(event: LosingPositionTimelineEvent): number {
-  const payload = event.payload ?? {};
+  const payload = (event.payload ?? {}) as Record<string, unknown>;
   const fromPayload = scoringPointsFromMatchEvent(payload);
   if (fromPayload > 0) return fromPayload;
   return DEFAULT_EVENT_POINTS[event.eventType] ?? 0;
@@ -106,7 +106,7 @@ function applyScoreUpdate(
   home: number,
   away: number,
 ): [number, number] | null {
-  const explicit = readScorePair(event.payload ?? {});
+  const explicit = readScorePair((event.payload ?? {}) as Record<string, unknown>);
   if (explicit) return explicit;
 
   if (!SCORING_EVENT_TYPES.has(event.eventType) || !event.teamId) return null;

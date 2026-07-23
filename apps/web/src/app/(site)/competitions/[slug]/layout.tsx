@@ -20,7 +20,7 @@ export default async function CompetitionLayout({
       <PageHeader
         eyebrow="Competition"
         title={competition.name}
-        description="Fixtures, results and league table synced from CMS data."
+        description="Fixtures, results, tables and player stats synced from CMS data."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/tables" className="cms-btn cms-btn--secondary">

@@ -2,14 +2,10 @@ import { NextResponse } from "next/server";
 import {
   clearRugbyDataApiCredentials,
   getRugbyDataApiPublicConfig,
-  resolveRugbyDataApiBaseUrl,
-  resolveRugbyDataApiToken,
   saveRugbyDataApiCredentials,
 } from "@/lib/integration-settings-service";
+import { testRugbyDataApiConnection } from "@/lib/rugby-data-api-client";
 import { apiErrorResponse } from "@/lib/api-errors";
-
-const BROWSER_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 export async function GET() {
   try {
@@ -36,42 +32,16 @@ export async function PATCH(req: Request) {
     }
 
     if (body.action === "test") {
-      const baseUrl = await resolveRugbyDataApiBaseUrl();
-      const token = await resolveRugbyDataApiToken();
-      const url = `${baseUrl}/api/v1/rugby-union/teams`;
-      const headers: Record<string, string> = {
-        Accept: "application/json",
-        "User-Agent": BROWSER_UA,
-      };
-      if (token) {
-        headers.token = token;
-      }
-
-      const res = await fetch(url, { headers, cache: "no-store" });
-      if (!res.ok) {
-        const error = await res.text();
+      const result = await testRugbyDataApiConnection();
+      if (!result.ok) {
         return NextResponse.json(
-          {
-            ok: false,
-            message: `Rugby Data API test failed (${res.status}): ${error.slice(0, 280)}`,
-          },
+          { ok: false, message: result.message },
           { status: 400 },
         );
       }
-
-      const payload = (await res.json()) as unknown;
-      const count = Array.isArray(payload)
-        ? payload.length
-        : Array.isArray((payload as { data?: unknown })?.data)
-          ? ((payload as { data: unknown[] }).data.length)
-          : undefined;
-
       return NextResponse.json({
         ok: true,
-        message:
-          count !== undefined
-            ? `Connected — teams endpoint returned ${count} records.`
-            : "Connected — teams endpoint responded OK.",
+        message: `${result.message} (${result.responseTimeMs}ms)`,
       });
     }
 

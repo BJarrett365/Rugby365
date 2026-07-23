@@ -1,3 +1,5 @@
+import { KNOWLEDGE_NAV_ITEMS } from "./knowledge-catalog";
+
 export type AdminNavItem = {
   href: string;
   label: string;
@@ -297,6 +299,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/referees", label: "Referees", short: "Refs" },
       { href: "/admin/squads", label: "Squads", short: "Squads" },
       { href: "/admin/data-audit", label: "Data audit", short: "Audit" },
+      { href: "/admin/season-repair", label: "Season repair", short: "Seasons" },
       { href: "/admin/data-audit/squads", label: "Membership audit", short: "Memb" },
       { href: "/admin/opta-stats", label: "Opta Stats", short: "Stats" },
       { href: "/admin/tables", label: "Tables", short: "Tables" },
@@ -314,11 +317,15 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     id: "keys",
     label: "Keys",
-    items: ADMIN_HUB_KEYS.map((key) => ({
-      href: key.href,
-      label: key.value,
-      short: key.value.slice(0, 4),
-    })),
+    items: [
+      { href: "/admin/knowledge", label: "Knowledge Base", short: "KB" },
+      ...KNOWLEDGE_NAV_ITEMS,
+      ...ADMIN_HUB_KEYS.map((key) => ({
+        href: key.href,
+        label: key.value,
+        short: key.value.slice(0, 4),
+      })),
+    ],
   },
 ];
 

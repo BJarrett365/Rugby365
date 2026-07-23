@@ -19,6 +19,11 @@ import {
   finalizeStandingsRows,
   type StandingsAccumulator,
 } from "./rugby-table-metrics-service";
+import {
+  parseScoringFirstSortBy,
+  scoringFirstSortByLabel,
+  type ScoringFirstSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -26,30 +31,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type ScoringFirstSortBy =
-  | "league_points"
-  | "win_pct"
-  | "lead_converted_win_pct"
-  | "matches_scoring_first_pct";
-
-export function parseScoringFirstSortBy(value: string | null | undefined): ScoringFirstSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "win_pct" || normalized === "win%") return "win_pct";
-  if (normalized === "lead_converted_win_pct" || normalized === "lead_converted") {
-    return "lead_converted_win_pct";
-  }
-  if (normalized === "matches_scoring_first_pct" || normalized === "scoring_first_pct") {
-    return "matches_scoring_first_pct";
-  }
-  return "league_points";
-}
-
-export function scoringFirstSortByLabel(sortBy: ScoringFirstSortBy): string {
-  if (sortBy === "win_pct") return "Win %";
-  if (sortBy === "lead_converted_win_pct") return "Lead converted into win %";
-  if (sortBy === "matches_scoring_first_pct") return "Matches scoring first %";
-  return "Table points";
-}
+export type { ScoringFirstSortBy };
+export { parseScoringFirstSortBy, scoringFirstSortByLabel };
 
 type ScoringFirstAccumulator = StandingsAccumulator & {
   firstScoreMinutes: number[];
@@ -122,11 +105,11 @@ export function enrichScoringFirstRows(
 ): RugbyTableStandingRow[] {
   return rows.map((row) => {
     const totalMatches = totalMatchesByTeam.get(row.teamId) ?? 0;
-    const avgFirstScoreMinute = row.extra?.avgFirstScoreMinute;
-    const leadConvertedWinPct = row.extra?.leadConvertedWinPct;
+    const avgFirstScoreMinute = row.extra?.avgFirstScoreMinute ?? null;
+    const leadConvertedWinPct = row.extra?.leadConvertedWinPct ?? null;
     const matchesScoringFirstPct =
-      totalMatches > 0 ? Math.round((row.played / totalMatches) * 1000) / 10 : undefined;
-    const avgWinningMargin = row.extra?.avgWinningMargin;
+      totalMatches > 0 ? Math.round((row.played / totalMatches) * 1000) / 10 : null;
+    const avgWinningMargin = row.extra?.avgWinningMargin ?? null;
 
     return {
       ...row,
@@ -268,7 +251,7 @@ export function buildScoringFirstTableStandings(input: {
     const leadConvertedWinPct =
       row.played > 0
         ? Math.round((acc.winsWhenScoringFirst / row.played) * 1000) / 10
-        : undefined;
+        : null;
     const avgWinningMargin =
       acc.winningMargins.length > 0
         ? Math.round(

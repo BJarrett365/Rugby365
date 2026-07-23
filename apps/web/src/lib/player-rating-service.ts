@@ -73,6 +73,19 @@ function toPerformanceStats(row: {
     ruckArrivalEffectiveness: row.ruckArrivalEffectiveness,
     passes: 0,
     offloads: 0,
+    kicks: 0,
+    kicksFromHand: 0,
+    kickFromHandMetres: 0,
+    kickPossessionRetained: 0,
+    badPasses: 0,
+    droppedCatch: 0,
+    handlingError: 0,
+    turnoversConceded: 0,
+    runs: 0,
+    gainLine: 0,
+    carriesMetres: 0,
+    carriesCrossedGainLine: 0,
+    carriesNotMadeGainLine: 0,
   };
 }
 

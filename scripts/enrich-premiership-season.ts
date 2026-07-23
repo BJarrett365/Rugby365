@@ -12,7 +12,7 @@ import {
 } from "../apps/web/src/lib/premiership-season-enrich-service";
 
 const args = process.argv.slice(2);
-const seasonLabel = args.find((arg) => arg.startsWith("--season="))?.split("=")[1] ?? "2025–26";
+const seasonLabel = args.find((arg) => arg.startsWith("--season="))?.split("=")[1] ?? "2026–27";
 const auditOnly = args.includes("--audit-only");
 
 function printAudit(audit: Awaited<ReturnType<typeof auditPremiershipSeasonEnrichment>>) {

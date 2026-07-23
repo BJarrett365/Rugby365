@@ -16,6 +16,10 @@ import {
   type TriesMatchRangePreset,
   type TriesScoredPeriod,
 } from "./tries-scored-table-service";
+import {
+  parseTriesConcededSortBy,
+  type TriesConcededSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -25,46 +29,11 @@ import type {
 
 export type TriesConcededPeriod = TriesScoredPeriod;
 
-export type TriesConcededSortBy =
-  | "fewest_tries_conceded"
-  | "lowest_tries_conceded_per_match"
-  | "lowest_try_conceding_rate_pct"
-  | "two_plus_conceded_pct"
-  | "three_plus_conceded_pct"
-  | "four_plus_conceded_pct"
-  | "five_plus_conceded_pct";
+export type { TriesConcededSortBy };
+export { parseTriesConcededSortBy };
 
 export function parseTriesConcededPeriod(value: string | null | undefined): TriesConcededPeriod {
   return parseTriesScoredPeriod(value);
-}
-
-export function parseTriesConcededSortBy(value: string | null | undefined): TriesConcededSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (
-    normalized === "lowest_tries_conceded_per_match" ||
-    normalized === "tries_conceded_per_match"
-  ) {
-    return "lowest_tries_conceded_per_match";
-  }
-  if (
-    normalized === "lowest_try_conceding_rate_pct" ||
-    normalized === "try_conceding_rate_pct"
-  ) {
-    return "lowest_try_conceding_rate_pct";
-  }
-  if (normalized === "two_plus_conceded_pct" || normalized === "2_plus_conceded_pct") {
-    return "two_plus_conceded_pct";
-  }
-  if (normalized === "three_plus_conceded_pct" || normalized === "3_plus_conceded_pct") {
-    return "three_plus_conceded_pct";
-  }
-  if (normalized === "four_plus_conceded_pct" || normalized === "4_plus_conceded_pct") {
-    return "four_plus_conceded_pct";
-  }
-  if (normalized === "five_plus_conceded_pct" || normalized === "5_plus_conceded_pct") {
-    return "five_plus_conceded_pct";
-  }
-  return "fewest_tries_conceded";
 }
 
 export function triesConcededForPeriod(
@@ -143,8 +112,8 @@ function createTriesConcededAccumulator(
   };
 }
 
-function pct(numerator: number, denominator: number): number | undefined {
-  if (denominator <= 0) return undefined;
+function pct(numerator: number, denominator: number): number | null {
+  if (denominator <= 0) return null;
   return Math.round((numerator / denominator) * 1000) / 10;
 }
 
@@ -284,7 +253,7 @@ export function buildTriesConcededTableStandings(input: {
     const triesConcededPerMatch =
       acc.matchesPlayed > 0
         ? Math.round((acc.totalTriesConceded / acc.matchesPlayed) * 100) / 100
-        : undefined;
+        : null;
 
     return {
       rank: 0,

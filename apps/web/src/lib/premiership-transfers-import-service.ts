@@ -82,6 +82,7 @@ export async function importPremiershipTransfers(input?: {
     existingPlayersLinked: 0,
     transfersAdded: 0,
     transfersUpdated: 0,
+    transfersSkipped: 0,
     teamsMapped: 0,
     warnings: [],
     errors: [],
@@ -230,7 +231,8 @@ async function importSingleTransfer(
     skipBioRefresh: true,
   });
 
-  if (result.updated) ctx.summary.transfersUpdated += 1;
+  if (result.skipped) ctx.summary.transfersSkipped += 1;
+  else if (result.updated) ctx.summary.transfersUpdated += 1;
   else ctx.summary.transfersAdded += 1;
 }
 

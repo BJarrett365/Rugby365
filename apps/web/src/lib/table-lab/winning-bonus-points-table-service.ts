@@ -14,6 +14,12 @@ import {
   parseTriesMatchRangeCount,
   type TriesMatchRangePreset,
 } from "./tries-scored-table-service";
+import {
+  parseWinningBonusPointsSortBy,
+  parseWinningBonusTypeFilter,
+  type WinningBonusPointsSortBy,
+  type WinningBonusTypeFilter,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -21,57 +27,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type WinningBonusTypeFilter =
-  | "all"
-  | "try_bonus"
-  | "losing_bonus"
-  | "maximum_point_wins";
-
-export type WinningBonusPointsSortBy =
-  | "total_bonus_points"
-  | "try_bonus_points"
-  | "losing_bonus_points"
-  | "maximum_point_wins"
-  | "bonus_point_rate_pct"
-  | "bonus_points_per_match";
-
-export function parseWinningBonusTypeFilter(
-  value: string | null | undefined,
-): WinningBonusTypeFilter {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "try_bonus" || normalized === "try") return "try_bonus";
-  if (normalized === "losing_bonus" || normalized === "losing") return "losing_bonus";
-  if (
-    normalized === "maximum_point_wins" ||
-    normalized === "maximum_point_win" ||
-    normalized === "max_point_wins"
-  ) {
-    return "maximum_point_wins";
-  }
-  return "all";
-}
-
-export function parseWinningBonusPointsSortBy(
-  value: string | null | undefined,
-): WinningBonusPointsSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "try_bonus_points" || normalized === "try_bonus") {
-    return "try_bonus_points";
-  }
-  if (normalized === "losing_bonus_points" || normalized === "losing_bonus") {
-    return "losing_bonus_points";
-  }
-  if (normalized === "maximum_point_wins" || normalized === "max_point_wins") {
-    return "maximum_point_wins";
-  }
-  if (normalized === "bonus_point_rate_pct" || normalized === "bonus_rate") {
-    return "bonus_point_rate_pct";
-  }
-  if (normalized === "bonus_points_per_match" || normalized === "bonus_per_match") {
-    return "bonus_points_per_match";
-  }
-  return "total_bonus_points";
-}
+export type { WinningBonusTypeFilter, WinningBonusPointsSortBy };
+export { parseWinningBonusTypeFilter, parseWinningBonusPointsSortBy };
 
 export function competitionHasBonusPoints(rules: RugbyScoringRules): boolean {
   return rules.tryBonusPoints > 0 || rules.losingBonusPoints > 0;
@@ -144,8 +101,8 @@ export function resolveMatchBonusPoints(
   };
 }
 
-function pct(numerator: number, denominator: number): number | undefined {
-  if (denominator <= 0) return undefined;
+function pct(numerator: number, denominator: number): number | null {
+  if (denominator <= 0) return null;
   return Math.round((numerator / denominator) * 1000) / 10;
 }
 
@@ -432,11 +389,11 @@ export function buildWinningBonusPointsTableStandings(input: {
     const bonusPointsPerMatch =
       acc.matchesPlayed > 0
         ? Math.round((acc.totalBonusPoints / acc.matchesPlayed) * 100) / 100
-        : undefined;
+        : null;
     const tryBonusPerMatch =
       acc.matchesPlayed > 0
         ? Math.round((acc.tryBonusPoints / acc.matchesPlayed) * 100) / 100
-        : undefined;
+        : null;
 
     return {
       rank: 0,

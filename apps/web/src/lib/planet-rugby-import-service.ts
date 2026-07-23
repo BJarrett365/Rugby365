@@ -37,8 +37,26 @@ import { SDMS_PROVIDER } from "./entity-resolve-service";
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half|live|first|second/i.test(status)) return "live";
+  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
+}
+
+/** Persist SDMS scores for live/HT/FT — not only finished matches. */
+function sdmsScoreFields(
+  row: SdmsFixtureRow,
+  existing?: { homeScore: number | null; awayScore: number | null } | null,
+): { homeScore: number; awayScore: number } {
+  return {
+    homeScore:
+      typeof row.home_team_score === "number"
+        ? row.home_team_score
+        : (existing?.homeScore ?? 0),
+    awayScore:
+      typeof row.away_team_score === "number"
+        ? row.away_team_score
+        : (existing?.awayScore ?? 0),
+  };
 }
 
 function buildPlanetRugbyFixtureSlug(
@@ -85,12 +103,14 @@ export async function upsertSdmsFixtureRow(
     externalProviderId: row.home_team_id,
     createIfMissing: true,
     sourceProvider: SDMS_PROVIDER,
+    imageUrl: row.home_team_icon,
   });
   const awayTeam = await resolveTeam({
     name: row.away_team_name,
     externalProviderId: row.away_team_id,
     createIfMissing: true,
     sourceProvider: SDMS_PROVIDER,
+    imageUrl: row.away_team_icon,
   });
   if (!homeTeam || !awayTeam) return { outcome: "skipped", matchId: row.match_id };
 
@@ -98,7 +118,6 @@ export async function upsertSdmsFixtureRow(
   const planetRugbyUrl = buildPlanetRugbyUrl(row, compSlug, competition.sdmsCompCode);
   const kickoffAt = combineKickoffIso(row.date, row.time);
   const status = sdmsStatusToFixtureStatus(row.status);
-  const isResult = status === "full_time";
   const slug = buildPlanetRugbyFixtureSlug(
     row.home_team_slug,
     row.away_team_slug,
@@ -120,20 +139,14 @@ export async function upsertSdmsFixtureRow(
   }
 
   if (existing) {
-    const externalMatchId =
-      !existing.externalMatchId ||
-      existing.externalMatchId === row.match_id ||
-      existing.externalMatchId.startsWith("livesport:")
-        ? row.match_id
-        : existing.externalMatchId;
-
+    // SDMS import always owns the Planet Rugby external id for this match.
     await updateFixture(existing.id, {
       competitionId: competition.id,
       competitionName: competition.name,
       kickoffAt,
       status,
       planetRugbyUrl,
-      externalMatchId,
+      externalMatchId: row.match_id,
       round: row.round ?? undefined,
       homeTeamId: homeTeam.id,
       awayTeamId: awayTeam.id,
@@ -143,10 +156,10 @@ export async function upsertSdmsFixtureRow(
     await db
       .update(fixtures)
       .set({
-        homeScore: isResult ? (row.home_team_score ?? existing.homeScore) : existing.homeScore,
-        awayScore: isResult ? (row.away_team_score ?? existing.awayScore) : existing.awayScore,
+        ...sdmsScoreFields(row, existing),
         venueName: row.venue ?? existing.venueName,
         round: row.round ?? existing.round,
+        externalMatchId: row.match_id,
       })
       .where(eq(fixtures.id, existing.id));
 
@@ -154,7 +167,7 @@ export async function upsertSdmsFixtureRow(
   }
 
   const uniqueSlug = await allocateUniqueFixtureSlug(slug);
-  await createFixture({
+  const created = await createFixture({
     slug: uniqueSlug,
     homeTeamId: homeTeam.id,
     awayTeamId: awayTeam.id,
@@ -167,23 +180,16 @@ export async function upsertSdmsFixtureRow(
     round: row.round ?? null,
   });
 
-  if (isResult) {
-    const created = await findFixtureBySdmsMatchId(row.match_id);
-    if (created) {
-      const db = getDb();
-      await db
-        .update(fixtures)
-        .set({
-          homeScore: row.home_team_score ?? 0,
-          awayScore: row.away_team_score ?? 0,
-          venueName: row.venue ?? null,
-        })
-        .where(eq(fixtures.id, created.id));
-    }
-  }
+  const db = getDb();
+  await db
+    .update(fixtures)
+    .set({
+      ...sdmsScoreFields(row),
+      venueName: row.venue ?? null,
+    })
+    .where(eq(fixtures.id, created.id));
 
-  const created = await findFixtureBySdmsMatchId(row.match_id);
-  return { outcome: "created", fixtureId: created?.id, matchId: row.match_id };
+  return { outcome: "created", fixtureId: created.id, matchId: row.match_id };
 }
 
 export type PlanetRugbyImportResult = {
@@ -344,6 +350,8 @@ export async function importPlanetRugbyCompetition(input: {
       try {
         await enrichFixtureFromSdmsMatch(result.fixtureId, result.matchId, {
           planetRugbyUrl: buildPlanetRugbyUrl(row, compSlug, competition.sdmsCompCode),
+          // Reconcile SDMS events so conversions/tries are not stuck on legacy index ids.
+          replaceEvents: true,
         });
         matchDetailsEnriched += 1;
       } catch {

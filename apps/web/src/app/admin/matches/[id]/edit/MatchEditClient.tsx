@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { MatchStatsPanel } from "@/components/admin/MatchStatsPanel";
 import { MatchDataPanel } from "@/components/admin/MatchDataPanel";
 import { MatchHeadToHeadPanel } from "@/components/admin/MatchHeadToHeadPanel";
+import { MatchSourcesPanel } from "@/components/admin/MatchSourcesPanel";
+import { MatchLineupsEditor } from "@/components/admin/MatchLineupsEditor";
+import { MatchTeamStatsEditor } from "@/components/admin/MatchTeamStatsEditor";
+import { MatchPlayerStatsEditor } from "@/components/admin/MatchPlayerStatsEditor";
+import { MatchEventsEditor } from "@/components/admin/MatchEventsEditor";
 import { MatchForm, toDatetimeLocal } from "@/components/admin/MatchForm";
+import { MatchIssuesPanel } from "@/components/admin/MatchIssuesPanel";
 import { PageHeader } from "@/components/shell/PageHeader";
 
 type MatchDetail = {
@@ -13,6 +18,8 @@ type MatchDetail = {
     id: string;
     homeTeamId?: string | null;
     awayTeamId?: string | null;
+    competitionId?: string | null;
+    seasonId?: string | null;
     planetRugbyUrl?: string | null;
     sport365Url?: string | null;
     venueId?: string | null;
@@ -31,7 +38,9 @@ function fixtureToFormInitial(fixture: MatchDetail["fixture"]) {
     slug: fixture.slug,
     homeTeamId: fixture.homeTeamId ?? "",
     awayTeamId: fixture.awayTeamId ?? "",
+    competitionId: fixture.competitionId ?? "",
     competitionName: fixture.competitionName ?? "",
+    seasonId: fixture.seasonId ?? "",
     kickoffAt: toDatetimeLocal(fixture.kickoffAt),
     status: fixture.status,
     sport365Url: fixture.sport365Url ?? "",
@@ -45,7 +54,11 @@ function fixtureToFormInitial(fixture: MatchDetail["fixture"]) {
   };
 }
 
-function applyDetail(data: MatchDetail, setDetail: (d: MatchDetail) => void, setInitial: (i: ReturnType<typeof fixtureToFormInitial>) => void) {
+function applyDetail(
+  data: MatchDetail,
+  setDetail: (d: MatchDetail) => void,
+  setInitial: (i: ReturnType<typeof fixtureToFormInitial>) => void,
+) {
   setDetail(data);
   setInitial(fixtureToFormInitial(data.fixture));
 }
@@ -61,29 +74,6 @@ export function MatchEditClient({ id }: { id: string }) {
     const data = await res.json();
     if (!res.ok || !data.fixture) throw new Error(data.error ?? "Match not found");
     applyDetail(data, setDetail, setInitial);
-  }, [id]);
-
-  const syncFromSport365 = useCallback(async () => {
-    setSyncing(true);
-    try {
-      const res = await fetch(`/api/admin/matches/${id}/sync`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ importEvents: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Sync failed");
-      if (data.detail) {
-        applyDetail(data.detail, setDetail, setInitial);
-      } else {
-        const reload = await fetch(`/api/admin/matches/${id}`);
-        const reloaded = await reload.json();
-        if (!reload.ok || !reloaded.fixture) throw new Error(reloaded.error ?? "Reload failed");
-        applyDetail(reloaded, setDetail, setInitial);
-      }
-    } finally {
-      setSyncing(false);
-    }
   }, [id]);
 
   useEffect(() => {
@@ -140,11 +130,23 @@ export function MatchEditClient({ id }: { id: string }) {
       }
     }
 
-    init();
+    void init();
     return () => {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!detail) return;
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (!hash) return;
+    const el = document.querySelector(hash);
+    if (el) {
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [detail]);
 
   if (error) {
     return (
@@ -158,7 +160,7 @@ export function MatchEditClient({ id }: { id: string }) {
   }
 
   if (!detail || !initial) {
-    return <p className="text-zinc-500 text-sm">Loading match data from Sport365…</p>;
+    return <p className="text-zinc-500 text-sm">Loading match data…</p>;
   }
 
   return (
@@ -166,13 +168,34 @@ export function MatchEditClient({ id }: { id: string }) {
       <PageHeader
         eyebrow="CMS"
         title="Edit match"
-        description="Fixture details, Sport365 sync, and stored incidents."
+        description="Issues, lineups, stats, events, sources, and fixture details."
       />
-      <div className="space-y-6 max-w-4xl">
-        <MatchDataPanel fixture={{ ...detail.fixture, id: detail.fixture.id }} events={detail.events} syncing={syncing} />
-        <div className="cms-card">
-          <h3 className="cms-section-title">Match statistics</h3>
-          <MatchStatsPanel fixtureId={id} />
+      <div className="space-y-6 max-w-6xl">
+        <div id="issues">
+          <MatchIssuesPanel fixtureId={id} onChanged={reloadDetail} />
+        </div>
+        <div id="information">
+          <MatchDataPanel
+            fixture={{ ...detail.fixture, id: detail.fixture.id }}
+            events={detail.events}
+            syncing={syncing}
+          />
+        </div>
+        <div id="lineups" className="cms-card">
+          <h3 className="cms-section-title">Lineups</h3>
+          <MatchLineupsEditor fixtureId={id} onChanged={reloadDetail} />
+        </div>
+        <div id="team-stats" className="cms-card">
+          <h3 className="cms-section-title">Match stats</h3>
+          <MatchTeamStatsEditor fixtureId={id} />
+        </div>
+        <div id="player-stats" className="cms-card">
+          <h3 className="cms-section-title">Player stats</h3>
+          <MatchPlayerStatsEditor fixtureId={id} />
+        </div>
+        <div id="events" className="cms-card">
+          <h3 className="cms-section-title">Match events</h3>
+          <MatchEventsEditor fixtureId={id} />
         </div>
         <div className="cms-card">
           <h3 className="cms-section-title">Head to head stats</h3>
@@ -182,6 +205,37 @@ export function MatchEditClient({ id }: { id: string }) {
             sport365Url={detail.fixture.sport365Url}
             onRefresh={reloadDetail}
           />
+        </div>
+        <div id="commentary" className="cms-card text-sm text-zinc-400">
+          <h3 className="cms-section-title">Commentary</h3>
+          <p className="m-0">
+            Open{" "}
+            <Link href={`/matches/${detail.fixture.slug}/commentary`} className="text-emerald-400 hover:underline">
+              public commentary
+            </Link>{" "}
+            or the{" "}
+            <Link href="/admin/operator" className="text-emerald-400 hover:underline">
+              operator console
+            </Link>
+            .
+          </p>
+        </div>
+        <div id="sources" className="cms-card">
+          <MatchSourcesPanel fixtureId={id} onSaved={reloadDetail} />
+        </div>
+        <div id="conflicts" className="cms-card text-sm text-zinc-400">
+          <h3 className="cms-section-title">Conflicts</h3>
+          <p className="m-0">
+            Conflict centre wiring comes in a later phase. Manual score locks already protect overrides.
+          </p>
+        </div>
+        <div id="raw-data" className="cms-card text-sm text-zinc-400">
+          <h3 className="cms-section-title">Raw data</h3>
+          <p className="m-0">Raw API response viewer arrives with Data Integration tools.</p>
+        </div>
+        <div id="audit" className="cms-card text-sm text-zinc-400">
+          <h3 className="cms-section-title">Audit</h3>
+          <p className="m-0">Inline score changes are written to the data integration audit log.</p>
         </div>
         <MatchForm
           fixtureId={id}

@@ -153,6 +153,7 @@ export const RUGBY_TABLE_DEFINITIONS: RugbyTableDefinition[] = [
     calculationMethod: "Sums scoring events between customPeriodStartMinute and customPeriodEndMinute.",
     requiredData: ["fixtures", "match_events"],
     metricLabel: "Period pts",
+    hiddenFromMenu: true,
   }),
 
   // Opposition
@@ -230,6 +231,7 @@ export const RUGBY_TABLE_DEFINITIONS: RugbyTableDefinition[] = [
     calculationMethod: "Includes fixtures where scores were tied during the match.",
     requiredData: ["fixtures", "match_events", "match_scores", "competition_scoring_rules"],
     metricLabel: "Pts from level",
+    hiddenFromMenu: true,
   }),
   def({
     id: "comeback",
@@ -680,9 +682,16 @@ export const RUGBY_TABLE_DEFINITIONS: RugbyTableDefinition[] = [
 const byId = new Map(RUGBY_TABLE_DEFINITIONS.map((row) => [row.id, row]));
 const bySlug = new Map(RUGBY_TABLE_DEFINITIONS.map((row) => [row.slug, row]));
 
-export function listRugbyTableDefinitions(category?: RugbyTableDefinition["category"]) {
-  if (!category) return RUGBY_TABLE_DEFINITIONS;
-  return RUGBY_TABLE_DEFINITIONS.filter((row) => row.category === category);
+export function listRugbyTableDefinitions(
+  category?: RugbyTableDefinition["category"],
+  options?: { includeHidden?: boolean },
+) {
+  const includeHidden = options?.includeHidden === true;
+  const definitions = includeHidden
+    ? RUGBY_TABLE_DEFINITIONS
+    : RUGBY_TABLE_DEFINITIONS.filter((row) => !row.hiddenFromMenu);
+  if (!category) return definitions;
+  return definitions.filter((row) => row.category === category);
 }
 
 export function getRugbyTableDefinition(idOrSlug: string): RugbyTableDefinition | null {

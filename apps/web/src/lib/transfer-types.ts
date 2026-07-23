@@ -36,6 +36,7 @@ export type TransferImportSummary = {
   existingPlayersLinked: number;
   transfersAdded: number;
   transfersUpdated: number;
+  transfersSkipped: number;
   teamsMapped: number;
   warnings: string[];
   errors: string[];

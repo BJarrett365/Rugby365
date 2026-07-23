@@ -21,8 +21,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.slug !== undefined ? { slug: String(body.slug) } : {}),
       ...(body.homeTeamId !== undefined ? { homeTeamId: String(body.homeTeamId) } : {}),
       ...(body.awayTeamId !== undefined ? { awayTeamId: String(body.awayTeamId) } : {}),
+      ...(body.competitionId !== undefined
+        ? { competitionId: body.competitionId ? String(body.competitionId) : null }
+        : {}),
       ...(body.competitionName !== undefined
         ? { competitionName: body.competitionName ? String(body.competitionName) : "" }
+        : {}),
+      ...(body.seasonId !== undefined
+        ? { seasonId: body.seasonId ? String(body.seasonId) : null }
         : {}),
       ...(body.kickoffAt !== undefined
         ? { kickoffAt: body.kickoffAt ? String(body.kickoffAt) : null }

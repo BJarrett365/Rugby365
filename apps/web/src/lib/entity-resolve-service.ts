@@ -10,6 +10,8 @@ import {
   squadKindFromCompetitionType,
   type SquadContext,
 } from "./player-profile-fields";
+import { canonicalCompetitionDisplayName } from "./competition-list-utils";
+import { findCompetitionByCanonicalName } from "./competition-dedupe-service";
 
 type TeamRow = typeof teams.$inferSelect;
 type PlayerRow = typeof players.$inferSelect;
@@ -35,10 +37,13 @@ export async function resolveTeam(input: {
   externalProviderId?: string;
   createIfMissing?: boolean;
   sourceProvider?: string;
+  /** Provider crest URL — filled when missing on the CMS team. */
+  imageUrl?: string | null;
 }): Promise<TeamRow | null> {
   const db = getDb();
   const name = normalizeTeamName(input.name.trim());
   if (!name) return null;
+  const imageUrl = input.imageUrl?.trim() || null;
 
   if (input.externalProviderId) {
     const [byExternal] = await db
@@ -47,10 +52,13 @@ export async function resolveTeam(input: {
       .where(eq(teams.externalProviderId, input.externalProviderId))
       .limit(1);
     if (byExternal) {
-      if (byExternal.name !== name) {
+      const patch: { name?: string; imageUrl?: string } = {};
+      if (byExternal.name !== name) patch.name = name;
+      if (imageUrl && !byExternal.imageUrl) patch.imageUrl = imageUrl;
+      if (Object.keys(patch).length > 0) {
         const [updated] = await db
           .update(teams)
-          .set({ name })
+          .set(patch)
           .where(eq(teams.id, byExternal.id))
           .returning();
         return updated;
@@ -63,13 +71,20 @@ export async function resolveTeam(input: {
   const allTeams = await db.select().from(teams);
   const byName = allTeams.find((t) => normalizedEntityKey(t.name, "team") === lower);
   if (byName) {
+    const patch: {
+      externalProviderId?: string;
+      sourceProvider?: string;
+      imageUrl?: string;
+    } = {};
     if (input.externalProviderId && !byName.externalProviderId) {
+      patch.externalProviderId = input.externalProviderId;
+      patch.sourceProvider = providerForExternalId(input.sourceProvider, input.externalProviderId);
+    }
+    if (imageUrl && !byName.imageUrl) patch.imageUrl = imageUrl;
+    if (Object.keys(patch).length > 0) {
       const [updated] = await db
         .update(teams)
-        .set({
-          externalProviderId: input.externalProviderId,
-          sourceProvider: providerForExternalId(input.sourceProvider, input.externalProviderId),
-        })
+        .set(patch)
         .where(eq(teams.id, byName.id))
         .returning();
       return updated;
@@ -80,10 +95,20 @@ export async function resolveTeam(input: {
   const slug = uniqueSlug(name, input.externalProviderId);
   const bySlug = allTeams.find((t) => t.slug === slug);
   if (bySlug) {
+    const patch: {
+      externalProviderId?: string;
+      sourceProvider?: string;
+      imageUrl?: string;
+    } = {};
     if (input.externalProviderId && !bySlug.externalProviderId) {
+      patch.externalProviderId = input.externalProviderId;
+      patch.sourceProvider = SPORT365;
+    }
+    if (imageUrl && !bySlug.imageUrl) patch.imageUrl = imageUrl;
+    if (Object.keys(patch).length > 0) {
       const [updated] = await db
         .update(teams)
-        .set({ externalProviderId: input.externalProviderId, sourceProvider: SPORT365 })
+        .set(patch)
         .where(eq(teams.id, bySlug.id))
         .returning();
       return updated;
@@ -101,6 +126,7 @@ export async function resolveTeam(input: {
       shortName: name.slice(0, 3).toUpperCase(),
       externalProviderId: input.externalProviderId ?? null,
       sourceProvider: providerForExternalId(input.sourceProvider, input.externalProviderId),
+      imageUrl,
     })
     .returning();
   return row;
@@ -127,7 +153,7 @@ export async function resolveCompetition(input: {
       const [updated] = await db
         .update(competitions)
         .set({
-          name,
+          name: canonicalCompetitionDisplayName(name),
           stageExternalId: input.stageExternalId ?? byExternal.stageExternalId,
           stageName: input.stageName ?? byExternal.stageName,
         })
@@ -156,10 +182,44 @@ export async function resolveCompetition(input: {
     return bySlug;
   }
 
+  // Hard rule: never create a second competition with the same canonical name.
+  const byCanonical = await findCompetitionByCanonicalName(name);
+  if (byCanonical) {
+    const patch: {
+      externalProviderId?: string;
+      sourceProvider?: string;
+      stageExternalId?: string | null;
+      stageName?: string | null;
+      sdmsCompCode?: string | null;
+      name?: string;
+    } = {};
+    if (input.externalProviderId && !byCanonical.externalProviderId) {
+      patch.externalProviderId = input.externalProviderId;
+      patch.sourceProvider = providerForExternalId(input.sourceProvider, input.externalProviderId);
+    }
+    if (input.stageExternalId && !byCanonical.stageExternalId) {
+      patch.stageExternalId = input.stageExternalId;
+    }
+    if (input.stageName && !byCanonical.stageName) {
+      patch.stageName = input.stageName;
+    }
+    const display = canonicalCompetitionDisplayName(name);
+    if (byCanonical.name !== display) patch.name = display;
+    if (Object.keys(patch).length) {
+      const [updated] = await db
+        .update(competitions)
+        .set(patch)
+        .where(eq(competitions.id, byCanonical.id))
+        .returning();
+      return updated;
+    }
+    return byCanonical;
+  }
+
   const [row] = await db
     .insert(competitions)
     .values({
-      name,
+      name: canonicalCompetitionDisplayName(name),
       slug,
       externalProviderId: input.externalProviderId ?? null,
       sourceProvider: providerForExternalId(input.sourceProvider, input.externalProviderId),

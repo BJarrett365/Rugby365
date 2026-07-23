@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   competitionSeasons,
   competitions,
@@ -9,17 +9,23 @@ import {
 import { getDb } from "./db";
 import { normalizeSlug, validateSlug } from "./fixture-admin-service";
 import { competitionsForPicker } from "./competition-list-utils";
+import { migrateSeasonId } from "./competition-dedupe-service";
 import {
   buildDomesticSeasonCatalog,
   canonicalSeasonPickerScore,
   currentDomesticSeasonStartYear,
+  formatSeasonLabelForKind,
   formatSeasonRangeLabel,
-  kickoffInSeason,
   normalizeSeasonLabel,
   parseSeasonStartYear,
+  seasonSlugForKind,
   seasonSlugFromStartYear,
   usesDomesticSeasonCatalog,
 } from "./season-label-utils";
+import {
+  fixtureBelongsToSeason,
+  seasonKindFromCompetitionType,
+} from "./fixture-season-resolve";
 import {
   dedupeSeasonsByYear,
   decorateSeasonPickerRows,
@@ -31,6 +37,10 @@ import { isPlayoffRound } from "./rugby-round-utils";
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
 
 export async function listAllSeasons(competitionId?: string) {
+  if (competitionId) {
+    await ensureRecentDomesticSeasons(competitionId);
+  }
+
   const db = getDb();
   const conditions = [eq(competitionSeasons.isDeprecated, false)];
   if (competitionId) {
@@ -62,6 +72,8 @@ export async function listAllSeasons(competitionId?: string) {
 }
 
 export async function listSeasonsForPicker(competitionId: string) {
+  await ensureRecentDomesticSeasons(competitionId);
+
   const db = getDb();
   const rows = await db
     .select({
@@ -249,12 +261,15 @@ export async function upsertSeason(input: {
   competitionId: string;
   label: string;
   isActive?: boolean;
+  /** Club uses cross-year labels; international/tournament use calendar year. */
+  seasonKind?: "club" | "international" | "tournament";
 }) {
   const startYear = parseSeasonStartYear(input.label.trim());
   if (startYear == null) throw new Error("Season label must be a year or range, e.g. 2025–26");
 
-  const label = formatSeasonRangeLabel(startYear);
-  const slug = seasonSlugFromStartYear(startYear);
+  const seasonKind = input.seasonKind ?? "club";
+  const label = formatSeasonLabelForKind(startYear, seasonKind);
+  const slug = seasonSlugForKind(startYear, seasonKind);
   const year = startYear;
 
   const db = getDb();
@@ -281,6 +296,7 @@ export async function upsertSeason(input: {
         label,
         slug,
         year,
+        isDeprecated: false,
         ...(input.isActive ? { isActive: true } : {}),
       })
       .where(eq(competitionSeasons.id, existing.id))
@@ -296,38 +312,52 @@ export async function upsertSeason(input: {
       label,
       year,
       isActive: input.isActive ?? false,
+      isDeprecated: false,
     })
     .returning();
   return row;
 }
 
-async function migrateStandingRowsToSeason(fromSeasonId: string, toSeasonId: string) {
-  const db = getDb();
-  const rows = await db
-    .select()
-    .from(standingRows)
-    .where(eq(standingRows.seasonId, fromSeasonId));
-
-  for (const row of rows) {
-    const [existing] = await db
-      .select({ id: standingRows.id })
-      .from(standingRows)
-      .where(
-        and(
-          eq(standingRows.seasonId, toSeasonId),
-          eq(standingRows.teamId, row.teamId),
-          eq(standingRows.view, row.view),
-        ),
-      )
-      .limit(1);
-
-    if (existing) continue;
-
-    await db
-      .update(standingRows)
-      .set({ seasonId: toSeasonId })
-      .where(eq(standingRows.id, row.id));
+/**
+ * Ensure current (+ previous) domestic seasons exist for picker dropdowns.
+ * Marks the calendar-current season active (e.g. 2026–27 from July 2026).
+ * Always undepricates rows so they appear in filters.
+ */
+export async function ensureRecentDomesticSeasons(
+  competitionId: string,
+  referenceDate = new Date(),
+) {
+  const competition = await getCompetitionById(competitionId);
+  if (!competition || !usesDomesticSeasonCatalog(competition.competitionType)) {
+    return;
   }
+
+  const currentYear = currentDomesticSeasonStartYear(referenceDate);
+  await upsertSeason({
+    competitionId,
+    label: formatSeasonRangeLabel(currentYear - 1),
+  });
+  await upsertSeason({
+    competitionId,
+    label: formatSeasonRangeLabel(currentYear),
+    isActive: true,
+  });
+
+  // Belt-and-braces: clear deprecated on current/previous even if upsert matched oddly
+  const db = getDb();
+  await db
+    .update(competitionSeasons)
+    .set({ isDeprecated: false })
+    .where(
+      and(
+        eq(competitionSeasons.competitionId, competitionId),
+        inArray(competitionSeasons.year, [currentYear - 1, currentYear]),
+      ),
+    );
+}
+
+async function migrateStandingRowsToSeason(fromSeasonId: string, toSeasonId: string) {
+  await migrateSeasonId(fromSeasonId, toSeasonId);
 }
 
 export async function normalizeCompetitionSeasonLabels(competitionId: string) {
@@ -656,13 +686,25 @@ export async function listCompetitionFixtures(
 
   const { season } = await resolveCompetitionSeason(competitionId, options.seasonLabel);
   const seasonYear = season?.year ?? (options.seasonLabel ? parseSeasonStartYear(options.seasonLabel) : null);
+  const competition = await getCompetitionById(competitionId);
+  const seasonKind = seasonKindFromCompetitionType(competition?.competitionType);
 
   const type = options.type ?? "all";
 
   return rows
     .filter((f) => {
-      if (seasonYear != null && f.kickoffAt) {
-        if (!kickoffInSeason(f.kickoffAt, seasonYear)) return false;
+      if (season && seasonYear != null) {
+        if (
+          !fixtureBelongsToSeason({
+            fixtureSeasonId: f.seasonId,
+            kickoffAt: f.kickoffAt,
+            seasonId: season.id,
+            seasonYear,
+            seasonKind,
+          })
+        ) {
+          return false;
+        }
       }
       if (type === "results") {
         return f.status === "full_time" || f.status === "live";

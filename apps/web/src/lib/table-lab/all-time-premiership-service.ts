@@ -17,7 +17,14 @@ import {
   mergeIdentityWarnings,
   resolvePremiershipCanonicalIdentity,
 } from "./premiership-team-identity";
+import {
+  parseAllTimeSeasonRangeMode,
+  parseAllTimeSortBy,
+  parseAllTimeTeamStatus,
+  parseSeasonYearParam,
+} from "./table-lab-param-parsers";
 import type {
+  AllTimePremiershipCoverage,
   AllTimePremiershipSortBy,
   AllTimeSeasonRangeMode,
   AllTimeTeamStatus,
@@ -32,6 +39,13 @@ export type {
   AllTimeSeasonRangeMode,
   AllTimeTeamStatus,
 } from "./table-types";
+
+export {
+  parseAllTimeSeasonRangeMode,
+  parseAllTimeSortBy,
+  parseAllTimeTeamStatus,
+  parseSeasonYearParam,
+};
 
 export type AllTimePremiershipBuildResult = {
   rows: RugbyTableStandingRow[];
@@ -75,40 +89,6 @@ export function resolveSeasonStartYearFromKickoff(
   const month = kickoffAt.getMonth();
   const year = kickoffAt.getFullYear();
   return month >= 6 ? year : year - 1;
-}
-
-export function parseAllTimeSeasonRangeMode(
-  value: string | null | undefined,
-): AllTimeSeasonRangeMode {
-  if (value === "from" || value === "to" || value === "custom") return value;
-  return "all";
-}
-
-export function parseAllTimeTeamStatus(value: string | null | undefined): AllTimeTeamStatus {
-  if (value === "current" || value === "former") return value;
-  return "all";
-}
-
-export function parseAllTimeSortBy(value: string | null | undefined): AllTimePremiershipSortBy {
-  const allowed: AllTimePremiershipSortBy[] = [
-    "league_points",
-    "seasons",
-    "played",
-    "won",
-    "win_pct",
-    "points_for",
-    "tries_for",
-    "team_name",
-  ];
-  return allowed.includes(value as AllTimePremiershipSortBy)
-    ? (value as AllTimePremiershipSortBy)
-    : "league_points";
-}
-
-export function parseSeasonYearParam(value: string | number | null | undefined): number | null {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1987) return null;
-  return Math.floor(parsed);
 }
 
 export function filterPerspectivesBySeasonRange(

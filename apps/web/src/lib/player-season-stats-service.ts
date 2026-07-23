@@ -1,3 +1,4 @@
+import "server-only";
 import { and, desc, eq, ilike } from "drizzle-orm";
 import {
   attackScore,
@@ -19,6 +20,19 @@ import {
 import { getDb } from "./db";
 import { resolveFixtureSeasonLabel } from "./fixture-season-utils";
 import { perMinuteRate } from "@rugby365/import-sdk";
+import {
+  buildSeasonStatsFilterOptions,
+  competitionFilterMatches,
+  seasonFilterMatches,
+  type SeasonStatsFilterOptions,
+} from "./player-season-stats-filters";
+
+export type { SeasonStatsFilterOptions };
+export {
+  buildSeasonStatsFilterOptions,
+  competitionFilterMatches,
+  seasonFilterMatches,
+} from "./player-season-stats-filters";
 
 export type PerformanceStatFields = {
   appearances: number;
@@ -93,11 +107,6 @@ export type TeamSeasonStatsFilters = {
   search?: string;
   sortBy?: "playerName" | "tries" | "carries" | "tacklesCompleted" | "points" | "metresCarried";
   sortDir?: "asc" | "desc";
-};
-
-export type SeasonStatsFilterOptions = {
-  seasons: Array<{ id: string; label: string }>;
-  competitions: Array<{ id: string; name: string }>;
 };
 
 function averageStatFields(rows: PerformanceStatFields[]): PerformanceStatFields {
@@ -307,14 +316,14 @@ function applySeasonPerformanceRanks(rows: PlayerSeasonStatsRow[]): PlayerSeason
     const attackSorted = [...groupRows]
       .map((row) => ({
         id: row.id,
-        score: attackScore({ ...row, passes: 0, offloads: 0, missedTackles: 0 }),
+        score: attackScore(row),
       }))
       .filter((row) => row.score > 0)
       .sort((a, b) => b.score - a.score);
     const defenceSorted = [...groupRows]
       .map((row) => ({
         id: row.id,
-        score: defenceScore({ ...row, passes: 0, offloads: 0, missedTackles: 0 }),
+        score: defenceScore(row),
       }))
       .filter((row) => row.score > 0)
       .sort((a, b) => b.score - a.score);
@@ -390,30 +399,20 @@ async function queryPlayerMatchStatsRows(filters: {
   });
 }
 
-export function buildSeasonStatsFilterOptions(rows: Array<{ seasonId: string; seasonLabel: string; competitionId: string; competitionName: string }>): SeasonStatsFilterOptions {
-  const seasons = new Map<string, string>();
-  const competitions = new Map<string, string>();
-  for (const row of rows) {
-    seasons.set(row.seasonId, row.seasonLabel);
-    competitions.set(row.competitionId, row.competitionName);
-  }
-  return {
-    seasons: [...seasons.entries()]
-      .map(([id, label]) => ({ id, label }))
-      .sort((a, b) => b.label.localeCompare(a.label)),
-    competitions: [...competitions.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  };
-}
-
 export function filterPlayerSeasonStatsRows(
   rows: PlayerSeasonStatsRow[],
   filters: Pick<TeamSeasonStatsFilters, "seasonId" | "competitionId">,
+  options: Partial<SeasonStatsFilterOptions> = {},
 ): PlayerSeasonStatsRow[] {
+  const seasonOptions = options.seasons ?? [];
+  const competitionOptions = options.competitions ?? [];
   return rows.filter((row) => {
-    if (filters.seasonId && row.seasonId !== filters.seasonId) return false;
-    if (filters.competitionId && row.competitionId !== filters.competitionId) return false;
+    if (!seasonFilterMatches(row.seasonId, filters.seasonId, seasonOptions)) return false;
+    if (
+      !competitionFilterMatches(row.competitionId, filters.competitionId, competitionOptions)
+    ) {
+      return false;
+    }
     return true;
   });
 }
@@ -515,6 +514,19 @@ export async function upsertMatchPerformanceStat(input: {
       passes: input.stats.passes,
       offloads: input.stats.offloads,
       missedTackles: input.stats.missedTackles,
+      kicks: input.stats.kicks,
+      kicksFromHand: input.stats.kicksFromHand,
+      kickFromHandMetres: input.stats.kickFromHandMetres,
+      kickPossessionRetained: input.stats.kickPossessionRetained,
+      badPasses: input.stats.badPasses,
+      droppedCatch: input.stats.droppedCatch,
+      handlingError: input.stats.handlingError,
+      turnoversConceded: input.stats.turnoversConceded,
+      runs: input.stats.runs,
+      gainLine: input.stats.gainLine,
+      carriesMetres: input.stats.carriesMetres,
+      carriesCrossedGainLine: input.stats.carriesCrossedGainLine,
+      carriesNotMadeGainLine: input.stats.carriesNotMadeGainLine,
     },
     sourceProvider: "sdms",
     importKey,
@@ -657,24 +669,14 @@ export async function recomputeSeasonPerformanceRanks(seasonId: string) {
   const attackSorted = [...rows]
     .map((row) => ({
       id: row.id,
-      score: attackScore({
-        ...toStatFields({ ...row, appearances: row.appearances }),
-        passes: 0,
-        offloads: 0,
-        missedTackles: 0,
-      }),
+      score: attackScore(toStatFields({ ...row, appearances: row.appearances })),
     }))
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
   const defenceSorted = [...rows]
     .map((row) => ({
       id: row.id,
-      score: defenceScore({
-        ...toStatFields({ ...row, appearances: row.appearances }),
-        passes: 0,
-        offloads: 0,
-        missedTackles: 0,
-      }),
+      score: defenceScore(toStatFields({ ...row, appearances: row.appearances })),
     }))
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -690,6 +692,13 @@ export async function recomputeSeasonPerformanceRanks(seasonId: string) {
       .update(playerSeasonStats)
       .set({ defenceRank: index + 1 })
       .where(eq(playerSeasonStats.id, row.id));
+  }
+
+  try {
+    const { invalidateRadarCachesForSeason } = await import("./player-radar-service");
+    await invalidateRadarCachesForSeason(seasonId);
+  } catch {
+    // Radar cache is optional — ranks still succeed
   }
 
   return { attackRanked: attackSorted.length, defenceRanked: defenceSorted.length };

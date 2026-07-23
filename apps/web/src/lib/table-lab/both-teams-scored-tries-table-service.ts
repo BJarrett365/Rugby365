@@ -13,6 +13,10 @@ import {
   parseTriesMatchRangeCount,
   type TriesMatchRangePreset,
 } from "./tries-scored-table-service";
+import {
+  parseBothTeamsScoredTriesSortBy,
+  type BothTeamsScoredTriesSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -20,29 +24,8 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type BothTeamsScoredTriesSortBy =
-  | "yes_pct"
-  | "no_pct"
-  | "both_teams_2_plus_pct"
-  | "both_teams_3_plus_pct"
-  | "both_teams_4_plus_pct";
-
-export function parseBothTeamsScoredTriesSortBy(
-  value: string | null | undefined,
-): BothTeamsScoredTriesSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "no_pct" || normalized === "no_percent") return "no_pct";
-  if (normalized === "both_teams_2_plus_pct" || normalized === "2_plus_pct") {
-    return "both_teams_2_plus_pct";
-  }
-  if (normalized === "both_teams_3_plus_pct" || normalized === "3_plus_pct") {
-    return "both_teams_3_plus_pct";
-  }
-  if (normalized === "both_teams_4_plus_pct" || normalized === "4_plus_pct") {
-    return "both_teams_4_plus_pct";
-  }
-  return "yes_pct";
-}
+export type { BothTeamsScoredTriesSortBy };
+export { parseBothTeamsScoredTriesSortBy };
 
 export function perspectiveHasVerifiedTryTotals(row: TeamFixturePerspective): boolean {
   return row.triesFor != null && row.triesAgainst != null;
@@ -111,8 +94,8 @@ function createBothTeamsScoredTriesAccumulator(
   };
 }
 
-function pct(numerator: number, denominator: number): number | undefined {
-  if (denominator <= 0) return undefined;
+function pct(numerator: number, denominator: number): number | null {
+  if (denominator <= 0) return null;
   return Math.round((numerator / denominator) * 1000) / 10;
 }
 

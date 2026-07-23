@@ -37,6 +37,23 @@ function slugifyImportPart(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Direction-agnostic key so In/Out listings of the same move collapse. */
+export function buildWikiSemanticImportKey(input: {
+  seasonLabel: string;
+  playerName: string;
+  fromClub: string | null;
+  toClub: string | null;
+  movementType: string;
+}): string {
+  return [
+    slugifyImportPart(input.seasonLabel),
+    slugifyImportPart(input.playerName),
+    slugifyImportPart(input.fromClub ?? "none"),
+    slugifyImportPart(input.toClub ?? "none"),
+    input.movementType,
+  ].join(":");
+}
+
 const TRANSFER_DATE_SUFFIX = /^\((\d{1,2}\/\d{1,2}\/\d{4})\)$/i;
 
 function stripTrailingTransferDate(raw: string): { body: string; transferDate: string | null } {
@@ -157,7 +174,7 @@ export function parsePremiershipTransferDocument(
   markdown: string,
   options?: { seasonLabel?: string; sourceTitle?: string },
 ): ParsedPremiershipTransferDocument {
-  const seasonLabel = options?.seasonLabel ?? "2025–26";
+  const seasonLabel = options?.seasonLabel ?? "2026–27";
   const sourceTitle = options?.sourceTitle ?? "Premiership Rugby transfers";
   const lines = markdown.split(/\r?\n/);
 
@@ -165,6 +182,7 @@ export function parsePremiershipTransferDocument(
   let currentClub: ParsedPremiershipClubTransfers | null = null;
   let section: "in" | "out" | null = null;
   const seenKeys = new Set<string>();
+  const seenSemanticKeys = new Set<string>();
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
@@ -193,7 +211,32 @@ export function parsePremiershipTransferDocument(
 
     const parsed = parseTransferLine(line, currentClub.clubName, section, seasonLabel);
     if (!parsed || seenKeys.has(parsed.importKey)) continue;
+
+    const fromNorm = (parsed.fromClub ?? "").toLowerCase().trim();
+    const toNorm = (parsed.toClub ?? "").toLowerCase().trim();
+    if (
+      fromNorm &&
+      toNorm &&
+      fromNorm === toNorm &&
+      parsed.movementType !== "released" &&
+      parsed.movementType !== "retirement" &&
+      parsed.movementType !== "contract_extension" &&
+      parsed.movementType !== "academy_promotion"
+    ) {
+      continue;
+    }
+
+    const semanticKey = buildWikiSemanticImportKey({
+      seasonLabel,
+      playerName: parsed.playerName,
+      fromClub: parsed.fromClub,
+      toClub: parsed.toClub,
+      movementType: parsed.movementType,
+    });
+    if (seenSemanticKeys.has(semanticKey)) continue;
+
     seenKeys.add(parsed.importKey);
+    seenSemanticKeys.add(semanticKey);
 
     if (section === "in") currentClub.playersIn.push(parsed);
     else currentClub.playersOut.push(parsed);

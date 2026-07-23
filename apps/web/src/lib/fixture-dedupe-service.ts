@@ -407,3 +407,64 @@ export async function countFixturesByIds(ids: string[]) {
   const rows = await db.select({ id: fixtures.id }).from(fixtures).where(inArray(fixtures.id, ids));
   return rows.length;
 }
+
+/** Same home/away + kickoff day as this fixture (excluding itself). */
+export async function findDuplicatesForFixture(fixtureId: string): Promise<FixtureDedupeRow[]> {
+  const db = getDb();
+  const [row] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  if (!row?.homeTeamId || !row.awayTeamId || !row.kickoffAt) return [];
+
+  const matchDay = kickoffDateKey(row.kickoffAt);
+  if (!matchDay) return [];
+
+  const peers = await db
+    .select()
+    .from(fixtures)
+    .where(
+      sql`${fixtures.homeTeamId} = ${row.homeTeamId}
+        AND ${fixtures.awayTeamId} = ${row.awayTeamId}
+        AND date(${fixtures.kickoffAt}) = ${matchDay}::date
+        AND ${fixtures.id} <> ${fixtureId}`,
+    );
+
+  return peers as FixtureDedupeRow[];
+}
+
+/** Merge one duplicate into another. Keeper wins identity; loser is deleted after child repoint. */
+export async function mergeFixtureDuplicatePair(input: {
+  keeperId: string;
+  loserId: string;
+  dryRun?: boolean;
+}): Promise<FixtureDedupeAction> {
+  if (input.keeperId === input.loserId) {
+    throw new Error("Cannot merge a fixture into itself");
+  }
+  const dryRun = input.dryRun ?? false;
+  const db = getDb();
+  const rows = (await db
+    .select()
+    .from(fixtures)
+    .where(inArray(fixtures.id, [input.keeperId, input.loserId]))) as FixtureDedupeRow[];
+
+  if (rows.length !== 2) throw new Error("Both fixtures must exist to merge");
+
+  const keeper = rows.find((r) => r.id === input.keeperId)!;
+  const loser = rows.find((r) => r.id === input.loserId)!;
+  const { patch, mergedFields } = mergeScalarFields({ ...keeper }, [loser]);
+
+  const action: FixtureDedupeAction = {
+    keeperId: keeper.id,
+    keeperSlug: keeper.slug,
+    removedIds: [loser.id],
+    mergedFields,
+  };
+
+  if (dryRun) return action;
+
+  if (Object.keys(patch).length > 0) {
+    await db.update(fixtures).set(patch).where(eq(fixtures.id, keeper.id));
+  }
+  await repointChildRows(keeper.id, loser.id);
+  await deleteFixture(loser.id);
+  return action;
+}

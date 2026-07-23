@@ -112,17 +112,20 @@ export default function TransfersAdminPage() {
     Array<{ seasonLabel: string; url: string; description?: string }>
   >([]);
   const [importSource, setImportSource] = useState({
-    seasonLabel: "2025–26",
-    url: "https://en.wikipedia.org/wiki/List_of_2025%E2%80%9326_Premiership_Rugby_transfers",
+    seasonLabel: "2026–27",
+    url: "https://en.wikipedia.org/wiki/List_of_2026%E2%80%9327_Premiership_Rugby_transfers",
   });
 
   const orderedSeasons = useMemo(() => {
     const statusRank: Record<string, number> = { current: 0, previous: 1, historical: 2 };
     return [...seasons].sort((a, b) => {
+      const yearA = a.year ?? 0;
+      const yearB = b.year ?? 0;
+      if (yearA !== yearB) return yearB - yearA;
       const rankA = statusRank[a.status ?? "historical"] ?? 2;
       const rankB = statusRank[b.status ?? "historical"] ?? 2;
       if (rankA !== rankB) return rankA - rankB;
-      return (b.year ?? 0) - (a.year ?? 0);
+      return (b.label ?? "").localeCompare(a.label ?? "");
     });
   }, [seasons]);
 
@@ -311,7 +314,7 @@ export default function TransfersAdminPage() {
       }
       const s = data.summary;
       setImportSummary(
-        `${dryRun ? "Preview" : "Import"}: +${s.transfersAdded} added, ${s.transfersUpdated} updated, ${s.newPlayers} new players, ${s.existingPlayersLinked} linked, ${s.pendingPlayerMatches?.length ?? 0} need review, ${s.warnings?.length ?? 0} warnings, ${s.errors?.length ?? 0} errors.`,
+        `${dryRun ? "Preview" : "Import"}: +${s.transfersAdded} added, ${s.transfersUpdated} updated, ${s.transfersSkipped ?? 0} skipped, ${s.newPlayers} new players, ${s.existingPlayersLinked} linked, ${s.pendingPlayerMatches?.length ?? 0} need review, ${s.warnings?.length ?? 0} warnings, ${s.errors?.length ?? 0} errors.`,
       );
       if (s.pendingPlayerMatches?.length) {
         setPendingMatches(s.pendingPlayerMatches);
@@ -404,8 +407,9 @@ export default function TransfersAdminPage() {
         <h3 className="font-semibold m-0">Wikipedia import</h3>
         <p className="text-sm text-zinc-500 mt-1 mb-3">
           Import Premiership transfers from Wikipedia for audit. Default audit season is{" "}
-          <strong className="font-normal text-zinc-400">2025–26</strong>. Imports add transfer
-          history only — they do not overwrite player current clubs.
+          <strong className="font-normal text-zinc-400">2026–27</strong>. Imports add transfer
+          history only — they do not overwrite player current clubs. Filter by season to review
+          each window separately.
         </p>
         <div className="grid gap-3 sm:grid-cols-2 mb-3">
           <label className="text-sm">

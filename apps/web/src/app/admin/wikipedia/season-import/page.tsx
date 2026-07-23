@@ -55,7 +55,9 @@ export default function WikipediaSeasonImportPage() {
       .then((data) => {
         const rows = (data.presets ?? []) as Preset[];
         setPresets(rows);
-        const first = rows.find((r) => r.startYear === 2024) ?? rows[0];
+        const currentStart =
+          new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+        const first = rows.find((r) => r.startYear === currentStart) ?? rows[0];
         if (first) {
           setUrl(first.url);
           setYear(first.startYear);

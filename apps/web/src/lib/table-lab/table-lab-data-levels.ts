@@ -23,7 +23,11 @@ const LEVEL_2_SOURCES: RugbyTableDataSource[] = [
   "standing_rows",
 ];
 
-const LEVEL_3_SOURCES: RugbyTableDataSource[] = ["match_events", "half_time_scores"];
+const LEVEL_3_SOURCES: RugbyTableDataSource[] = [
+  "match_events",
+  "half_time_scores",
+  "sixty_minute_scores",
+];
 
 function hasValue(value: unknown): boolean {
   return value !== null && value !== undefined;
@@ -128,6 +132,17 @@ function sourceCoverage(
     return pct(
       perspectives.filter(
         (row) => hasValue(row.firstHalfFor) && hasValue(row.firstHalfAgainst),
+      ).length,
+      perspectives.length,
+    );
+  }
+
+  if (source === "sixty_minute_scores") {
+    return pct(
+      perspectives.filter(
+        (row) =>
+          row.sixtyMinuteScoreVerified === true ||
+          (hasValue(row.scoreAtSixtyFor) && hasValue(row.scoreAtSixtyAgainst)),
       ).length,
       perspectives.length,
     );

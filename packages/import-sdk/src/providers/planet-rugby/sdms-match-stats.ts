@@ -12,7 +12,16 @@ export type SdmsMatchStatsBundle = {
   set_piece: Record<string, number>;
 };
 
-export type SdmsPlayerStatCategory = "attack" | "defend" | "kicking";
+/** Planet Rugby Detailed tabs + snapshot leader sources. */
+export type SdmsPlayerStatCategory = "attack" | "defend" | "kicking" | "errors" | "carries";
+
+export const SDMS_PLAYER_STAT_CATEGORIES: SdmsPlayerStatCategory[] = [
+  "attack",
+  "defend",
+  "kicking",
+  "errors",
+  "carries",
+];
 
 export type SdmsPlayerStatRow = {
   player_id?: string;
@@ -30,6 +39,16 @@ export type SdmsMatchPlayerStats = {
   home: Record<SdmsPlayerStatCategory, SdmsPlayerStatsBundle | null>;
   away: Record<SdmsPlayerStatCategory, SdmsPlayerStatsBundle | null>;
 };
+
+function emptySideStats(): Record<SdmsPlayerStatCategory, SdmsPlayerStatsBundle | null> {
+  return {
+    attack: null,
+    defend: null,
+    kicking: null,
+    errors: null,
+    carries: null,
+  };
+}
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   const ctrl = new AbortController();
@@ -66,11 +85,10 @@ export async function fetchSdmsPlayerStats(
 }
 
 export async function fetchSdmsMatchPlayerStats(matchId: string): Promise<SdmsMatchPlayerStats> {
-  const categories: SdmsPlayerStatCategory[] = ["attack", "defend", "kicking"];
   const sides: Array<"home" | "away"> = ["home", "away"];
   const results = await Promise.all(
     sides.flatMap((side) =>
-      categories.map(async (category) => ({
+      SDMS_PLAYER_STAT_CATEGORIES.map(async (category) => ({
         side,
         category,
         data: await fetchSdmsPlayerStats(matchId, side, category),
@@ -79,8 +97,8 @@ export async function fetchSdmsMatchPlayerStats(matchId: string): Promise<SdmsMa
   );
 
   const out: SdmsMatchPlayerStats = {
-    home: { attack: null, defend: null, kicking: null },
-    away: { attack: null, defend: null, kicking: null },
+    home: emptySideStats(),
+    away: emptySideStats(),
   };
   for (const row of results) {
     out[row.side][row.category] = row.data;
@@ -126,4 +144,40 @@ export function rankPlayerStatRows(
     .sort((a, b) => b.value - a.value)
     .slice(0, limit)
     .map((row, i) => ({ ...row, rank: i + 1 }));
+}
+
+/** Flatten SDMS leader arrays (value + side) into rows usable by rankPlayerStatRows. */
+export function leaderRowsFromPlayerStats(
+  playerStats: SdmsMatchPlayerStats,
+  metric: string,
+  preferredCategories: SdmsPlayerStatCategory[] = ["attack", "defend", "carries"],
+): Array<SdmsPlayerStatRow & { side: "home" | "away" }> {
+  const byPlayer = new Map<string, SdmsPlayerStatRow & { side: "home" | "away"; value: number }>();
+
+  for (const side of ["home", "away"] as const) {
+    for (const category of preferredCategories) {
+      const bundle = playerStats[side][category] as (SdmsPlayerStatsBundle & Record<string, unknown>) | null;
+      if (!bundle) continue;
+      const rows = bundle[metric];
+      if (!Array.isArray(rows)) continue;
+      for (const row of rows) {
+        if (!row?.player_id || (row.side && row.side !== side)) continue;
+        const value = Number(row.value ?? 0);
+        if (!Number.isFinite(value) || value <= 0) continue;
+        const key = String(row.player_id);
+        const existing = byPlayer.get(key);
+        if (!existing || value > existing.value) {
+          byPlayer.set(key, {
+            player_id: row.player_id,
+            player_name: row.player_name,
+            side,
+            value,
+            [metric]: value,
+          });
+        }
+      }
+    }
+  }
+
+  return [...byPlayer.values()];
 }

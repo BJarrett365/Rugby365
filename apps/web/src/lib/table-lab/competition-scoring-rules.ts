@@ -1,3 +1,4 @@
+import "server-only";
 import { getCompetitionById } from "../competition-admin-service";
 import {
   DOMESTIC_SCORING_DEFAULT,

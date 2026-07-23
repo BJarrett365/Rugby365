@@ -3,20 +3,24 @@
  * Scoped to .admin-shell — public site tokens in :root are unchanged.
  */
 .admin-shell {
-  /* Core palette */
-  --pr-navy: #12343c;
-  --pr-dark-teal: #173b42;
-  --pr-teal: #294d4f;
-  --pr-teal-light: #365c5e;
+  /* Core palette — Rugby365 / Planet Rugby admin */
+  --pr-navy: #0f2a31;
+  --pr-dark-teal: #14343b;
+  --pr-teal: #1f4246;
+  --pr-teal-light: #2a5357;
   --pr-gold: #e7bc63;
   --pr-gold-hover: #f0cb7a;
+  --pr-cyan: #3db8c5;
+  --pr-cyan-muted: rgba(61, 184, 197, 0.16);
   --pr-green: #54b989;
+  --pr-amber: #e7bc63;
+  --pr-info: #5b9fd4;
   --pr-white: #f7f7f5;
   --pr-grey: #a7adac;
-  --pr-border: rgba(255, 255, 255, 0.12);
-  --pr-border-strong: rgba(255, 255, 255, 0.18);
-  --pr-track: #0e3037;
-  --pr-teal-row-alt: #315759;
+  --pr-border: rgba(255, 255, 255, 0.1);
+  --pr-border-strong: rgba(255, 255, 255, 0.16);
+  --pr-track: #0b2429;
+  --pr-teal-row-alt: #24494d;
   --pr-error: #d46a6a;
   --pr-error-muted: #b85c5c;
 
@@ -29,16 +33,22 @@
 
   /* Typography */
   --pr-font:
-    Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
-  --pr-text-page-title: clamp(1.875rem, 2vw + 1rem, 2.125rem);
-  --pr-text-section: clamp(1.375rem, 1vw + 1rem, 1.625rem);
+    Inter, "Segoe UI", "SF Pro Text", Roboto, system-ui, -apple-system, sans-serif;
+  --pr-text-page-title: clamp(1.875rem, 2vw + 1rem, 2rem); /* ~32px */
+  --pr-text-section: clamp(1.25rem, 1vw + 1rem, 1.375rem); /* ~22px */
   --pr-text-card-heading: 1.125rem;
-  --pr-text-body: 1rem;
-  --pr-text-small: 0.8125rem;
+  --pr-text-body: 0.875rem; /* 14px operational density */
+  --pr-text-small: 0.75rem; /* 12px */
+  --pr-text-table-header: 0.6875rem;
 
-  /* Radius */
+  /* Radius — 8px system, compact controls */
   --pr-radius-sm: 6px;
   --pr-radius-md: 8px;
   --pr-radius-lg: 10px;
   --pr-radius-pill: 999px;
+
+  /* Motion */
+  --pr-ease: ease;
+  --pr-duration-hover: 150ms;
+  --pr-duration-dropdown: 200ms;
 }

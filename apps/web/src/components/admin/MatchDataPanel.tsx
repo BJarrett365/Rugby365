@@ -1,12 +1,6 @@
-import {
-  enrichEventPayloadsFromMatchEvents,
-  teamPosForTeamId,
-  type Sport365Lineups,
-} from "@rugby365/match-operator-agent";
-import { AdminMatchLineupSection } from "@/components/admin/AdminMatchLineupSection";
+import { type Sport365Lineups } from "@rugby365/match-operator-agent";
 import { HeadToHeadStatsSection } from "@/components/admin/HeadToHeadStatsSection";
 import { buildCompetitionSlots, parseSdmsHeadToHeadRecords } from "@/lib/head-to-head-shared";
-import { buildRunningScoresForEvents } from "@/lib/match-event-scores";
 
 type Team = { id: string; name: string; slug: string };
 
@@ -191,33 +185,9 @@ type EventRow = {
   team?: Team | null;
 };
 
-function teamPosForFixture(fixture: FixtureRow, teamName?: string | null): number {
-  if (teamName && fixture.awayTeam?.name && teamName === fixture.awayTeam.name) return 1;
-  return 0;
-}
-
-function formatEventPlayer(payload: Record<string, unknown>, field: "player" | "player_out" = "player"): string {
-  const jerseyKey = field === "player" ? "player_jersey" : "player_out_jersey";
-  const name = typeof payload[field] === "string" ? (payload[field] as string) : undefined;
-  if (!name) return "—";
-
-  const jersey = payload[jerseyKey];
-  if (typeof jersey === "number") return `#${jersey} ${name}`;
-  return name;
-}
-
 function formatKickoff(iso?: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatMinute(minute: number, second: number) {
-  if (second >= 60) return `${minute}'+${Math.floor(second / 60)}`;
-  return `${minute}'`;
-}
-
-function formatEventType(type: string) {
-  return type.replace(/_/g, " ");
 }
 
 function formatVenue(venue?: { name?: string; city?: string }) {
@@ -264,46 +234,13 @@ export function MatchDataPanel({
   const snap = fixture.providerSnapshot;
   const home = fixture.homeTeam?.name ?? "Home";
   const away = fixture.awayTeam?.name ?? "Away";
-  const lineups = snap?.lineups;
   const h2h = normalizeHeadToHead(snap, home, away);
   const sdmsHeadToHeadRaw = snap?.sdms?.headToHead ?? (Array.isArray(snap?.headToHead) ? snap?.headToHead : []);
   const h2hSlots = buildCompetitionSlots(parseSdmsHeadToHeadRecords(sdmsHeadToHeadRaw));
-  const enrichedPayloadById = enrichEventPayloadsFromMatchEvents(
-    events.map((event) => {
-      const payload = event.payload ?? {};
-      const teamName =
-        event.team?.name ?? (typeof payload.team_name === "string" ? payload.team_name : undefined);
-      const teamPos = teamPosForFixture(fixture, teamName);
-      return {
-        id: event.id,
-        teamPos: fixture.homeTeam?.id && fixture.awayTeam?.id
-          ? teamPosForTeamId(event.team?.id, fixture.homeTeam.id, fixture.awayTeam.id)
-          : teamPos,
-        payload,
-      };
-    }),
-    lineups,
-  );
-  const hasLineups =
-    lineups &&
-    (lineups.home.starting.length > 0 ||
-      lineups.home.substitutes.length > 0 ||
-      lineups.away.starting.length > 0 ||
-      lineups.away.substitutes.length > 0);
-  const runningScores = buildRunningScoresForEvents(
-    events.map((event) => ({
-      id: event.id,
-      eventType: event.eventType,
-      teamId: event.teamId ?? event.team?.id ?? null,
-      payload: event.payload,
-    })),
-    fixture.homeTeamId ?? fixture.homeTeam?.id,
-    fixture.awayTeamId ?? fixture.awayTeam?.id,
-  );
 
   return (
     <div className="cms-card space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div id="score" className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-zinc-500 m-0">Stored match data</p>
           <p className="text-2xl font-semibold text-zinc-100 m-0 mt-1">
@@ -356,24 +293,10 @@ export function MatchDataPanel({
         </p>
       )}
 
-      {fixture.id && hasLineups ? (
-        <AdminMatchLineupSection
-          fixtureId={fixture.id}
-          lineups={lineups!}
-          homeFallback={home}
-          awayFallback={away}
-          matchStatus={fixture.status}
-        />
-      ) : (
-        <div>
-          <p className="cms-section-title text-sm">Line-ups</p>
-          {!hasLineups ? (
-            <p className="text-sm text-zinc-500 m-0">No line-ups stored yet. Sync from Sport365 after teams are named.</p>
-          ) : (
-            <p className="text-sm text-zinc-500 m-0">Save this fixture to CMS before loading player ratings.</p>
-          )}
-        </div>
-      )}
+      <div className="cms-card--nested p-3 text-sm match-cms-muted">
+        Lineups and events are edited via the Match CMS action icons
+        {events.length ? ` · ${events.length} events stored` : ""}.
+      </div>
 
       <div>
         <p className="cms-section-title text-sm">Head to head stats</p>
@@ -447,63 +370,6 @@ export function MatchDataPanel({
               </div>
             )}
           </>
-        )}
-      </div>
-
-      <div>
-        <p className="cms-section-title text-sm">
-          Match events ({events.length}
-          {snap?.incidentCount !== undefined ? ` · ${snap.incidentCount} from provider` : ""})
-        </p>
-        {events.length === 0 ? (
-          <p className="text-sm text-zinc-500 m-0">No incidents stored yet. Use Sync from Sport365 below.</p>
-        ) : (
-          <div className="cms-table-scroll max-h-96">
-            <table className="cms-table w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="w-16">Min</th>
-                  <th>Type</th>
-                  <th>Team</th>
-                  <th>Player</th>
-                  <th className="w-20">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((event) => {
-                  const payload = enrichedPayloadById.get(event.id) ?? event.payload ?? {};
-                  const scoreAfter = runningScores.get(event.id);
-                  const teamName =
-                    event.team?.name ?? (typeof payload.team_name === "string" ? payload.team_name : "—");
-                  const playerLabel = formatEventPlayer(payload);
-                  const playerOutLabel =
-                    event.eventType === "substitution" ? formatEventPlayer(payload, "player_out") : null;
-                  return (
-                    <tr key={event.id}>
-                      <td className="whitespace-nowrap text-zinc-400">
-                        {formatMinute(
-                          event.minute,
-                          typeof event.payload?.minute_plus === "number"
-                            ? (event.payload.minute_plus as number) * 60
-                            : event.second,
-                        )}
-                      </td>
-                      <td>{formatEventType(event.eventType)}</td>
-                      <td className="text-zinc-400">{teamName}</td>
-                      <td className="text-zinc-400">
-                        {playerOutLabel && playerOutLabel !== "—"
-                          ? `${playerOutLabel} → ${playerLabel}`
-                          : playerLabel}
-                      </td>
-                      <td className="font-mono text-xs">
-                        {scoreAfter ? `${scoreAfter[0]}–${scoreAfter[1]}` : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         )}
       </div>
     </div>

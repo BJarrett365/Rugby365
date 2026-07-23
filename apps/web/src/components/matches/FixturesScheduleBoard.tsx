@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MatchDatePicker } from "./MatchDatePicker";
+import { TeamCrest } from "./TeamCrest";
 import {
   competitionDisplayName,
   dateKeyLocal,
+  formatPublicDateHeader,
   groupByCompetition,
   isFinished,
   kickoffDateKey,
   matchDetailHref,
   matchStatusShort,
   monthBoundsFromYearMonth,
+  publicMatchStatusLabel,
   seasonFromDateKey,
   type ScheduleCompetition,
   type ScheduleFixture,
@@ -152,29 +155,73 @@ function CompactMatchRow({
     );
   }
 
-  if (isDb) {
-    return (
-      <Link href={`/matches/${fixture.slug}/commentary`} className="fixtures-row">
-        {content}
-      </Link>
-    );
-  }
-
   return (
-    <div className="fixtures-row fixtures-row--live-only" title="Live from Planet Rugby — not yet in CMS">
+    <div className="fixtures-row fixtures-row--live-only" title="Match Centre link unavailable">
       {content}
     </div>
   );
 }
 
+function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
+  const home = fixture.homeTeam?.name ?? "TBC";
+  const away = fixture.awayTeam?.name ?? "TBC";
+  const finished = fixture.status === "full_time" || fixture.status === "live";
+  const showScores = finished;
+  const detailHref = matchDetailHref(fixture);
+  const status = publicMatchStatusLabel(fixture.status, fixture.kickoffAt, fixture.matchDate);
+
+  return (
+    <article className="pr-mc-match-row">
+      <div className="pr-mc-match-row__meta">
+        <span className="pr-mc-match-row__round">{fixture.round?.trim() || "—"}</span>
+        {fixture.venue ? <span className="pr-mc-match-row__venue">{fixture.venue}</span> : null}
+      </div>
+
+      <div className="pr-mc-match-row__status">{status}</div>
+
+      <div className="pr-mc-match-row__teams">
+        <div className="pr-mc-team">
+          <TeamCrest name={home} imageUrl={fixture.homeTeam?.imageUrl} size="sm" />
+          <span className="pr-mc-team__name">{home}</span>
+          {showScores ? <span className="pr-mc-team__score">{fixture.homeScore}</span> : null}
+        </div>
+        <div className="pr-mc-team">
+          <TeamCrest name={away} imageUrl={fixture.awayTeam?.imageUrl} size="sm" />
+          <span className="pr-mc-team__name">{away}</span>
+          {showScores ? <span className="pr-mc-team__score">{fixture.awayScore}</span> : null}
+        </div>
+      </div>
+
+      <div className="pr-mc-match-row__action">
+        {detailHref ? (
+          <Link href={detailHref} className="pr-mc-match-info-btn">
+            Match Info
+          </Link>
+        ) : (
+          <span className="pr-mc-match-info-btn pr-mc-match-info-btn--disabled">Match Info</span>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function seasonOptionsAround(dateKey: string): string[] {
+  const year = Number(dateKey.slice(0, 4));
+  if (!Number.isFinite(year)) return [String(new Date().getFullYear())];
+  return [String(year - 1), String(year), String(year + 1)];
+}
+
 export function FixturesScheduleBoard({
   admin = false,
+  variant = "admin",
   onDelete,
   selectedFixtureId,
   onSelectFixture,
   initialFixtureId,
 }: {
   admin?: boolean;
+  /** Public Planet Rugby list layout. Default keeps existing admin/operator behaviour. */
+  variant?: "public" | "admin";
   onDelete?: (id: string, label: string) => void;
   /** Operator console: highlight and select a CMS fixture for commentary. */
   selectedFixtureId?: string;
@@ -182,6 +229,7 @@ export function FixturesScheduleBoard({
   /** Jump the date strip to this fixture's kickoff day on first load. */
   initialFixtureId?: string;
 }) {
+  const isPublic = variant === "public";
   const [selectedDateKey, setSelectedDateKey] = useState(() => dateKeyLocal(new Date()));
   const [competitionFilter, setCompetitionFilter] = useState("all");
   const [fixtures, setFixtures] = useState<ScheduleFixture[]>([]);
@@ -195,6 +243,9 @@ export function FixturesScheduleBoard({
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
     [],
   );
+
+  const seasonYear = seasonFromDateKey(selectedDateKey) ?? String(new Date().getFullYear());
+  const seasonChoices = useMemo(() => seasonOptionsAround(selectedDateKey), [selectedDateKey]);
 
   const mergeFixtureDates = useCallback((dates: string[]) => {
     setDatesWithMatches((prev) => {
@@ -251,16 +302,16 @@ export function FixturesScheduleBoard({
         );
       }
       if (!res.ok) throw new Error(String(data.error ?? "Failed to load"));
-      setFixtures(data.fixtures ?? []);
+      setFixtures((data.fixtures as ScheduleFixture[]) ?? []);
       setCompetitions(
-        (data.competitions ?? []).map((c: ScheduleCompetition) => ({
+        ((data.competitions as ScheduleCompetition[]) ?? []).map((c) => ({
           id: c.id,
           name: c.name,
           slug: c.slug,
         })),
       );
-      setLiveCount(data.liveCount ?? 0);
-      setDatesWithMatches(new Set(data.datesWithMatches ?? []));
+      setLiveCount((data.liveCount as number) ?? 0);
+      setDatesWithMatches(new Set((data.datesWithMatches as string[]) ?? []));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load fixtures");
       setFixtures([]);
@@ -339,32 +390,93 @@ export function FixturesScheduleBoard({
     [filtered, competitionById],
   );
 
+  const onSeasonChange = (year: string) => {
+    const rest = selectedDateKey.slice(4);
+    const nextKey = `${year}${rest}`;
+    const parsed = Number(year);
+    if (!Number.isFinite(parsed)) return;
+    // Clamp invalid dates (e.g. Feb 29) via Date constructor
+    const [ , m, d] = nextKey.split("-").map(Number);
+    const safe = dateKeyLocal(new Date(parsed, (m ?? 1) - 1, d ?? 1));
+    setSelectedDateKey(safe);
+  };
+
+  const boardClass = isPublic
+    ? "pr-mc-fixtures-board"
+    : "cms-card fixtures-schedule";
+
   return (
-      <div className="cms-card fixtures-schedule">
-      <div className="fixtures-schedule__filters">
-        <label className="fixtures-competition-select text-sm">
-          <span className="sr-only">Competition</span>
-          <select
-            className="cms-input w-full"
-            value={competitionFilter}
-            onChange={(e) => setCompetitionFilter(e.target.value)}
-          >
-            <option value="all">All competitions</option>
-            {competitionOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+    <div className={boardClass}>
+      <div className={isPublic ? "pr-mc-fixtures-board__filters" : "fixtures-schedule__filters"}>
+        {isPublic ? (
+          <>
+            <MatchDatePicker
+              selectedKey={selectedDateKey}
+              onSelect={setSelectedDateKey}
+              matchDateKeys={matchDateKeys}
+              onFetchMonthDates={fetchMonthDates}
+              variant="public"
+              hideHeader
+              showMonthStrip
+            />
+            <div className="pr-mc-fixtures-board__selects">
+              <label className="pr-mc-filter-select">
+                <span className="sr-only">Competition</span>
+                <select
+                  value={competitionFilter}
+                  onChange={(e) => setCompetitionFilter(e.target.value)}
+                >
+                  <option value="all">All Competitions</option>
+                  {competitionOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="pr-mc-filter-select">
+                <span className="sr-only">Season</span>
+                <select value={seasonYear} onChange={(e) => onSeasonChange(e.target.value)}>
+                  {seasonChoices.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </>
+        ) : (
+          <label className="fixtures-competition-select text-sm">
+            <span className="sr-only">Competition</span>
+            <select
+              className="cms-input w-full"
+              value={competitionFilter}
+              onChange={(e) => setCompetitionFilter(e.target.value)}
+            >
+              <option value="all">All competitions</option>
+              {competitionOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
-      <MatchDatePicker
-        selectedKey={selectedDateKey}
-        onSelect={setSelectedDateKey}
-        matchDateKeys={matchDateKeys}
-        onFetchMonthDates={fetchMonthDates}
-      />
+      {!isPublic && (
+        <MatchDatePicker
+          selectedKey={selectedDateKey}
+          onSelect={setSelectedDateKey}
+          matchDateKeys={matchDateKeys}
+          onFetchMonthDates={fetchMonthDates}
+        />
+      )}
+
+      {isPublic && (
+        <div className="pr-mc-date-header">{formatPublicDateHeader(selectedDateKey)}</div>
+      )}
 
       {error && <p className="text-red-400 text-sm m-0 mb-3">{error}</p>}
 
@@ -382,60 +494,89 @@ export function FixturesScheduleBoard({
         </p>
       ) : (
         <>
-          {liveCount > 0 && (
+          {!isPublic && liveCount > 0 && (
             <p className="text-xs text-zinc-600 m-0 mb-3">
               {liveCount} match{liveCount === 1 ? "" : "es"} from Planet Rugby SDMS
               {fixtures.some((f) => f.source === "sdms") ? " (some not yet imported to CMS)" : ""}.
             </p>
           )}
-          <div className="fixtures-schedule__groups">
-          {groups.map((group) => {
-            const season =
-              seasonFromDateKey(group.fixtures[0]?.matchDate ?? null) ??
-              group.fixtures[0]?.seasonLabel;
-            return (
-            <section key={group.key} className="fixtures-competition-block">
-              <header className="fixtures-competition-block__header">
-                <span className="fixtures-competition-block__icon" aria-hidden>
-                  🌐
-                </span>
-                <span className="fixtures-competition-block__title">
-                  {group.label}
-                  {season ? ` · ${season}` : ""}
-                </span>
-                  {group.slug && (
-                    <Link
-                      href={`/competitions/${group.slug}/results`}
-                      className="fixtures-competition-block__pin"
-                      title="View league"
-                    >
-                      📌
-                    </Link>
-                  )}
-                </header>
-                <div className="fixtures-competition-block__rows">
-                  {group.fixtures.map((f) => (
-                    <CompactMatchRow
-                      key={f.id}
-                      fixture={f}
-                      admin={admin && !operatorMode}
-                      onDelete={onDelete}
-                      operatorSelect={
-                        operatorMode
-                          ? {
-                              selected: f.source !== "sdms" && selectedFixtureId === f.id,
-                              onSelect: () => {
-                                if (f.source !== "sdms") onSelectFixture?.(f);
-                              },
-                            }
-                          : undefined
-                      }
-                    />
-                  ))}
-              </div>
-            </section>
-            );
-          })}
+          <div className={isPublic ? "pr-mc-fixtures-board__groups" : "fixtures-schedule__groups"}>
+            {groups.map((group) => {
+              const season =
+                seasonFromDateKey(group.fixtures[0]?.matchDate ?? null) ??
+                group.fixtures[0]?.seasonLabel;
+              const publicLabel = competitionDisplayName(
+                group.fixtures[0]!,
+                competitionById,
+              );
+              return (
+                <section
+                  key={group.key}
+                  className={isPublic ? "pr-mc-competition-block" : "fixtures-competition-block"}
+                >
+                  <header
+                    className={
+                      isPublic
+                        ? "pr-mc-competition-block__header"
+                        : "fixtures-competition-block__header"
+                    }
+                  >
+                    {isPublic ? (
+                      <span className="pr-mc-competition-block__title">{publicLabel}</span>
+                    ) : (
+                      <>
+                        <span className="fixtures-competition-block__icon" aria-hidden>
+                          🌐
+                        </span>
+                        <span className="fixtures-competition-block__title">
+                          {group.label}
+                          {season ? ` · ${season}` : ""}
+                        </span>
+                        {group.slug && (
+                          <Link
+                            href={`/competitions/${group.slug}/results`}
+                            className="fixtures-competition-block__pin"
+                            title="View league"
+                          >
+                            📌
+                          </Link>
+                        )}
+                      </>
+                    )}
+                  </header>
+                  <div
+                    className={
+                      isPublic
+                        ? "pr-mc-competition-block__rows"
+                        : "fixtures-competition-block__rows"
+                    }
+                  >
+                    {group.fixtures.map((f) =>
+                      isPublic ? (
+                        <PublicMatchRow key={f.id} fixture={f} />
+                      ) : (
+                        <CompactMatchRow
+                          key={f.id}
+                          fixture={f}
+                          admin={admin && !operatorMode}
+                          onDelete={onDelete}
+                          operatorSelect={
+                            operatorMode
+                              ? {
+                                  selected: f.source !== "sdms" && selectedFixtureId === f.id,
+                                  onSelect: () => {
+                                    if (f.source !== "sdms") onSelectFixture?.(f);
+                                  },
+                                }
+                              : undefined
+                          }
+                        />
+                      ),
+                    )}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         </>
       )}

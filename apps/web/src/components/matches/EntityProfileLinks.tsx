@@ -18,7 +18,7 @@ export function PlayerProfileLink({
     return <span className={className}>{name}</span>;
   }
   return (
-    <Link href={`/admin/players/${link.id}/edit`} className={`match-entity-link${className ? ` ${className}` : ""}`}>
+    <Link href={`/players/${link.slug}`} className={`match-entity-link${className ? ` ${className}` : ""}`}>
       {name}
     </Link>
   );

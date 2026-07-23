@@ -6,7 +6,7 @@ import type { MatchEntityContext } from "@/lib/match-entity-context";
 import type { MatchRatingDisplay } from "@/lib/match-rating-service";
 import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
 import { PlayerProfileLink } from "./EntityProfileLinks";
-import { DualRatingCell, SelectionTrendChip } from "./MatchRatingBadge";
+import { DualRatingCell } from "./MatchRatingBadge";
 import { PlayerMatchPerformancePanel } from "./PlayerMatchPerformancePanel";
 
 type LineupPlayer = MappedLineups["home"]["starting"][number];
@@ -70,8 +70,7 @@ function LineupColumn({
                 <span className="match-potm-pip" title="Rugby365 Player of the Match">
                   POTM
                 </span>
-              )}
-              <SelectionTrendChip rating={rating} />
+              ) : null}
             </div>
           </td>
           <td className="match-detail-lineup__pos">{p.positionName}</td>

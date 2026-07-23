@@ -7,11 +7,14 @@ import {
   filterByKickoffRange,
   matchLeaguePoints,
 } from "./rugby-table-metrics-service";
-import {
-  parseLosingPositionFilter,
-  type LosingPositionFilter,
-} from "./points-gained-losing-table-service";
 import { uniqueFixtureCount } from "./scoring-first-table-service";
+import {
+  parseWinningPositionFilter,
+  parsePointsLostWinningSortBy,
+  winningPositionFilterLabel,
+  type WinningPositionFilter,
+  type PointsLostWinningSortBy,
+} from "./table-lab-param-parsers";
 import type {
   RugbyScoringRules,
   RugbyTableStandingRow,
@@ -19,74 +22,12 @@ import type {
   TeamFixturePerspective,
 } from "./table-types";
 
-export type WinningPositionFilter = LosingPositionFilter;
-
-export type PointsLostWinningSortBy =
-  | "points_lost"
-  | "losses_after_leading"
-  | "draws_after_leading"
-  | "lead_protection_pct"
-  | "fewest_points_lost"
-  | "most_wins_after_leading";
-
-export function parseWinningPositionFilter(
-  value: string | null | undefined,
-): WinningPositionFilter {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (
-    normalized === "ahead_at_half_time" ||
-    normalized === "ahead_at_ht" ||
-    normalized === "leading_at_half_time"
-  ) {
-    return "half_time";
-  }
-  if (
-    normalized === "ahead_after_60" ||
-    normalized === "leading_after_60" ||
-    normalized === "ahead_after_sixty"
-  ) {
-    return "after_sixty";
-  }
-  if (normalized === "ahead_at_any_time" || normalized === "leading_at_any_time") {
-    return "any_time";
-  }
-  return parseLosingPositionFilter(value);
-}
-
-export function parsePointsLostWinningSortBy(
-  value: string | null | undefined,
-): PointsLostWinningSortBy {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "losses_after_leading" || normalized === "losses") {
-    return "losses_after_leading";
-  }
-  if (normalized === "draws_after_leading" || normalized === "draws") {
-    return "draws_after_leading";
-  }
-  if (
-    normalized === "lead_protection_pct" ||
-    normalized === "lead_protection" ||
-    normalized === "best_lead_protection"
-  ) {
-    return "lead_protection_pct";
-  }
-  if (normalized === "fewest_points_lost" || normalized === "fewest_lost") {
-    return "fewest_points_lost";
-  }
-  if (
-    normalized === "most_wins_after_leading" ||
-    normalized === "wins_after_leading"
-  ) {
-    return "most_wins_after_leading";
-  }
-  return "points_lost";
-}
-
-export function winningPositionFilterLabel(filter: WinningPositionFilter): string {
-  if (filter === "half_time") return "Ahead at half-time";
-  if (filter === "after_sixty") return "Ahead after 60 minutes";
-  return "Ahead at any time";
-}
+export type { WinningPositionFilter, PointsLostWinningSortBy };
+export {
+  parseWinningPositionFilter,
+  parsePointsLostWinningSortBy,
+  winningPositionFilterLabel,
+};
 
 export function pointsLostFromWinningPosition(
   pointsFor: number,
@@ -302,11 +243,11 @@ export function buildPointsLostWinningTableStandings(input: {
     const leadProtectionPct =
       acc.matchesLed > 0
         ? Math.round((acc.winsAfterLeading / acc.matchesLed) * 1000) / 10
-        : undefined;
+        : null;
     const avgPointsLostPerMatch =
       acc.matchesLed > 0
         ? Math.round((acc.pointsLost / acc.matchesLed) * 100) / 100
-        : undefined;
+        : null;
 
     return {
       rank: 0,
