@@ -2,25 +2,20 @@
 
 Rugby Union Match Tracker & Commentary Engine — local dev build.
 
+**New to the repo?** Install tools and follow the full walkthrough in **[docs/SETUP.md](docs/SETUP.md)** (Git, Node 20+, Docker Desktop, env, ports, troubleshooting).
+
 ## Quick start
 
 ```bash
-# 1. Dependencies
+# Prerequisites: Node 20+, npm, Docker Desktop running
 npm install
+cp .env.example .env   # if needed — never commit .env
 
-# 2. Database
-docker compose up -d
-cp .env.example .env   # if needed
-
-# 3. Generate & run migrations
-npm run db:generate -w @rugby365/db
-npm run db:migrate
-npm run db:seed
-
-# 4. Start app
+# Starts Postgres (Docker :5433), migrates, seeds, then Next.js :3000
+npm run db:up
 npm run dev
 
-# 5. Replay demo match (another terminal)
+# Optional — replay demo match (another terminal)
 npm run demo:feed
 ```
 
@@ -64,9 +59,10 @@ rugby365/
 └── scripts/demo-live-match-feed.mjs
 ```
 
-## Product plans
+## Docs
 
 | Document | Description |
 |----------|-------------|
+| [docs/SETUP.md](docs/SETUP.md) | Tools to install + local contributor setup |
 | [docs/stats-brain/README.md](docs/stats-brain/README.md) | Stats Brain overview — cross-entity analytics layer |
 | [docs/stats-brain/INSIGHT_STATS.md](docs/stats-brain/INSIGHT_STATS.md) | Insight Stats — master CMS, data model, detectors, publishing |
