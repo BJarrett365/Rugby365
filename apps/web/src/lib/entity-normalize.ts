@@ -4,12 +4,32 @@ export function normalizePlayerName(name: string): string {
   return normalizeProviderPlayerName(name);
 }
 
+/** Common club sponsors that should not create duplicate team identities. */
+const TEAM_SPONSOR_PREFIX =
+  /^(dhl|vodacom|suzuki|toyota|hyundai|emirates|cell\s*c|mtn|sasol|investec|hollywood|fidelity|hollywood\s*card)\s+/i;
+
+/** Trailing season / squad roman numerals (e.g. Stormers XXIII). */
+const TEAM_ROMAN_SUFFIX = /\s+(x{0,3})(ix|iv|v?i{0,3})$/i;
+
 export function normalizeTeamName(name: string): string {
   return name
     .replace(/^→+\s*/u, "")
     .replace(/^bt\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Strip leading sponsors and trailing Roman squad labels for matching. */
+export function stripTeamSponsorAndSeasonLabels(name: string): string {
+  let next = normalizeTeamName(name);
+  // Repeat sponsor strip for stacked prefixes.
+  for (let i = 0; i < 3; i++) {
+    const stripped = next.replace(TEAM_SPONSOR_PREFIX, "").trim();
+    if (stripped === next) break;
+    next = stripped;
+  }
+  next = next.replace(TEAM_ROMAN_SUFFIX, "").trim();
+  return next;
 }
 
 export type TeamDedupTier =
@@ -57,7 +77,7 @@ export function teamDedupTier(name: string): TeamDedupTier {
 
 /** Base club/country label with age/gender tier markers removed for duplicate matching. */
 export function teamDedupBaseName(name: string): string {
-  let normalized = normalizeTeamName(name);
+  let normalized = stripTeamSponsorAndSeasonLabels(name);
   normalized = normalized
     .replace(/\s*\(asst\.\)/gi, "")
     .replace(/\s*\(loan\)/gi, "")

@@ -1037,21 +1037,61 @@ html[data-surface="print"] .no-print {
 
 .match-detail-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.25rem 1.25rem;
   margin-bottom: 1.5rem;
   padding-bottom: 0;
   border-bottom: 1px solid #27272a;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .match-detail-tabs__tab {
   position: relative;
-  padding: 0.65rem 0.15rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.2rem 0.85rem;
+  min-height: 44px;
   font-size: 0.9375rem;
   font-weight: 600;
   color: #d4d4d8;
   text-decoration: none;
   white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.match-detail-tabs__badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  background: #3f3f46;
+  color: #fafafa;
+}
+
+.match-detail-tabs__badge--live {
+  background: #b91c1c;
+  color: #fff;
+}
+
+.match-detail-tabs__badge--replay {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.match-detail-tabs__badge--soon {
+  background: #a16207;
+  color: #fff;
+}
+
+.match-detail-tabs__badge--unavailable {
+  background: #52525b;
+  color: #e4e4e7;
 }
 
 .match-detail-tabs__tab:hover {

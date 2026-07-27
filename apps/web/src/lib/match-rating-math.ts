@@ -15,7 +15,10 @@ export type PerformanceTrend = "up" | "down" | "flat" | "new";
 export type SelectionTrend = "up" | "down" | "flat" | "new" | "unknown";
 export type SquadRole = "starter" | "replacement" | "not_selected";
 
-/** Career and match line-up ratings publish only after the fixture is complete. */
+/**
+ * Match ratings (1–10) publish after the fixture is complete.
+ * Career ratings are available before kick-off and refresh after full time.
+ */
 export function isFixtureRatingsPublished(status: string): boolean {
   const normalized = status.trim().toLowerCase().replace(/\s+/g, "_");
   return (

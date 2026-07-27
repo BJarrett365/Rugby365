@@ -1,5 +1,8 @@
 export type MatchDetailTab =
   | "details"
+  | "animation"
+  | "watchalong"
+  | "highlights"
   | "stats"
   | "player-stats"
   | "lineups"
@@ -9,6 +12,9 @@ export type MatchDetailTab =
 
 export function parseMatchDetailTab(value: string | undefined): MatchDetailTab {
   if (
+    value === "animation" ||
+    value === "watchalong" ||
+    value === "highlights" ||
     value === "stats" ||
     value === "player-stats" ||
     value === "lineups" ||
@@ -19,4 +25,9 @@ export function parseMatchDetailTab(value: string | undefined): MatchDetailTab {
     return value;
   }
   return "details";
+}
+
+export function matchDetailTabHref(pathname: string, tab: MatchDetailTab): string {
+  if (tab === "details") return pathname;
+  return `${pathname}?tab=${tab}`;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { SdmsKeyEvent } from "@rugby365/import-sdk";
 import {
   rankPlayerStatRows,
   sdmsHomeAwayStatRows,
@@ -16,6 +15,10 @@ import {
   formatProviderScorerMinutes,
   normalizeProviderPlayerName,
 } from "@/lib/match-entity-context";
+import {
+  formatMatchEventMinute,
+  type PublicKeyEvent,
+} from "@/lib/match-key-events";
 import { PlayerProfileLink } from "./EntityProfileLinks";
 import {
   PrCompareStatCard,
@@ -23,17 +26,13 @@ import {
   defenceRingsFromStats,
   kickingRingsFromStats,
   percentageRingsFromSection,
+  rucksRingsFromStats,
   type CompareStatRow,
 } from "./PrCompareStatCard";
 import { PlayerStatsSnapshot } from "./PlayerStatsSnapshot";
 import { PlayerStatsDetailed } from "./PlayerStatsDetailed";
 
 type ScoringEntry = { player_id?: string; player_name?: string; minute?: number; card_type?: string };
-
-function formatEventTime(minute: number, second?: number): string {
-  if (second && second > 0) return `${minute}'${String(second).padStart(2, "0")}`;
-  return `${minute}'`;
-}
 
 /** Planet Rugby match-event icons from /content/themes/planet2/img/svg/match-events/ */
 function eventIconSrc(type: string): string | null {
@@ -89,7 +88,14 @@ function eventTypeLabel(type: string): string {
   if (t.includes("conversion")) return "Conversion";
   if (t.includes("penalty") && !t.includes("try")) return "Penalty";
   if (t.includes("drop")) return "Drop Goal";
-  if (t.includes("sub") || t.includes("replacement")) return "";
+  if (
+    t.includes("sub") ||
+    t.includes("replacement") ||
+    t.includes("player on") ||
+    t.includes("player off")
+  ) {
+    return "";
+  }
   if (t.includes("yellow") || t.includes("sin bin") || t.includes("sinbin")) return "Yellow Card";
   if (t.includes("sent off") || (t.includes("red") && t.includes("card"))) return "Sent Off";
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -156,6 +162,7 @@ export function MatchDetailsCard({
   scoringDetail,
   matchStats: _matchStats,
   entities,
+  bonusPoints = null,
 }: {
   homeName: string;
   awayName: string;
@@ -165,6 +172,15 @@ export function MatchDetailsCard({
   scoringDetail: Record<string, unknown> | undefined;
   matchStats: SdmsMatchStatsBundle | null;
   entities: MatchEntityContext;
+  bonusPoints?: {
+    tryBonusTotal: number;
+    losingBonusTotal: number;
+    homeTryBonusPoints: number;
+    awayTryBonusPoints: number;
+    homeLosingBonusPoints: number;
+    awayLosingBonusPoints: number;
+    rules: { tryBonusThreshold: number; losingBonusMargin: number };
+  } | null;
 }) {
   const detail = scoringDetail ?? {};
   const homeScoring = {
@@ -190,9 +206,48 @@ export function MatchDetailsCard({
     homeScoring.cards.length > 0 ||
     awayScoring.cards.length > 0;
 
+  const showBonus = bonusPoints != null;
+
   return (
     <section className="pr-mc-card">
       <h2 className="pr-mc-card__title">Match Details</h2>
+      {showBonus ? (
+        <div className="pr-bonus">
+          <h3 className="pr-bonus__heading">Bonus Points</h3>
+          <p className="pr-bonus__rules">
+            Try bonus: {bonusPoints.rules.tryBonusThreshold}+ tries · Losing bonus: defeat by ≤
+            {bonusPoints.rules.losingBonusMargin}
+          </p>
+          <div className="pr-bonus-tiles">
+            <div className="pr-bonus-tile">
+              <span className="pr-bonus-tile__label">Try</span>
+              <div className="pr-bonus-tile__sides">
+                <div>
+                  <span className="pr-bonus-tile__value">{bonusPoints.homeTryBonusPoints}</span>
+                  <span className="pr-bonus-tile__team">{homeName}</span>
+                </div>
+                <div>
+                  <span className="pr-bonus-tile__value">{bonusPoints.awayTryBonusPoints}</span>
+                  <span className="pr-bonus-tile__team">{awayName}</span>
+                </div>
+              </div>
+            </div>
+            <div className="pr-bonus-tile">
+              <span className="pr-bonus-tile__label">Losing</span>
+              <div className="pr-bonus-tile__sides">
+                <div>
+                  <span className="pr-bonus-tile__value">{bonusPoints.homeLosingBonusPoints}</span>
+                  <span className="pr-bonus-tile__team">{homeName}</span>
+                </div>
+                <div>
+                  <span className="pr-bonus-tile__value">{bonusPoints.awayLosingBonusPoints}</span>
+                  <span className="pr-bonus-tile__team">{awayName}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {hasScorers ? (
         <div className="pr-scorers">
           <div className="pr-scorers__heads" aria-hidden>
@@ -292,19 +347,70 @@ export function MatchSummaryPanel({
   );
 }
 
+function KeyEventPlayers({
+  event,
+  entities,
+}: {
+  event: PublicKeyEvent;
+  entities: MatchEntityContext;
+}) {
+  const onName = event.player_on?.trim();
+  const offName = event.player_off?.trim();
+  if (onName || offName) {
+    return (
+      <span className="pr-key-events__sub-lines">
+        {onName ? (
+          <span className="pr-key-events__sub-line">
+            <PlayerProfileLink
+              name={normalizeProviderPlayerName(onName) || onName}
+              externalId={event.player_on_id ?? event.player_id}
+              context={entities}
+            />{" "}
+            <span className="pr-key-events__type">On</span>
+          </span>
+        ) : null}
+        {offName ? (
+          <span className="pr-key-events__sub-line">
+            <PlayerProfileLink
+              name={normalizeProviderPlayerName(offName) || offName}
+              externalId={event.player_off_id ?? undefined}
+              context={entities}
+            />{" "}
+            <span className="pr-key-events__type">Off</span>
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+
+  const player = event.player_name?.trim();
+  if (!player) return null;
+  const typeLabel = eventTypeLabel(event.type);
+  return (
+    <>
+      <PlayerProfileLink
+        name={normalizeProviderPlayerName(player) || player}
+        externalId={event.player_id}
+        context={entities}
+      />
+      {typeLabel ? <span className="pr-key-events__type">{typeLabel}</span> : null}
+    </>
+  );
+}
+
 export function KeyEventsPanel({
   events,
   homeTeamId,
   entities,
 }: {
-  events: SdmsKeyEvent[];
+  events: PublicKeyEvent[];
   homeTeamId?: string;
   entities: MatchEntityContext;
 }) {
   const rows = useMemo(() => {
     const out: Array<
       | { kind: "period"; label: string; key: string }
-      | { kind: "event"; event: SdmsKeyEvent; key: string }
+      | { kind: "event"; event: PublicKeyEvent; key: string }
     > = [];
     let halfDividerAdded = false;
     events.forEach((e, i) => {
@@ -313,10 +419,19 @@ export function KeyEventsPanel({
         halfDividerAdded = true;
         return;
       }
-      if (/half\s*start|full\s*time|kick\s*off/i.test(e.type) && !e.player_name) {
+      if (
+        /half\s*start|full\s*time|kick\s*off/i.test(e.type) &&
+        !e.player_name &&
+        !e.player_on &&
+        !e.player_off
+      ) {
         return;
       }
-      out.push({ kind: "event", event: e, key: `${e.minute}-${e.type}-${i}` });
+      out.push({
+        kind: "event",
+        event: e,
+        key: `${e.minute}-${e.type}-${e.player_on ?? e.player_off ?? e.player_name ?? i}-${i}`,
+      });
     });
     return out;
   }, [events]);
@@ -340,24 +455,14 @@ export function KeyEventsPanel({
           const e = row.event;
           const isHome = Boolean(homeTeamId && e.team_id === homeTeamId);
           const isAway = Boolean(e.team_id && (!homeTeamId || e.team_id !== homeTeamId));
-          const player = e.player_name?.trim();
-          const typeLabel = eventTypeLabel(e.type);
           const iconSrc = eventIconSrc(e.type);
-          const playerNode = player ? (
-            <PlayerProfileLink
-              name={normalizeProviderPlayerName(player) || player}
-              externalId={e.player_id}
-              context={entities}
-            />
-          ) : null;
 
           return (
             <li key={row.key} className="pr-key-events__item">
               <div className="pr-key-events__home">
                 {isHome && (
                   <>
-                    {playerNode}
-                    {typeLabel ? <span className="pr-key-events__type">{typeLabel}</span> : null}
+                    <KeyEventPlayers event={e} entities={entities} />
                     {e.home_score != null && e.away_score != null && (
                       <span className="pr-key-events__score">
                         {e.home_score}–{e.away_score}
@@ -376,13 +481,12 @@ export function KeyEventsPanel({
                     height={16}
                   />
                 ) : null}
-                <span className="pr-key-events__time">{formatEventTime(e.minute, e.second)}</span>
+                <span className="pr-key-events__time">{formatMatchEventMinute(e.minute)}</span>
               </div>
               <div className="pr-key-events__away">
                 {isAway && (
                   <>
-                    {playerNode}
-                    {typeLabel ? <span className="pr-key-events__type">{typeLabel}</span> : null}
+                    <KeyEventPlayers event={e} entities={entities} />
                     {e.home_score != null && e.away_score != null && (
                       <span className="pr-key-events__score">
                         {e.home_score}–{e.away_score}
@@ -458,11 +562,7 @@ export function MatchTeamStatsPanel({
         title="Rucks"
         {...crest}
         rows={teamStatRows(matchStats.rucks)}
-        rings={percentageRingsFromSection(matchStats.rucks, "Ruck Success", [
-          "ruck_success_percentage",
-          "success_percentage",
-          "rucks_won_percentage",
-        ])}
+        rings={rucksRingsFromStats(matchStats.rucks)}
       />
       <PrCompareStatCard
         title="Set Piece"
@@ -808,11 +908,7 @@ function TeamStatsStack({
         title="Rucks"
         {...crest}
         rows={teamStatRows(matchStats.rucks)}
-        rings={percentageRingsFromSection(matchStats.rucks, "Ruck Success", [
-          "ruck_success_percentage",
-          "success_percentage",
-          "rucks_won_percentage",
-        ])}
+        rings={rucksRingsFromStats(matchStats.rucks)}
       />
     </div>
   );

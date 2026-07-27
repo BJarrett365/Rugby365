@@ -2,12 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MatchCmsInfoHeader } from "@/components/admin/MatchCmsInfoHeader";
-import { CARD_EVENT_TYPES, SCORING_EVENT_TYPES } from "@/lib/match-cms-data-shared";
+import {
+  CARD_EVENT_TYPES,
+  SCORING_EVENT_TYPES,
+  TMO_EVENT_TYPES,
+} from "@/lib/match-cms-data-shared";
 
 type SquadPlayer = {
   playerId: string;
   teamId: string;
   playerName: string;
+  jerseyNumber?: number | null;
 };
 
 type EventRow = {
@@ -143,6 +148,11 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
   const [subInId, setSubInId] = useState("");
   const [subMinute, setSubMinute] = useState("");
 
+  const [tmoTeamId, setTmoTeamId] = useState("");
+  const [tmoType, setTmoType] = useState<string>("tmo_review");
+  const [tmoMinute, setTmoMinute] = useState("");
+  const [tmoNote, setTmoNote] = useState("");
+
   const reload = useCallback(async () => {
     const [matchRes, eventsRes, squadRes] = await Promise.all([
       fetch(`/api/admin/matches/${fixtureId}`),
@@ -160,7 +170,8 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
     if (!goalTeamId && match.fixture?.homeTeamId) setGoalTeamId(match.fixture.homeTeamId);
     if (!cardTeamId && match.fixture?.homeTeamId) setCardTeamId(match.fixture.homeTeamId);
     if (!subTeamId && match.fixture?.homeTeamId) setSubTeamId(match.fixture.homeTeamId);
-  }, [fixtureId, goalTeamId, cardTeamId, subTeamId]);
+    if (!tmoTeamId && match.fixture?.homeTeamId) setTmoTeamId(match.fixture.homeTeamId);
+  }, [fixtureId, goalTeamId, cardTeamId, subTeamId, tmoTeamId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,6 +216,10 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
     [events],
   );
   const subs = useMemo(() => events.filter((e) => e.eventType === "substitution"), [events]);
+  const tmoEvents = useMemo(
+    () => events.filter((e) => (TMO_EVENT_TYPES as readonly string[]).includes(e.eventType)),
+    [events],
+  );
 
   async function createEvent(body: Record<string, unknown>) {
     setBusy(true);
@@ -281,7 +296,11 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
           <select className="cms-select" value={goalType} onChange={(e) => setGoalType(e.target.value)}>
             {SCORING_EVENT_TYPES.map((t) => (
               <option key={t} value={t}>
-                {t.replace(/_/g, " ")}
+                {t === "missed_conversion"
+                  ? "missed conversion"
+                  : t === "drop_goal"
+                    ? "drop goal"
+                    : t.replace(/_/g, " ")}
               </option>
             ))}
           </select>
@@ -322,6 +341,7 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
                 minute: Number(goalMinute || 0),
                 playerName: player?.playerName,
                 assistPlayerName: assist?.playerName,
+                jerseyNumber: player?.jerseyNumber ?? undefined,
               }).then(() => {
                 setGoalMinute("");
                 setGoalPlayerId("");
@@ -388,6 +408,7 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
                 playerId: cardPlayerId || null,
                 minute: Number(cardMinute || 0),
                 playerName: player?.playerName,
+                jerseyNumber: player?.jerseyNumber ?? undefined,
               }).then(() => {
                 setCardMinute("");
                 setCardPlayerId("");
@@ -472,6 +493,73 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
           }}
           busy={busy}
           showSub
+        />
+      </section>
+
+      <section className="cms-card--nested p-3 space-y-3">
+        <h4 className="cms-section-title text-sm m-0">TMO / TV referee</h4>
+        <p className="m-0 text-xs text-zinc-500">
+          Fourth official / television match official review. Publishes to public Match Animation signals.
+        </p>
+        <div className="match-cms-editor-form">
+          <select className="cms-select" value={tmoTeamId} onChange={(e) => setTmoTeamId(e.target.value)}>
+            <option value="">No team</option>
+            {teamOptions.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          <select className="cms-select" value={tmoType} onChange={(e) => setTmoType(e.target.value)}>
+            {TMO_EVENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t === "tmo_review"
+                  ? "TMO review"
+                  : t === "tmo_decision"
+                    ? "TMO decision"
+                    : "Decision overturned"}
+              </option>
+            ))}
+          </select>
+          <input
+            className="cms-input"
+            placeholder="Min"
+            inputMode="numeric"
+            value={tmoMinute}
+            onChange={(e) => setTmoMinute(e.target.value.replace(/[^\d]/g, ""))}
+          />
+          <input
+            className="cms-input"
+            placeholder="Note (optional)"
+            value={tmoNote}
+            onChange={(e) => setTmoNote(e.target.value)}
+          />
+          <button
+            type="button"
+            className="cms-btn cms-btn--primary"
+            disabled={busy || tmoMinute === ""}
+            onClick={() => {
+              void createEvent({
+                eventType: tmoType,
+                teamId: tmoTeamId || null,
+                minute: Number(tmoMinute || 0),
+                note: tmoNote.trim() || undefined,
+              }).then(() => {
+                setTmoMinute("");
+                setTmoNote("");
+              });
+            }}
+          >
+            Save
+          </button>
+        </div>
+        <EventTable
+          rows={tmoEvents}
+          teamName={teamName}
+          onDelete={(id) => {
+            void deleteEvent(id);
+          }}
+          busy={busy}
         />
       </section>
 

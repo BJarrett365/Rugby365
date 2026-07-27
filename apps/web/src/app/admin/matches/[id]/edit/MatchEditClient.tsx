@@ -11,6 +11,8 @@ import { MatchPlayerStatsEditor } from "@/components/admin/MatchPlayerStatsEdito
 import { MatchEventsEditor } from "@/components/admin/MatchEventsEditor";
 import { MatchForm, toDatetimeLocal } from "@/components/admin/MatchForm";
 import { MatchIssuesPanel } from "@/components/admin/MatchIssuesPanel";
+import { MatchTrackerSettingsPanel } from "@/components/admin/MatchTrackerSettingsPanel";
+import { MatchYoutubeMediaPanel } from "@/components/admin/MatchYoutubeMediaPanel";
 import { PageHeader } from "@/components/shell/PageHeader";
 
 type MatchDetail = {
@@ -22,6 +24,8 @@ type MatchDetail = {
     seasonId?: string | null;
     planetRugbyUrl?: string | null;
     sport365Url?: string | null;
+    watchalongYoutubeUrl?: string | null;
+    highlightsYoutubeUrl?: string | null;
     venueId?: string | null;
     attendance?: number | null;
     refereeId?: string | null;
@@ -196,6 +200,22 @@ export function MatchEditClient({ id }: { id: string }) {
         <div id="events" className="cms-card">
           <h3 className="cms-section-title">Match events</h3>
           <MatchEventsEditor fixtureId={id} />
+        </div>
+        <div id="tracker" className="cms-card">
+          <h3 className="cms-section-title">Match Animation / Tracker</h3>
+          <MatchTrackerSettingsPanel fixtureId={id} />
+        </div>
+        <div id="youtube" className="cms-card">
+          <h3 className="cms-section-title">Watchalong &amp; Match Highlights</h3>
+          <p className="mb-3 mt-0 text-xs text-zinc-500">
+            Manage each video independently. Saving one does not change the other.
+          </p>
+          <MatchYoutubeMediaPanel
+            fixtureId={id}
+            initialWatchalongUrl={detail.fixture.watchalongYoutubeUrl ?? null}
+            initialHighlightsUrl={detail.fixture.highlightsYoutubeUrl ?? null}
+            onSaved={reloadDetail}
+          />
         </div>
         <div className="cms-card">
           <h3 className="cms-section-title">Head to head stats</h3>

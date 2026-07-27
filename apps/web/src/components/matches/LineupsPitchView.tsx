@@ -1,14 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState, type CSSProperties } from "react";
 import type { MappedLineups, MappedLineupPlayer } from "@rugby365/import-sdk";
 import type { MatchEntityContext } from "@/lib/match-entity-context";
 import type { MatchRatingDisplay } from "@/lib/match-rating-service";
 import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
+import { teamAccentColor } from "@/lib/team-accent-color";
 import { PlayerProfileLink } from "./EntityProfileLinks";
 import { PlayerMatchPerformancePanel } from "./PlayerMatchPerformancePanel";
+import { LineupPitchField } from "./LineupPitchField";
+import { LineupPitchJersey } from "./LineupPitchJersey";
 
-/** Approximate rugby XV pitch positions (percent from top / left). */
+/**
+ * XV slots — pack toward top of pitch (opposition half), full-back at bottom.
+ * Matches broadcast-style lineup cards.
+ */
 const PITCH_SLOTS: Record<number, { top: string; left: string }> = {
   1: { top: "8%", left: "28%" },
   2: { top: "8%", left: "50%" },
@@ -16,20 +22,36 @@ const PITCH_SLOTS: Record<number, { top: string; left: string }> = {
   4: { top: "20%", left: "38%" },
   5: { top: "20%", left: "62%" },
   6: { top: "32%", left: "22%" },
-  7: { top: "32%", left: "78%" },
   8: { top: "32%", left: "50%" },
+  7: { top: "32%", left: "78%" },
   9: { top: "46%", left: "50%" },
-  10: { top: "58%", left: "50%" },
-  11: { top: "70%", left: "18%" },
+  10: { top: "56%", left: "50%" },
+  11: { top: "70%", left: "16%" },
   12: { top: "70%", left: "38%" },
   13: { top: "70%", left: "62%" },
-  14: { top: "70%", left: "82%" },
+  14: { top: "70%", left: "84%" },
   15: { top: "86%", left: "50%" },
 };
 
-function surname(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return parts[parts.length - 1] ?? name;
+function pitchSurname(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return name;
+  const particles = new Set(["van", "von", "de", "del", "da", "di", "le", "la", "du", "st", "der"]);
+  if (parts.length >= 3 && particles.has(parts[parts.length - 2]!.toLowerCase())) {
+    const short = `${parts[parts.length - 2]} ${parts[parts.length - 1]}`;
+    return short.length > 12 ? parts[parts.length - 1]! : short;
+  }
+  const last = parts[parts.length - 1]!;
+  return last.length > 11 ? `${last.slice(0, 10)}…` : last;
+}
+
+function slotForPlayer(player: MappedLineupPlayer, index: number): { top: string; left: string } {
+  if (player.jerseyNumber >= 1 && player.jerseyNumber <= 15 && PITCH_SLOTS[player.jerseyNumber]) {
+    return PITCH_SLOTS[player.jerseyNumber]!;
+  }
+  // Bench / unknown numbers: keep off the main XV grid
+  const col = index % 5;
+  return { top: `${92 + Math.floor(index / 5) * 4}%`, left: `${18 + col * 16}%` };
 }
 
 function ratingForPlayer(
@@ -182,6 +204,10 @@ export function LineupsPitchView({
 
   const pitchTeam = pitchSide === "home" ? lineups.home : lineups.away;
   const selected = ratings.find((r) => r.playerId === selectedId) ?? null;
+  const homeAccent = teamAccentColor(lineups.home.teamName, "home");
+  const awayAccent = teamAccentColor(lineups.away.teamName, "away");
+  const pitchAccent = pitchSide === "home" ? homeAccent : awayAccent;
+  const gradId = useId().replace(/:/g, "");
 
   const listProps = {
     entities,
@@ -219,6 +245,81 @@ export function LineupsPitchView({
         </div>
       )}
 
+      <section className="pr-lineup-pitch-wrap">
+        <div className="pr-lineup-pitch__tabs" role="tablist" aria-label="Pitch team">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pitchSide === "home"}
+            className={`pr-lineup-pitch__tab${pitchSide === "home" ? " pr-lineup-pitch__tab--active" : ""}`}
+            onClick={() => setPitchSide("home")}
+          >
+            {lineups.home.teamName}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pitchSide === "away"}
+            className={`pr-lineup-pitch__tab${pitchSide === "away" ? " pr-lineup-pitch__tab--active" : ""}`}
+            onClick={() => setPitchSide("away")}
+          >
+            {lineups.away.teamName}
+          </button>
+        </div>
+
+        <div
+          className={`pr-lineup-pitch pr-lineup-pitch--${pitchSide}`}
+          style={{ ["--pr-lineup-accent" as string]: pitchAccent } as CSSProperties}
+          aria-label={`${pitchTeam.teamName} starting lineup on pitch`}
+        >
+          <LineupPitchField />
+          {/* unique gradient namespace scope for jersey fills when both kits use SVG defs */}
+          <span className="sr-only" id={`lineup-pitch-${gradId}`}>
+            {pitchTeam.teamName}
+          </span>
+          {pitchTeam.starting.map((p, index) => {
+            const slot = slotForPlayer(p, index);
+            const rating = ratingForPlayer(p, ratingsByExternalId, ratingsByName);
+            const matchLabel =
+              ratingsPublished && rating?.rating != null && rating.ratingStatus !== "unavailable"
+                ? rating.ratingLabel
+                : rating?.careerRating != null
+                  ? String(rating.careerRating)
+                  : null;
+            const active = rating != null && selectedId === rating.playerId;
+            return (
+              <button
+                type="button"
+                key={p.providerId || `${p.jerseyNumber}-${p.name}`}
+                className={`pr-lineup-pitch__player${rating?.isRugby365Potm ? " pr-lineup-pitch__player--potm" : ""}${active ? " is-active" : ""}`}
+                style={{ top: slot.top, left: slot.left }}
+                onClick={() => setSelectedId(rating?.playerId ?? null)}
+                aria-label={`${p.jerseyNumber} ${p.name}`}
+              >
+                <LineupPitchJersey
+                  number={p.jerseyNumber}
+                  accent={pitchAccent}
+                  variant={pitchSide}
+                />
+                <span className="pr-lineup-pitch__surname">{pitchSurname(p.name)}</span>
+                {matchLabel ? (
+                  <span
+                    className="pr-lineup-pitch__rating"
+                    title={ratingsPublished ? "Match rating" : "Career rating"}
+                  >
+                    {matchLabel}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {selected && (
+        <PlayerMatchPerformancePanel rating={selected} onClose={() => setSelectedId(null)} />
+      )}
+
       <section className="pr-lineup-list">
         <div className="pr-lineup-list__cols">
           <div>
@@ -251,66 +352,6 @@ export function LineupsPitchView({
               {...listProps}
             />
           </div>
-        </div>
-      </section>
-
-      {selected && (
-        <PlayerMatchPerformancePanel rating={selected} onClose={() => setSelectedId(null)} />
-      )}
-
-      <section className="pr-lineup-pitch-wrap">
-        <div className="pr-lineup-pitch__tabs" role="tablist" aria-label="Pitch team">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pitchSide === "home"}
-            className={`pr-lineup-pitch__tab${pitchSide === "home" ? " pr-lineup-pitch__tab--active" : ""}`}
-            onClick={() => setPitchSide("home")}
-          >
-            {lineups.home.teamName}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={pitchSide === "away"}
-            className={`pr-lineup-pitch__tab${pitchSide === "away" ? " pr-lineup-pitch__tab--active" : ""}`}
-            onClick={() => setPitchSide("away")}
-          >
-            {lineups.away.teamName}
-          </button>
-        </div>
-
-        <div
-          className={`pr-lineup-pitch pr-lineup-pitch--${pitchSide}`}
-          aria-label={`${pitchTeam.teamName} formation`}
-        >
-          {pitchTeam.starting.map((p) => {
-            const slot = PITCH_SLOTS[p.jerseyNumber] ?? { top: "50%", left: "50%" };
-            const rating = ratingForPlayer(p, ratingsByExternalId, ratingsByName);
-            const matchLabel =
-              ratingsPublished && rating?.rating != null && rating.ratingStatus !== "unavailable"
-                ? rating.ratingLabel
-                : rating?.careerRating != null
-                  ? String(rating.careerRating)
-                  : null;
-            return (
-              <button
-                type="button"
-                key={p.providerId || `${p.jerseyNumber}-${p.name}`}
-                className={`pr-lineup-pitch__player${rating?.isRugby365Potm ? " pr-lineup-pitch__player--potm" : ""}`}
-                style={{ top: slot.top, left: slot.left }}
-                onClick={() => setSelectedId(rating?.playerId ?? null)}
-              >
-                <span className="pr-lineup-pitch__jersey">{p.jerseyNumber}</span>
-                <span className="pr-lineup-pitch__surname">{surname(p.name)}</span>
-                {matchLabel && (
-                  <span className="pr-lineup-pitch__rating" title={ratingsPublished ? "Match rating" : "Career rating"}>
-                    {matchLabel}
-                  </span>
-                )}
-              </button>
-            );
-          })}
         </div>
       </section>
     </div>

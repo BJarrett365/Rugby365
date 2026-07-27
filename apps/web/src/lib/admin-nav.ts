@@ -80,6 +80,14 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     matchPrefixes: ["/admin/keys/rugby-data"],
   },
   {
+    id: "supabase",
+    label: "Supabase",
+    value: "Supabase",
+    description: "Supabase project URL, anon key and service role for Auth, DB and Storage.",
+    href: "/admin/keys/supabase",
+    matchPrefixes: ["/admin/keys/supabase"],
+  },
+  {
     id: "wiki",
     label: "Wikipedia & Wikimedia",
     value: "Wiki",
@@ -243,6 +251,12 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       description: "Configure Rugby Data API base URL and token (P1 provider).",
       status: "Admin",
     },
+    {
+      title: "Supabase keys",
+      href: "/admin/keys/supabase",
+      description: "Configure Supabase project URL, anon key and service role.",
+      status: "Admin",
+    },
   ],
   wiki: [
     {
@@ -273,6 +287,12 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       title: "Rugby Data API keys",
       href: "/admin/keys/rugby-data",
       description: "Primary rugby data provider credentials for sync and mapping.",
+      status: "Admin",
+    },
+    {
+      title: "Supabase keys",
+      href: "/admin/keys/supabase",
+      description: "Supabase project credentials for Auth, Database and Storage.",
       status: "Admin",
     },
   ],

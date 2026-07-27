@@ -442,7 +442,13 @@ export async function applyPlayerImageAction(
         .where(eq(players.id, playerId))
         .returning();
 
-      return { image: row, player: updatedPlayer };
+      const mirrored = await maybeMirrorPlayerImageToSupabase({
+        playerId,
+        imageId,
+        sourceUrl: image.imageUrl,
+        matchContext: (row?.matchContext ?? {}) as Record<string, unknown>,
+      });
+      return { image: mirrored ?? row, player: updatedPlayer };
     }
 
     const [row] = await db
@@ -455,7 +461,14 @@ export async function applyPlayerImageAction(
       })
       .where(eq(playerImages.id, imageId))
       .returning();
-    return { image: row, player };
+
+    const mirrored = await maybeMirrorPlayerImageToSupabase({
+      playerId,
+      imageId,
+      sourceUrl: image.imageUrl,
+      matchContext: (row?.matchContext ?? {}) as Record<string, unknown>,
+    });
+    return { image: mirrored ?? row, player };
   }
 
   throw new Error(`Unknown action: ${action}`);
@@ -465,6 +478,49 @@ async function getPlayerRow(playerId: string) {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
   return player;
+}
+
+/** Best-effort Supabase Storage mirror; never fails the CMS image action. */
+async function maybeMirrorPlayerImageToSupabase(input: {
+  playerId: string;
+  imageId: string;
+  sourceUrl: string;
+  matchContext: Record<string, unknown>;
+}) {
+  try {
+    const { mirrorRemoteImageToSupabase } = await import("./supabase-live-service");
+    const mirrored = await mirrorRemoteImageToSupabase({
+      sourceUrl: input.sourceUrl,
+      playerId: input.playerId,
+      imageId: input.imageId,
+    });
+    if (!mirrored.publicUrl) return null;
+
+    const db = getDb();
+    const [row] = await db
+      .update(playerImages)
+      .set({
+        matchContext: {
+          ...input.matchContext,
+          supabase: {
+            publicUrl: mirrored.publicUrl,
+            path: mirrored.path,
+            mirroredAt: new Date().toISOString(),
+            sourceUrl: input.sourceUrl,
+          },
+        },
+        updatedAt: now(),
+      })
+      .where(eq(playerImages.id, input.imageId))
+      .returning();
+    return row ?? null;
+  } catch (error) {
+    console.warn(
+      `[supabase] player image mirror skipped for ${input.imageId}:`,
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
 }
 
 /**

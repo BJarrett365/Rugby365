@@ -127,8 +127,8 @@ export function formatSeasonPickerLabel(label: string, status: SeasonStatus): st
 
 export function seasonDateRange(startYear: number): { from: Date; to: Date } {
   return {
-    from: new Date(startYear, 7, 1, 0, 0, 0, 0),
-    to: new Date(startYear + 1, 6, 31, 23, 59, 59, 999),
+    from: new Date(startYear, 6, 1, 0, 0, 0, 0),
+    to: new Date(startYear + 1, 5, 30, 23, 59, 59, 999),
   };
 }
 

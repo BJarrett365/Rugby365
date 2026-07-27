@@ -520,6 +520,10 @@ export const fixtures = pgTable("fixtures", {
   period: text("period").notNull().default("not_started"),
   sport365Url: text("sport365_url"),
   planetRugbyUrl: text("planet_rugby_url"),
+  /** YouTube watch / embed / iframe paste for public Watchalong tab. */
+  watchalongYoutubeUrl: text("watchalong_youtube_url"),
+  /** YouTube watch / embed / iframe paste for public Match Highlights tab. */
+  highlightsYoutubeUrl: text("highlights_youtube_url"),
   externalMatchId: text("external_match_id"),
   providerSnapshot: jsonb("provider_snapshot"),
   refereeName: text("referee_name"),
@@ -530,6 +534,15 @@ export const fixtures = pgTable("fixtures", {
   refereeId: uuid("referee_id").references(() => referees.id),
   homeCoachId: uuid("home_coach_id").references(() => coaches.id),
   awayCoachId: uuid("away_coach_id").references(() => coaches.id),
+  /** Competition try-bonus points awarded to the home side (usually 0 or 1). */
+  homeTryBonusPoints: integer("home_try_bonus_points").notNull().default(0),
+  /** Competition try-bonus points awarded to the away side (usually 0 or 1). */
+  awayTryBonusPoints: integer("away_try_bonus_points").notNull().default(0),
+  /** Losing-bonus points awarded to the home side (usually 0 or 1). */
+  homeLosingBonusPoints: integer("home_losing_bonus_points").notNull().default(0),
+  /** Losing-bonus points awarded to the away side (usually 0 or 1). */
+  awayLosingBonusPoints: integer("away_losing_bonus_points").notNull().default(0),
+  bonusPointsComputedAt: timestamp("bonus_points_computed_at", { withTimezone: true }),
   round: text("round"),
   rugby365PotmPlayerId: uuid("rugby365_potm_player_id").references(() => players.id, {
     onDelete: "set null",
@@ -785,6 +798,33 @@ export const matchEvents = pgTable("match_events", {
   sourceProvider: text("source_provider").default("demo"),
   sequenceNo: integer("sequence_no").notNull(),
 });
+
+/** Public Match Animation + CMS Match Tracker settings (one row per fixture). */
+export const fixtureTrackerSettings = pgTable(
+  "fixture_tracker_settings",
+  {
+    fixtureId: uuid("fixture_id")
+      .primaryKey()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    trackerActivated: boolean("tracker_activated").notNull().default(false),
+    publicAnimationEnabled: boolean("public_animation_enabled").notNull().default(false),
+    publicReplayEnabled: boolean("public_replay_enabled").notNull().default(false),
+    mode: text("mode").notNull().default("manual"),
+    countdownHeld: boolean("countdown_held").notNull().default(false),
+    countdownCancelled: boolean("countdown_cancelled").notNull().default(false),
+    kickOffDelayed: boolean("kick_off_delayed").notNull().default(false),
+    revisedKickoffAt: timestamp("revised_kickoff_at", { withTimezone: true }),
+    kickOffConfirmedAt: timestamp("kick_off_confirmed_at", { withTimezone: true }),
+    matchStartedAt: timestamp("match_started_at", { withTimezone: true }),
+    matchStartedBy: text("match_started_by"),
+    fullTimeConfirmedAt: timestamp("full_time_confirmed_at", { withTimezone: true }),
+    fullTimeConfirmedBy: text("full_time_confirmed_by"),
+    previewMode: boolean("preview_mode").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("fixture_tracker_settings_public_idx").on(table.publicAnimationEnabled)],
+);
 
 export const rugbyLaws = pgTable("rugby_laws", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -1141,6 +1181,103 @@ export const playerMatchRatings = pgTable(
   },
   (table) => [
     uniqueIndex("player_match_ratings_fixture_player_unique").on(table.fixtureId, table.playerId),
+  ],
+);
+
+/** Per-match Rugby365 Coach Ratings (1–10) after full time. */
+export const coachMatchRatings = pgTable(
+  "coach_match_ratings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    side: text("side").notNull(),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "set null",
+    }),
+    rating: real("rating"),
+    ratingStatus: text("rating_status").notNull().default("unavailable"),
+    modelVersion: text("model_version").notNull().default("coach-match-v1"),
+    performanceBand: text("performance_band"),
+    ratingExplanation: text("rating_explanation"),
+    positiveImpacts: jsonb("positive_impacts").notNull().default([]),
+    deductions: jsonb("deductions").notNull().default([]),
+    matchContext: jsonb("match_context").notNull().default([]),
+    previousFixtureId: uuid("previous_fixture_id").references(() => fixtures.id, {
+      onDelete: "set null",
+    }),
+    previousRating: real("previous_rating"),
+    ratingChange: real("rating_change"),
+    performanceTrend: text("performance_trend"),
+    manualOverrideRating: real("manual_override_rating"),
+    manualOverrideReason: text("manual_override_reason"),
+    sourceProvider: text("source_provider").notNull().default("rugby365"),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }),
+    recalculatedAt: timestamp("recalculated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("coach_match_ratings_fixture_coach_unique").on(table.fixtureId, table.coachId),
+    index("coach_match_ratings_coach_idx").on(table.coachId),
+    index("coach_match_ratings_fixture_idx").on(table.fixtureId),
+  ],
+);
+
+/** Per-match Rugby365 Referee Ratings (1–10) after full time. */
+export const refereeMatchRatings = pgTable(
+  "referee_match_ratings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    refereeId: uuid("referee_id")
+      .notNull()
+      .references(() => referees.id, { onDelete: "cascade" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "set null",
+    }),
+    rating: real("rating"),
+    ratingStatus: text("rating_status").notNull().default("unavailable"),
+    modelVersion: text("model_version").notNull().default("referee-match-v1"),
+    performanceBand: text("performance_band"),
+    ratingExplanation: text("rating_explanation"),
+    positiveImpacts: jsonb("positive_impacts").notNull().default([]),
+    deductions: jsonb("deductions").notNull().default([]),
+    matchContext: jsonb("match_context").notNull().default([]),
+    previousFixtureId: uuid("previous_fixture_id").references(() => fixtures.id, {
+      onDelete: "set null",
+    }),
+    previousRating: real("previous_rating"),
+    ratingChange: real("rating_change"),
+    performanceTrend: text("performance_trend"),
+    manualOverrideRating: real("manual_override_rating"),
+    manualOverrideReason: text("manual_override_reason"),
+    sourceProvider: text("source_provider").notNull().default("rugby365"),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }),
+    recalculatedAt: timestamp("recalculated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("referee_match_ratings_fixture_referee_unique").on(
+      table.fixtureId,
+      table.refereeId,
+    ),
+    index("referee_match_ratings_referee_idx").on(table.refereeId),
+    index("referee_match_ratings_fixture_idx").on(table.fixtureId),
   ],
 );
 

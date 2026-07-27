@@ -66,6 +66,30 @@ export function IconPitch({ className = "w-3.5 h-3.5", title }: IconProps) {
   );
 }
 
+/** Pitch + play — Match Animation / Tracker action. */
+export function IconAnimation({ className = "w-3.5 h-3.5", title }: IconProps) {
+  return (
+    <svg className={`${base} ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden={title ? undefined : true}>
+      {title ? <title>{title}</title> : null}
+      <rect x="2" y="5" width="14" height="14" rx="1" />
+      <path d="M9 5v14" />
+      <circle cx="9" cy="12" r="1.75" />
+      <path d="M18 8.5v7l5-3.5-5-3.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Play button — Watchalong / Highlights YouTube media. */
+export function IconYoutube({ className = "w-3.5 h-3.5", title }: IconProps) {
+  return (
+    <svg className={`${base} ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden={title ? undefined : true}>
+      {title ? <title>{title}</title> : null}
+      <rect x="2" y="5" width="20" height="14" rx="3" />
+      <path d="M10 9.5v5l5-2.5-5-2.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconChat({ className = "w-3.5 h-3.5", title }: IconProps) {
   return (
     <svg className={`${base} ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden={title ? undefined : true}>

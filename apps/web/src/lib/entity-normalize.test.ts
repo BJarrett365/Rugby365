@@ -66,6 +66,15 @@ describe("teamDedupBaseName", () => {
     expect(teamDedupBaseName("Bath Rugby")).toBe("bath");
     expect(teamDedupBaseName("England U20s")).toBe("england");
   });
+
+  it("treats DHL Stormers XXIII as the same club as Stormers", () => {
+    expect(teamDedupKey("DHL Stormers XXIII")).toBe(teamDedupKey("Stormers"));
+    expect(teamDedupBaseName("DHL Stormers XXIII")).toBe("stormers");
+  });
+
+  it("does not merge Sale Sharks with Sharks after sponsor strip", () => {
+    expect(teamDedupKey("Sale Sharks")).not.toBe(teamDedupKey("Sharks"));
+  });
 });
 
 describe("entityNameQualityScore", () => {

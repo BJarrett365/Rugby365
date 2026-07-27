@@ -30,5 +30,14 @@ export type TeamStatPairRow = {
   away: number;
 };
 
-export const SCORING_EVENT_TYPES = ["try", "conversion", "penalty", "drop_goal"] as const;
+export const SCORING_EVENT_TYPES = [
+  "try",
+  "conversion",
+  "missed_conversion",
+  "penalty",
+  "drop_goal",
+] as const;
 export const CARD_EVENT_TYPES = ["yellow_card", "red_card"] as const;
+
+/** Television Match Official / fourth-official review actions (CMS + public animation). */
+export const TMO_EVENT_TYPES = ["tmo_review", "tmo_decision", "tmo_overturned"] as const;

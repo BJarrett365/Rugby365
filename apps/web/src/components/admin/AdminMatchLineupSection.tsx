@@ -60,13 +60,11 @@ function AdminLineupTable({
           <td className="text-center whitespace-nowrap">
             <AdminLineupRatingCell
               kind="career"
-              value={ratingsPublished ? (rating?.careerRating ?? null) : null}
+              value={rating?.careerRating ?? null}
               title={
-                !ratingsPublished
-                  ? "Published after full time"
-                  : rating?.careerRating != null
-                    ? `Career Rating ${rating.careerRating}`
-                    : "Career Rating unavailable"
+                rating?.careerRating != null
+                  ? `Career Rating ${rating.careerRating}`
+                  : "Career Rating unavailable"
               }
             />
           </td>
@@ -81,13 +79,21 @@ function AdminLineupTable({
           <td className="text-center whitespace-nowrap">
             <AdminLineupRatingCell
               kind="match"
-              value={ratingsPublished ? matchDisplayValue(rating) : null}
+              value={
+                ratingsPublished
+                  ? matchDisplayValue(rating)
+                  : rating?.formRating != null
+                    ? rating.formRating
+                    : null
+              }
               title={
-                !ratingsPublished
-                  ? "Published after full time"
-                  : rating?.rating != null
+                ratingsPublished
+                  ? rating?.rating != null
                     ? `Match Rating ${rating.rating}`
                     : "Match Rating unavailable"
+                  : rating?.formRating != null
+                    ? `Form Rating ${rating.formLabel}`
+                    : "Form unavailable until recent match ratings exist · Match publishes after full time"
               }
             />
           </td>
@@ -110,8 +116,11 @@ function AdminLineupTable({
                 Career
               </th>
               <th>Player</th>
-              <th className="w-16 text-center" title="Match Rating (1–10)">
-                Match
+              <th
+                className="w-16 text-center"
+                title={ratingsPublished ? "Match Rating (1–10)" : "Form from recent Match Ratings"}
+              >
+                {ratingsPublished ? "Match" : "Form"}
               </th>
             </tr>
           </thead>
@@ -155,11 +164,6 @@ export function AdminMatchLineupSection({
 
   useEffect(() => {
     let cancelled = false;
-    if (!ratingsPublished) {
-      setBundle(null);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     fetch(`/api/admin/matches/${fixtureId}/lineup-ratings`, { cache: "no-store" })
       .then((r) => r.json())
@@ -175,7 +179,7 @@ export function AdminMatchLineupSection({
     return () => {
       cancelled = true;
     };
-  }, [fixtureId, ratingsPublished]);
+  }, [fixtureId]);
 
   const ratingsByExternalId = useMemo(() => {
     const map = new Map<string, MatchRatingDisplay>();
@@ -203,7 +207,9 @@ export function AdminMatchLineupSection({
         <p className="cms-section-title text-sm m-0">Line-ups</p>
         {loading ? <span className="text-xs text-zinc-500">Loading ratings…</span> : null}
         {!ratingsPublished ? (
-          <span className="text-xs text-zinc-500">Career and match ratings publish after full time</span>
+          <span className="text-xs text-zinc-500">
+            Career shows before kick-off · Match ratings publish after full time
+          </span>
         ) : null}
       </div>
       {rugby365PotmName ? (

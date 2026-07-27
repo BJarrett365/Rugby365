@@ -4,9 +4,13 @@ import {
 } from "./table-types";
 
 /** Per-competition league scoring — not a single global Premiership default. */
+/** Domestic SA Currie Cup — same bonus structure as Premiership / URC. */
+const CURRIE_CUP_SCORING_RULES: RugbyScoringRules = DEFAULT_PREMIERSHIP_SCORING_RULES;
+
 const SCORING_BY_SLUG: Record<string, RugbyScoringRules> = {
   premiership: DEFAULT_PREMIERSHIP_SCORING_RULES,
   championship: DEFAULT_PREMIERSHIP_SCORING_RULES,
+  "currie-cup": CURRIE_CUP_SCORING_RULES,
   "top-14": {
     winPoints: 4,
     drawPoints: 2,
@@ -62,8 +66,15 @@ export function scoringRulesForCompetitionSlug(
   slug: string | null | undefined,
   competitionType?: string | null,
 ): RugbyScoringRules {
-  if (slug && SCORING_BY_SLUG[slug]) {
-    return SCORING_BY_SLUG[slug]!;
+  const key = (slug ?? "").trim().toLowerCase();
+  if (key && SCORING_BY_SLUG[key]) {
+    return SCORING_BY_SLUG[key]!;
+  }
+  // Provider slugs often append ids (currie-cup-pd9ro98v).
+  for (const known of Object.keys(SCORING_BY_SLUG)) {
+    if (key === known || key.startsWith(`${known}-`)) {
+      return SCORING_BY_SLUG[known]!;
+    }
   }
   if (competitionType === "international" || competitionType === "world_cup") {
     return INTERNATIONAL_DEFAULT;

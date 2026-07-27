@@ -105,7 +105,22 @@ export default function EditCoachPage() {
 
   return (
     <>
-      <PageHeader eyebrow="CMS" title="Edit coach" />
+      <PageHeader
+        eyebrow="CMS"
+        title="Edit coach"
+        actions={
+          values.slug ? (
+            <Link
+              href={`/coaches/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null
+        }
+      />
       <div className="cms-card mb-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-semibold m-0">Wikipedia</h3>
@@ -291,6 +306,16 @@ export default function EditCoachPage() {
           <button type="submit" disabled={saving} className="cms-btn cms-btn--primary">
             {saving ? "Saving…" : "Save"}
           </button>
+          {values.slug ? (
+            <Link
+              href={`/coaches/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
           <Link href="/admin/coaches" className="cms-btn cms-btn--secondary">
             Back
           </Link>

@@ -24,10 +24,11 @@ function candidates(rows: Array<Partial<SeasonCandidate> & { id: string; year: n
 }
 
 describe("domesticSeasonStartYearFromKickoff", () => {
-  it("uses Aug–Jul window", () => {
+  it("uses Jul–Jun window", () => {
+    expect(domesticSeasonStartYearFromKickoff("2025-07-01T12:00:00Z")).toBe(2025);
     expect(domesticSeasonStartYearFromKickoff("2025-08-01T12:00:00Z")).toBe(2025);
     expect(domesticSeasonStartYearFromKickoff("2026-02-01T12:00:00Z")).toBe(2025);
-    expect(domesticSeasonStartYearFromKickoff("2025-07-31T12:00:00Z")).toBe(2024);
+    expect(domesticSeasonStartYearFromKickoff("2025-06-30T12:00:00Z")).toBe(2024);
   });
 });
 
@@ -134,7 +135,7 @@ describe("resolveFixtureSeason — international / tournament", () => {
     expect(result.status).toBe("resolved");
   });
 
-  it("does not use club Aug–Jul for international kickoffs in Jan–Jul", () => {
+  it("does not use club Jul–Jun for international kickoffs in Jan–Jun", () => {
     const rows = candidates([{ id: "sn-2026", year: 2026, label: "2026" }]);
     // Club would map Feb 2026 → 2025 start year; international must stay 2026
     const result = resolveFixtureSeason({
@@ -149,9 +150,9 @@ describe("resolveFixtureSeason — international / tournament", () => {
 });
 
 describe("fixtureBelongsToSeason", () => {
-  it("includes July internationals in calendar year 2026 (not club Aug–Jul)", () => {
+  it("includes July internationals in calendar year 2026 (club Jul–Jun also starts in July)", () => {
     const july = new Date("2026-07-04T07:10:00.000Z");
-    expect(kickoffMatchesSeasonYear(july, 2026, "club")).toBe(false);
+    expect(kickoffMatchesSeasonYear(july, 2026, "club")).toBe(true);
     expect(kickoffMatchesSeasonYear(july, 2026, "international")).toBe(true);
     expect(
       fixtureBelongsToSeason({

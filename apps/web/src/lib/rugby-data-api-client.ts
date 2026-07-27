@@ -219,6 +219,19 @@ export async function fetchRugbyDataTeams() {
   });
 }
 
+/** Daily match list nested by tournament (Planet Rugby /fixtures-style feed). */
+export async function fetchRugbyDataMatchesByDate(
+  date: string,
+  type: "all" | "live" | "finished" | "fixtures" = "all",
+) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/matches",
+    query: { type, date },
+    entityType: "match",
+    externalId: date,
+  });
+}
+
 export async function fetchRugbyDataLeague(leagueId: string | number) {
   return rugbyDataApiFetch({
     path: `/api/v1/rugby-union/league/${leagueId}/header`,

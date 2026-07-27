@@ -13,28 +13,57 @@ import {
   type SdmsMatchPlayerStats,
   type SdmsMatchStatsBundle,
 } from "@rugby365/import-sdk";
-import { and, eq, or } from "drizzle-orm";
-import { competitions, competitionSeasons } from "@rugby365/db";
+import { and, asc, eq, inArray, or } from "drizzle-orm";
+import { competitions, competitionSeasons, fixtures, matchEvents, players } from "@rugby365/db";
 import { getDb } from "./db";
+import {
+  mapCmsEventsToPublicKeyEvents,
+  mapSdmsEventsToPublicKeyEvents,
+  type PublicKeyEvent,
+} from "./match-key-events";
 import { buildMatchEntityContext, type MatchEntityContext } from "./entity-lookup-service";
 import { findFixtureBySdmsMatchId, getFixtureById } from "./fixture-admin-service";
+import { resolveReferee } from "./entity-admin-service";
+import {
+  calculateAndPersistFixtureStaffMatchRatings,
+  listStaffMatchRatingsForFixture,
+  type StaffMatchRatingDisplay,
+} from "./staff-match-rating-service";
+import { ensureFixtureMatchCoaches } from "./match-coach-resolve-service";
+import { getFixtureBonusPoints } from "./fixture-bonus-points-service";
+import type { MatchBonusPoints } from "./match-bonus-points";
+import { resolveVenue } from "./venue-admin-service";
 import {
   listFixtureSquadPlayerIds,
   syncSdmsMatchEntityLinks,
   ensureSdmsProvidersRegistered,
 } from "./match-entity-sync-service";
 import {
+  attachCareerAndFormToLineupRatings,
   calculateAndPersistFixtureMatchRatings,
-  listCareerRatingsForPlayerIds,
   listMatchRatingsForFixture,
   type FixtureMatchRatingsBundle,
   type MatchRatingDisplay,
 } from "./match-rating-service";
 import { autoImportSdmsMatchToCms } from "./sdms-auto-import-service";
-import { CAREER_RATING_MODEL, MATCH_RATING_MODEL, isFixtureRatingsPublished } from "./match-rating-math";
+import { isFixtureRatingsPublished } from "./match-rating-math";
+import type { CmsEntityLink } from "./match-entity-context";
 import type { MatchTableContext } from "./match-table-context";
 
 export type { MatchTableContext } from "./match-table-context";
+
+export type MatchStaffLink = {
+  id: string;
+  name: string;
+  slug: string;
+  rating: StaffMatchRatingDisplay | null;
+};
+
+export type MatchVenueLink = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 export type MatchDetailPageData = {
   detail: SdmsMatchDetail;
@@ -49,12 +78,21 @@ export type MatchDetailPageData = {
     squadCount: number;
     entitySyncRan: boolean;
     autoImported: boolean;
+    watchalongYoutubeUrl: string | null;
+    highlightsYoutubeUrl: string | null;
   } | null;
   tableContext: MatchTableContext | null;
   entities: MatchEntityContext;
   matchRatings: MatchRatingDisplay[];
   rugby365PotmName: string | null;
   officialPotmName: string | null;
+  homeCoach: MatchStaffLink | null;
+  awayCoach: MatchStaffLink | null;
+  referee: MatchStaffLink | null;
+  venue: MatchVenueLink | null;
+  bonusPoints: MatchBonusPoints | null;
+  /** Key events for public Match Details (CMS preferred, Sub On/Off paired). */
+  keyEvents: PublicKeyEvent[];
 };
 
 async function resolveMatchTableContext(
@@ -233,70 +271,188 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       null)
     : null;
 
-  // Ensure Career Ratings appear on line-ups even when Match Ratings are missing.
-  let matchRatings = ratingsPublished ? ratingsBundle.ratings : [];
-  if (ratingsPublished) {
-    const careerTargets = new Set<string>([
-      ...squadPlayerIds,
-      ...Object.values(entities.playersByExternalId).map((p) => p.id),
-    ]);
-    const missingCareerIds = [...careerTargets].filter(
-      (id) => !matchRatings.some((r) => r.playerId === id),
-    );
-    if (missingCareerIds.length) {
-      const careerMap = await listCareerRatingsForPlayerIds(missingCareerIds);
-      const byId = new Map(
-        Object.values(entities.playersByExternalId).map((p) => [p.id, p] as const),
-      );
-      const byName = new Map(
-        Object.values(entities.playersByName).map((p) => [p.id, p] as const),
-      );
-      for (const playerId of missingCareerIds) {
-        const career = careerMap.get(playerId);
-        if (career == null) continue;
-        const link = byId.get(playerId) ?? byName.get(playerId);
-        matchRatings = [
-          ...matchRatings,
-          {
-            playerId,
-            externalPlayerId: link?.externalProviderId ?? null,
-            teamId: "",
-            playerName: link?.name ?? "Player",
-            jerseyNumber: null,
-            positionName: null,
-            squadRole: "starter",
-            minutesPlayed: 0,
-            careerRating: career,
-            careerModel: CAREER_RATING_MODEL,
-            rating: null,
-            matchModel: MATCH_RATING_MODEL,
-            ratingStatus: "unavailable",
-            performanceBand: null,
-            ratingLabel: "—",
-            ratingExplanation: null,
-            positiveImpacts: [],
-            deductions: [],
-            matchContext: [],
-            formRating: null,
-            formTrend: null,
-            formLabel: "—",
-            previousRating: null,
-            ratingChange: null,
-            performanceTrend: null,
-            performanceTrendLabel: "NEW",
-            selectionPreviousRole: null,
-            selectionCurrentRole: null,
-            selectionTrend: null,
-            selectionBadge: null,
-            isRugby365Potm: false,
-            isOfficialPotm: false,
-          },
-        ];
+  // Career (+ Form) before kick-off; Match + refreshed Career after full time.
+  const playerLinksById = new Map<string, CmsEntityLink>();
+  for (const link of Object.values(entities.playersByExternalId)) {
+    playerLinksById.set(link.id, link);
+  }
+  for (const link of Object.values(entities.playersByName)) {
+    playerLinksById.set(link.id, link);
+  }
+  const unresolvedSquadIds = squadPlayerIds.filter((id) => !playerLinksById.has(id));
+  if (unresolvedSquadIds.length > 0) {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: players.id,
+        slug: players.slug,
+        name: players.name,
+        externalProviderId: players.externalProviderId,
+      })
+      .from(players)
+      .where(inArray(players.id, unresolvedSquadIds));
+    for (const row of rows) {
+      playerLinksById.set(row.id, {
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        externalProviderId: row.externalProviderId,
+      });
+    }
+  }
+  const matchRatings = await attachCareerAndFormToLineupRatings(
+    ratingsPublished ? ratingsBundle.ratings : [],
+    [...playerLinksById.values()],
+  );
+
+  const tableContext = await resolveMatchTableContext(detail, cmsFixtureRow);
+
+  // Ensure coaches are linked (staff rows + curated head-coach defaults) for the header.
+  if (cmsFixtureRow) {
+    try {
+      await ensureFixtureMatchCoaches(cmsFixtureRow.id);
+    } catch {
+      // non-blocking
+    }
+  }
+
+  // Reload after match/staff rating calc so coach/ref FKs + ratings are fresh.
+  let fixtureWithStaff = cmsFixtureRow ? await getFixtureById(cmsFixtureRow.id) : null;
+  let staffBundle = cmsFixtureRow
+    ? await listStaffMatchRatingsForFixture(cmsFixtureRow.id)
+    : null;
+
+  let venue: MatchVenueLink | null = fixtureWithStaff?.venue
+    ? {
+        id: fixtureWithStaff.venue.id,
+        name: fixtureWithStaff.venue.name,
+        slug: fixtureWithStaff.venue.slug,
+      }
+    : null;
+
+  if (!venue && (detail.venue_name || fixtureWithStaff?.venueName)) {
+    const venueName = (detail.venue_name || fixtureWithStaff?.venueName || "").trim();
+    if (venueName) {
+      try {
+        const resolved = await resolveVenue({
+          name: venueName,
+          teamId: fixtureWithStaff?.homeTeamId ?? undefined,
+          createIfMissing: true,
+        });
+        if (resolved) {
+          venue = { id: resolved.id, name: resolved.name, slug: resolved.slug };
+          if (cmsFixtureRow && !fixtureWithStaff?.venueId) {
+            await getDb()
+              .update(fixtures)
+              .set({ venueId: resolved.id, venueName: resolved.name })
+              .where(eq(fixtures.id, cmsFixtureRow.id));
+          }
+        }
+      } catch {
+        // non-blocking
       }
     }
   }
 
-  const tableContext = await resolveMatchTableContext(detail, cmsFixtureRow);
+  if (!fixtureWithStaff?.referee) {
+    const sdmsRef =
+      detail.referee?.find((r) => /referee/i.test(r.role)) ?? detail.referee?.[0] ?? null;
+    if (sdmsRef?.name && cmsFixtureRow) {
+      const resolved = await resolveReferee({
+        name: sdmsRef.name,
+        externalProviderId: sdmsRef.id || undefined,
+        createIfMissing: true,
+      });
+      if (resolved) {
+        try {
+          const db = getDb();
+          await db
+            .update(fixtures)
+            .set({ refereeId: resolved.id })
+            .where(eq(fixtures.id, cmsFixtureRow.id));
+          if (ratingsPublished) {
+            await calculateAndPersistFixtureStaffMatchRatings(cmsFixtureRow.id);
+          }
+          fixtureWithStaff = await getFixtureById(cmsFixtureRow.id);
+          staffBundle = await listStaffMatchRatingsForFixture(cmsFixtureRow.id);
+        } catch {
+          // non-blocking
+        }
+      }
+    }
+  }
+
+  const coachRating = (coachId: string | null | undefined) =>
+    staffBundle?.coaches.find((c) => c.entityId === coachId) ?? null;
+
+  // Reload after coach ensure so newly linked Stormers / sponsor-alias coaches appear.
+  if (cmsFixtureRow) {
+    fixtureWithStaff = await getFixtureById(cmsFixtureRow.id);
+  }
+
+  const homeCoach: MatchStaffLink | null = fixtureWithStaff?.homeCoach
+    ? {
+        id: fixtureWithStaff.homeCoach.id,
+        name: fixtureWithStaff.homeCoach.name,
+        slug: fixtureWithStaff.homeCoach.slug,
+        rating: coachRating(fixtureWithStaff.homeCoach.id),
+      }
+    : null;
+  const awayCoach: MatchStaffLink | null = fixtureWithStaff?.awayCoach
+    ? {
+        id: fixtureWithStaff.awayCoach.id,
+        name: fixtureWithStaff.awayCoach.name,
+        slug: fixtureWithStaff.awayCoach.slug,
+        rating: coachRating(fixtureWithStaff.awayCoach.id),
+      }
+    : null;
+
+  let bonusPoints: MatchBonusPoints | null = null;
+  if (cmsFixtureRow) {
+    try {
+      bonusPoints = await getFixtureBonusPoints(cmsFixtureRow.id);
+    } catch {
+      bonusPoints = null;
+    }
+  }
+
+  const referee: MatchStaffLink | null = fixtureWithStaff?.referee
+    ? {
+        id: fixtureWithStaff.referee.id,
+        name: fixtureWithStaff.referee.name,
+        slug: fixtureWithStaff.referee.slug,
+        rating: staffBundle?.referee ?? null,
+      }
+    : null;
+
+  let keyEvents: PublicKeyEvent[] = mapSdmsEventsToPublicKeyEvents(detail.key_events ?? []);
+  if (cmsFixtureRow) {
+    try {
+      const cmsRows = await getDb()
+        .select({
+          id: matchEvents.id,
+          minute: matchEvents.minute,
+          second: matchEvents.second,
+          eventType: matchEvents.eventType,
+          teamId: matchEvents.teamId,
+          playerId: matchEvents.playerId,
+          payload: matchEvents.payload,
+        })
+        .from(matchEvents)
+        .where(eq(matchEvents.fixtureId, cmsFixtureRow.id))
+        .orderBy(asc(matchEvents.sequenceNo), asc(matchEvents.minute), asc(matchEvents.second));
+      if (cmsRows.length > 0) {
+        keyEvents = mapCmsEventsToPublicKeyEvents(
+          cmsRows.map((r) => ({
+            ...r,
+            payload: (r.payload ?? {}) as Record<string, unknown>,
+          })),
+        );
+      }
+    } catch {
+      /* keep SDMS-derived key events */
+    }
+  }
 
   return {
     detail,
@@ -312,6 +468,8 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
           squadCount: squadPlayerIds.length,
           entitySyncRan,
           autoImported,
+          watchalongYoutubeUrl: cmsFixtureRow.watchalongYoutubeUrl ?? null,
+          highlightsYoutubeUrl: cmsFixtureRow.highlightsYoutubeUrl ?? null,
         }
       : null,
     tableContext,
@@ -319,5 +477,11 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     matchRatings,
     rugby365PotmName,
     officialPotmName: ratingsBundle.officialPotmName,
+    homeCoach,
+    awayCoach,
+    referee,
+    bonusPoints,
+    venue,
+    keyEvents,
   };
 }

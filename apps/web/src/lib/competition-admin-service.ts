@@ -149,12 +149,20 @@ export async function getCompetitionById(id: string) {
 export async function getCompetitionBySlug(slug: string) {
   const db = getDb();
   const normalized = normalizeSlug(slug);
-  const [row] = await db
+  const [bySlug] = await db
     .select()
     .from(competitions)
     .where(eq(competitions.slug, normalized))
     .limit(1);
-  return row ?? null;
+  if (bySlug) return bySlug;
+
+  // Public / Planet Rugby URLs often use planet_rugby_slug (e.g. currie-cup).
+  const [byPlanetSlug] = await db
+    .select()
+    .from(competitions)
+    .where(eq(competitions.planetRugbySlug, normalized))
+    .limit(1);
+  return byPlanetSlug ?? null;
 }
 
 export async function getCompetitionDetail(id: string) {

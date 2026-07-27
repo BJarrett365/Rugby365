@@ -17,6 +17,36 @@ import { parseSeasonStartYear } from "./season-label-utils";
 
 const VIEWS: StandingView[] = ["overall", "home", "away"];
 
+/** SDMS often keys tables by calendar year even when CMS stores club labels (2026–27). */
+function sdmsSeasonKeyCandidates(label: string, year: number | null | undefined): string[] {
+  const keys: string[] = [];
+  const push = (value: string | null | undefined) => {
+    const trimmed = value?.trim();
+    if (!trimmed || keys.includes(trimmed)) return;
+    keys.push(trimmed);
+  };
+
+  const startYear = year ?? parseSeasonStartYear(label);
+  if (startYear != null) push(String(startYear));
+  push(label);
+  push(label.replace(/\u2013/g, "-"));
+  push(label.replace(/\u2013/g, "/"));
+
+  return keys;
+}
+
+async function fetchSdmsTableWithFallbacks(
+  compCode: string,
+  seasonKeys: string[],
+  view: SdmsView,
+) {
+  for (const key of seasonKeys) {
+    const rows = await fetchSdmsTable(compCode, key, view);
+    if (rows?.length) return rows;
+  }
+  return null;
+}
+
 export async function syncSeasonStandings(
   seasonId: string,
   views: StandingView[] = VIEWS,
@@ -36,11 +66,12 @@ export async function syncSeasonStandings(
 
   let rowsUpserted = 0;
   const syncedAt = new Date();
+  const seasonKeys = sdmsSeasonKeyCandidates(season.label, season.year);
 
   for (const view of views) {
-    const sdmsRows = await fetchSdmsTable(
+    const sdmsRows = await fetchSdmsTableWithFallbacks(
       competition.sdmsCompCode,
-      season.label,
+      seasonKeys,
       view as SdmsView,
     );
     if (!sdmsRows?.length) continue;

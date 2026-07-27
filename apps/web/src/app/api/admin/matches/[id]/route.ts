@@ -40,6 +40,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.planetRugbyUrl !== undefined
         ? { planetRugbyUrl: body.planetRugbyUrl ? String(body.planetRugbyUrl) : null }
         : {}),
+      ...(body.watchalongYoutubeUrl !== undefined
+        ? {
+            watchalongYoutubeUrl: body.watchalongYoutubeUrl
+              ? String(body.watchalongYoutubeUrl)
+              : null,
+          }
+        : {}),
+      ...(body.highlightsYoutubeUrl !== undefined
+        ? {
+            highlightsYoutubeUrl: body.highlightsYoutubeUrl
+              ? String(body.highlightsYoutubeUrl)
+              : null,
+          }
+        : {}),
       ...(body.externalMatchId !== undefined
         ? { externalMatchId: body.externalMatchId ? String(body.externalMatchId) : null }
         : {}),

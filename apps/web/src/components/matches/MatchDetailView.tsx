@@ -12,10 +12,18 @@ import type { MatchDetailTab } from "@/lib/match-detail-tabs";
 import { TeamProfileLinkFromContext } from "./EntityProfileLinks";
 import { LineupsPitchView } from "./LineupsPitchView";
 import { MatchEventTimelineStrip } from "./MatchEventTimelineStrip";
+import { MatchMomentumChart } from "./MatchMomentumChart";
 import { MatchCentreSidebar } from "./MatchCentreSidebar";
 import { MatchHeadToHeadPublic } from "./MatchHeadToHeadPublic";
 import { MatchLiveTablesPanel } from "./MatchLiveTablesPanel";
+import { MatchAnimationSection } from "./MatchAnimationSection";
+import { MatchYoutubeEmbedSection } from "./MatchYoutubeEmbedSection";
 import { TeamCrest } from "./TeamCrest";
+import { collectHeaderCards, resolveHalfTimeScore } from "@/lib/match-header-utils";
+import { buildMatchAnimationPublicPayload } from "@/lib/match-animation-public-service";
+import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
+import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability";
+import { youtubeEmbedSrc } from "@/lib/youtube-embed";
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso);
@@ -113,12 +121,49 @@ function MatchDetailEditPanel({
   );
 }
 
-function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetailPageData }) {
+function MatchDetailPanel({
+  tab,
+  data,
+  animationPayload,
+}: {
+  tab: MatchDetailTab;
+  data: MatchDetailPageData;
+  animationPayload: MatchAnimationPublicPayload | null;
+}) {
   const { detail, lineups, matchStats, playerStats, planetRugbyUrl, cmsFixture, entities } = data;
-  const keyEvents = detail.key_events ?? [];
   const mappedPlayers = Object.keys(entities.playersByExternalId).length;
   const homeImageUrl = entities.homeTeam?.imageUrl ?? detail.home_team_icon ?? null;
   const awayImageUrl = entities.awayTeam?.imageUrl ?? detail.away_team_icon ?? null;
+
+  if (tab === "animation") {
+    if (!animationPayload) {
+      return <p className="match-detail-empty">Match animation is temporarily unavailable.</p>;
+    }
+    return <MatchAnimationSection payload={animationPayload} />;
+  }
+
+  if (tab === "watchalong") {
+    return (
+      <MatchYoutubeEmbedSection
+        title="Watchalong"
+        description="Live or full-match watchalong for this fixture."
+        youtubeUrl={cmsFixture?.watchalongYoutubeUrl}
+        emptyMessage="No watchalong has been added for this match yet."
+        autoplay
+      />
+    );
+  }
+
+  if (tab === "highlights") {
+    return (
+      <MatchYoutubeEmbedSection
+        title="Match Highlights"
+        description="Highlights package for this fixture."
+        youtubeUrl={cmsFixture?.highlightsYoutubeUrl}
+        emptyMessage="No highlights have been added for this match yet."
+      />
+    );
+  }
 
   if (tab === "stats") {
     return (
@@ -203,6 +248,7 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
         scoringDetail={detail.detail as Record<string, unknown> | undefined}
         matchStats={matchStats}
         entities={entities}
+        bonusPoints={data.bonusPoints}
       />
       <MatchSummaryPanel
         homeName={detail.home_team_name}
@@ -211,7 +257,11 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
         awayImageUrl={awayImageUrl}
         matchStats={matchStats}
       />
-      <KeyEventsPanel events={keyEvents} homeTeamId={detail.home_team_id} entities={entities} />
+      <KeyEventsPanel
+        events={data.keyEvents}
+        homeTeamId={detail.home_team_id}
+        entities={entities}
+      />
       {(data.rugby365PotmName || data.officialPotmName) && (
         <section className="match-detail-section">
           <h2 className="match-detail-section__heading">Player of the Match</h2>
@@ -233,19 +283,47 @@ function MatchDetailPanel({ tab, data }: { tab: MatchDetailTab; data: MatchDetai
   );
 }
 
-export function MatchDetailView({
+export async function MatchDetailView({
   data,
   activeTab = "details",
 }: {
   data: MatchDetailPageData;
   activeTab?: MatchDetailTab;
 }) {
-  const { detail, kickoffAt, entities } = data;
-  const mainRef = detail.referee?.find((r) => /referee/i.test(r.role)) ?? detail.referee?.[0];
+  const {
+    detail,
+    kickoffAt,
+    entities,
+    matchStats,
+    homeCoach,
+    awayCoach,
+    referee,
+    venue,
+    cmsFixture,
+  } = data;
   const teamsLabel = `${detail.home_team_name} v ${detail.away_team_name}`;
   const homeImageUrl = entities.homeTeam?.imageUrl ?? detail.home_team_icon ?? null;
   const awayImageUrl = entities.awayTeam?.imageUrl ?? detail.away_team_icon ?? null;
   const keyEvents = detail.key_events ?? [];
+  const halfTime = resolveHalfTimeScore(keyEvents);
+  const cards = collectHeaderCards(detail, detail.home_team_id);
+  const homeCards = cards.filter((c) => c.side === "home");
+  const awayCards = cards.filter((c) => c.side === "away");
+  const refName = referee?.name ?? detail.referee?.find((r) => /referee/i.test(r.role))?.name ?? detail.referee?.[0]?.name;
+  const stadiumName = venue?.name ?? detail.venue_name ?? null;
+
+  const hasHighlights = Boolean(youtubeEmbedSrc(cmsFixture?.highlightsYoutubeUrl));
+  const hasWatchalong = Boolean(youtubeEmbedSrc(cmsFixture?.watchalongYoutubeUrl));
+  // YouTube tabs are CMS-gated — ignore deep links when that field is empty.
+  const resolvedTab =
+    (activeTab === "highlights" && !hasHighlights) ||
+    (activeTab === "watchalong" && !hasWatchalong)
+      ? "details"
+      : activeTab;
+
+  // Light availability for tab badge on every render; full payload only for animation tab (lazy engine).
+  const animationPayload = await buildMatchAnimationPublicPayload(data);
+  const animationBadge: MatchAnimationTabBadge = animationPayload.availability.tabBadge;
 
   return (
     <div className="pr-match-centre match-detail">
@@ -282,14 +360,27 @@ export function MatchDetailView({
                 {" "}
                 [{detail.competition_name}]
                 {kickoffAt ? ` · ${formatKickoff(kickoffAt)}` : ""}
-                {detail.venue_name ? ` · ${detail.venue_name}` : ""}
+                {stadiumName ? (
+                  <>
+                    {" · "}
+                    {venue ? (
+                      <Link href={`/venues/${venue.slug}`} className="pr-mc-header__venue-link">
+                        {stadiumName}
+                      </Link>
+                    ) : (
+                      stadiumName
+                    )}
+                  </>
+                ) : null}
                 {" · "}
                 {statusLabel(detail.status)}
               </span>
             </h1>
             <div className="pr-mc-header__board">
               <div className="pr-mc-header__team">
-                <TeamCrest name={detail.home_team_name} imageUrl={homeImageUrl} size="lg" />
+                <span className="pr-mc-header__crest-oval">
+                  <TeamCrest name={detail.home_team_name} imageUrl={homeImageUrl} size="md" />
+                </span>
                 <span className="pr-mc-header__name">
                   <TeamProfileLinkFromContext
                     name={detail.home_team_name}
@@ -298,16 +389,33 @@ export function MatchDetailView({
                     side="home"
                   />
                 </span>
+                {homeCards.length > 0 ? (
+                  <div className="pr-mc-header__cards" aria-label="Home cards">
+                    {homeCards.map((c, i) => (
+                      <span
+                        key={`h-${c.type}-${c.minute}-${i}`}
+                        className={`pr-mc-header__card pr-mc-header__card--${c.type}`}
+                        title={`${c.type === "red" ? "Red" : "Yellow"} card${c.minute ? ` ${c.minute}'` : ""}${c.playerName ? ` · ${c.playerName}` : ""}`}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="pr-mc-header__centre">
                 <span className="pr-mc-header__status">{statusLabel(detail.status)}</span>
                 <span className="pr-mc-header__score">
                   {detail.home_team_score} – {detail.away_team_score}
                 </span>
-                <MatchEventTimelineStrip events={keyEvents} homeTeamId={detail.home_team_id} />
+                {halfTime ? (
+                  <span className="pr-mc-header__ht">
+                    HT {halfTime.home}–{halfTime.away}
+                  </span>
+                ) : null}
               </div>
               <div className="pr-mc-header__team">
-                <TeamCrest name={detail.away_team_name} imageUrl={awayImageUrl} size="lg" />
+                <span className="pr-mc-header__crest-oval">
+                  <TeamCrest name={detail.away_team_name} imageUrl={awayImageUrl} size="md" />
+                </span>
                 <span className="pr-mc-header__name">
                   <TeamProfileLinkFromContext
                     name={detail.away_team_name}
@@ -316,16 +424,115 @@ export function MatchDetailView({
                     side="away"
                   />
                 </span>
+                {awayCards.length > 0 ? (
+                  <div className="pr-mc-header__cards" aria-label="Away cards">
+                    {awayCards.map((c, i) => (
+                      <span
+                        key={`a-${c.type}-${c.minute}-${i}`}
+                        className={`pr-mc-header__card pr-mc-header__card--${c.type}`}
+                        title={`${c.type === "red" ? "Red" : "Yellow"} card${c.minute ? ` ${c.minute}'` : ""}${c.playerName ? ` · ${c.playerName}` : ""}`}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
-            {mainRef?.name ? (
-              <p className="pr-mc-header__meta">Ref: {mainRef.name}</p>
+
+            <MatchEventTimelineStrip
+              events={keyEvents}
+              homeTeamId={detail.home_team_id}
+              homeTeamName={detail.home_team_name}
+              awayTeamName={detail.away_team_name}
+              halfTimeScore={halfTime}
+            />
+
+            <MatchMomentumChart
+              matchStats={matchStats}
+              events={keyEvents}
+              homeTeamId={detail.home_team_id}
+              homeName={detail.home_team_name}
+              awayName={detail.away_team_name}
+              homeImageUrl={homeImageUrl}
+              awayImageUrl={awayImageUrl}
+              matchStatus={detail.status}
+            />
+
+            {(homeCoach || awayCoach || refName) ? (
+              <div className="pr-mc-header__footer">
+                <div className="pr-mc-header__footer-side pr-mc-header__footer-side--home">
+                  {homeCoach ? (
+                    <Link href={`/coaches/${homeCoach.slug}`} className="pr-mc-header__footer-link">
+                      <span className="pr-mc-header__footer-label">Coach</span>
+                      <span className="pr-mc-header__footer-name">{homeCoach.name}</span>
+                      {homeCoach.rating?.ratingLabel && homeCoach.rating.ratingLabel !== "—" ? (
+                        <span
+                          className="pr-mc-header__staff-rating"
+                          title={homeCoach.rating.ratingExplanation ?? undefined}
+                        >
+                          {homeCoach.rating.ratingLabel}
+                        </span>
+                      ) : null}
+                    </Link>
+                  ) : (
+                    <span className="pr-mc-header__footer-empty" />
+                  )}
+                </div>
+                <div className="pr-mc-header__footer-ref">
+                  {refName ? (
+                    <>
+                      <span className="pr-mc-header__footer-label">Ref</span>
+                      {referee ? (
+                        <Link href={`/referees/${referee.slug}`} className="pr-mc-header__footer-link">
+                          <span className="pr-mc-header__footer-name">{referee.name}</span>
+                          {referee.rating?.ratingLabel && referee.rating.ratingLabel !== "—" ? (
+                            <span
+                              className="pr-mc-header__staff-rating"
+                              title={referee.rating.ratingExplanation ?? undefined}
+                            >
+                              {referee.rating.ratingLabel}
+                            </span>
+                          ) : null}
+                        </Link>
+                      ) : (
+                        <span className="pr-mc-header__footer-name">{refName}</span>
+                      )}
+                    </>
+                  ) : null}
+                </div>
+                <div className="pr-mc-header__footer-side pr-mc-header__footer-side--away">
+                  {awayCoach ? (
+                    <Link href={`/coaches/${awayCoach.slug}`} className="pr-mc-header__footer-link">
+                      <span className="pr-mc-header__footer-label">Coach</span>
+                      <span className="pr-mc-header__footer-name">{awayCoach.name}</span>
+                      {awayCoach.rating?.ratingLabel && awayCoach.rating.ratingLabel !== "—" ? (
+                        <span
+                          className="pr-mc-header__staff-rating"
+                          title={awayCoach.rating.ratingExplanation ?? undefined}
+                        >
+                          {awayCoach.rating.ratingLabel}
+                        </span>
+                      ) : null}
+                    </Link>
+                  ) : (
+                    <span className="pr-mc-header__footer-empty" />
+                  )}
+                </div>
+              </div>
             ) : null}
           </header>
 
-          <MatchDetailTabs activeTab={activeTab} />
+          <MatchDetailTabs
+            activeTab={resolvedTab}
+            animationBadge={animationBadge}
+            hasWatchalong={hasWatchalong}
+            hasHighlights={hasHighlights}
+          />
 
-          <MatchDetailPanel tab={activeTab} data={data} />
+          <MatchDetailPanel
+            tab={resolvedTab}
+            data={data}
+            animationPayload={resolvedTab === "animation" ? animationPayload : null}
+          />
         </div>
 
         <MatchCentreSidebar

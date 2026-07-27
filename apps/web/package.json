@@ -17,6 +17,7 @@
     "@rugby365/match-operator-agent": "*",
     "@rugby365/match-spec": "*",
     "@rugby365/shared": "*",
+    "@supabase/supabase-js": "^2.110.8",
     "drizzle-orm": "^0.44.2",
     "next": "15.2.4",
     "react": "^19.0.0",

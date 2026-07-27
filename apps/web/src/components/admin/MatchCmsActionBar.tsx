@@ -3,12 +3,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
+  IconAnimation,
   IconChart,
   IconChat,
   IconLink,
   IconPitch,
   IconTrend,
   IconUsers,
+  IconYoutube,
 } from "@/components/admin/MatchCmsIcons";
 
 type Action = {
@@ -33,6 +35,8 @@ export function MatchCmsActionBar({
     { label: "Match stats", href: edit("#team-stats"), icon: <IconChart /> },
     { label: "Player stats", href: edit("#player-stats"), icon: <IconTrend /> },
     { label: "Events", href: edit("#events"), icon: <IconPitch /> },
+    { label: "Match Animation", href: edit("#tracker"), icon: <IconAnimation /> },
+    { label: "YouTube media", href: edit("#youtube"), icon: <IconYoutube /> },
     {
       label: "Commentary",
       href: slug ? `/matches/${slug}/commentary` : edit("#commentary"),

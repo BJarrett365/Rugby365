@@ -71,12 +71,24 @@ export function MatchDatePicker({
   const selectedMonth = selectedDate.getMonth();
 
   const stripDays = useMemo(() => {
+    // Public month carousel: show every day in the selected month.
+    if (showMonthStrip) {
+      const year = selectedDate.getFullYear();
+      const month = selectedDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days: string[] = [];
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        days.push(dateKeyLocal(new Date(year, month, day)));
+      }
+      return days;
+    }
+
     const days: string[] = [];
-    for (let i = -stripRadius; i <= stripRadius; i++) {
+    for (let i = -stripRadius; i <= stripRadius; i += 1) {
       days.push(dateKeyLocal(addDays(selectedDate, i)));
     }
     return days;
-  }, [selectedDate, stripRadius]);
+  }, [selectedDate, stripRadius, showMonthStrip]);
 
   const closeCalendar = useCallback(() => setCalendarOpen(false), []);
 

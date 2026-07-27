@@ -23,6 +23,8 @@ export default function RugbyDataApiKeysPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncDate, setSyncDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -100,6 +102,28 @@ export default function RugbyDataApiKeysPage() {
       setConfig(data);
       if (data.baseUrl) setBaseUrl(data.baseUrl);
     }
+  }
+
+  async function syncDay() {
+    setSyncing(true);
+    setError("");
+    setMessage("");
+    const res = await fetch("/api/admin/integrations/rugby-data", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "sync-day", date: syncDate, syncEvents: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? data.message ?? "Day sync failed");
+    } else {
+      setMessage(
+        `Synced ${data.dateKey}: ${data.matched}/${data.listed} matched, ${data.scoresUpdated} scores, ${data.statusesUpdated} statuses, ${data.eventsImported} events` +
+          (data.unmatched ? `, ${data.unmatched} unmatched` : "") +
+          (data.errors?.length ? ` (${data.errors.length} errors)` : ""),
+      );
+    }
+    setSyncing(false);
   }
 
   return (
@@ -229,6 +253,32 @@ export default function RugbyDataApiKeysPage() {
                 </button>
               ) : null}
             </div>
+
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 space-y-3">
+              <h2 className="text-zinc-200 text-sm m-0">Day sync (scores + events)</h2>
+              <p className="text-xs text-zinc-500 m-0">
+                Pulls the Rugby Data daily match list and updates CMS scores/status. Events import when
+                the fixture has no SDMS timeline. Also runs automatically when the public fixtures
+                schedule for that date is loaded.
+              </p>
+              <label className="block text-sm">
+                <span className="text-zinc-400">Date</span>
+                <input
+                  type="date"
+                  className="cms-input mt-1 w-full font-mono text-sm"
+                  value={syncDate}
+                  onChange={(e) => setSyncDate(e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary"
+                disabled={syncing || !syncDate}
+                onClick={syncDay}
+              >
+                {syncing ? "Syncing…" : "Sync day from Rugby Data"}
+              </button>
+            </div>
           </>
         )}
 
@@ -240,8 +290,9 @@ export default function RugbyDataApiKeysPage() {
         <h2 className="text-zinc-200 text-base mt-0">Used by</h2>
         <ul className="m-0 pl-4 space-y-1">
           <li>Primary source for competitions, teams and fixtures</li>
+          <li>Day sync for match scores/status (and events when SDMS timeline is empty)</li>
           <li>Match scores, lineups, player/team stats and tables</li>
-          <li>Future sync and mapping review (P1 over SDMS / Sport365)</li>
+          <li>Mapping review (P1 over SDMS / Sport365)</li>
         </ul>
       </div>
     </>

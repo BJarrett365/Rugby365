@@ -66,6 +66,8 @@ export type FixtureInput = {
   status?: string;
   sport365Url?: string | null;
   planetRugbyUrl?: string | null;
+  watchalongYoutubeUrl?: string | null;
+  highlightsYoutubeUrl?: string | null;
   externalMatchId?: string | null;
   venueId?: string | null;
   attendance?: number | null;
@@ -679,6 +681,12 @@ export async function updateFixture(id: string, input: Partial<FixtureInput>) {
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.sport365Url !== undefined ? { sport365Url } : {}),
       ...(input.planetRugbyUrl !== undefined ? { planetRugbyUrl } : {}),
+      ...(input.watchalongYoutubeUrl !== undefined
+        ? { watchalongYoutubeUrl: input.watchalongYoutubeUrl?.trim() || null }
+        : {}),
+      ...(input.highlightsYoutubeUrl !== undefined
+        ? { highlightsYoutubeUrl: input.highlightsYoutubeUrl?.trim() || null }
+        : {}),
       externalMatchId,
       ...(input.venueId !== undefined ? { venueId: input.venueId || null, venueName } : {}),
       ...(input.attendance !== undefined ? { attendance: input.attendance } : {}),

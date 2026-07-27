@@ -311,14 +311,17 @@ export function FixturesScheduleBoard({
         })),
       );
       setLiveCount((data.liveCount as number) ?? 0);
-      setDatesWithMatches(new Set((data.datesWithMatches as string[]) ?? []));
+      const nextDates = (data.datesWithMatches as string[]) ?? [];
+      if (nextDates.length) {
+        mergeFixtureDates(nextDates);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load fixtures");
       setFixtures([]);
     } finally {
       setLoading(false);
     }
-  }, [browserTimeZone]);
+  }, [browserTimeZone, mergeFixtureDates]);
 
   useEffect(() => {
     void load(selectedDateKey);
@@ -353,12 +356,7 @@ export function FixturesScheduleBoard({
     [competitions],
   );
 
-  const matchDateKeys = useMemo(() => {
-    if (datesWithMatches.has(selectedDateKey)) return datesWithMatches;
-    const keys = new Set(datesWithMatches);
-    keys.add(selectedDateKey);
-    return keys;
-  }, [datesWithMatches, selectedDateKey]);
+  const matchDateKeys = useMemo(() => datesWithMatches, [datesWithMatches]);
 
   const competitionOptions = useMemo(() => {
     const options = new Map<string, string>();

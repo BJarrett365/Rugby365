@@ -11,11 +11,11 @@ function teamInitials(name: string): string {
   return name.trim().slice(0, 2).toUpperCase() || "?";
 }
 
-const SIZE_PX = { sm: 28, md: 40, lg: 56 } as const;
+const SIZE_PX = { xs: 18, sm: 22, md: 32, lg: 44 } as const;
 
 /**
  * Team crest — Planet Rugby circular badge.
- * Decorative by default when adjacent team name is present.
+ * Sized via a fixed wrapper so MediaImage's 100% fill cannot blow up the layout.
  */
 export function TeamCrest({
   name,
@@ -25,7 +25,7 @@ export function TeamCrest({
 }: {
   name: string;
   imageUrl?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   /** When true, crest is meaningful alone and gets an alt name. */
   labelled?: boolean;
 }) {
@@ -35,27 +35,29 @@ export function TeamCrest({
 
   if (imageUrl) {
     return (
-      <MediaImage
-        src={imageUrl}
-        alt={labelled ? `${name} crest` : ""}
-        decorative={!labelled}
-        width={px}
-        height={px}
-        objectFit="contain"
-        className={className}
-        sizes={`${px}px`}
-        fallback={
-          <span className={`${className} pr-team-crest--placeholder`} aria-hidden>
-            {initials}
-          </span>
-        }
-      />
+      <span className={className} style={{ width: px, height: px }}>
+        <MediaImage
+          src={imageUrl}
+          alt={labelled ? `${name} crest` : ""}
+          decorative={!labelled}
+          width={px}
+          height={px}
+          objectFit="contain"
+          sizes={`${px}px`}
+          fallback={
+            <span className="pr-team-crest__fallback" aria-hidden>
+              {initials}
+            </span>
+          }
+        />
+      </span>
     );
   }
 
   return (
     <span
       className={`${className} pr-team-crest--placeholder`}
+      style={{ width: px, height: px }}
       aria-hidden={!labelled}
       role={labelled ? "img" : undefined}
       aria-label={labelled ? `${name} crest` : undefined}

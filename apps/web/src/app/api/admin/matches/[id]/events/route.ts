@@ -35,6 +35,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
               ...(body.assistPlayerName ? { assistPlayerName: String(body.assistPlayerName) } : {}),
               ...(body.playerOutName ? { playerOutName: String(body.playerOutName) } : {}),
               ...(body.playerInName ? { playerInName: String(body.playerInName) } : {}),
+              ...(body.note ? { note: String(body.note) } : {}),
+              ...(body.jerseyNumber !== undefined && body.jerseyNumber !== null && body.jerseyNumber !== ""
+                ? { jerseyNumber: Number(body.jerseyNumber) }
+                : {}),
             },
     });
     const events = await listFixtureEventsAdmin(id);

@@ -197,6 +197,18 @@ export default function EditRefereePage() {
         eyebrow="CMS"
         title={detail.referee.name}
         description={`${detail.stats.matchCount} fixtures · ${detail.stats.yellowCardCount} yellow · ${detail.stats.redCardCount} red`}
+        actions={
+          values.slug ? (
+            <Link
+              href={`/referees/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null
+        }
       />
 
       <RefereeFixturesPanel
@@ -395,6 +407,16 @@ export default function EditRefereePage() {
           <button type="submit" disabled={saving} className="cms-btn cms-btn--primary">
             {saving ? "Saving…" : "Save"}
           </button>
+          {values.slug ? (
+            <Link
+              href={`/referees/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
           <Link href="/admin/referees" className="cms-btn cms-btn--secondary">
             Back
           </Link>

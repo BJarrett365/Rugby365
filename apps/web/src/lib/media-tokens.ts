@@ -56,6 +56,7 @@ export const MEDIA_OPTIMIZED_HOST_SUFFIXES = [
   "images.ps-aws.com",
   "d3gbf3ykm8gp5c.cloudfront.net",
   "planetrugby.com",
+  "supabase.co",
   "upload.wikimedia.org",
   "commons.wikimedia.org",
   "wikipedia.org",

@@ -45,6 +45,7 @@ export type CoachingStaffRow = {
   coachSlug: string;
   teamId: string;
   teamName: string;
+  teamSlug: string;
   seasonId: string | null;
   seasonLabel: string | null;
   role: CoachingRole;
@@ -69,6 +70,7 @@ function mapStaffRow(row: {
   coachName: string;
   coachSlug: string;
   teamName: string;
+  teamSlug: string;
   seasonLabel: string | null;
 }): CoachingStaffRow {
   const role = normalizeCoachingRole(row.assignment.role);
@@ -79,6 +81,7 @@ function mapStaffRow(row: {
     coachSlug: row.coachSlug,
     teamId: row.assignment.teamId,
     teamName: row.teamName,
+    teamSlug: row.teamSlug,
     seasonId: row.assignment.seasonId,
     seasonLabel: row.seasonLabel,
     role,
@@ -100,6 +103,7 @@ async function selectStaffRows(whereClause?: ReturnType<typeof eq>) {
       coachName: coaches.name,
       coachSlug: coaches.slug,
       teamName: teams.name,
+      teamSlug: teams.slug,
       seasonLabel: competitionSeasons.label,
     })
     .from(teamCoachingStaff)

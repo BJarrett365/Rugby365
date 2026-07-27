@@ -5,6 +5,7 @@ import {
   saveRugbyDataApiCredentials,
 } from "@/lib/integration-settings-service";
 import { testRugbyDataApiConnection } from "@/lib/rugby-data-api-client";
+import { syncRugbyDataFixturesForDate } from "@/lib/rugby-data-day-sync-service";
 import { apiErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
@@ -43,6 +44,17 @@ export async function PATCH(req: Request) {
         ok: true,
         message: `${result.message} (${result.responseTimeMs}ms)`,
       });
+    }
+
+    if (body.action === "sync-day") {
+      const dateKey =
+        typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date)
+          ? body.date
+          : new Date().toISOString().slice(0, 10);
+      const result = await syncRugbyDataFixturesForDate(dateKey, {
+        syncEvents: body.syncEvents !== false,
+      });
+      return NextResponse.json({ ok: true, ...result });
     }
 
     const apiToken = typeof body.apiToken === "string" ? body.apiToken : undefined;

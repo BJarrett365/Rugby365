@@ -74,17 +74,17 @@ export function PrCompareStatCard({
         <h3 className="pr-compare-card__title">{title}</h3>
         <TeamCrest name={awayName} imageUrl={awayImageUrl} size="sm" />
       </header>
-      {rings && rings.length > 0 && (
-        <div className="pr-compare-card__rings">
-          {rings.map((ring) => (
-            <PrStatRing key={ring.label} {...ring} />
-          ))}
-        </div>
-      )}
       {rows.length > 0 && (
         <div className="pr-compare-card__rows">
           {rows.map((row) => (
             <CompareBarRow key={row.label} {...row} />
+          ))}
+        </div>
+      )}
+      {rings && rings.length > 0 && (
+        <div className="pr-compare-card__rings">
+          {rings.map((ring) => (
+            <PrStatRing key={ring.label} {...ring} />
           ))}
         </div>
       )}
@@ -204,4 +204,29 @@ export function percentageRingsFromSection(
     }
   }
   return [];
+}
+
+/** Rucks success rings — SDMS uses `rucks_success_percentage` (won/total fallback). */
+export function rucksRingsFromStats(rucks: Record<string, number> | undefined): {
+  label: string;
+  homePct: number | null;
+  awayPct: number | null;
+}[] {
+  if (!rucks) return [];
+  const fromPct = percentageRingsFromSection(rucks, "Rucks Success", [
+    "rucks_success_percentage",
+    "ruck_success_percentage",
+    "rucks_won_percentage",
+    "success_percentage",
+  ]);
+  if (fromPct.length > 0) return fromPct;
+
+  const homeWon = rucks.home_rucks_won ?? 0;
+  const awayWon = rucks.away_rucks_won ?? 0;
+  const homeTotal = rucks.home_total_rucks ?? homeWon + (rucks.home_rucks_lost ?? 0);
+  const awayTotal = rucks.away_total_rucks ?? awayWon + (rucks.away_rucks_lost ?? 0);
+  const homePct = homeTotal > 0 ? (homeWon / homeTotal) * 100 : null;
+  const awayPct = awayTotal > 0 ? (awayWon / awayTotal) * 100 : null;
+  if (homePct == null && awayPct == null) return [];
+  return [{ label: "Rucks Success", homePct, awayPct }];
 }

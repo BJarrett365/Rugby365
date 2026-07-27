@@ -1,6 +1,6 @@
 /**
  * Pure season resolution helpers for fixtures.
- * Club: Aug–Jul cross-year. International/tournament: calendar (tournament) year.
+ * Club: Jul–Jun cross-year. International/tournament: calendar (tournament) year.
  */
 
 import {
@@ -64,13 +64,13 @@ export function seasonKindFromCompetitionType(
   return "club";
 }
 
-/** Aug–Jul domestic window start year from kickoff (not calendar year alone). */
+/** Jul–Jun domestic window start year from kickoff (not calendar year alone). */
 export function domesticSeasonStartYearFromKickoff(kickoffAt: Date | string): number | null {
   const kickoff = kickoffAt instanceof Date ? kickoffAt : new Date(kickoffAt);
   if (Number.isNaN(kickoff.getTime())) return null;
-  const month = kickoff.getMonth(); // 0 = Jan; Aug = 7
+  const month = kickoff.getMonth(); // 0 = Jan; Jul = 6
   const year = kickoff.getFullYear();
-  return month >= 7 ? year : year - 1;
+  return month >= 6 ? year : year - 1;
 }
 
 /** Calendar / tournament year from kickoff. */
@@ -101,7 +101,7 @@ export function kickoffMatchesSeasonYear(
 /**
  * Whether a fixture belongs to a season row.
  * Prefer explicit fixture.seasonId; otherwise use kickoff vs season kind
- * (club = Aug–Jul, international/tournament = calendar year).
+ * (club = Jul–Jun, international/tournament = calendar year).
  */
 export function fixtureBelongsToSeason(input: {
   fixtureSeasonId: string | null | undefined;

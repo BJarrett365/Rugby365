@@ -118,6 +118,13 @@ export async function updateFixtureScoreStatus(
     });
   }
 
+  try {
+    const { computeAndStoreFixtureBonusPoints } = await import("./fixture-bonus-points-service");
+    await computeAndStoreFixtureBonusPoints(id, { persist: true });
+  } catch {
+    /* non-blocking */
+  }
+
   const lockAfterSave = input.lockAfterSave !== false;
   if (lockAfterSave) {
     for (const change of changed) {

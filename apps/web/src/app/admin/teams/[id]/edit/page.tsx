@@ -271,7 +271,22 @@ export default function EditTeamPage() {
 
   return (
     <>
-      <PageHeader eyebrow="CMS" title={teamName || "Edit team"} />
+      <PageHeader
+        eyebrow="CMS"
+        title={teamName || "Edit team"}
+        actions={
+          values.slug ? (
+            <Link
+              href={`/teams/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null
+        }
+      />
 
       <AiAssistPanel entityType="team" entityId={id} onApplied={() => load().catch(() => undefined)} />
 
@@ -409,6 +424,16 @@ export default function EditTeamPage() {
           <button type="submit" disabled={saving} className="cms-btn cms-btn--primary">
             {saving ? "Saving…" : "Save"}
           </button>
+          {values.slug ? (
+            <Link
+              href={`/teams/${values.slug}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cms-btn cms-btn--secondary"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
           <Link href="/admin/teams" className="cms-btn cms-btn--secondary">
             Back
           </Link>

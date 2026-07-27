@@ -33,8 +33,8 @@ export function resolveFixtureSeasonLabel(input: {
   });
   if (labelMatch) return labelMatch.label;
 
-  // Northern hemisphere club season typically runs Aug–Jul.
-  if (kickoff.getMonth() >= 7) {
+  // Club season typically runs Jul–Jun (aligned with domestic catalog).
+  if (kickoff.getMonth() >= 6) {
     const endShort = String((calendarYear + 1) % 100).padStart(2, "0");
     const cross = competitionSeasons.find((season) =>
       season.label.includes(`${calendarYear}`) && season.label.includes(endShort),

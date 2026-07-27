@@ -355,9 +355,9 @@ export function emptySquadRankings(): SquadPlayerRankings {
   return { ...EMPTY_SQUAD_RANKINGS };
 }
 
-function careerOnlyRatingDisplay(
+function careerFormRatingDisplay(
   link: CmsEntityLink,
-  career: number,
+  rankings: SquadPlayerRankings,
 ): MatchRatingDisplay {
   return {
     playerId: link.id,
@@ -368,7 +368,7 @@ function careerOnlyRatingDisplay(
     positionName: null,
     squadRole: "starter",
     minutesPlayed: 0,
-    careerRating: career,
+    careerRating: rankings.careerRating,
     careerModel: CAREER_RATING_MODEL,
     rating: null,
     matchModel: MATCH_RATING_MODEL,
@@ -379,9 +379,9 @@ function careerOnlyRatingDisplay(
     positiveImpacts: [],
     deductions: [],
     matchContext: [],
-    formRating: null,
+    formRating: rankings.formRating,
     formTrend: null,
-    formLabel: "—",
+    formLabel: rankings.formLabel,
     previousRating: null,
     ratingChange: null,
     performanceTrend: null,
@@ -395,22 +395,57 @@ function careerOnlyRatingDisplay(
   };
 }
 
+/**
+ * Ensure lineup rows always carry Career (and Form when Match is absent).
+ * Used before kick-off and to fill gaps after full time.
+ */
+export async function attachCareerAndFormToLineupRatings(
+  ratings: MatchRatingDisplay[],
+  playerLinks: CmsEntityLink[],
+): Promise<MatchRatingDisplay[]> {
+  const linkById = new Map<string, CmsEntityLink>();
+  for (const link of playerLinks) {
+    if (link.id) linkById.set(link.id, link);
+  }
+  const allIds = [
+    ...new Set([
+      ...ratings.map((row) => row.playerId).filter(Boolean),
+      ...playerLinks.map((link) => link.id).filter(Boolean),
+    ]),
+  ];
+  if (allIds.length === 0) return ratings;
+
+  const rankings = await listSquadRankingsForPlayerIds(allIds);
+  const byPlayer = new Map(ratings.map((row) => [row.playerId, { ...row }]));
+
+  for (const playerId of allIds) {
+    const rank = rankings.get(playerId) ?? emptySquadRankings();
+    const existing = byPlayer.get(playerId);
+    if (existing) {
+      if (existing.careerRating == null && rank.careerRating != null) {
+        existing.careerRating = rank.careerRating;
+      }
+      if (existing.formRating == null && rank.formRating != null) {
+        existing.formRating = rank.formRating;
+        existing.formLabel = rank.formLabel;
+      }
+      byPlayer.set(playerId, existing);
+      continue;
+    }
+    const link = linkById.get(playerId);
+    if (!link) continue;
+    if (rank.careerRating == null && rank.formRating == null) continue;
+    byPlayer.set(playerId, careerFormRatingDisplay(link, rank));
+  }
+
+  return [...byPlayer.values()];
+}
+
 export async function enrichRatingsWithCareerFallback(
   ratings: MatchRatingDisplay[],
   playerLinks: CmsEntityLink[],
 ): Promise<MatchRatingDisplay[]> {
-  const existing = new Set(ratings.map((row) => row.playerId));
-  const missing = playerLinks.filter((link) => !existing.has(link.id));
-  if (missing.length === 0) return ratings;
-
-  const careerMap = await listCareerRatingsForPlayerIds(missing.map((link) => link.id));
-  const extras: MatchRatingDisplay[] = [];
-  for (const link of missing) {
-    const career = careerMap.get(link.id);
-    if (career == null) continue;
-    extras.push(careerOnlyRatingDisplay(link, career));
-  }
-  return extras.length > 0 ? [...ratings, ...extras] : ratings;
+  return attachCareerAndFormToLineupRatings(ratings, playerLinks);
 }
 
 type SnapshotLineups = {
@@ -430,7 +465,7 @@ function collectLineupProviderIds(lineups?: SnapshotLineups | null): string[] {
   return ids;
 }
 
-/** Admin match edit: match ratings + career fallback for squad and lineup-linked players. */
+/** Admin match edit: Career (+ Form) before kick-off; Match + Career after full time. */
 export async function getAdminFixtureLineupRatings(
   fixtureId: string,
 ): Promise<FixtureMatchRatingsBundle> {
@@ -443,17 +478,19 @@ export async function getAdminFixtureLineupRatings(
     officialPotmPlayerId: fixture?.officialPotmPlayerId ?? null,
     officialPotmName: fixture?.officialPotmName ?? null,
   };
-  if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
-    return emptyBundle;
+  if (!fixture) return emptyBundle;
+
+  const published = isFixtureRatingsPublished(fixture.status);
+  let bundle = emptyBundle;
+  if (published) {
+    try {
+      await calculateAndPersistFixtureMatchRatings(fixtureId);
+    } catch {
+      // Best-effort — still list stored ratings.
+    }
+    bundle = await listMatchRatingsForFixture(fixtureId);
   }
 
-  try {
-    await calculateAndPersistFixtureMatchRatings(fixtureId);
-  } catch {
-    // Best-effort — still list stored ratings.
-  }
-
-  const bundle = await listMatchRatingsForFixture(fixtureId);
   const squadLinks = await db
     .select({
       id: players.id,
@@ -465,7 +502,7 @@ export async function getAdminFixtureLineupRatings(
     .innerJoin(players, eq(fixturePlayers.playerId, players.id))
     .where(eq(fixturePlayers.fixtureId, fixtureId));
 
-  const snap = fixture?.providerSnapshot as { lineups?: SnapshotLineups } | null | undefined;
+  const snap = fixture.providerSnapshot as { lineups?: SnapshotLineups } | null | undefined;
   const playersByExt = await loadPlayersByExternalIds(collectLineupProviderIds(snap?.lineups));
 
   const linkById = new Map<string, CmsEntityLink>();
@@ -506,13 +543,17 @@ export async function getAdminFixtureLineupRatings(
     }
   }
 
-  const ratings = await enrichRatingsWithCareerFallback(bundle.ratings, [...linkById.values()]);
+  const ratings = await attachCareerAndFormToLineupRatings(bundle.ratings, [
+    ...linkById.values(),
+  ]);
   return { ...bundle, ratings };
 }
 
 export async function calculateAndPersistFixtureMatchRatings(fixtureId: string): Promise<{
   calculated: number;
   potmPlayerId: string | null;
+  coachesCalculated?: number;
+  refereeCalculated?: number;
 }> {
   const db = getDb();
   const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
@@ -668,7 +709,21 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
       .where(eq(fixtures.id, fixtureId));
   }
 
-  return { calculated, potmPlayerId };
+  // Coach + referee match ratings (same publish gate).
+  let coachesCalculated = 0;
+  let refereeCalculated = 0;
+  try {
+    const { calculateAndPersistFixtureStaffMatchRatings } = await import(
+      "./staff-match-rating-service"
+    );
+    const staff = await calculateAndPersistFixtureStaffMatchRatings(fixtureId);
+    coachesCalculated = staff.coachesCalculated;
+    refereeCalculated = staff.refereeCalculated;
+  } catch {
+    // Staff ratings are best-effort alongside player ratings.
+  }
+
+  return { calculated, potmPlayerId, coachesCalculated, refereeCalculated };
 }
 
 export async function listRatingLabRows(limit = 100) {

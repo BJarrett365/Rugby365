@@ -302,6 +302,34 @@
       "when": 1784100000000,
       "tag": "0042_player_image_learning_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0043_staff_match_ratings",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0044_fixture_tracker_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1784400000000,
+      "tag": "0045_fixture_tracker_full_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1784500000000,
+      "tag": "0046_fixture_youtube_media",
+      "breakpoints": true
     }
   ]
 }

@@ -78,7 +78,10 @@ function LineupColumn({
             {prefix === "s" ? "Starter" : "Replacement"}
           </td>
           <td className="match-detail-lineup__rating">
-            <DualRatingCell rating={ratingsPublished ? rating : null} mode="completed" />
+            <DualRatingCell
+              rating={rating}
+              mode={ratingsPublished ? "completed" : "scheduled"}
+            />
           </td>
         </tr>
       );
@@ -94,7 +97,9 @@ function LineupColumn({
             <th>Player</th>
             <th>Pos</th>
             <th>Role</th>
-            <th title="Career (35–99) | Match (1–10) or Form">Career | Match</th>
+            <th title="Career (35–99) | Match (1–10) or Form">
+              {ratingsPublished ? "Career | Match" : "Career | Form"}
+            </th>
           </tr>
         </thead>
         <tbody>{renderRows(lineup.starting, "s")}</tbody>
@@ -109,7 +114,7 @@ function LineupColumn({
                 <th>Player</th>
                 <th>Pos</th>
                 <th>Role</th>
-                <th>Career | Match</th>
+                <th>{ratingsPublished ? "Career | Match" : "Career | Form"}</th>
               </tr>
             </thead>
             <tbody>{renderRows(lineup.substitutes, "b")}</tbody>
@@ -169,7 +174,10 @@ export function MatchLineupsWithRatings({
             (1–10)
           </>
         ) : (
-          <>Career and match ratings publish after full time.</>
+          <>
+            <strong>Career</strong> shows before kick-off · <strong>Form</strong> from recent matches
+            · <strong>Match</strong> ratings publish after full time
+          </>
         )}
       </p>
       {ratingsPublished && (rugby365PotmName || officialPotmName) && (

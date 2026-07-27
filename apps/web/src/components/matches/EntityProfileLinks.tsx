@@ -43,7 +43,7 @@ export function TeamProfileLink({
     return <span className={className}>{name}</span>;
   }
   return (
-    <Link href={`/admin/teams/${team.id}/edit`} className={`match-entity-link${className ? ` ${className}` : ""}`}>
+    <Link href={`/teams/${team.slug}`} className={`match-entity-link${className ? ` ${className}` : ""}`}>
       {name}
     </Link>
   );

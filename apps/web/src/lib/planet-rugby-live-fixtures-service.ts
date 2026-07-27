@@ -24,6 +24,7 @@ import { listCompetitions } from "./competition-admin-service";
 import { getDb } from "./db";
 import { listTeams, buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
+import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -208,6 +209,16 @@ export async function getScheduleForDate(
     await autoImportSdmsFixtureRows(sdmsRows);
   }
 
+  // P1 (Rugby Data) owns scores/status when present; also fills events if no SDMS timeline.
+  try {
+    await syncRugbyDataFixturesForDate(dateKey, { timeZone, syncEvents: true });
+  } catch (error) {
+    console.warn(
+      `[schedule] rugby_data day sync failed for ${dateKey}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
   const dbRowsAfterImport = await listDbFixturesForDate(dateKey, timeZone);
 
   const competitionList: ScheduleCompetition[] = competitions.map((c) => ({
@@ -305,9 +316,8 @@ export async function getScheduleForDate(
   return {
     fixtures: filtered,
     competitions: competitionList,
-    liveCount: competitionIdFilter
-      ? filtered.filter((f) => /live|half/i.test(f.status)).length
-      : sdmsRows.length,
+    // Count truly in-play fixtures only (not "all SDMS rows for the day").
+    liveCount: filtered.filter((f) => /live|half_time|half time/i.test(f.status)).length,
     dbCount: dbRowsAfterImport.length,
     datesWithMatches,
     timeZone,
