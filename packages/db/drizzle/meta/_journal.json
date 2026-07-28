@@ -330,6 +330,34 @@
       "when": 1784500000000,
       "tag": "0046_fixture_youtube_media",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1784600000000,
+      "tag": "0047_fixture_bonus_points",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1784700000000,
+      "tag": "0048_venue_geo",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1784800000000,
+      "tag": "0049_fixture_broadcasters",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784900000000,
+      "tag": "0050_fixture_match_board_info",
+      "breakpoints": true
     }
   ]
 }

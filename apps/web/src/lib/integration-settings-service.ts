@@ -756,3 +756,234 @@ export async function testSupabaseConnection(): Promise<{
     };
   }
 }
+
+export const TV_SCHEDULE_SLUG = "tv_schedule";
+export const DEFAULT_GRACENOTE_BASE_URL = "https://data.tmsapi.com/v1.1";
+
+export type TvScheduleProvider = "none" | "gracenote" | "pa_media";
+
+export type TvScheduleConfig = {
+  provider?: TvScheduleProvider;
+  gracenoteApiKey?: string;
+  gracenoteBaseUrl?: string;
+  gracenoteLineupId?: string;
+  paApiKey?: string;
+  defaultRegion?: string;
+};
+
+export type TvSchedulePublicConfig = {
+  provider: TvScheduleProvider;
+  hasGracenoteApiKey: boolean;
+  gracenoteApiKeyMasked?: string;
+  gracenoteBaseUrl: string;
+  gracenoteLineupId: string;
+  hasPaApiKey: boolean;
+  paApiKeyMasked?: string;
+  defaultRegion: string;
+  configured: boolean;
+  gracenoteKeySource: "environment" | "admin" | "none";
+  paKeySource: "environment" | "admin" | "none";
+};
+
+function normalizeTvProvider(value: unknown): TvScheduleProvider {
+  if (value === "gracenote" || value === "pa_media" || value === "none") return value;
+  return "none";
+}
+
+function toTvSchedulePublicConfig(config: TvScheduleConfig): TvSchedulePublicConfig {
+  const envGracenote = process.env.GRACENOTE_API_KEY?.trim();
+  const envPa = process.env.PA_MEDIA_TV_API_KEY?.trim();
+  const gracenoteKey = envGracenote || config.gracenoteApiKey?.trim() || "";
+  const paKey = envPa || config.paApiKey?.trim() || "";
+  const provider = normalizeTvProvider(config.provider);
+  const hasGracenote = Boolean(gracenoteKey);
+  const hasPa = Boolean(paKey);
+  return {
+    provider,
+    hasGracenoteApiKey: hasGracenote,
+    gracenoteApiKeyMasked: hasGracenote
+      ? maskSecret(envGracenote || config.gracenoteApiKey)
+      : undefined,
+    gracenoteBaseUrl:
+      process.env.GRACENOTE_BASE_URL?.trim() ||
+      config.gracenoteBaseUrl?.trim() ||
+      DEFAULT_GRACENOTE_BASE_URL,
+    gracenoteLineupId: config.gracenoteLineupId?.trim() || "",
+    hasPaApiKey: hasPa,
+    paApiKeyMasked: hasPa ? maskSecret(envPa || config.paApiKey) : undefined,
+    defaultRegion: config.defaultRegion?.trim() || "UK",
+    configured:
+      (provider === "gracenote" && hasGracenote) ||
+      (provider === "pa_media" && hasPa) ||
+      (provider === "none" && false),
+    gracenoteKeySource: envGracenote
+      ? "environment"
+      : config.gracenoteApiKey?.trim()
+        ? "admin"
+        : "none",
+    paKeySource: envPa ? "environment" : config.paApiKey?.trim() ? "admin" : "none",
+  };
+}
+
+export async function getTvScheduleConfig(): Promise<TvScheduleConfig> {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(integrationSettings)
+    .where(eq(integrationSettings.slug, TV_SCHEDULE_SLUG))
+    .limit(1);
+  if (!row) return { provider: "none", defaultRegion: "UK" };
+  return (row.config ?? {}) as TvScheduleConfig;
+}
+
+export async function getTvSchedulePublicConfig(): Promise<TvSchedulePublicConfig> {
+  const config = await getTvScheduleConfig();
+  return toTvSchedulePublicConfig(config);
+}
+
+export async function saveTvScheduleCredentials(input: {
+  provider?: TvScheduleProvider;
+  gracenoteApiKey?: string;
+  gracenoteBaseUrl?: string;
+  gracenoteLineupId?: string;
+  paApiKey?: string;
+  defaultRegion?: string;
+}): Promise<TvSchedulePublicConfig> {
+  const db = getDb();
+  const existing = await getTvScheduleConfig();
+  const next: TvScheduleConfig = { ...existing };
+
+  if (input.provider !== undefined) next.provider = normalizeTvProvider(input.provider);
+  if (input.gracenoteApiKey?.trim()) next.gracenoteApiKey = input.gracenoteApiKey.trim();
+  if (input.gracenoteBaseUrl !== undefined) {
+    next.gracenoteBaseUrl = input.gracenoteBaseUrl.trim() || DEFAULT_GRACENOTE_BASE_URL;
+  }
+  if (input.gracenoteLineupId !== undefined) {
+    next.gracenoteLineupId = input.gracenoteLineupId.trim();
+  }
+  if (input.paApiKey?.trim()) next.paApiKey = input.paApiKey.trim();
+  if (input.defaultRegion !== undefined) {
+    next.defaultRegion = input.defaultRegion.trim() || "UK";
+  }
+
+  const [row] = await db
+    .insert(integrationSettings)
+    .values({
+      slug: TV_SCHEDULE_SLUG,
+      label: "TV Schedule",
+      config: next,
+    })
+    .onConflictDoUpdate({
+      target: integrationSettings.slug,
+      set: {
+        config: next,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return toTvSchedulePublicConfig((row.config ?? {}) as TvScheduleConfig);
+}
+
+export async function clearTvScheduleCredentials(input?: {
+  clearGracenote?: boolean;
+  clearPa?: boolean;
+}): Promise<TvSchedulePublicConfig> {
+  const db = getDb();
+  const existing = await getTvScheduleConfig();
+  const next: TvScheduleConfig = { ...existing };
+  if (input?.clearGracenote !== false) delete next.gracenoteApiKey;
+  if (input?.clearPa !== false) delete next.paApiKey;
+
+  await db
+    .insert(integrationSettings)
+    .values({
+      slug: TV_SCHEDULE_SLUG,
+      label: "TV Schedule",
+      config: next,
+    })
+    .onConflictDoUpdate({
+      target: integrationSettings.slug,
+      set: { config: next, updatedAt: new Date() },
+    });
+
+  return getTvSchedulePublicConfig();
+}
+
+export async function resolveGracenoteApiKey(): Promise<string | null> {
+  const env = process.env.GRACENOTE_API_KEY?.trim();
+  if (env) return env;
+  const config = await getTvScheduleConfig();
+  return config.gracenoteApiKey?.trim() || null;
+}
+
+export async function resolvePaMediaTvApiKey(): Promise<string | null> {
+  const env = process.env.PA_MEDIA_TV_API_KEY?.trim();
+  if (env) return env;
+  const config = await getTvScheduleConfig();
+  return config.paApiKey?.trim() || null;
+}
+
+export async function testTvScheduleConnection(): Promise<{
+  ok: boolean;
+  message: string;
+  provider: TvScheduleProvider;
+}> {
+  const config = await getTvScheduleConfig();
+  const provider = normalizeTvProvider(config.provider);
+
+  if (provider === "none") {
+    return {
+      ok: false,
+      message:
+        "No EPG provider selected. Choose Gracenote or PA Media, or keep using manual CMS broadcasters.",
+      provider,
+    };
+  }
+
+  if (provider === "gracenote") {
+    const key = await resolveGracenoteApiKey();
+    if (!key) {
+      return { ok: false, message: "No Gracenote API key configured.", provider };
+    }
+    const base =
+      process.env.GRACENOTE_BASE_URL?.trim() ||
+      config.gracenoteBaseUrl?.trim() ||
+      DEFAULT_GRACENOTE_BASE_URL;
+    const url = `${base.replace(/\/$/, "")}/sports/genres?api_key=${encodeURIComponent(key)}`;
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+      if (!res.ok) {
+        const body = await res.text();
+        return {
+          ok: false,
+          message: `Gracenote test failed (${res.status}): ${body.slice(0, 220)}`,
+          provider,
+        };
+      }
+      return {
+        ok: true,
+        message: "Connected to Gracenote — sports genres endpoint OK. Match sync can be built next.",
+        provider,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error instanceof Error ? error.message : "Gracenote request failed",
+        provider,
+      };
+    }
+  }
+
+  const paKey = await resolvePaMediaTvApiKey();
+  if (!paKey) {
+    return { ok: false, message: "No PA Media TV API key configured.", provider };
+  }
+  return {
+    ok: true,
+    message:
+      "PA Media key stored. Full EPG sync needs a commercial endpoint URL from PA — contact PA Media for access.",
+    provider,
+  };
+}
+

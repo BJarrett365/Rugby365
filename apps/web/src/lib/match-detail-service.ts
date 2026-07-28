@@ -33,6 +33,11 @@ import { ensureFixtureMatchCoaches } from "./match-coach-resolve-service";
 import { getFixtureBonusPoints } from "./fixture-bonus-points-service";
 import type { MatchBonusPoints } from "./match-bonus-points";
 import { resolveVenue } from "./venue-admin-service";
+import { resolveWeatherForVenueId } from "./venue-geocode-service";
+import {
+  formatBroadcasterLabel,
+  listFixtureBroadcasters,
+} from "./fixture-broadcasters-service";
 import {
   listFixtureSquadPlayerIds,
   syncSdmsMatchEntityLinks,
@@ -63,6 +68,20 @@ export type MatchVenueLink = {
   id: string;
   name: string;
   slug: string;
+  city?: string | null;
+  countryName?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  weather?: {
+    temperatureC: number | null;
+    humidityPct: number | null;
+    precipitationMm: number | null;
+    windSpeedKmh: number | null;
+    windDirectionDeg: number | null;
+    windCompass: string | null;
+    observedAt: string | null;
+    source: "forecast" | "archive";
+  } | null;
 };
 
 export type MatchDetailPageData = {
@@ -90,6 +109,16 @@ export type MatchDetailPageData = {
   awayCoach: MatchStaffLink | null;
   referee: MatchStaffLink | null;
   venue: MatchVenueLink | null;
+  /** TV / streaming where-to-watch rows from CMS (and later EPG providers). */
+  broadcasters: Array<{
+    id: string;
+    label: string;
+    broadcasterName: string;
+    channelName: string | null;
+    region: string | null;
+    platform: string;
+    url: string | null;
+  }>;
   bonusPoints: MatchBonusPoints | null;
   /** Key events for public Match Details (CMS preferred, Sub On/Off paired). */
   keyEvents: PublicKeyEvent[];
@@ -327,6 +356,11 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
         id: fixtureWithStaff.venue.id,
         name: fixtureWithStaff.venue.name,
         slug: fixtureWithStaff.venue.slug,
+        city: fixtureWithStaff.venue.city ?? null,
+        countryName: fixtureWithStaff.venue.countryName ?? null,
+        latitude: fixtureWithStaff.venue.latitude ?? null,
+        longitude: fixtureWithStaff.venue.longitude ?? null,
+        weather: null,
       }
     : null;
 
@@ -340,7 +374,16 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
           createIfMissing: true,
         });
         if (resolved) {
-          venue = { id: resolved.id, name: resolved.name, slug: resolved.slug };
+          venue = {
+            id: resolved.id,
+            name: resolved.name,
+            slug: resolved.slug,
+            city: resolved.city ?? null,
+            countryName: resolved.countryName ?? null,
+            latitude: resolved.latitude ?? null,
+            longitude: resolved.longitude ?? null,
+            weather: null,
+          };
           if (cmsFixtureRow && !fixtureWithStaff?.venueId) {
             await getDb()
               .update(fixtures)
@@ -351,6 +394,27 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       } catch {
         // non-blocking
       }
+    }
+  }
+
+  if (venue) {
+    try {
+      const kickoffIso =
+        fixtureWithStaff?.kickoffAt?.toISOString?.() ??
+        (typeof fixtureWithStaff?.kickoffAt === "string"
+          ? fixtureWithStaff.kickoffAt
+          : null) ??
+        sdmsScheduleKickoffIso(detail.date, detail.time);
+      venue = {
+        ...venue,
+        weather: await resolveWeatherForVenueId({
+          venueId: venue.id,
+          kickoffAt: kickoffIso,
+          geocodeIfMissing: true,
+        }),
+      };
+    } catch {
+      // non-blocking
     }
   }
 
@@ -454,6 +518,24 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     }
   }
 
+  let broadcasters: MatchDetailPageData["broadcasters"] = [];
+  if (cmsFixtureRow?.id) {
+    try {
+      const rows = await listFixtureBroadcasters(cmsFixtureRow.id);
+      broadcasters = rows.map((row) => ({
+        id: row.id,
+        label: formatBroadcasterLabel(row),
+        broadcasterName: row.broadcasterName,
+        channelName: row.channelName,
+        region: row.region,
+        platform: row.platform,
+        url: row.url,
+      }));
+    } catch {
+      broadcasters = [];
+    }
+  }
+
   return {
     detail,
     lineups,
@@ -482,6 +564,7 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     referee,
     bonusPoints,
     venue,
+    broadcasters,
     keyEvents,
   };
 }

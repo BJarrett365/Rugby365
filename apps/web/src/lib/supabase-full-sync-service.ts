@@ -72,6 +72,7 @@ export const SUPABASE_SYNC_TABLES: SyncTableSpec[] = [
   { name: "referee_match_ratings", onConflict: "id" },
   { name: "referee_appointments", onConflict: "id" },
   { name: "fixture_tracker_settings", onConflict: "fixture_id" },
+  { name: "fixture_broadcasters", onConflict: "id" },
   { name: "commentary_rules", onConflict: "id" },
   { name: "commentary_templates", onConflict: "id" },
   { name: "commentary_suggestions", onConflict: "id" },

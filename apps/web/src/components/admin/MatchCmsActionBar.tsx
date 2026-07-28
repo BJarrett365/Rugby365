@@ -7,11 +7,15 @@ import {
   IconChart,
   IconChat,
   IconLink,
+  IconList,
+  IconPencil,
   IconPitch,
   IconTrend,
   IconUsers,
   IconYoutube,
+  IconTv,
 } from "@/components/admin/MatchCmsIcons";
+import { matchCmsSectionHref } from "@/components/admin/MatchCmsSubnav";
 
 type Action = {
   label: string;
@@ -24,25 +28,35 @@ const iconBtn = "match-cms-icon-btn";
 /** Dense icon action bar — tooltips via title + aria-label. */
 export function MatchCmsActionBar({
   matchId,
-  slug,
 }: {
   matchId: string;
+  /** Kept for callers; commentary opens the admin bridge page. */
   slug?: string | null;
 }) {
-  const edit = (hash: string) => `/admin/matches/${matchId}/edit${hash}`;
   const actions: Action[] = [
-    { label: "Lineups", href: edit("#lineups"), icon: <IconUsers /> },
-    { label: "Match stats", href: edit("#team-stats"), icon: <IconChart /> },
-    { label: "Player stats", href: edit("#player-stats"), icon: <IconTrend /> },
-    { label: "Events", href: edit("#events"), icon: <IconPitch /> },
-    { label: "Match Animation", href: edit("#tracker"), icon: <IconAnimation /> },
-    { label: "YouTube media", href: edit("#youtube"), icon: <IconYoutube /> },
+    { label: "Match Info", href: matchCmsSectionHref(matchId, "info"), icon: <IconPencil /> },
+    { label: "Lineups", href: matchCmsSectionHref(matchId, "lineups"), icon: <IconUsers /> },
+    { label: "Match stats", href: matchCmsSectionHref(matchId, "stats"), icon: <IconChart /> },
+    {
+      label: "Player stats",
+      href: matchCmsSectionHref(matchId, "player-stats"),
+      icon: <IconTrend />,
+    },
+    { label: "Events", href: matchCmsSectionHref(matchId, "events"), icon: <IconPitch /> },
+    { label: "Match Channels", href: matchCmsSectionHref(matchId, "channels"), icon: <IconTv /> },
+    { label: "YouTube media", href: matchCmsSectionHref(matchId, "media"), icon: <IconYoutube /> },
+    {
+      label: "Match Animation",
+      href: matchCmsSectionHref(matchId, "animation"),
+      icon: <IconAnimation />,
+    },
+    { label: "Head to Head", href: matchCmsSectionHref(matchId, "h2h"), icon: <IconList /> },
+    { label: "Sources", href: matchCmsSectionHref(matchId, "sources"), icon: <IconLink /> },
     {
       label: "Commentary",
-      href: slug ? `/matches/${slug}/commentary` : edit("#commentary"),
+      href: matchCmsSectionHref(matchId, "commentary"),
       icon: <IconChat />,
     },
-    { label: "Sources", href: edit("#sources"), icon: <IconLink /> },
   ];
 
   return (

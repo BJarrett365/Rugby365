@@ -382,6 +382,11 @@ export function MatchLineupsEditor({
         awayTeam={detail.fixture.awayTeam}
         kickoffAt={detail.fixture.kickoffAt}
         status={detail.fixture.status}
+        halfTimeHome={detail.fixture.halfTimeHome}
+        halfTimeAway={detail.fixture.halfTimeAway}
+        attendance={detail.fixture.attendance}
+        competitionSlug={detail.fixture.competition?.slug ?? null}
+        competitionName={detail.fixture.competition?.name ?? detail.fixture.competitionName}
         actions={
           <button
             type="button"

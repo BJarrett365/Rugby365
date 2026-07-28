@@ -165,7 +165,9 @@ export function soundCueForSignalKind(
 ): MatchAnimationSoundCue | null {
   if (!kind) return null;
   if (kind === "try_awarded") return "try";
-  if (kind === "conversion_awarded") return "conversion";
+  if (kind === "conversion_awarded" || kind === "penalty_goal" || kind === "drop_goal") {
+    return "conversion";
+  }
   if (kind === "conversion_missed") return "conversion_miss";
   return null;
 }

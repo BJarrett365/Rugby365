@@ -153,8 +153,15 @@ export const venues = pgTable(
     name: text("name").notNull(),
     city: text("city"),
     countryName: text("country_name"),
+    /** ISO 3166-1 alpha-2 when known — used for Open-Meteo geocoding filter. */
+    countryCode: text("country_code"),
     capacity: integer("capacity"),
     recordAttendance: integer("record_attendance"),
+    latitude: real("latitude"),
+    longitude: real("longitude"),
+    geocodedAt: timestamp("geocoded_at", { withTimezone: true }),
+    geocodeSource: text("geocode_source"),
+    geocodeQuery: text("geocode_query"),
     teamId: uuid("team_id").references(() => teams.id),
     sourceProvider: text("source_provider").notNull().default("manual"),
     wikipediaUrl: text("wikipedia_url"),
@@ -515,6 +522,9 @@ export const fixtures = pgTable("fixtures", {
   status: text("status").notNull().default("scheduled"),
   homeScore: integer("home_score").notNull().default(0),
   awayScore: integer("away_score").notNull().default(0),
+  /** Explicit half-time score for public fixtures board / match centre. */
+  halfTimeHome: integer("half_time_home"),
+  halfTimeAway: integer("half_time_away"),
   matchMinute: integer("match_minute").notNull().default(0),
   matchSecond: integer("match_second").notNull().default(0),
   period: text("period").notNull().default("not_started"),
@@ -531,6 +541,10 @@ export const fixtures = pgTable("fixtures", {
   isNeutralVenue: boolean("is_neutral_venue").notNull().default(false),
   venueId: uuid("venue_id").references(() => venues.id),
   attendance: integer("attendance"),
+  /** Short public note for fixtures board “additional information”. */
+  additionalInfo: text("additional_info"),
+  /** Manual weather override when venue GEO / Open-Meteo is missing. */
+  weatherNote: text("weather_note"),
   refereeId: uuid("referee_id").references(() => referees.id),
   homeCoachId: uuid("home_coach_id").references(() => coaches.id),
   awayCoachId: uuid("away_coach_id").references(() => coaches.id),
@@ -552,6 +566,35 @@ export const fixtures = pgTable("fixtures", {
   }),
   officialPotmName: text("official_potm_name"),
 });
+
+/** Where to watch a fixture — CMS manual now; Gracenote / PA Media later. */
+export const fixtureBroadcasters = pgTable(
+  "fixture_broadcasters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    broadcasterName: text("broadcaster_name").notNull(),
+    channelName: text("channel_name"),
+    region: text("region"),
+    platform: text("platform").notNull().default("tv"),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    endAt: timestamp("end_at", { withTimezone: true }),
+    url: text("url"),
+    sourceProvider: text("source_provider").notNull().default("manual"),
+    externalId: text("external_id"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("fixture_broadcasters_fixture_id_idx").on(table.fixtureId),
+    uniqueIndex("fixture_broadcasters_fixture_external_unique")
+      .on(table.fixtureId, table.sourceProvider, table.externalId)
+      .where(sql`${table.externalId} is not null`),
+  ],
+);
 
 export const playerTransfers = pgTable(
   "player_transfers",

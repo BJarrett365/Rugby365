@@ -13,13 +13,14 @@ export function MatchCmsWarnings({ match }: { match: MatchCmsListRow }) {
   }
 
   const summary = warnings.map((w) => w.label).join(" · ");
+  const firstHref = warnings[0]?.href(match.id) ?? `/admin/matches/${match.id}/edit`;
 
   return (
     <Link
-      href={`/admin/matches/${match.id}/edit#issues`}
+      href={firstHref}
       className="match-cms-warn"
-      title={`${summary} — open issues template`}
-      aria-label={`${warnings.length} issues: ${summary}. Open fix template.`}
+      title={`${summary} — open first issue`}
+      aria-label={`${warnings.length} issues: ${summary}. Open first issue.`}
     >
       <IconAlert className="w-3.5 h-3.5" />
       <span className="match-cms-warn__count">{warnings.length}</span>

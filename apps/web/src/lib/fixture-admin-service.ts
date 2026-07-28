@@ -71,6 +71,10 @@ export type FixtureInput = {
   externalMatchId?: string | null;
   venueId?: string | null;
   attendance?: number | null;
+  halfTimeHome?: number | null;
+  halfTimeAway?: number | null;
+  additionalInfo?: string | null;
+  weatherNote?: string | null;
   refereeId?: string | null;
   homeCoachId?: string | null;
   awayCoachId?: string | null;
@@ -446,6 +450,9 @@ export async function getFixtureById(id: string) {
             countryName: venues.countryName,
             capacity: venues.capacity,
             recordAttendance: venues.recordAttendance,
+            latitude: venues.latitude,
+            longitude: venues.longitude,
+            countryCode: venues.countryCode,
           })
           .from(venues)
           .where(eq(venues.id, fixture.venueId))
@@ -479,6 +486,15 @@ export async function getFixtureById(id: string) {
           .limit(1)
           .then((rows) => rows[0] ?? null)
       : null;
+  const competition =
+    fixture.competitionId != null
+      ? await db
+          .select({ id: competitions.id, name: competitions.name, slug: competitions.slug })
+          .from(competitions)
+          .where(eq(competitions.id, fixture.competitionId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null)
+      : null;
   return {
     ...fixture,
     homeTeam: fixture.homeTeamId ? teamById[fixture.homeTeamId] : null,
@@ -487,6 +503,7 @@ export async function getFixtureById(id: string) {
     referee,
     homeCoach,
     awayCoach,
+    competition,
   };
 }
 
@@ -593,6 +610,10 @@ export async function createFixture(input: FixtureInput) {
       externalMatchId,
       venueId: input.venueId ?? null,
       attendance: input.attendance ?? null,
+      halfTimeHome: input.halfTimeHome ?? null,
+      halfTimeAway: input.halfTimeAway ?? null,
+      additionalInfo: input.additionalInfo?.trim() || null,
+      weatherNote: input.weatherNote?.trim() || null,
       refereeId: input.refereeId ?? null,
       homeCoachId: input.homeCoachId ?? null,
       awayCoachId: input.awayCoachId ?? null,
@@ -690,6 +711,14 @@ export async function updateFixture(id: string, input: Partial<FixtureInput>) {
       externalMatchId,
       ...(input.venueId !== undefined ? { venueId: input.venueId || null, venueName } : {}),
       ...(input.attendance !== undefined ? { attendance: input.attendance } : {}),
+      ...(input.halfTimeHome !== undefined ? { halfTimeHome: input.halfTimeHome } : {}),
+      ...(input.halfTimeAway !== undefined ? { halfTimeAway: input.halfTimeAway } : {}),
+      ...(input.additionalInfo !== undefined
+        ? { additionalInfo: input.additionalInfo?.trim() || null }
+        : {}),
+      ...(input.weatherNote !== undefined
+        ? { weatherNote: input.weatherNote?.trim() || null }
+        : {}),
       ...(input.refereeId !== undefined ? { refereeId: input.refereeId || null } : {}),
       ...(input.homeCoachId !== undefined ? { homeCoachId: input.homeCoachId || null } : {}),
       ...(input.awayCoachId !== undefined ? { awayCoachId: input.awayCoachId || null } : {}),

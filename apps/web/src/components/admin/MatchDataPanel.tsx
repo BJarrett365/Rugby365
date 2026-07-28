@@ -299,7 +299,17 @@ export function MatchDataPanel({
       </div>
 
       <div>
-        <p className="cms-section-title text-sm">Head to head stats</p>
+        <p className="cms-section-title text-sm flex flex-wrap items-center justify-between gap-2">
+          <span>Head to head stats</span>
+          {fixture.id ? (
+            <a
+              href={`/admin/matches/${fixture.id}/h2h`}
+              className="text-xs font-normal normal-case tracking-normal text-emerald-400 hover:underline"
+            >
+              Open Head to Head →
+            </a>
+          ) : null}
+        </p>
         {h2h.kind === "none" && !h2hSlots.some((slot) => slot.hasData) ? (
           <p className="text-sm text-zinc-500 m-0">No head-to-head data stored yet. Sync from Planet Rugby.</p>
         ) : h2hSlots.some((slot) => slot.hasData) ? (

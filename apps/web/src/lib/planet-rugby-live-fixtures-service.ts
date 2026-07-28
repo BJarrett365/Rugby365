@@ -25,6 +25,7 @@ import { getDb } from "./db";
 import { listTeams, buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
+import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -62,8 +63,16 @@ function mapDbFixture(
     status: string;
     round: string | null;
     venueName?: string | null;
+    venueId?: string | null;
     homeScore: number;
     awayScore: number;
+    attendance?: number | null;
+    halfTimeHome?: number | null;
+    halfTimeAway?: number | null;
+    additionalInfo?: string | null;
+    weatherNote?: string | null;
+    refereeName?: string | null;
+    isNeutralVenue?: boolean | null;
     externalMatchId: string | null;
     planetRugbyUrl: string | null;
     homeTeam: { name: string; slug?: string | null; imageUrl?: string | null } | null;
@@ -86,8 +95,23 @@ function mapDbFixture(
     status: row.status,
     round: row.round,
     venue: row.venueName?.trim() || null,
+    venueId: row.venueId ?? null,
     homeScore: row.homeScore,
     awayScore: row.awayScore,
+    halfTimeHome: row.halfTimeHome ?? null,
+    halfTimeAway: row.halfTimeAway ?? null,
+    attendance: row.attendance ?? null,
+    additionalInfo: row.additionalInfo?.trim() || null,
+    weather: row.weatherNote?.trim()
+      ? {
+          temperatureC: null,
+          windSpeedKmh: null,
+          windCompass: null,
+          summary: row.weatherNote.trim(),
+        }
+      : null,
+    refereeName: row.refereeName?.trim() || null,
+    isNeutralVenue: Boolean(row.isNeutralVenue),
     homeTeam: toScheduleTeam(row.homeTeam, icons?.home),
     awayTeam: toScheduleTeam(row.awayTeam, icons?.away),
     externalMatchId: row.externalMatchId,
@@ -313,11 +337,21 @@ export async function getScheduleForDate(
     ? merged.filter((f) => f.competitionId === competitionIdFilter)
     : merged;
 
+  let enriched = filtered;
+  try {
+    enriched = await enrichScheduleFixturesForPublic(filtered);
+  } catch (error) {
+    console.warn(
+      `[schedule] public enrichment failed for ${dateKey}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
   return {
-    fixtures: filtered,
+    fixtures: enriched,
     competitions: competitionList,
     // Count truly in-play fixtures only (not "all SDMS rows for the day").
-    liveCount: filtered.filter((f) => /live|half_time|half time/i.test(f.status)).length,
+    liveCount: enriched.filter((f) => /live|half_time|half time/i.test(f.status)).length,
     dbCount: dbRowsAfterImport.length,
     datesWithMatches,
     timeZone,

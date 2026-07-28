@@ -3,13 +3,18 @@
 export type AnimationSignalKind =
   | "scrum_awarded"
   | "lineout"
+  | "dropout"
   | "penalty_awarded"
+  | "free_kick"
   | "try_awarded"
   | "conversion_awarded"
   | "conversion_missed"
+  | "penalty_goal"
+  | "drop_goal"
   | "yellow_card"
   | "red_card"
   | "substitution"
+  | "injury"
   | "tmo_review"
   | "tmo_decision"
   | "tmo_overturned"
@@ -20,8 +25,8 @@ export type AnimationSignalKind =
 
 export type FieldZone = "own_22" | "midfield" | "opp_22" | "ingoal";
 
-/** Front-on posts camera for try / conversion sequences. */
-export type GoalCameraMode = "try" | "conversion" | "miss" | null;
+/** Front-on posts camera for try / kick sequences. */
+export type GoalCameraMode = "try" | "conversion" | "miss" | "penalty_goal" | "drop_goal" | null;
 
 export type AnimationSignal = {
   kind: AnimationSignalKind;
@@ -32,10 +37,14 @@ export type AnimationSignal = {
   playerOn: string | null;
   jerseyNumber: number | null;
   playerImageUrl: string | null;
+  /** Optional law reason / option line (from feed label when present). */
+  detail: string | null;
   /** Show conversion ball-between-posts simulation before/with signal. */
   simulateConversion: boolean;
   /** Show line-out arrow graphic. */
   showLineoutArrow: boolean;
+  /** Dashed kick path from touch / 22 (dropout / kick to touch style). */
+  showKickPath: boolean;
   /** Switch pitch to front-on goal posts view. */
   frontGoalView: GoalCameraMode;
 };
@@ -62,22 +71,33 @@ export function resolveAnimationSignal(input: {
     playerOn: null as string | null,
     jerseyNumber: input.jerseyNumber ?? null,
     playerImageUrl: input.playerImageUrl ?? null,
+    detail: extractSignalDetail(label),
     simulateConversion: false,
     showLineoutArrow: false,
+    showKickPath: false,
     frontGoalView: null as GoalCameraMode,
   };
 
   if (t.includes("lineout") || t.includes("line_out") || /\bline.?out\b/i.test(label)) {
-    return { ...base, kind: "lineout", title: "LINE-OUT", showLineoutArrow: true };
+    return { ...base, kind: "lineout", title: "LINEOUT", showLineoutArrow: true };
+  }
+  if (
+    t.includes("dropout") ||
+    t.includes("drop_out") ||
+    t.includes("22_drop") ||
+    /\b22\b.*drop/i.test(label) ||
+    /goal.?line.?drop/i.test(label)
+  ) {
+    return { ...base, kind: "dropout", title: "22 DROPOUT", showKickPath: true };
   }
   if (t.includes("scrum")) {
-    return { ...base, kind: "scrum_awarded", title: "SCRUM AWARDED" };
+    return { ...base, kind: "scrum_awarded", title: "SCRUM" };
   }
   if (t.includes("penalty_try")) {
     return { ...base, kind: "try_awarded", title: "PENALTY TRY", frontGoalView: "try" };
   }
   if (t.includes("try") && !t.includes("conversion")) {
-    return { ...base, kind: "try_awarded", title: "TRY AWARDED", frontGoalView: "try" };
+    return { ...base, kind: "try_awarded", title: "TRY", frontGoalView: "try" };
   }
   if (t.includes("missed_conversion") || (t.includes("conversion") && t.includes("miss"))) {
     return {
@@ -92,13 +112,40 @@ export function resolveAnimationSignal(input: {
     return {
       ...base,
       kind: "conversion_awarded",
-      title: "CONVERSION AWARDED",
+      title: "CONVERSION",
       simulateConversion: true,
       frontGoalView: "conversion",
     };
   }
+  if (t.includes("drop_goal") || t.includes("dropgoal") || /\bdrop\s*goal\b/i.test(label)) {
+    return {
+      ...base,
+      kind: "drop_goal",
+      title: "DROP GOAL",
+      simulateConversion: true,
+      frontGoalView: "drop_goal",
+    };
+  }
+  if (
+    (t.includes("penalty") || t.includes("pen_")) &&
+    (t.includes("goal") || t.includes("kick") || /\bpen(?:alty)?\s*goal\b/i.test(label))
+  ) {
+    return {
+      ...base,
+      kind: "penalty_goal",
+      title: "PENALTY GOAL",
+      simulateConversion: true,
+      frontGoalView: "penalty_goal",
+    };
+  }
+  if (t.includes("free_kick") || t.includes("freekick") || /\bfree\s*kick\b/i.test(label)) {
+    return { ...base, kind: "free_kick", title: "FREE KICK", showKickPath: true };
+  }
   if (t.includes("penalty") || t.includes("pen_")) {
-    return { ...base, kind: "penalty_awarded", title: "PENALTY AWARDED" };
+    return { ...base, kind: "penalty_awarded", title: "PENALTY", showKickPath: true };
+  }
+  if (t.includes("injury") || t.includes("injured") || t.includes("hia") || t.includes("blood")) {
+    return { ...base, kind: "injury", title: "INJURY" };
   }
   if (t.includes("yellow") || t.includes("sin_bin") || t.includes("sinbin")) {
     return { ...base, kind: "yellow_card", title: "YELLOW CARD" };
@@ -158,6 +205,27 @@ export function resolveAnimationSignal(input: {
 function extractPlayerFromLabel(label: string): string | null {
   const m = label.match(/—\s*(.+)$/) || label.match(/-\s*(.+)$/);
   return m?.[1]?.trim() || null;
+}
+
+/** Pull rugby reason/option text from CMS/feed labels when present. */
+export function extractSignalDetail(label: string): string | null {
+  const raw = label.trim();
+  if (!raw) return null;
+  const option = raw.match(
+    /\b(?:option|choice)\s*[:–-]\s*(.+)$/i,
+  );
+  if (option?.[1]) return option[1].trim();
+  const reason = raw.match(
+    /\b(?:reason|infringement|for)\s*[:–-]\s*(.+)$/i,
+  );
+  if (reason?.[1]) return reason[1].trim();
+  // Known rugby reasons appearing inline
+  const known =
+    raw.match(
+      /\b(offside|not releasing|holding on|hands in the ruck|high tackle|collapsing the scrum|collapsing the maul|side entry|deliberate knock-?on|kick to touch|kick at goal|tap and go|scrum selected)\b/i,
+    );
+  if (known?.[1]) return known[1];
+  return null;
 }
 
 /** Parse "Off X / On Y" style substitution labels when present. */

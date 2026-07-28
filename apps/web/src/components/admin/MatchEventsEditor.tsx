@@ -33,6 +33,11 @@ type FixtureMeta = {
   awayTeam: { id: string; name: string } | null;
   kickoffAt: string | Date | null;
   status: string;
+  halfTimeHome?: number | null;
+  halfTimeAway?: number | null;
+  attendance?: number | null;
+  competitionName?: string | null;
+  competition?: { id: string; name: string; slug: string } | null;
 };
 
 function payloadName(payload: Record<string, unknown> | null, key: string): string {
@@ -281,6 +286,11 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
         awayTeam={fixture.awayTeam}
         kickoffAt={fixture.kickoffAt}
         status={fixture.status}
+        halfTimeHome={fixture.halfTimeHome}
+        halfTimeAway={fixture.halfTimeAway}
+        attendance={fixture.attendance}
+        competitionSlug={fixture.competition?.slug ?? null}
+        competitionName={fixture.competition?.name ?? fixture.competitionName}
       />
 
       <section className="cms-card--nested p-3 space-y-3">

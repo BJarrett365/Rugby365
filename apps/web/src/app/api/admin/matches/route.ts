@@ -102,6 +102,12 @@ export async function POST(req: Request) {
       externalMatchId: body.externalMatchId ? String(body.externalMatchId) : null,
       venueId: body.venueId ? String(body.venueId) : null,
       attendance: body.attendance != null && body.attendance !== "" ? Number(body.attendance) : null,
+      halfTimeHome:
+        body.halfTimeHome != null && body.halfTimeHome !== "" ? Number(body.halfTimeHome) : null,
+      halfTimeAway:
+        body.halfTimeAway != null && body.halfTimeAway !== "" ? Number(body.halfTimeAway) : null,
+      additionalInfo: body.additionalInfo ? String(body.additionalInfo) : null,
+      weatherNote: body.weatherNote ? String(body.weatherNote) : null,
       refereeId: body.refereeId ? String(body.refereeId) : null,
       homeCoachId: body.homeCoachId ? String(body.homeCoachId) : null,
       awayCoachId: body.awayCoachId ? String(body.awayCoachId) : null,

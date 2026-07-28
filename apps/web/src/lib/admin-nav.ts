@@ -88,6 +88,22 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     matchPrefixes: ["/admin/keys/supabase"],
   },
   {
+    id: "open-meteo",
+    label: "Open-Meteo weather",
+    value: "Weather",
+    description: "Open-Meteo forecast and geocoding for match venue weather and wind (no API key).",
+    href: "/admin/keys/open-meteo",
+    matchPrefixes: ["/admin/keys/open-meteo"],
+  },
+  {
+    id: "tv-schedule",
+    label: "TV Schedule",
+    value: "TV",
+    description: "Gracenote / PA Media EPG keys for rugby where-to-watch (CMS manual until synced).",
+    href: "/admin/keys/tv-schedule",
+    matchPrefixes: ["/admin/keys/tv-schedule"],
+  },
+  {
     id: "wiki",
     label: "Wikipedia & Wikimedia",
     value: "Wiki",
@@ -257,6 +273,18 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       description: "Configure Supabase project URL, anon key and service role.",
       status: "Admin",
     },
+    {
+      title: "Open-Meteo weather",
+      href: "/admin/keys/open-meteo",
+      description: "Venue weather and wind via Open-Meteo (no API key; needs venue coordinates).",
+      status: "Admin",
+    },
+    {
+      title: "TV Schedule",
+      href: "/admin/keys/tv-schedule",
+      description: "Gracenote / PA Media keys for rugby TV listings (CMS broadcasters work without keys).",
+      status: "Admin",
+    },
   ],
   wiki: [
     {
@@ -293,6 +321,18 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       title: "Supabase keys",
       href: "/admin/keys/supabase",
       description: "Supabase project credentials for Auth, Database and Storage.",
+      status: "Admin",
+    },
+    {
+      title: "Open-Meteo weather",
+      href: "/admin/keys/open-meteo",
+      description: "Open-Meteo weather and geocoding for match venue conditions.",
+      status: "Admin",
+    },
+    {
+      title: "TV Schedule",
+      href: "/admin/keys/tv-schedule",
+      description: "EPG provider credentials for automated where-to-watch sync.",
       status: "Admin",
     },
   ],

@@ -3,16 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { MatchDataPanel } from "@/components/admin/MatchDataPanel";
-import { MatchHeadToHeadPanel } from "@/components/admin/MatchHeadToHeadPanel";
-import { MatchSourcesPanel } from "@/components/admin/MatchSourcesPanel";
-import { MatchLineupsEditor } from "@/components/admin/MatchLineupsEditor";
-import { MatchTeamStatsEditor } from "@/components/admin/MatchTeamStatsEditor";
-import { MatchPlayerStatsEditor } from "@/components/admin/MatchPlayerStatsEditor";
-import { MatchEventsEditor } from "@/components/admin/MatchEventsEditor";
 import { MatchForm, toDatetimeLocal } from "@/components/admin/MatchForm";
 import { MatchIssuesPanel } from "@/components/admin/MatchIssuesPanel";
-import { MatchTrackerSettingsPanel } from "@/components/admin/MatchTrackerSettingsPanel";
-import { MatchYoutubeMediaPanel } from "@/components/admin/MatchYoutubeMediaPanel";
+import { MatchCmsSubnav } from "@/components/admin/MatchCmsSubnav";
+import { MatchCmsInfoHeader } from "@/components/admin/MatchCmsInfoHeader";
+import { MatchCmsHashRedirect } from "@/components/admin/MatchCmsHashRedirect";
 import { PageHeader } from "@/components/shell/PageHeader";
 
 type MatchDetail = {
@@ -28,10 +23,15 @@ type MatchDetail = {
     highlightsYoutubeUrl?: string | null;
     venueId?: string | null;
     attendance?: number | null;
+    halfTimeHome?: number | null;
+    halfTimeAway?: number | null;
+    additionalInfo?: string | null;
+    weatherNote?: string | null;
     refereeId?: string | null;
     homeCoachId?: string | null;
     awayCoachId?: string | null;
     round?: string | null;
+    competition?: { id: string; name: string; slug: string } | null;
   };
   events: Parameters<typeof MatchDataPanel>[0]["events"];
   eventCount: number;
@@ -51,6 +51,10 @@ function fixtureToFormInitial(fixture: MatchDetail["fixture"]) {
     planetRugbyUrl: fixture.planetRugbyUrl ?? "",
     venueId: fixture.venueId ?? "",
     attendance: fixture.attendance != null ? String(fixture.attendance) : "",
+    halfTimeHome: fixture.halfTimeHome != null ? String(fixture.halfTimeHome) : "",
+    halfTimeAway: fixture.halfTimeAway != null ? String(fixture.halfTimeAway) : "",
+    additionalInfo: fixture.additionalInfo ?? "",
+    weatherNote: fixture.weatherNote ?? "",
     refereeId: fixture.refereeId ?? "",
     homeCoachId: fixture.homeCoachId ?? "",
     awayCoachId: fixture.awayCoachId ?? "",
@@ -118,9 +122,7 @@ export function MatchEditClient({ id }: { id: string }) {
               body: JSON.stringify({ replaceEvents: false }),
             });
             const enrichData = await enrichRes.json();
-            if (!enrichRes.ok) throw new Error(enrichData.error ?? "Planet Rugby enrich failed");
-            if (cancelled) return;
-            if (enrichData.detail) {
+            if (enrichRes.ok && enrichData.detail && !cancelled) {
               applyDetail(enrichData.detail, setDetail, setInitial);
             }
           } finally {
@@ -128,9 +130,7 @@ export function MatchEditClient({ id }: { id: string }) {
           }
         }
       } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load match");
-        }
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
       }
     }
 
@@ -139,18 +139,6 @@ export function MatchEditClient({ id }: { id: string }) {
       cancelled = true;
     };
   }, [id]);
-
-  useEffect(() => {
-    if (!detail) return;
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    if (!hash) return;
-    const el = document.querySelector(hash);
-    if (el) {
-      requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-  }, [detail]);
 
   if (error) {
     return (
@@ -167,14 +155,53 @@ export function MatchEditClient({ id }: { id: string }) {
     return <p className="text-zinc-500 text-sm">Loading match data…</p>;
   }
 
+  const fixture = detail.fixture;
+
   return (
     <>
+      <MatchCmsHashRedirect matchId={id} />
       <PageHeader
         eyebrow="CMS"
-        title="Edit match"
-        description="Issues, lineups, stats, events, sources, and fixture details."
+        title="Match Info"
+        description="Core fixture details, attendance, half-time, weather note and additional information."
       />
-      <div className="space-y-6 max-w-6xl">
+      <p className="text-sm text-zinc-500 m-0 mb-3">
+        <Link href="/admin/matches" className="text-zinc-400 hover:text-zinc-200">
+          ← Matches
+        </Link>
+        {fixture.slug ? (
+          <>
+            {" · "}
+            <Link
+              href={`/matches/${fixture.slug}`}
+              className="text-emerald-400 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Public view
+            </Link>
+          </>
+        ) : null}
+      </p>
+
+      <div className="mb-3">
+        <MatchCmsInfoHeader
+          matchId={fixture.id}
+          homeTeam={fixture.homeTeam}
+          awayTeam={fixture.awayTeam}
+          kickoffAt={fixture.kickoffAt}
+          status={fixture.status}
+          halfTimeHome={fixture.halfTimeHome}
+          halfTimeAway={fixture.halfTimeAway}
+          attendance={fixture.attendance}
+          competitionSlug={fixture.competition?.slug ?? null}
+          competitionName={fixture.competition?.name ?? fixture.competitionName}
+        />
+      </div>
+
+      <MatchCmsSubnav matchId={id} slug={fixture.slug} />
+
+      <div className="space-y-6 max-w-6xl mt-4">
         <div id="issues">
           <MatchIssuesPanel fixtureId={id} onChanged={reloadDetail} />
         </div>
@@ -185,90 +212,13 @@ export function MatchEditClient({ id }: { id: string }) {
             syncing={syncing}
           />
         </div>
-        <div id="lineups" className="cms-card">
-          <h3 className="cms-section-title">Lineups</h3>
-          <MatchLineupsEditor fixtureId={id} onChanged={reloadDetail} />
-        </div>
-        <div id="team-stats" className="cms-card">
-          <h3 className="cms-section-title">Match stats</h3>
-          <MatchTeamStatsEditor fixtureId={id} />
-        </div>
-        <div id="player-stats" className="cms-card">
-          <h3 className="cms-section-title">Player stats</h3>
-          <MatchPlayerStatsEditor fixtureId={id} />
-        </div>
-        <div id="events" className="cms-card">
-          <h3 className="cms-section-title">Match events</h3>
-          <MatchEventsEditor fixtureId={id} />
-        </div>
-        <div id="tracker" className="cms-card">
-          <h3 className="cms-section-title">Match Animation / Tracker</h3>
-          <MatchTrackerSettingsPanel fixtureId={id} />
-        </div>
-        <div id="youtube" className="cms-card">
-          <h3 className="cms-section-title">Watchalong &amp; Match Highlights</h3>
-          <p className="mb-3 mt-0 text-xs text-zinc-500">
-            Manage each video independently. Saving one does not change the other.
-          </p>
-          <MatchYoutubeMediaPanel
-            fixtureId={id}
-            initialWatchalongUrl={detail.fixture.watchalongYoutubeUrl ?? null}
-            initialHighlightsUrl={detail.fixture.highlightsYoutubeUrl ?? null}
-            onSaved={reloadDetail}
-          />
-        </div>
-        <div className="cms-card">
-          <h3 className="cms-section-title">Head to head stats</h3>
-          <MatchHeadToHeadPanel
-            fixtureId={id}
-            planetRugbyUrl={detail.fixture.planetRugbyUrl}
-            sport365Url={detail.fixture.sport365Url}
-            onRefresh={reloadDetail}
-          />
-        </div>
-        <div id="commentary" className="cms-card text-sm text-zinc-400">
-          <h3 className="cms-section-title">Commentary</h3>
-          <p className="m-0">
-            Open{" "}
-            <Link href={`/matches/${detail.fixture.slug}/commentary`} className="text-emerald-400 hover:underline">
-              public commentary
-            </Link>{" "}
-            or the{" "}
-            <Link href="/admin/operator" className="text-emerald-400 hover:underline">
-              operator console
-            </Link>
-            .
-          </p>
-        </div>
-        <div id="sources" className="cms-card">
-          <MatchSourcesPanel fixtureId={id} onSaved={reloadDetail} />
-        </div>
-        <div id="conflicts" className="cms-card text-sm text-zinc-400">
-          <h3 className="cms-section-title">Conflicts</h3>
-          <p className="m-0">
-            Conflict centre wiring comes in a later phase. Manual score locks already protect overrides.
-          </p>
-        </div>
-        <div id="raw-data" className="cms-card text-sm text-zinc-400">
-          <h3 className="cms-section-title">Raw data</h3>
-          <p className="m-0">Raw API response viewer arrives with Data Integration tools.</p>
-        </div>
-        <div id="audit" className="cms-card text-sm text-zinc-400">
-          <h3 className="cms-section-title">Audit</h3>
-          <p className="m-0">Inline score changes are written to the data integration audit log.</p>
-        </div>
         <MatchForm
           fixtureId={id}
           initial={initial}
-          submitLabel="Save changes"
+          submitLabel="Save Match Info"
           onSynced={reloadDetail}
         />
       </div>
-      <p className="text-sm text-zinc-600 mt-4">
-        <Link href="/admin/matches" className="text-zinc-400 hover:text-zinc-200">
-          ← Back to matches
-        </Link>
-      </p>
     </>
   );
 }

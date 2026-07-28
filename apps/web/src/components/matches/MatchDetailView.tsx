@@ -311,6 +311,7 @@ export async function MatchDetailView({
   const awayCards = cards.filter((c) => c.side === "away");
   const refName = referee?.name ?? detail.referee?.find((r) => /referee/i.test(r.role))?.name ?? detail.referee?.[0]?.name;
   const stadiumName = venue?.name ?? detail.venue_name ?? null;
+  const broadcasters = data.broadcasters ?? [];
 
   const hasHighlights = Boolean(youtubeEmbedSrc(cmsFixture?.highlightsYoutubeUrl));
   const hasWatchalong = Boolean(youtubeEmbedSrc(cmsFixture?.watchalongYoutubeUrl));
@@ -371,6 +372,46 @@ export async function MatchDetailView({
                       stadiumName
                     )}
                   </>
+                ) : null}
+                {venue?.weather &&
+                (venue.weather.temperatureC != null || venue.weather.windSpeedKmh != null) ? (
+                  <span className="pr-mc-header__weather">
+                    {" · "}
+                    {[
+                      venue.weather.temperatureC != null
+                        ? `${Math.round(venue.weather.temperatureC)}°C`
+                        : null,
+                      venue.weather.windSpeedKmh != null
+                        ? `${Math.round(venue.weather.windSpeedKmh)} km/h${
+                            venue.weather.windCompass ? ` ${venue.weather.windCompass}` : ""
+                          }`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                ) : null}
+                {broadcasters.length ? (
+                  <span className="pr-mc-header__tv">
+                    {" · Watch on "}
+                    {broadcasters.map((b, i) => (
+                      <span key={b.id}>
+                        {i > 0 ? ", " : null}
+                        {b.url ? (
+                          <a
+                            href={b.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="pr-mc-header__tv-link"
+                          >
+                            {b.label}
+                          </a>
+                        ) : (
+                          b.label
+                        )}
+                      </span>
+                    ))}
+                  </span>
                 ) : null}
                 {" · "}
                 {statusLabel(detail.status)}

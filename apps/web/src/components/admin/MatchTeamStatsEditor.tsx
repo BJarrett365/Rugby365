@@ -17,6 +17,9 @@ type StatsPayload = {
     awayTeamName: string | null;
     kickoffAt: string | null;
     status: string;
+    halfTimeHome?: number | null;
+    halfTimeAway?: number | null;
+    attendance?: number | null;
   };
   pairRows: TeamStatPairRow[];
 };
@@ -118,6 +121,9 @@ export function MatchTeamStatsEditor({ fixtureId }: { fixtureId: string }) {
         awayTeam={{ id: data.fixture.awayTeamId, name: data.fixture.awayTeamName }}
         kickoffAt={data.fixture.kickoffAt}
         status={data.fixture.status}
+        halfTimeHome={data.fixture.halfTimeHome}
+        halfTimeAway={data.fixture.halfTimeAway}
+        attendance={data.fixture.attendance}
       />
 
       <div className="cms-card--nested p-3 space-y-3">

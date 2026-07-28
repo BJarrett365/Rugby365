@@ -39,14 +39,14 @@ const FINISHED_LIKE = new Set(["full_time", "live", "half_time"]);
 
 export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
   const out: MatchWarning[] = [];
-  const edit = (hash: string) => (id: string) => `/admin/matches/${id}/edit${hash}`;
+  const page = (path: string) => (id: string) => `/admin/matches/${id}/${path}`;
 
   if (!flags.competitionId) {
     out.push({
       code: "competition",
       label: "Competition mapping",
       actionLabel: "Map competition",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.seasonId) {
@@ -54,7 +54,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "season",
       label: "Season mapping",
       actionLabel: "Map season",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.homeTeamId) {
@@ -62,7 +62,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "home_team",
       label: "Home team",
       actionLabel: "Map team",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.awayTeamId) {
@@ -70,7 +70,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "away_team",
       label: "Away team",
       actionLabel: "Map team",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.venueId) {
@@ -78,7 +78,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "venue",
       label: "Venue",
       actionLabel: "Add venue",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.refereeId) {
@@ -86,7 +86,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "referee",
       label: "Main referee",
       actionLabel: "Add referee",
-      href: edit("#issues"),
+      href: page("edit"),
     });
   }
   if (!flags.primaryApiMatchId) {
@@ -94,7 +94,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       code: "primary_mapping",
       label: "Primary API mapping",
       actionLabel: "Review mapping",
-      href: edit("#sources"),
+      href: page("sources"),
     });
   }
 
@@ -104,7 +104,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
         code: "lineups",
         label: "Lineups",
         actionLabel: "Import lineups",
-        href: edit("#lineups"),
+        href: page("lineups"),
       });
     }
     if (!flags.hasTeamStats) {
@@ -112,7 +112,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
         code: "team_stats",
         label: "Team stats",
         actionLabel: "Sync stats",
-        href: edit("#team-stats"),
+        href: page("stats"),
       });
     }
     if (!flags.hasPlayerStats) {
@@ -120,7 +120,7 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
         code: "player_stats",
         label: "Player stats",
         actionLabel: "Sync stats",
-        href: edit("#player-stats"),
+        href: page("player-stats"),
       });
     }
   }

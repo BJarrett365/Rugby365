@@ -90,9 +90,19 @@ export function MatchAnimationSignal({
       <p className="pr-ma-signal__title" aria-hidden>
         {signal.title}
       </p>
+      {signal.kind === "injury" ? (
+        <span className="pr-ma-signal__injury" aria-hidden>
+          ✚
+        </span>
+      ) : null}
       {team ? (
         <p className="pr-ma-signal__team" aria-hidden style={{ color: team.colour }}>
           {team.shortName}
+        </p>
+      ) : null}
+      {signal.detail ? (
+        <p className="pr-ma-signal__detail" aria-hidden>
+          {signal.detail}
         </p>
       ) : null}
       {signal.kind === "substitution" ? (

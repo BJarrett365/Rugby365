@@ -165,19 +165,44 @@ function CompactMatchRow({
 function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
   const home = fixture.homeTeam?.name ?? "TBC";
   const away = fixture.awayTeam?.name ?? "TBC";
-  const finished = fixture.status === "full_time" || fixture.status === "live";
-  const showScores = finished;
+  const showScores =
+    fixture.status === "full_time" ||
+    fixture.status === "live" ||
+    fixture.status === "half_time" ||
+    /result|finished|ft/i.test(fixture.status);
   const detailHref = matchDetailHref(fixture);
   const status = publicMatchStatusLabel(fixture.status, fixture.kickoffAt, fixture.matchDate);
+  const hasHt =
+    fixture.halfTimeHome != null &&
+    fixture.halfTimeAway != null &&
+    Number.isFinite(fixture.halfTimeHome) &&
+    Number.isFinite(fixture.halfTimeAway);
+  const tvTitle = fixture.tvLabels?.length ? fixture.tvLabels.join(" · ") : null;
+  const weatherTitle = fixture.weather?.summary ?? null;
+  const infoTitle = fixture.additionalInfo ?? null;
+  const attendanceTitle =
+    fixture.attendance != null
+      ? `Attendance ${fixture.attendance.toLocaleString("en-GB")}`
+      : null;
 
   return (
     <article className="pr-mc-match-row">
       <div className="pr-mc-match-row__meta">
         <span className="pr-mc-match-row__round">{fixture.round?.trim() || "—"}</span>
         {fixture.venue ? <span className="pr-mc-match-row__venue">{fixture.venue}</span> : null}
+        {attendanceTitle ? (
+          <span className="pr-mc-match-row__attendance">{attendanceTitle}</span>
+        ) : null}
       </div>
 
-      <div className="pr-mc-match-row__status">{status}</div>
+      <div className="pr-mc-match-row__status">
+        <span>{status}</span>
+        {hasHt ? (
+          <span className="pr-mc-match-row__ht" title="Half-time score">
+            HT {fixture.halfTimeHome}–{fixture.halfTimeAway}
+          </span>
+        ) : null}
+      </div>
 
       <div className="pr-mc-match-row__teams">
         <div className="pr-mc-team">
@@ -190,6 +215,46 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
           <span className="pr-mc-team__name">{away}</span>
           {showScores ? <span className="pr-mc-team__score">{fixture.awayScore}</span> : null}
         </div>
+      </div>
+
+      <div className="pr-mc-match-row__extras" aria-label="Match extras">
+        {infoTitle ? (
+          <span className="pr-mc-match-extra" title={infoTitle} aria-label={infoTitle}>
+            <span className="pr-mc-match-extra__icon" aria-hidden>
+              i
+            </span>
+            <span className="pr-mc-match-extra__text">{infoTitle}</span>
+          </span>
+        ) : null}
+        {tvTitle ? (
+          <span className="pr-mc-match-extra" title={tvTitle} aria-label={`TV: ${tvTitle}`}>
+            <span className="pr-mc-match-extra__icon" aria-hidden>
+              TV
+            </span>
+            <span className="pr-mc-match-extra__text">{tvTitle}</span>
+          </span>
+        ) : null}
+        {weatherTitle ? (
+          <span
+            className="pr-mc-match-extra"
+            title={weatherTitle}
+            aria-label={`Weather: ${weatherTitle}`}
+          >
+            <span className="pr-mc-match-extra__icon" aria-hidden>
+              W
+            </span>
+            <span className="pr-mc-match-extra__text">
+              {fixture.weather?.temperatureC != null
+                ? `${Math.round(fixture.weather.temperatureC)}°C`
+                : "Weather"}
+              {fixture.weather?.windSpeedKmh != null
+                ? ` · ${Math.round(fixture.weather.windSpeedKmh)} km/h${
+                    fixture.weather.windCompass ? ` ${fixture.weather.windCompass}` : ""
+                  }`
+                : ""}
+            </span>
+          </span>
+        ) : null}
       </div>
 
       <div className="pr-mc-match-row__action">
@@ -520,7 +585,17 @@ export function FixturesScheduleBoard({
                     }
                   >
                     {isPublic ? (
-                      <span className="pr-mc-competition-block__title">{publicLabel}</span>
+                      <>
+                        <span className="pr-mc-competition-block__title">{publicLabel}</span>
+                        {group.slug ? (
+                          <Link
+                            href={`/competitions/${group.slug}/table`}
+                            className="pr-mc-competition-block__table"
+                          >
+                            Full Table
+                          </Link>
+                        ) : null}
+                      </>
                     ) : (
                       <>
                         <span className="fixtures-competition-block__icon" aria-hidden>
