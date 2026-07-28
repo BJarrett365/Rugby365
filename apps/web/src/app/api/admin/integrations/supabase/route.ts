@@ -10,6 +10,7 @@ import {
   getSupabaseIntegrationStatus,
   mirrorLiveFixturesToSupabase,
 } from "@/lib/supabase-live-service";
+import { syncAllDataToSupabase } from "@/lib/supabase-full-sync-service";
 import { apiErrorResponse } from "@/lib/api-errors";
 
 export async function GET() {
@@ -79,6 +80,20 @@ export async function PATCH(req: Request) {
         dateKey,
         ...result,
       });
+    }
+
+    if (body.action === "sync-all") {
+      const tables =
+        typeof body.tables === "string"
+          ? body.tables
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : Array.isArray(body.tables)
+            ? body.tables.map(String)
+            : undefined;
+      const result = await syncAllDataToSupabase({ tables });
+      return NextResponse.json(result, { status: result.ok ? 200 : 500 });
     }
 
     const projectUrl = typeof body.projectUrl === "string" ? body.projectUrl : undefined;
