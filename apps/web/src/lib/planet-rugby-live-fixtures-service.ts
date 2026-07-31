@@ -43,11 +43,15 @@ function dayBoundsInTimezone(dateKey: string, timeZone: string): { start: Date; 
 }
 
 function toScheduleTeam(
-  team: { name: string; slug?: string | null; imageUrl?: string | null } | null | undefined,
+  team:
+    | { id?: string | null; name: string; slug?: string | null; imageUrl?: string | null }
+    | null
+    | undefined,
   fallbackIcon?: string | null,
 ): ScheduleTeam | null {
   if (!team?.name) return null;
   return {
+    id: team.id ?? null,
     name: team.name,
     slug: team.slug ?? null,
     imageUrl: team.imageUrl ?? fallbackIcon ?? null,
@@ -76,8 +80,18 @@ function mapDbFixture(
     isNeutralVenue?: boolean | null;
     externalMatchId: string | null;
     planetRugbyUrl: string | null;
-    homeTeam: { name: string; slug?: string | null; imageUrl?: string | null } | null;
-    awayTeam: { name: string; slug?: string | null; imageUrl?: string | null } | null;
+    homeTeam: {
+      id?: string | null;
+      name: string;
+      slug?: string | null;
+      imageUrl?: string | null;
+    } | null;
+    awayTeam: {
+      id?: string | null;
+      name: string;
+      slug?: string | null;
+      imageUrl?: string | null;
+    } | null;
   },
   timeZone: string,
   icons?: { home?: string | null; away?: string | null },
@@ -209,7 +223,14 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
 export async function getScheduleForDate(
   dateKey: string,
   timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
-  options?: { competitionId?: string | null },
+  options?: {
+    competitionId?: string | null;
+    /**
+     * Fast DB-only path for Match Centre sidebar rails.
+     * Skips SDMS/Rugby Data sync and public weather/win-prob enrichment.
+     */
+    lite?: boolean;
+  },
 ): Promise<{
   fixtures: ScheduleFixture[];
   competitions: ScheduleCompetition[];
@@ -219,6 +240,7 @@ export async function getScheduleForDate(
   timeZone: string;
 }> {
   const competitionIdFilter = options?.competitionId?.trim() || null;
+  const lite = Boolean(options?.lite);
   const season = dateKey.slice(0, 4);
   const { start, end } = sdmsDatetimeRangeForDate(dateKey, timeZone);
 
@@ -227,6 +249,37 @@ export async function getScheduleForDate(
   const stripEnd = addDaysToDateKey(dateKey, 14);
   const datesRangeStart = month.start < stripStart ? month.start : stripStart;
   const datesRangeEnd = month.end > stripEnd ? month.end : stripEnd;
+
+  if (lite) {
+    const [competitions, dbRows] = await Promise.all([
+      listCompetitions(),
+      listDbFixturesForDate(dateKey, timeZone),
+    ]);
+    const competitionList: ScheduleCompetition[] = competitions.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+    }));
+    let fixtures = dbRows
+      .map((row) => mapDbFixture(row, timeZone))
+      .filter((f) => fixtureOnCalendarDate(f, dateKey));
+    if (competitionIdFilter) {
+      fixtures = fixtures.filter((f) => f.competitionId === competitionIdFilter);
+    }
+    fixtures.sort((a, b) => {
+      const ta = a.kickoffAt ? new Date(a.kickoffAt).getTime() : 0;
+      const tb = b.kickoffAt ? new Date(b.kickoffAt).getTime() : 0;
+      return ta - tb;
+    });
+    return {
+      fixtures,
+      competitions: competitionList,
+      liveCount: fixtures.filter((f) => /live|half_time|half time/i.test(f.status)).length,
+      dbCount: dbRows.length,
+      datesWithMatches: [],
+      timeZone,
+    };
+  }
 
   const [sdmsRaw, competitions, datesWithMatches] = await Promise.all([
     fetchSdmsGlobalFixtures(season, start, end),

@@ -10,14 +10,36 @@ type SchedulePayload = {
   fixtures: ScheduleFixture[];
 };
 
+/** Survive Match Centre remounts when switching tabs (searchParams re-render). */
+const sidebarFixtureCache = new Map<string, ScheduleFixture[]>();
+
+function sidebarCacheKey(
+  matchDate: string,
+  competitionName: string,
+  competitionId?: string | number | null,
+): string {
+  return `${matchDate}|${competitionId ?? ""}|${competitionName.trim().toLowerCase()}`;
+}
+
 function formatKickTime(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function isFinished(status: string): boolean {
-  const s = status.toLowerCase();
-  return s === "result" || s === "finished" || s === "ft" || s === "full time" || s === "complete";
+  const s = status.toLowerCase().replace(/\s+/g, "_");
+  return (
+    s === "result" ||
+    s === "finished" ||
+    s === "ft" ||
+    s === "full_time" ||
+    s === "complete" ||
+    s === "completed"
+  );
 }
 
 function addDays(isoDate: string, days: number): string {
@@ -46,9 +68,10 @@ function ordinal(day: number): string {
 
 /** e.g. Sunday 26th July 2026 — matches Planet Rugby rail. */
 function formatDateHeading(iso: string): string {
+  // Noon UTC keeps calendar day stable across UK/EU offsets for strip headings.
   const d = new Date(`${iso}T12:00:00Z`);
-  const weekday = d.toLocaleDateString("en-GB", { weekday: "long" });
-  const month = d.toLocaleDateString("en-GB", { month: "long" });
+  const weekday = d.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
+  const month = d.toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" });
   const year = d.getUTCFullYear();
   return `${weekday} ${ordinal(d.getUTCDate())} ${month} ${year}`;
 }
@@ -164,43 +187,59 @@ export function MatchCentreSidebar({
   competitionId?: string | number | null;
   currentMatchId: string;
 }) {
-  const [fixtures, setFixtures] = useState<ScheduleFixture[] | null>(null);
+  const cacheKey = sidebarCacheKey(matchDate, competitionName, competitionId);
+  const [fixtures, setFixtures] = useState<ScheduleFixture[] | null>(
+    () => sidebarFixtureCache.get(cacheKey) ?? null,
+  );
   const dates = useMemo(() => dateRange(matchDate, 7, 7), [matchDate]);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = sidebarFixtureCache.get(cacheKey);
+    if (cached) {
+      setFixtures(cached);
+      return;
+    }
+    setFixtures(null);
+    // lite=1: DB-only, no provider sync / win-prob enrichment (keeps Match Centre snappy).
     Promise.all(
       dates.map((date) =>
-        fetch(`/api/fixtures/schedule?${new URLSearchParams({ date }).toString()}`)
+        fetch(`/api/fixtures/schedule?${new URLSearchParams({ date, lite: "1" }).toString()}`)
           .then((res) => (res.ok ? res.json() : null))
           .then((json: SchedulePayload | null) => json?.fixtures ?? [])
           .catch(() => [] as ScheduleFixture[]),
       ),
-    ).then((days) => {
-      if (cancelled) return;
-      const nameNorm = competitionName.trim().toLowerCase();
-      const merged = new Map<string, ScheduleFixture>();
-      for (const list of days) {
-        for (const f of list) {
-          if (
-            competitionId != null &&
-            f.sdmsCompetitionId &&
-            String(f.sdmsCompetitionId) === String(competitionId)
-          ) {
-            merged.set(f.id, f);
-            continue;
-          }
-          if ((f.competitionName ?? "").trim().toLowerCase() === nameNorm) {
-            merged.set(f.id, f);
+    )
+      .then((days) => {
+        if (cancelled) return;
+        const nameNorm = competitionName.trim().toLowerCase();
+        const merged = new Map<string, ScheduleFixture>();
+        for (const list of days) {
+          for (const f of list) {
+            if (
+              competitionId != null &&
+              f.sdmsCompetitionId &&
+              String(f.sdmsCompetitionId) === String(competitionId)
+            ) {
+              merged.set(f.id, f);
+              continue;
+            }
+            if ((f.competitionName ?? "").trim().toLowerCase() === nameNorm) {
+              merged.set(f.id, f);
+            }
           }
         }
-      }
-      setFixtures([...merged.values()]);
-    });
+        const next = [...merged.values()];
+        sidebarFixtureCache.set(cacheKey, next);
+        setFixtures(next);
+      })
+      .catch(() => {
+        if (!cancelled) setFixtures([]);
+      });
     return () => {
       cancelled = true;
     };
-  }, [dates, competitionName, competitionId]);
+  }, [cacheKey, dates, competitionName, competitionId]);
 
   if (fixtures === null) {
     return (

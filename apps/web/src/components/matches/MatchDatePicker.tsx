@@ -55,7 +55,8 @@ export function MatchDatePicker({
   /** Planet Rugby-style Jan–Dec month carousel. */
   showMonthStrip?: boolean;
 }) {
-  const todayKey = dateKeyLocal(new Date());
+  // Defer "today" until mount — Node SSR TZ and the browser can disagree near midnight.
+  const [todayKey, setTodayKey] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
     const d = parseDateKey(selectedKey);
@@ -65,6 +66,10 @@ export function MatchDatePicker({
   const activeBtnRef = useRef<HTMLButtonElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const fetchedMonthsRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    setTodayKey(dateKeyLocal(new Date()));
+  }, []);
 
   const selectedDate = useMemo(() => parseDateKey(selectedKey), [selectedKey]);
   const selectedYear = selectedDate.getFullYear();

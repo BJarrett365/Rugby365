@@ -1,10 +1,12 @@
-import { inArray } from "drizzle-orm";
-import { fixtureBroadcasters, matchEvents } from "@rugby365/db";
+import { eq, inArray } from "drizzle-orm";
+import { fixtureBroadcasters, fixtures, matchEvents, teams, venues } from "@rugby365/db";
 import { getDb } from "./db";
 import { formatBroadcasterLabel } from "./fixture-broadcasters-service";
 import { formatOpenMeteoSummary } from "./open-meteo-service";
 import type { ScheduleFixture } from "./match-schedule-utils";
 import { resolveWeatherForVenueId } from "./venue-geocode-service";
+import { enrichScheduleFixturesWithWinProbability } from "./schedule-win-probability";
+import { buildVenueResolver, type CmsVenueRef } from "./venue-fixture-resolve-service";
 
 function isHalfTimeEventType(type: string): boolean {
   const t = type.toLowerCase();
@@ -129,14 +131,80 @@ function buildAdditionalInfo(fixture: ScheduleFixture): string | null {
 }
 
 /**
+ * When schedule rows have a venue name but no venueId, resolve + persist the link
+ * so weather (and Match Centre) can use Open-Meteo.
+ */
+async function resolveMissingVenueIds(
+  scheduleFixtures: ScheduleFixture[],
+): Promise<Map<string, string>> {
+  const resolved = new Map<string, string>();
+  const needs = scheduleFixtures.filter(
+    (f) => f.source === "db" && !f.venueId && Boolean(f.venue?.trim()),
+  );
+  if (!needs.length) return resolved;
+
+  const db = getDb();
+  const cmsVenues: CmsVenueRef[] = await db
+    .select({
+      id: venues.id,
+      name: venues.name,
+      slug: venues.slug,
+      city: venues.city,
+      countryName: venues.countryName,
+      teamId: venues.teamId,
+    })
+    .from(venues);
+  const resolver = buildVenueResolver(cmsVenues);
+
+  const homeTeamIds = [
+    ...new Set(needs.map((f) => f.homeTeam?.id).filter((id): id is string => Boolean(id))),
+  ];
+  const homeVenueByTeam = new Map<string, string | null>();
+  if (homeTeamIds.length) {
+    const teamRows = await db
+      .select({ id: teams.id, homeVenueId: teams.homeVenueId })
+      .from(teams)
+      .where(inArray(teams.id, homeTeamIds));
+    for (const row of teamRows) homeVenueByTeam.set(row.id, row.homeVenueId);
+  }
+
+  for (const fixture of needs) {
+    const homeTeamId = fixture.homeTeam?.id ?? undefined;
+    const match = resolver.resolveFixtureVenue({
+      venueName: fixture.venue!,
+      homeTeamId,
+      homeVenueId: homeTeamId ? (homeVenueByTeam.get(homeTeamId) ?? undefined) : undefined,
+    });
+    if (!match) continue;
+    resolved.set(fixture.id, match.venue.id);
+    try {
+      await db
+        .update(fixtures)
+        .set({ venueId: match.venue.id, updatedAt: new Date() })
+        .where(eq(fixtures.id, fixture.id));
+    } catch {
+      /* non-blocking — still use resolved id for this response */
+    }
+  }
+
+  return resolved;
+}
+
+/**
  * Attach TV / weather / HT / attendance extras for the public fixtures board.
  * Safe to call for mixed DB + SDMS rows (SDMS-only rows stay sparse).
  */
 export async function enrichScheduleFixturesForPublic(
-  fixtures: ScheduleFixture[],
+  scheduleFixtures: ScheduleFixture[],
 ): Promise<ScheduleFixture[]> {
-  const dbIds = fixtures.filter((f) => f.source === "db").map((f) => f.id);
-  if (!dbIds.length) return fixtures;
+  const dbIds = scheduleFixtures.filter((f) => f.source === "db").map((f) => f.id);
+  if (!dbIds.length) return scheduleFixtures;
+
+  const venueIdByFixture = await resolveMissingVenueIds(scheduleFixtures);
+  const withVenueIds = scheduleFixtures.map((fixture) => {
+    const resolvedId = venueIdByFixture.get(fixture.id);
+    return resolvedId ? { ...fixture, venueId: resolvedId } : fixture;
+  });
 
   const [tvByFixture, htByFixture] = await Promise.all([
     loadTvLabelsByFixture(dbIds),
@@ -145,7 +213,7 @@ export async function enrichScheduleFixturesForPublic(
 
   const venueIds = [
     ...new Set(
-      fixtures
+      withVenueIds
         .map((f) => f.venueId)
         .filter((id): id is string => Boolean(id)),
     ),
@@ -159,11 +227,12 @@ export async function enrichScheduleFixturesForPublic(
     venueIds.map(async (venueId) => {
       try {
         const kickoff =
-          fixtures.find((f) => f.venueId === venueId)?.kickoffAt ?? null;
+          withVenueIds.find((f) => f.venueId === venueId)?.kickoffAt ?? null;
         const weather = await resolveWeatherForVenueId({
           venueId,
           kickoffAt: kickoff,
-          geocodeIfMissing: false,
+          // Allow a one-shot geocode when coords are missing (e.g. Trafalgar Park).
+          geocodeIfMissing: true,
         });
         if (!weather) return;
         if (weather.temperatureC == null && weather.windSpeedKmh == null) return;
@@ -181,7 +250,7 @@ export async function enrichScheduleFixturesForPublic(
     }),
   );
 
-  return fixtures.map((fixture) => {
+  const withExtras = withVenueIds.map((fixture) => {
     if (fixture.source !== "db") return fixture;
     const eventHt = htByFixture.get(fixture.id);
     const cmsHasHt = fixture.halfTimeHome != null && fixture.halfTimeAway != null;
@@ -198,4 +267,10 @@ export async function enrichScheduleFixturesForPublic(
     next.additionalInfo = buildAdditionalInfo(next);
     return next;
   });
+
+  try {
+    return await enrichScheduleFixturesWithWinProbability(withExtras);
+  } catch {
+    return withExtras;
+  }
 }

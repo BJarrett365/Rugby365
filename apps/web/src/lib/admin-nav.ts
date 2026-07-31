@@ -184,6 +184,13 @@ export const ADMIN_ODDS_LINKS: AdminHubLink[] = [
     status: "Live",
   },
   {
+    title: "Model pick accuracy",
+    href: "/admin/odds/model-accuracy",
+    description:
+      "Graph of Betting Intelligence win-probability leans vs finished results — cumulative correct / wrong %.",
+    status: "Live",
+  },
+  {
     title: "Match Centre Betting Intel",
     href: "/matches",
     description:
@@ -441,6 +448,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { href: "/admin/odds", label: "Odds hub", short: "Odds" },
       { href: "/admin/odds/bmbets", label: "BMbets import", short: "BMbets" },
+      { href: "/admin/odds/model-accuracy", label: "Model accuracy", short: "Accuracy" },
     ],
   },
   {

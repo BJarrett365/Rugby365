@@ -1,6 +1,7 @@
 import { canonicalCompetitionDisplayName } from "./competition-list-utils";
 
 export type ScheduleTeam = {
+  id?: string | null;
   name: string;
   slug?: string | null;
   imageUrl?: string | null;
@@ -14,6 +15,15 @@ export type ScheduleFixtureWeather = {
   /** Sun / cloud / rain glyph key. */
   icon?: import("./weather-condition").WeatherIconKind | null;
   conditionLabel?: string | null;
+};
+
+/** Compact Betting Intelligence win model for fixtures list rows. */
+export type ScheduleWinProbability = {
+  homeWinPct: number;
+  drawPct: number;
+  awayWinPct: number;
+  lean: "home" | "away" | "draw" | "uncertain";
+  confidencePct: number;
 };
 
 export type ScheduleFixture = {
@@ -43,6 +53,8 @@ export type ScheduleFixture = {
   weather?: ScheduleFixtureWeather | null;
   /** Extra tooltip / note line (neutral venue, first-leg style notes, etc.). */
   additionalInfo?: string | null;
+  /** Planet Rugby Betting Intelligence win % (upcoming fixtures). */
+  winProbability?: ScheduleWinProbability | null;
   homeTeam: ScheduleTeam | null;
   awayTeam: ScheduleTeam | null;
   externalMatchId?: string | null;
@@ -232,10 +244,19 @@ export function formatStripDay(key: string, todayKey: string): { top: string; bo
   return { top: weekday, bottom: `${month} ${dayNum}` };
 }
 
+/** Stable en-GB clock formatting — pin hour12 so Node SSR and Chromium match. */
+export function formatClockTime(iso: string, timeZone?: string): string {
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    ...(timeZone ? { timeZone } : {}),
+  });
+}
+
 export function formatKickoffTime(iso: string | null, matchDate?: string | null): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const time = formatClockTime(iso);
   if (matchDate && kickoffDateKey(iso) !== matchDate) {
     return `${matchDate.slice(8, 10)}/${matchDate.slice(5, 7)} ${time}`;
   }

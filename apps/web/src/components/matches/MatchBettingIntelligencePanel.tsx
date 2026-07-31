@@ -198,7 +198,7 @@ export function MatchBettingIntelligencePanel({
   return (
     <section className="pr-bi" aria-label="Betting Intelligence">
       <header className="pr-bi__header">
-        <p className="pr-mc-pr-badge">Planet Rugby Betting Intelligence</p>
+        <p className="pr-bi__eyebrow">Planet Rugby · Betting Intelligence</p>
         <h2>Betting Intelligence</h2>
         <p className="pr-bi__lede">
           Explainable rugby signals for why a selection may have value — built from Rugby365 data,
@@ -539,7 +539,7 @@ export function MatchBettingIntelligencePanel({
               <p>
                 Best prices from {intel.odds.provider} · {intel.odds.bookmakerCount} bookmakers
                 {intel.odds.scrapedAt
-                  ? ` · scraped ${new Date(intel.odds.scrapedAt).toLocaleString()}`
+                  ? ` · scraped ${new Date(intel.odds.scrapedAt).toLocaleString("en-GB", { hour12: false })}`
                   : ""}
                 {" · "}
                 <a href={intel.odds.sourceUrl} target="_blank" rel="noreferrer">

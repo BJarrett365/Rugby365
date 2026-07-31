@@ -17,6 +17,7 @@ import { MatchCentreSidebar } from "./MatchCentreSidebar";
 import { MatchHeadToHeadPublic } from "./MatchHeadToHeadPublic";
 import { MatchLiveTablesPanel } from "./MatchLiveTablesPanel";
 import { MatchBettingIntelligencePanel } from "./MatchBettingIntelligencePanel";
+import { MatchHeaderWinProbability } from "./MatchHeaderWinProbability";
 import { MatchAnimationSection } from "./MatchAnimationSection";
 import { MatchYoutubeEmbedSection } from "./MatchYoutubeEmbedSection";
 import { TeamCrest } from "./TeamCrest";
@@ -24,6 +25,7 @@ import { WeatherIcon } from "./WeatherIcon";
 import { collectHeaderCards, resolveHalfTimeScore } from "@/lib/match-header-utils";
 import { buildMatchAnimationPublicPayload } from "@/lib/match-animation-public-service";
 import { buildMatchBettingIntelligence } from "@/lib/match-betting-intelligence-service";
+import type { MatchBettingIntelligence } from "@/lib/match-betting-intelligence-types";
 import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
 import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability";
 import { youtubeEmbedSrc } from "@/lib/youtube-embed";
@@ -38,6 +40,7 @@ function formatKickoff(iso: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 
@@ -342,8 +345,13 @@ export async function MatchDetailView({
   // Light availability for tab badge on every render; full payload only for animation tab (lazy engine).
   const animationPayload = await buildMatchAnimationPublicPayload(data);
   const animationBadge: MatchAnimationTabBadge = animationPayload.availability.tabBadge;
-  const bettingIntel =
-    resolvedTab === "betting" ? await buildMatchBettingIntelligence(data) : null;
+  // Always build Betting Intelligence so win probability can sit in the match header.
+  let bettingIntel: MatchBettingIntelligence | null = null;
+  try {
+    bettingIntel = await buildMatchBettingIntelligence(data);
+  } catch {
+    bettingIntel = null;
+  }
 
   return (
     <div className="pr-match-centre match-detail">
@@ -508,6 +516,14 @@ export async function MatchDetailView({
                 ) : null}
               </div>
             </div>
+
+            {bettingIntel ? (
+              <MatchHeaderWinProbability
+                homeName={detail.home_team_name}
+                awayName={detail.away_team_name}
+                prediction={bettingIntel.prediction}
+              />
+            ) : null}
 
             <MatchEventTimelineStrip
               events={keyEvents}

@@ -60,6 +60,7 @@ function formatKickoffLocal(iso: string | null, timeZone: string): string {
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return "TBC";
   return d.toLocaleString("en-GB", {
+    hour12: false,
     timeZone,
     weekday: "short",
     day: "numeric",

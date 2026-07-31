@@ -234,7 +234,15 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     match_date: detail.date,
   });
 
-  await ensureSdmsProvidersRegistered(detail, lineups);
+  try {
+    await ensureSdmsProvidersRegistered(detail, lineups);
+  } catch (error) {
+    // Entity registration must never blank the Match Centre (e.g. concurrent player insert races).
+    console.warn(
+      `[match-detail] ensureSdmsProvidersRegistered failed for ${matchId}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
 
   let cmsFixtureRow = await findFixtureBySdmsMatchId(matchId);
   let entitySyncRan = false;
