@@ -124,7 +124,7 @@ function buildAdditionalInfo(fixture: ScheduleFixture): string | null {
   if (fixture.isNeutralVenue && !/neutral/i.test(fixture.additionalInfo ?? "")) {
     bits.push("Neutral venue");
   }
-  if (fixture.refereeName?.trim()) bits.push(`Referee: ${fixture.refereeName.trim()}`);
+  // Referee is shown on its own in the fixture footer — do not fold into additionalInfo.
   return bits.length ? bits.join(" · ") : null;
 }
 
@@ -172,6 +172,8 @@ export async function enrichScheduleFixturesForPublic(
           windSpeedKmh: weather.windSpeedKmh,
           windCompass: weather.windCompass,
           summary: formatOpenMeteoSummary(weather),
+          icon: weather.icon,
+          conditionLabel: weather.conditionLabel,
         });
       } catch {
         /* non-blocking */

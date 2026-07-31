@@ -143,21 +143,19 @@ export function CompetitionPlayerStatsClient({
   }
 
   return (
-    <div>
+    <div className="competition-stats">
       <div className="cms-card mb-4 grid gap-3 sm:grid-cols-3">
         {data?.supportsHemisphereFilter ? (
           <label className="text-sm sm:col-span-2">
             <span className="block text-zinc-500 mb-1">Hemisphere</span>
-            <div className="inline-flex w-full rounded-lg border border-zinc-800 overflow-hidden text-sm">
+            <div className="competition-stats__segment" role="group" aria-label="Hemisphere">
               {HEMISPHERE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setHemisphere(option.value)}
-                  className={`flex-1 px-3 py-2 touch-target ${
-                    hemisphere === option.value
-                      ? "bg-zinc-800 text-zinc-100"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
+                  className={`competition-stats__segment-btn${
+                    hemisphere === option.value ? " is-active" : ""
                   }`}
                 >
                   {option.label}
@@ -200,12 +198,20 @@ export function CompetitionPlayerStatsClient({
             ? ` · ${data.coverage.playerCount} players · ${data.coverage.rowCount} match rows`
             : ""}
         </p>
-        <Link
-          href={`/competitions/${slug}/table${seasonLabel ? `?season=${encodeURIComponent(seasonLabel)}` : ""}`}
-          className="cms-btn cms-btn--secondary text-xs"
-        >
-          View table
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/competitions/${slug}/team-stats${seasonLabel ? `?season=${encodeURIComponent(seasonLabel)}` : ""}`}
+            className="cms-btn cms-btn--secondary text-xs"
+          >
+            Team stats
+          </Link>
+          <Link
+            href={`/competitions/${slug}/table${seasonLabel ? `?season=${encodeURIComponent(seasonLabel)}` : ""}`}
+            className="cms-btn cms-btn--secondary text-xs"
+          >
+            View table
+          </Link>
+        </div>
       </div>
 
       {loading ? (

@@ -26,6 +26,7 @@ import { listTeams, buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
+import { weatherConditionFromText } from "./weather-condition";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -103,12 +104,18 @@ function mapDbFixture(
     attendance: row.attendance ?? null,
     additionalInfo: row.additionalInfo?.trim() || null,
     weather: row.weatherNote?.trim()
-      ? {
-          temperatureC: null,
-          windSpeedKmh: null,
-          windCompass: null,
-          summary: row.weatherNote.trim(),
-        }
+      ? (() => {
+          const summary = row.weatherNote.trim();
+          const condition = weatherConditionFromText(summary);
+          return {
+            temperatureC: null,
+            windSpeedKmh: null,
+            windCompass: null,
+            summary,
+            icon: condition.kind,
+            conditionLabel: condition.label,
+          };
+        })()
       : null,
     refereeName: row.refereeName?.trim() || null,
     isNeutralVenue: Boolean(row.isNeutralVenue),

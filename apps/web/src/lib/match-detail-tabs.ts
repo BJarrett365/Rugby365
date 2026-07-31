@@ -8,6 +8,7 @@ export type MatchDetailTab =
   | "lineups"
   | "tables"
   | "head-to-head"
+  | "betting"
   | "edit";
 
 export function parseMatchDetailTab(value: string | undefined): MatchDetailTab {
@@ -20,6 +21,7 @@ export function parseMatchDetailTab(value: string | undefined): MatchDetailTab {
     value === "lineups" ||
     value === "tables" ||
     value === "head-to-head" ||
+    value === "betting" ||
     value === "edit"
   ) {
     return value;

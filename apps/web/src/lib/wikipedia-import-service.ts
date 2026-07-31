@@ -362,11 +362,26 @@ async function applyWikipediaPlayerArchive(
   return { entityId: updated.id, slug: updated.slug, fieldsUpdated: [...new Set(fieldsUpdated)] };
 }
 
-/** Look up Wikipedia by stored URL (preferred) or name and merge into an existing player only. */
+function normalizeWikipediaPlayerUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
+    if (!/(^|\.)wikipedia\.org$/i.test(url.hostname)) return null;
+    if (!url.pathname.includes("/wiki/")) return null;
+    return url.toString();
+  } catch {
+    // Allow bare article titles (e.g. Antoine_Dupont) as lookup candidates.
+    if (/^[A-Za-z0-9][\w .%'()-]{1,200}$/.test(trimmed)) return trimmed;
+    return null;
+  }
+}
+
+/** Look up Wikipedia by pasted/stored URL (preferred) or name and merge into an existing player only. */
 export async function enrichPlayerFromWikipedia(
   playerId: string,
   playerName?: string,
-  options?: { fillMissingOnly?: boolean },
+  options?: { fillMissingOnly?: boolean; sourceUrl?: string },
 ): Promise<PlayerArchiveEnrichResult> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
@@ -380,16 +395,38 @@ export async function enrichPlayerFromWikipedia(
     return { enriched: false, playerId, reason: "name_too_short" };
   }
 
+  const explicitSource =
+    options?.sourceUrl != null ? normalizeWikipediaPlayerUrl(options.sourceUrl) : null;
+  if (options?.sourceUrl?.trim() && !explicitSource) {
+    return { enriched: false, playerId, reason: "invalid_wikipedia_url" };
+  }
+
+  // Persist pasted URL even before a successful archive pull — lets editors verify identity
+  // against RugbyPass and re-test players with missing/broken wiki pages.
+  if (explicitSource && explicitSource.includes("wikipedia.org") && explicitSource !== player.wikipediaUrl) {
+    await db
+      .update(players)
+      .set({ wikipediaUrl: explicitSource })
+      .where(eq(players.id, playerId));
+  }
+
   const accessToken = await getWikimediaEnterpriseAccessToken();
   const candidates: string[] = [];
-  if (player.wikipediaUrl?.trim()) {
+  if (explicitSource) candidates.push(explicitSource);
+  if (player.wikipediaUrl?.trim() && !candidates.includes(player.wikipediaUrl.trim())) {
     candidates.push(player.wikipediaUrl.trim());
   }
-  candidates.push(
-    ...prioritizePlayerArticleTitles(await findWikipediaPlayerArticleTitles(name), name).filter(
-      (title) => !candidates.includes(title),
-    ),
-  );
+  // When an editor pasted a specific article URL, only try that page (identity check).
+  if (!explicitSource) {
+    candidates.push(
+      ...prioritizePlayerArticleTitles(await findWikipediaPlayerArticleTitles(name), name).filter(
+        (title) => !candidates.includes(title),
+      ),
+    );
+  }
+
+  let nameMismatchUrl: string | undefined;
+  let nameMismatchArchiveName: string | undefined;
 
   for (const title of candidates) {
     try {
@@ -400,7 +437,13 @@ export async function enrichPlayerFromWikipedia(
       });
 
       if (parsedRaw.entityType !== "player") continue;
-      if (!namesLikelyMatch(name, parsedRaw.name)) continue;
+      if (!namesLikelyMatch(name, parsedRaw.name)) {
+        if (explicitSource) {
+          nameMismatchUrl = parsedRaw.wikipediaUrl;
+          nameMismatchArchiveName = parsedRaw.name;
+        }
+        continue;
+      }
 
       const parsed = await attachWikidataProfile(parsedRaw);
       const applied = await applyWikipediaPlayerArchive(playerId, parsed, {
@@ -429,7 +472,21 @@ export async function enrichPlayerFromWikipedia(
     }
   }
 
-  return { enriched: false, playerId, reason: "no_matching_wikipedia_article" };
+  if (nameMismatchUrl) {
+    return {
+      enriched: false,
+      playerId,
+      wikipediaUrl: nameMismatchUrl,
+      reason: `name_mismatch:${nameMismatchArchiveName ?? "unknown"}`,
+    };
+  }
+
+  return {
+    enriched: false,
+    playerId,
+    wikipediaUrl: explicitSource?.includes("wikipedia.org") ? explicitSource : player.wikipediaUrl ?? undefined,
+    reason: "no_matching_wikipedia_article",
+  };
 }
 
 async function importPlayerArchive(

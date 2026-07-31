@@ -535,7 +535,7 @@ export default function EditTeamPage() {
               <tr className="text-left text-zinc-500 border-b border-zinc-800">
                 <th className="py-2 pr-2">#</th>
                 <th className="py-2 pr-3">Player</th>
-                <th className="py-2 pr-3" title="Career Rating (35–99) | Match (1–10) | Form">
+                <th className="py-2 pr-3" title="Career (35–99) | Match (1–10) | Season avg | Form">
                   Rankings
                 </th>
                 <th className="py-2 pr-3">Role</th>

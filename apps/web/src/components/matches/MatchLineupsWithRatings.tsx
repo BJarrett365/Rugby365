@@ -8,6 +8,8 @@ import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
 import { PlayerProfileLink } from "./EntityProfileLinks";
 import { DualRatingCell } from "./MatchRatingBadge";
 import { PlayerMatchPerformancePanel } from "./PlayerMatchPerformancePanel";
+import { PlayerBadge } from "@/components/players/PlayerBadge";
+import { lookupPlayerLink } from "@/lib/match-entity-context";
 
 type LineupPlayer = MappedLineups["home"]["starting"][number];
 
@@ -90,6 +92,27 @@ function LineupColumn({
   return (
     <div className="match-detail-lineup">
       <h3 className="match-detail-lineup__title">{lineup.teamName}</h3>
+      <div className="pr-lineup-badge-row" aria-label={`${lineup.teamName} starting badges`}>
+        {lineup.starting.slice(0, 15).map((p) => {
+          const rating = ratingForPlayer(p, ratingsByExternalId, ratingsByName);
+          const link = lookupPlayerLink(entities, {
+            externalId: p.providerId,
+            name: p.name,
+          });
+          return (
+            <PlayerBadge
+              key={`${side}-badge-${p.providerId || p.name}`}
+              name={p.name}
+              imageUrl={link?.imageUrl}
+              rating={rating?.careerRating ?? null}
+              positionName={p.positionName}
+              slug={link?.slug}
+              size="micro"
+              compact
+            />
+          );
+        })}
+      </div>
       <table className="match-detail-lineup__table">
         <thead>
           <tr>

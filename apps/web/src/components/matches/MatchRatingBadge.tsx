@@ -127,11 +127,9 @@ export function MatchRatingBadge({
     >
       {showPrefix && <span className="match-rating-badge__prefix">Match</span>}
       <span className="match-rating-badge__value">{rating.ratingLabel}</span>
-      {rating.ratingStatus !== "unavailable" && (
-        <span className="match-rating-badge__trend" aria-label={rating.performanceTrendLabel}>
-          {rating.performanceTrendLabel}
-        </span>
-      )}
+      <span className="match-rating-badge__trend" aria-label={rating.performanceTrendLabel}>
+        {rating.performanceTrendLabel}
+      </span>
     </span>
   );
 }

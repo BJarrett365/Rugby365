@@ -10,6 +10,8 @@ import {
   buildSeasonDevelopmentRows,
   detectMixedModelVersions,
   filterTimelinePoints,
+  ratingDisplayLabel,
+  resolveAppearanceStatus,
   rollingAverage,
   summarizeRatedPoints,
   type DevelopmentTimelineFilters,
@@ -386,7 +388,17 @@ export function PlayerDevelopmentTimeline({
                     <td>{p.resultLabel ?? "—"}</td>
                     <td>{p.started == null ? "—" : p.started ? "Start" : "Bench"}</td>
                     <td>{p.minutes ?? "—"}</td>
-                    <td>{p.rating != null ? formatNum(p.rating) : "Unrated"}</td>
+                    <td>
+                      {ratingDisplayLabel(
+                        p.rating,
+                        p.appearanceStatus ??
+                          resolveAppearanceStatus({
+                            rating: p.rating,
+                            minutes: p.minutes,
+                            started: p.started,
+                          }),
+                      )}
+                    </td>
                     <td>
                       {p.ratingChange == null
                         ? "—"
@@ -445,6 +457,7 @@ function SeasonTable({
             <th scope="col">Team</th>
             <th scope="col">Competitions</th>
             <th scope="col">Rated</th>
+            <th scope="col">DNP</th>
             <th scope="col">Avg</th>
             <th scope="col">High</th>
             <th scope="col">Low</th>
@@ -467,6 +480,7 @@ function SeasonTable({
               <td>{r.teamName}</td>
               <td>{r.competitions.join(", ") || "—"}</td>
               <td>{r.ratedAppearances || "—"}</td>
+              <td>{r.dnpCount || "—"}</td>
               <td>{formatNum(r.average)}</td>
               <td>{formatNum(r.highest)}</td>
               <td>{formatNum(r.lowest)}</td>

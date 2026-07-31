@@ -1,4 +1,4 @@
-import { eq, gte, lte, and, desc } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { fixtures, playerExternalMatches, players, teams } from "@rugby365/db";
 import {
   parseRugbyPassPlayerProfile,
@@ -9,13 +9,12 @@ import {
 } from "@rugby365/import-sdk";
 import { getDb } from "./db";
 import { resolvePlayer, resolveTeam } from "./entity-resolve-service";
-import { normalizeTeamName } from "./entity-normalize";
 import {
   enrichmentFieldsUpdated,
   mergeRugbyPassEnrichment,
   namesLikelyMatch,
 } from "./player-profile-enrichment-service";
-import { canonicalPremiershipTeamName } from "./transfer-match-service";
+import { pickStoredFixtureForRugbyPassMatch } from "./rugbypass-fixture-match";
 
 export type RugbyPassPlayerImportResult = {
   enriched: boolean;
@@ -28,17 +27,6 @@ export type RugbyPassPlayerImportResult = {
 };
 
 const RUGBYPASS_PROVIDER = "rugbypass";
-
-function canonicalTeamKey(name: string): string {
-  return canonicalPremiershipTeamName(normalizeTeamName(name)).toLowerCase();
-}
-
-function teamsMatch(left: string | null | undefined, right: string | null | undefined): boolean {
-  if (!left || !right) return false;
-  const a = canonicalTeamKey(left);
-  const b = canonicalTeamKey(right);
-  return a === b || a.includes(b) || b.includes(a);
-}
 
 async function fetchRugbyPassHtml(url: string): Promise<string> {
   const res = await fetch(url, {
@@ -101,37 +89,62 @@ async function resolveFixtureForMatch(input: {
   competitionName: string;
 }) {
   const db = getDb();
+
+  // ±1 day window covers timezone / kickoff-date drift between RugbyPass and CMS.
   const dayStart = new Date(input.kickoffAt);
+  dayStart.setUTCDate(dayStart.getUTCDate() - 1);
   dayStart.setUTCHours(0, 0, 0, 0);
   const dayEnd = new Date(input.kickoffAt);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
   dayEnd.setUTCHours(23, 59, 59, 999);
 
   const rows = await db
-    .select()
+    .select({
+      id: fixtures.id,
+      kickoffAt: fixtures.kickoffAt,
+      slug: fixtures.slug,
+      competitionName: fixtures.competitionName,
+      homeTeamId: fixtures.homeTeamId,
+      awayTeamId: fixtures.awayTeamId,
+    })
     .from(fixtures)
     .where(and(gte(fixtures.kickoffAt, dayStart), lte(fixtures.kickoffAt, dayEnd)));
 
-  const allTeams = await db.select().from(teams);
-  const teamById = Object.fromEntries(allTeams.map((t) => [t.id, t.name]));
+  if (!rows.length) return null;
 
-  for (const row of rows) {
-    const home = row.homeTeamId ? teamById[row.homeTeamId] : null;
-    const away = row.awayTeamId ? teamById[row.awayTeamId] : null;
-    if (!home || !away) continue;
-    const titleMatches =
-      (teamsMatch(home, input.teamName) && teamsMatch(away, input.opponentName)) ||
-      (teamsMatch(home, input.opponentName) && teamsMatch(away, input.teamName));
-    if (!titleMatches) continue;
-    if (
-      input.competitionName &&
-      row.competitionName &&
-      !row.competitionName.toLowerCase().includes(input.competitionName.toLowerCase().slice(0, 8))
-    ) {
-      continue;
-    }
-    return row.id;
-  }
-  return null;
+  const teamIds = [
+    ...new Set(
+      rows
+        .flatMap((r) => [r.homeTeamId, r.awayTeamId])
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const teamRows =
+    teamIds.length > 0
+      ? await db
+          .select({ id: teams.id, name: teams.name })
+          .from(teams)
+          .where(inArray(teams.id, teamIds))
+      : [];
+  const teamById = Object.fromEntries(teamRows.map((t) => [t.id, t.name]));
+
+  const candidates = rows.map((row) => ({
+    id: row.id,
+    kickoffAt: row.kickoffAt,
+    slug: row.slug,
+    competitionName: row.competitionName,
+    homeName: row.homeTeamId ? teamById[row.homeTeamId] ?? null : null,
+    awayName: row.awayTeamId ? teamById[row.awayTeamId] ?? null : null,
+  }));
+
+  // Link to an existing CMS fixture only — never create a duplicate match.
+  return pickStoredFixtureForRugbyPassMatch(candidates, {
+    kickoffAt: input.kickoffAt,
+    teamName: input.teamName,
+    opponentName: input.opponentName,
+    competitionName: input.competitionName,
+    matchTitle: input.matchTitle,
+  });
 }
 
 async function upsertExternalMatches(
@@ -144,20 +157,23 @@ async function upsertExternalMatches(
 
   for (const match of profile.recentMatches) {
     const kickoffAt = new Date(match.kickoffAt);
-    const fixtureId = await resolveFixtureForMatch({
+    const resolvedFixtureId = await resolveFixtureForMatch({
       kickoffAt,
       matchTitle: match.matchTitle,
       teamName: match.teamName,
       opponentName: match.opponentName,
       competitionName: match.competitionName,
     });
-    if (fixtureId) linked += 1;
 
     const [existing] = await db
-      .select({ id: playerExternalMatches.id })
+      .select({ id: playerExternalMatches.id, fixtureId: playerExternalMatches.fixtureId })
       .from(playerExternalMatches)
       .where(eq(playerExternalMatches.importKey, match.importKey))
       .limit(1);
+
+    // Prefer freshly resolved CMS fixture; keep a previous link if re-resolve misses.
+    const fixtureId = resolvedFixtureId ?? existing?.fixtureId ?? null;
+    if (fixtureId) linked += 1;
 
     const values = {
       playerId,

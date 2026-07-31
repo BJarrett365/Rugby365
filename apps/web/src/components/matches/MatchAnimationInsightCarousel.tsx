@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TeamCrest } from "./TeamCrest";
+import { WeatherIcon } from "./WeatherIcon";
 import { MediaImage } from "@/components/media/MediaImage";
 import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
 import {
@@ -9,6 +10,7 @@ import {
   buildSetPieceDefenceRows,
   type InsightCarouselCard,
 } from "@/lib/match-animation-insight";
+import { resolveWeatherCondition } from "@/lib/weather-condition";
 
 type Props = {
   payload: MatchAnimationPublicPayload;
@@ -237,6 +239,17 @@ export function MatchAnimationInsightCarousel({
             (card.venue.weather.temperatureC != null ||
               card.venue.weather.windSpeedKmh != null) ? (
               <p className="pr-ma-insight__weather">
+                <WeatherIcon
+                  className="pr-weather-icon pr-weather-icon--inline"
+                  kind={
+                    card.venue.weather.icon ??
+                    resolveWeatherCondition({
+                      weatherCode: card.venue.weather.weatherCode,
+                      precipitationMm: card.venue.weather.precipitationMm,
+                    }).kind
+                  }
+                  title={card.venue.weather.conditionLabel ?? undefined}
+                />{" "}
                 {[
                   card.venue.weather.temperatureC != null
                     ? `${Math.round(card.venue.weather.temperatureC)}°C`

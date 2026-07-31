@@ -11,7 +11,7 @@ export function schedulePlayerWikipediaEnrich(playerId: string, playerName: stri
 export async function enrichPlayerFromWikipediaAndWait(
   playerId: string,
   playerName?: string,
-  options?: { fillMissingOnly?: boolean },
+  options?: { fillMissingOnly?: boolean; sourceUrl?: string },
 ) {
   try {
     return await enrichPlayerFromWikipedia(playerId, playerName, options);

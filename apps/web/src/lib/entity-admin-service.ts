@@ -6,6 +6,7 @@ import {
   matchEvents,
   playerCareerStints,
   playerExternalMatches,
+  playerMatchRatings,
   playerTransfers,
   playerRatings,
   players,
@@ -304,6 +305,9 @@ export async function getTeamDetail(id: string) {
     latestFixturePublished: recentSquadFixture
       ? isFixtureRatingsPublished(recentSquadFixture.status)
       : false,
+    seasonId: recentSquadFixtureRow
+      ? (fixtureRows.find((f) => f.id === recentSquadFixtureRow.id)?.seasonId ?? null)
+      : null,
   });
   const withRankings = <T extends { playerId: string }>(rows: T[]) =>
     rows.map((row) => ({
@@ -818,7 +822,7 @@ export async function getPlayerDetail(id: string) {
     batchPlayerCareerStats([id]),
   ]);
 
-  const [seasonRows, allTeams] = await Promise.all([
+  const [seasonRows, allTeams, matchRatingRows] = await Promise.all([
     db
       .select({
         competitionId: competitionSeasons.competitionId,
@@ -827,8 +831,37 @@ export async function getPlayerDetail(id: string) {
       })
       .from(competitionSeasons),
     db.select().from(teams),
+    squads.length
+      ? db
+          .select({
+            fixtureId: playerMatchRatings.fixtureId,
+            rating: playerMatchRatings.rating,
+            ratingStatus: playerMatchRatings.ratingStatus,
+            minutesPlayed: playerMatchRatings.minutesPlayed,
+            performanceTrend: playerMatchRatings.performanceTrend,
+            ratingChange: playerMatchRatings.ratingChange,
+          })
+          .from(playerMatchRatings)
+          .where(
+            and(
+              eq(playerMatchRatings.playerId, id),
+              inArray(
+                playerMatchRatings.fixtureId,
+                squads.map((s) => s.fixtureId),
+              ),
+            ),
+          )
+      : Promise.resolve([] as Array<{
+          fixtureId: string;
+          rating: number | null;
+          ratingStatus: string;
+          minutesPlayed: number;
+          performanceTrend: string | null;
+          ratingChange: number | null;
+        }>),
   ]);
 
+  const ratingByFixture = new Map(matchRatingRows.map((r) => [r.fixtureId, r]));
   const teamById = Object.fromEntries(allTeams.map((t) => [t.id, t]));
   const stats = statsMap.get(id)!;
 
@@ -841,6 +874,7 @@ export async function getPlayerDetail(id: string) {
       competitionId: s.competitionId,
       seasons: seasonRows,
     });
+    const matchRating = ratingByFixture.get(s.fixtureId);
     return {
       ...s,
       homeTeam: home,
@@ -848,6 +882,11 @@ export async function getPlayerDetail(id: string) {
       scoreline,
       opponentName: s.teamName === home ? away : home,
       seasonLabel,
+      matchRating: matchRating?.rating ?? null,
+      matchRatingStatus: matchRating?.ratingStatus ?? null,
+      matchMinutes: matchRating?.minutesPlayed ?? null,
+      matchRatingChange: matchRating?.ratingChange ?? null,
+      matchPerformanceTrend: matchRating?.performanceTrend ?? null,
     };
   });
 
@@ -940,6 +979,12 @@ export async function updatePlayer(
     publicIntroOverride?: string | null;
     preferredFoot?: string | null;
     statusOverride?: string | null;
+    contractExpiresOn?: string | null;
+    reportedSalaryGbp?: number | null;
+    salaryAsOf?: string | null;
+    agentName?: string | null;
+    agentAgency?: string | null;
+    clubDebutOn?: string | null;
   }>,
 ) {
   const db = getDb();
@@ -1022,6 +1067,18 @@ export async function updatePlayer(
       ...(input.statusOverride !== undefined
         ? { statusOverride: input.statusOverride?.trim() || null }
         : {}),
+      ...(input.contractExpiresOn !== undefined
+        ? { contractExpiresOn: input.contractExpiresOn || null }
+        : {}),
+      ...(input.reportedSalaryGbp !== undefined
+        ? { reportedSalaryGbp: input.reportedSalaryGbp ?? null }
+        : {}),
+      ...(input.salaryAsOf !== undefined ? { salaryAsOf: input.salaryAsOf || null } : {}),
+      ...(input.agentName !== undefined ? { agentName: input.agentName?.trim() || null } : {}),
+      ...(input.agentAgency !== undefined
+        ? { agentAgency: input.agentAgency?.trim() || null }
+        : {}),
+      ...(input.clubDebutOn !== undefined ? { clubDebutOn: input.clubDebutOn || null } : {}),
       profileUpdatedAt: new Date(),
     })
     .where(eq(players.id, id))

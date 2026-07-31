@@ -59,8 +59,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     if (body.action === "enrich-wikipedia") {
       const { enrichPlayerFromWikipediaAndWait } = await import("@/lib/player-wikipedia-enrich");
-      const archive = await enrichPlayerFromWikipediaAndWait(id, body.name ? String(body.name) : undefined);
+      const archive = await enrichPlayerFromWikipediaAndWait(id, body.name ? String(body.name) : undefined, {
+        ...(body.sourceUrl ? { sourceUrl: String(body.sourceUrl) } : {}),
+      });
       const detail = await getPlayerDetail(id);
+      if (!archive.enriched && archive.reason && archive.reason !== "matched_no_new_data") {
+        return NextResponse.json(
+          { ok: false, ...archive, player: detail?.player },
+          { status: 400 },
+        );
+      }
       return NextResponse.json({ ok: true, archive, player: detail?.player });
     }
 
@@ -156,6 +164,29 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         : {}),
       ...(body.statusOverride !== undefined
         ? { statusOverride: body.statusOverride ? String(body.statusOverride) : null }
+        : {}),
+      ...(body.contractExpiresOn !== undefined
+        ? { contractExpiresOn: body.contractExpiresOn ? String(body.contractExpiresOn) : null }
+        : {}),
+      ...(body.reportedSalaryGbp !== undefined
+        ? {
+            reportedSalaryGbp:
+              body.reportedSalaryGbp === null || body.reportedSalaryGbp === ""
+                ? null
+                : Number(body.reportedSalaryGbp),
+          }
+        : {}),
+      ...(body.salaryAsOf !== undefined
+        ? { salaryAsOf: body.salaryAsOf ? String(body.salaryAsOf) : null }
+        : {}),
+      ...(body.agentName !== undefined
+        ? { agentName: body.agentName ? String(body.agentName) : null }
+        : {}),
+      ...(body.agentAgency !== undefined
+        ? { agentAgency: body.agentAgency ? String(body.agentAgency) : null }
+        : {}),
+      ...(body.clubDebutOn !== undefined
+        ? { clubDebutOn: body.clubDebutOn ? String(body.clubDebutOn) : null }
         : {}),
     });
     return NextResponse.json({ player });

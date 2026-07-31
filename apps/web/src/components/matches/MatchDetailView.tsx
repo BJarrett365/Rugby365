@@ -16,14 +16,18 @@ import { MatchMomentumChart } from "./MatchMomentumChart";
 import { MatchCentreSidebar } from "./MatchCentreSidebar";
 import { MatchHeadToHeadPublic } from "./MatchHeadToHeadPublic";
 import { MatchLiveTablesPanel } from "./MatchLiveTablesPanel";
+import { MatchBettingIntelligencePanel } from "./MatchBettingIntelligencePanel";
 import { MatchAnimationSection } from "./MatchAnimationSection";
 import { MatchYoutubeEmbedSection } from "./MatchYoutubeEmbedSection";
 import { TeamCrest } from "./TeamCrest";
+import { WeatherIcon } from "./WeatherIcon";
 import { collectHeaderCards, resolveHalfTimeScore } from "@/lib/match-header-utils";
 import { buildMatchAnimationPublicPayload } from "@/lib/match-animation-public-service";
+import { buildMatchBettingIntelligence } from "@/lib/match-betting-intelligence-service";
 import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
 import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability";
 import { youtubeEmbedSrc } from "@/lib/youtube-embed";
+import { resolveWeatherCondition } from "@/lib/weather-condition";
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso);
@@ -125,10 +129,12 @@ function MatchDetailPanel({
   tab,
   data,
   animationPayload,
+  bettingIntel,
 }: {
   tab: MatchDetailTab;
   data: MatchDetailPageData;
   animationPayload: MatchAnimationPublicPayload | null;
+  bettingIntel: Awaited<ReturnType<typeof buildMatchBettingIntelligence>> | null;
 }) {
   const { detail, lineups, matchStats, playerStats, planetRugbyUrl, cmsFixture, entities } = data;
   const mappedPlayers = Object.keys(entities.playersByExternalId).length;
@@ -222,6 +228,17 @@ function MatchDetailPanel({
         competitionName={detail.competition_name}
       />
     );
+  }
+
+  if (tab === "betting") {
+    if (!bettingIntel) {
+      return (
+        <p className="match-detail-empty">
+          Betting Intelligence is temporarily unavailable for this match.
+        </p>
+      );
+    }
+    return <MatchBettingIntelligencePanel intel={bettingIntel} />;
   }
 
   if (tab === "edit") {
@@ -325,6 +342,8 @@ export async function MatchDetailView({
   // Light availability for tab badge on every render; full payload only for animation tab (lazy engine).
   const animationPayload = await buildMatchAnimationPublicPayload(data);
   const animationBadge: MatchAnimationTabBadge = animationPayload.availability.tabBadge;
+  const bettingIntel =
+    resolvedTab === "betting" ? await buildMatchBettingIntelligence(data) : null;
 
   return (
     <div className="pr-match-centre match-detail">
@@ -377,6 +396,17 @@ export async function MatchDetailView({
                 (venue.weather.temperatureC != null || venue.weather.windSpeedKmh != null) ? (
                   <span className="pr-mc-header__weather">
                     {" · "}
+                    <WeatherIcon
+                      className="pr-weather-icon pr-weather-icon--inline"
+                      kind={
+                        venue.weather.icon ??
+                        resolveWeatherCondition({
+                          weatherCode: venue.weather.weatherCode,
+                          precipitationMm: venue.weather.precipitationMm,
+                        }).kind
+                      }
+                      title={venue.weather.conditionLabel ?? undefined}
+                    />{" "}
                     {[
                       venue.weather.temperatureC != null
                         ? `${Math.round(venue.weather.temperatureC)}°C`
@@ -573,6 +603,7 @@ export async function MatchDetailView({
             tab={resolvedTab}
             data={data}
             animationPayload={resolvedTab === "animation" ? animationPayload : null}
+            bettingIntel={bettingIntel}
           />
         </div>
 

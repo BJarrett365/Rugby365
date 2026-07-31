@@ -79,6 +79,9 @@ export type MatchVenueLink = {
     windSpeedKmh: number | null;
     windDirectionDeg: number | null;
     windCompass: string | null;
+    weatherCode?: number | null;
+    icon?: import("./weather-condition").WeatherIconKind | null;
+    conditionLabel?: string | null;
     observedAt: string | null;
     source: "forecast" | "archive";
   } | null;

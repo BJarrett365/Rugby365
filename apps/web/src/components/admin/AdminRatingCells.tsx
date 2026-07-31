@@ -45,6 +45,10 @@ export function AdminSquadRankingsCell({
     rankings.formRating != null
       ? `Form ${rankings.formRating.toFixed(1)} from recent matches`
       : "Form unavailable";
+  const seasonTitle =
+    rankings.seasonMatchAverage != null
+      ? `Season average ${rankings.seasonMatchAverage.toFixed(1)}`
+      : "No season match ratings yet";
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 whitespace-nowrap">
@@ -63,6 +67,12 @@ export function AdminSquadRankingsCell({
           />
         </>
       ) : null}
+      <span className="text-zinc-600 text-xs">|</span>
+      <span className="text-xs text-emerald-500/90 font-mono" title={seasonTitle}>
+        {rankings.seasonMatchAverage != null
+          ? `Szn ${rankings.seasonMatchAverage.toFixed(1)}`
+          : "Szn —"}
+      </span>
       <span className="text-zinc-600 text-xs">|</span>
       <span className="text-xs text-zinc-400 font-mono" title={formTitle}>
         {rankings.formLabel}

@@ -111,7 +111,7 @@ function inferSeasonSlugFromKickoff(
 export async function loadPlayerAppearances(
   playerId: string,
   options: {
-    view?: PublicPlayerView;
+    view?: PublicPlayerView | "all";
     internationalTeamId?: string | null;
   } = {},
 ): Promise<PublicAppearanceRow[]> {

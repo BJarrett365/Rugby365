@@ -1,5 +1,10 @@
 /** Open-Meteo forecast, archive, and geocoding (no API key for standard use). */
 
+import {
+  weatherConditionFromCode,
+  type WeatherIconKind,
+} from "./weather-condition";
+
 export const OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
 export const OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
@@ -13,6 +18,12 @@ export type OpenMeteoWeather = {
   windDirectionDeg: number | null;
   /** Compact compass for UI arrows, e.g. "NE". */
   windCompass: string | null;
+  /** WMO weather interpretation code from Open-Meteo. */
+  weatherCode: number | null;
+  /** Icon kind for sun / cloud / rain glyphs. */
+  icon: WeatherIconKind;
+  /** Short human label, e.g. "Partly cloudy". */
+  conditionLabel: string;
   observedAt: string | null;
   latitude: number;
   longitude: number;
@@ -24,6 +35,7 @@ type ForecastCurrent = {
   temperature_2m?: number;
   relative_humidity_2m?: number;
   precipitation?: number;
+  weather_code?: number;
   wind_speed_10m?: number;
   wind_direction_10m?: number;
 };
@@ -41,6 +53,7 @@ type ArchiveHourly = {
   temperature_2m?: Array<number | null>;
   relative_humidity_2m?: Array<number | null>;
   precipitation?: Array<number | null>;
+  weather_code?: Array<number | null>;
   wind_speed_10m?: Array<number | null>;
   wind_direction_10m?: Array<number | null>;
 };
@@ -149,13 +162,17 @@ function toWeather(
     precipitationMm: number | null;
     windSpeedKmh: number | null;
     windDirectionDeg: number | null;
+    weatherCode: number | null;
     observedAt: string | null;
     source: "forecast" | "archive";
   },
 ): OpenMeteoWeather {
+  const condition = weatherConditionFromCode(input.weatherCode);
   return {
     ...input,
     windCompass: windDegreesToCompass(input.windDirectionDeg),
+    icon: condition.kind,
+    conditionLabel: condition.label,
   };
 }
 
@@ -179,7 +196,7 @@ export async function fetchOpenMeteoWeather(input: {
   url.searchParams.set("longitude", String(input.longitude));
   url.searchParams.set(
     "current",
-    "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m",
+    "temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m",
   );
   url.searchParams.set("wind_speed_unit", "kmh");
   url.searchParams.set("timezone", "auto");
@@ -208,6 +225,7 @@ export async function fetchOpenMeteoWeather(input: {
     windSpeedKmh: typeof current.wind_speed_10m === "number" ? current.wind_speed_10m : null,
     windDirectionDeg:
       typeof current.wind_direction_10m === "number" ? current.wind_direction_10m : null,
+    weatherCode: typeof current.weather_code === "number" ? current.weather_code : null,
     observedAt: typeof current.time === "string" ? current.time : null,
     latitude: data.latitude ?? input.latitude,
     longitude: data.longitude ?? input.longitude,
@@ -246,7 +264,7 @@ export async function fetchOpenMeteoArchiveWeather(input: {
   url.searchParams.set("end_date", day);
   url.searchParams.set(
     "hourly",
-    "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m",
+    "temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m",
   );
   url.searchParams.set("wind_speed_unit", "kmh");
   url.searchParams.set("timezone", "auto");
@@ -283,6 +301,7 @@ export async function fetchOpenMeteoArchiveWeather(input: {
     precipitationMm: numAt(hourly.precipitation),
     windSpeedKmh: numAt(hourly.wind_speed_10m),
     windDirectionDeg: numAt(hourly.wind_direction_10m),
+    weatherCode: numAt(hourly.weather_code),
     observedAt: times[idx] ?? null,
     latitude: data.latitude ?? input.latitude,
     longitude: data.longitude ?? input.longitude,
@@ -361,6 +380,9 @@ export async function geocodeOpenMeteoPlace(
 
 export function formatOpenMeteoSummary(weather: OpenMeteoWeather): string {
   const parts: string[] = [];
+  if (weather.conditionLabel && weather.conditionLabel !== "Weather") {
+    parts.push(weather.conditionLabel);
+  }
   if (weather.temperatureC != null) parts.push(`${weather.temperatureC}°C`);
   if (weather.windSpeedKmh != null) {
     const dir = weather.windCompass

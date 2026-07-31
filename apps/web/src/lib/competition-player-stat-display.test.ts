@@ -17,4 +17,16 @@ describe("teamCodeForLeaderboard", () => {
     expect(teamCodeForLeaderboard({ teamName: "South Africa", teamShortName: "SA" })).toBe("RSA");
     expect(teamCodeForLeaderboard({ teamName: "Ireland", teamShortName: "IRE" })).toBe("IRE");
   });
+
+  it("rejects Wikipedia template debris in short names", () => {
+    expect(teamCodeForLeaderboard({ teamName: "Griquas", teamShortName: "{{FS}}" })).toBe("GRI");
+    expect(teamCodeForLeaderboard({ teamName: "Pumas", teamShortName: "{{F" })).toBe("PUM");
+  });
+
+  it("maps Currie Cup clubs from name when short name is junk", () => {
+    expect(teamCodeForLeaderboard({ teamName: "Cheetahs", teamShortName: null })).toBe("CHE");
+    expect(teamCodeForLeaderboard({ teamName: "Boland Cavaliers", teamShortName: "BOL" })).toBe(
+      "BOL",
+    );
+  });
 });

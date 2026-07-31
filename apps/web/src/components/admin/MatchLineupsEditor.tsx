@@ -27,6 +27,11 @@ type SquadDetail = {
     awayTeamId: string | null;
     homeTeam: { id: string; name: string } | null;
     awayTeam: { id: string; name: string } | null;
+    halfTimeHome?: number | null;
+    halfTimeAway?: number | null;
+    attendance?: number | null;
+    competitionName?: string | null;
+    competition?: { slug?: string | null; name?: string | null } | null;
     providerSnapshot?: { lineups?: Sport365Lineups } | null;
   };
   squad: SquadPlayer[];

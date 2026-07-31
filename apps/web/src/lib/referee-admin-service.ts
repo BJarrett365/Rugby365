@@ -1,4 +1,5 @@
-import { alias, and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { fixtures, matchEvents, players, referees, teams } from "@rugby365/db";
 import { getDb } from "./db";
 

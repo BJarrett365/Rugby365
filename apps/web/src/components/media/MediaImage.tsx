@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import {
@@ -8,6 +9,7 @@ import {
   objectPositionFromFocal,
   type MediaAspect,
 } from "@/lib/media-tokens";
+import { SilhouetteAvatar } from "@/components/media/SilhouetteAvatar";
 
 export type MediaImageProps = {
   src: string | null | undefined;
@@ -31,6 +33,7 @@ export type MediaImageProps = {
 /**
  * Shared public/CMS image primitive.
  * Uses next/image when the host is allow-listed; otherwise a sized img.
+ * Broken or missing images fall back to silhouette (or custom fallback).
  */
 export function MediaImage({
   src,
@@ -48,6 +51,7 @@ export function MediaImage({
   fallback = null,
   onClick,
 }: MediaImageProps) {
+  const [failed, setFailed] = useState(false);
   const resolvedAlt = decorative ? "" : alt;
   const objectPosition = objectPositionFromFocal(focalX, focalY);
   const style: CSSProperties = {
@@ -58,10 +62,20 @@ export function MediaImage({
     height: "100%",
   };
 
-  if (!src?.trim()) {
+  const silhouetteAspect = aspect === "square" ? "square" : "portrait";
+  const defaultFallback = fallback ?? (
+    <SilhouetteAvatar
+      name={alt}
+      aspect={silhouetteAspect}
+      decorative={decorative}
+      className="pr-media-fallback-silhouette"
+    />
+  );
+
+  if (!src?.trim() || failed) {
     return (
       <span className={className} style={style} aria-hidden={decorative || undefined}>
-        {fallback}
+        {defaultFallback}
       </span>
     );
   }
@@ -71,6 +85,7 @@ export function MediaImage({
     className,
     style,
     onClick,
+    onError: () => setFailed(true),
   };
 
   if (canOptimizeMediaUrl(url)) {

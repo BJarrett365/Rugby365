@@ -16,6 +16,7 @@ export type PublicPlayerFilterState = {
 export const PUBLIC_PLAYER_TABS = [
   "overview",
   "stats",
+  "value",
   "matches",
   "events",
   "transfers",

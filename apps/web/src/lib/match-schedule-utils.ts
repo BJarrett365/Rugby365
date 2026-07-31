@@ -11,6 +11,9 @@ export type ScheduleFixtureWeather = {
   windSpeedKmh: number | null;
   windCompass: string | null;
   summary: string;
+  /** Sun / cloud / rain glyph key. */
+  icon?: import("./weather-condition").WeatherIconKind | null;
+  conditionLabel?: string | null;
 };
 
 export type ScheduleFixture = {
