@@ -143,3 +143,84 @@ export function kickoffInSeason(kickoffAt: Date | string | null, startYear: numb
 export function usesDomesticSeasonCatalog(competitionType: string | null | undefined): boolean {
   return competitionType === "domestic" || competitionType === "european";
 }
+
+/** Competitions typed domestic but labelled by calendar year (e.g. Super Rugby). */
+export function usesDomesticSeasonCatalogForCompetition(
+  competitionSlug: string | null | undefined,
+  competitionType: string | null | undefined,
+): boolean {
+  if (!competitionSlug) return usesDomesticSeasonCatalog(competitionType);
+  if (usesCalendarYearSeasons(competitionSlug, competitionType)) return false;
+  // Historic branding eras — don't auto-fill Premiership-style 1987– shells.
+  if (
+    competitionSlug === "celtic-league" ||
+    competitionSlug === "pro12" ||
+    competitionSlug === "pro14" ||
+    competitionSlug === "heineken-cup" ||
+    competitionSlug === "anglo-welsh-cup" ||
+    competitionSlug === "european-challenge-cup-historic" ||
+    competitionSlug === "air-new-zealand-cup" ||
+    competitionSlug === "itm-cup" ||
+    competitionSlug === "mitre-10-cup"
+  ) {
+    return false;
+  }
+  return usesDomesticSeasonCatalog(competitionType);
+}
+
+const CALENDAR_YEAR_COMPETITION_SLUGS = new Set([
+  "rugby-championship",
+  "six-nations",
+  "nations-championship",
+  "world-rugby-nations-cup",
+  "international",
+  "rugby-world-cup",
+  "rugby-europe-championship",
+  "end-of-year-internationals",
+  "autumn-nations-cup",
+  "super-rugby",
+  "npc",
+  "pacific-nations-cup",
+  "british-irish-lions",
+  "world-rugby-u20-championship",
+  "world-rugby-u20-trophy",
+  "world-rugby-pacific-challenge",
+  "summer-internationals",
+  "major-league-rugby",
+  "super-rugby-americas",
+  "heartland-championship",
+  "farah-palmer-cup",
+  "sa-cup",
+  "ranfurly-shield",
+]);
+
+/** Southern hemisphere internationals / tournaments use calendar year (2024), not 2024–25. */
+export function usesCalendarYearSeasons(
+  competitionSlug: string | null | undefined,
+  competitionType: string | null | undefined,
+): boolean {
+  if (competitionSlug?.startsWith("currie-cup")) return true;
+  if (competitionSlug?.startsWith("autumn-nations-cup")) return true;
+  if (competitionSlug && CALENDAR_YEAR_COMPETITION_SLUGS.has(competitionSlug)) return true;
+  return competitionType === "international" || competitionType === "world_cup";
+}
+
+export function seasonKindForCompetition(
+  competitionSlug: string | null | undefined,
+  competitionType: string | null | undefined,
+): "club" | "international" | "tournament" {
+  if (usesCalendarYearSeasons(competitionSlug, competitionType)) {
+    return competitionType === "world_cup" ? "tournament" : "international";
+  }
+  return "club";
+}
+
+export function seasonStatusForCalendarYear(
+  year: number,
+  referenceDate = new Date(),
+): SeasonStatus {
+  const current = referenceDate.getFullYear();
+  if (year === current) return "current";
+  if (year === current - 1) return "previous";
+  return "historical";
+}

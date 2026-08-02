@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "country_leagues",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/country/leagues?q=",
+    "path": "/api/v1/rugby-union/country/leagues",
     "status": 200,
-    "bytes": 29320,
-    "captured_at": "2026-07-10T09:59:58Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:28.169Z",
+    "response_time_ms": 304,
+    "raw_response_id": "c4f10285-7122-4e39-a2c0-868b9f60e146"
   },
   "response": {
     "status": 200,
@@ -57,6 +54,14 @@
             "id": 106,
             "sl": "prem-rugby-cup-106",
             "sea": "2025/26",
+            "category_id": 907,
+            "name": "PREM Rugby Cup",
+            "nm": "England PREM Rugby Cup"
+          },
+          {
+            "id": 230,
+            "sl": "prem-rugby-cup-230",
+            "sea": "2026/27",
             "category_id": 907,
             "name": "PREM Rugby Cup",
             "nm": "England PREM Rugby Cup"
@@ -159,6 +164,14 @@
             "nm": "France Pro D2"
           },
           {
+            "id": 232,
+            "sl": "pro-d2-232",
+            "sea": "2026/27",
+            "category_id": 250,
+            "name": "Pro D2",
+            "nm": "France Pro D2"
+          },
+          {
             "id": 52,
             "sl": "pro-d2-playoff-52",
             "sea": "2024/25",
@@ -202,6 +215,14 @@
             "id": 94,
             "sl": "top-14-94",
             "sea": "2025/26",
+            "category_id": 250,
+            "name": "Top 14",
+            "nm": "France Top 14"
+          },
+          {
+            "id": 231,
+            "sl": "top-14-231",
+            "sea": "2026/27",
             "category_id": 250,
             "name": "Top 14",
             "nm": "France Top 14"
@@ -288,6 +309,14 @@
             "nm": "International European Rugby Challenge Cup Pool 1"
           },
           {
+            "id": 226,
+            "sl": "european-rugby-challenge-cup-pool-1-226",
+            "sea": "2026/27",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 1",
+            "nm": "International European Rugby Challenge Cup Pool 1"
+          },
+          {
             "id": 59,
             "sl": "european-rugby-challenge-cup-pool-2-59",
             "sea": "2024/25",
@@ -304,6 +333,14 @@
             "nm": "International European Rugby Challenge Cup Pool 2"
           },
           {
+            "id": 227,
+            "sl": "european-rugby-challenge-cup-pool-2-227",
+            "sea": "2026/27",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 2",
+            "nm": "International European Rugby Challenge Cup Pool 2"
+          },
+          {
             "id": 60,
             "sl": "european-rugby-challenge-cup-pool-3-60",
             "sea": "2024/25",
@@ -315,6 +352,14 @@
             "id": 99,
             "sl": "european-rugby-challenge-cup-pool-3-99",
             "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Challenge Cup Pool 3",
+            "nm": "International European Rugby Challenge Cup Pool 3"
+          },
+          {
+            "id": 228,
+            "sl": "european-rugby-challenge-cup-pool-3-228",
+            "sea": "2026/27",
             "category_id": 916,
             "name": "European Rugby Challenge Cup Pool 3",
             "nm": "International European Rugby Challenge Cup Pool 3"
@@ -352,6 +397,14 @@
             "nm": "International European Rugby Champions Cup Pool 1"
           },
           {
+            "id": 222,
+            "sl": "european-rugby-champions-cup-pool-1-222",
+            "sea": "2026/27",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 1",
+            "nm": "International European Rugby Champions Cup Pool 1"
+          },
+          {
             "id": 63,
             "sl": "european-rugby-champions-cup-pool-2-63",
             "sea": "2024/25",
@@ -363,6 +416,14 @@
             "id": 101,
             "sl": "european-rugby-champions-cup-pool-2-101",
             "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 2",
+            "nm": "International European Rugby Champions Cup Pool 2"
+          },
+          {
+            "id": 223,
+            "sl": "european-rugby-champions-cup-pool-2-223",
+            "sea": "2026/27",
             "category_id": 916,
             "name": "European Rugby Champions Cup Pool 2",
             "nm": "International European Rugby Champions Cup Pool 2"
@@ -384,6 +445,14 @@
             "nm": "International European Rugby Champions Cup Pool 3"
           },
           {
+            "id": 224,
+            "sl": "european-rugby-champions-cup-pool-3-224",
+            "sea": "2026/27",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 3",
+            "nm": "International European Rugby Champions Cup Pool 3"
+          },
+          {
             "id": 65,
             "sl": "european-rugby-champions-cup-pool-4-65",
             "sea": "2024/25",
@@ -395,6 +464,14 @@
             "id": 103,
             "sl": "european-rugby-champions-cup-pool-4-103",
             "sea": "2025/26",
+            "category_id": 916,
+            "name": "European Rugby Champions Cup Pool 4",
+            "nm": "International European Rugby Champions Cup Pool 4"
+          },
+          {
+            "id": 225,
+            "sl": "european-rugby-champions-cup-pool-4-225",
+            "sea": "2026/27",
             "category_id": 916,
             "name": "European Rugby Champions Cup Pool 4",
             "nm": "International European Rugby Champions Cup Pool 4"

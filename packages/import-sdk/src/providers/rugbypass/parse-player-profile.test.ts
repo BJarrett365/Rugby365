@@ -107,4 +107,11 @@ describe("match helpers", () => {
     });
     expect(key).toBe("rugbypass:match:24106:1778936400:bath-vs-newcastle");
   });
+
+  it("parses og:image when player-image class is absent", () => {
+    const html = `<html><head><meta property="og:image" content="https://cdn.example/players/maro-itoje.jpg" /></head><body><h1>Maro Itoje</h1></body></html>`;
+    expect(parseRugbyPassPlayerProfile(html, "https://www.rugbypass.com/players/maro-itoje/")?.imageUrl).toBe(
+      "https://cdn.example/players/maro-itoje.jpg",
+    );
+  });
 });

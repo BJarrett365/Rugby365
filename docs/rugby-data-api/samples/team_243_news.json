@@ -1,24 +1,15 @@
 {
   "_meta": {
     "endpoint": "team_243_news",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/team/243/news",
     "status": 200,
-    "bytes": 119,
-    "captured_at": "2026-07-10T10:00:13Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:33.756Z",
+    "response_time_ms": 229,
+    "raw_response_id": "5315f7dc-e7d5-4c6c-8892-33d3e1fb0366"
   },
   "response": {
     "status": 200,
     "message": "News lisiting",
-    "data": [],
-    "pagination": {
-      "total": 0,
-      "per_page": 5,
-      "current_page": 0,
-      "last_page": 0
-    }
+    "data": []
   }
 }

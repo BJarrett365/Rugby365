@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "news_leagues",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/news/leagues",
     "status": 200,
-    "bytes": 2060,
-    "captured_at": "2026-07-10T09:59:59Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:28.411Z",
+    "response_time_ms": 235,
+    "raw_response_id": "b35fdc1a-1a27-463a-8b44-cd328e5f6f6a"
   },
   "response": {
     "status": 200,
@@ -114,29 +111,7 @@
         }
       },
       {
-        "id": 94,
-        "name": "Top 14",
-        "league_id": 21711,
-        "category_id": 71,
-        "rugbyCategory": {
-          "id": 11659,
-          "fb_category_id": 250,
-          "flag_id": 71
-        }
-      },
-      {
-        "id": 204,
-        "name": "Top 14",
-        "league_id": 21711,
-        "category_id": 71,
-        "rugbyCategory": {
-          "id": 11659,
-          "fb_category_id": 250,
-          "flag_id": 71
-        }
-      },
-      {
-        "id": 205,
+        "id": 231,
         "name": "Top 14",
         "league_id": 21711,
         "category_id": 71,
@@ -169,7 +144,7 @@
         }
       },
       {
-        "id": 100,
+        "id": 222,
         "name": "Champions Cup",
         "league_id": 21737,
         "category_id": 99,
@@ -180,7 +155,7 @@
         }
       },
       {
-        "id": 97,
+        "id": 226,
         "name": "Challenge Cup",
         "league_id": 21736,
         "category_id": 99,

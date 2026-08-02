@@ -45,7 +45,7 @@ async function main() {
 
   for (const [index, season] of seasons.entries()) {
     if (index > 0) {
-      await new Promise((r) => setTimeout(r, 2500));
+      await new Promise((r) => setTimeout(r, 8000));
     }
     const started = Date.now();
     console.log(`→ ${season.startYear} (${season.winner})`);

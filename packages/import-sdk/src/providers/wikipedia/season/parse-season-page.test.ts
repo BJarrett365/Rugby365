@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parsePremiershipSeasonWikitext, parseSportsTableModule, parseRugbyboxFixtures } from "./parse-season-page";
+import {
+  parsePremiershipSeasonWikitext,
+  parsePoolWikitableStandings,
+  parseSportsTableModule,
+  parseRugbyboxFixtures,
+} from "./parse-season-page";
 
 const TABLE = `
 == Table ==
@@ -70,7 +75,90 @@ describe("parseRugbyboxFixtures", () => {
   });
 });
 
+describe("parsePoolWikitableStandings", () => {
+  it("parses legacy Challenge Cup pool tables", () => {
+    const rows = parsePoolWikitableStandings(`
+===Pool 1===
+{| class="wikitable"
+|-
+!Team!!P!!W!!D!!L!!Pts
+|- bgcolor="#ccffcc"
+|align="left"| {{flagicon|FRA}} '''[[SU Agen Lot-et-Garonne|Agen]]'''
+|5||5||0||0||'''10'''
+|-
+|align="left"| {{flagicon|ENG}} [[Sale Sharks]]
+|5||3||0||2||'''6'''
+|}
+===Pool 2===
+{| class="wikitable"
+|-
+!Team!!P!!W!!D!!L!!Pts
+|-
+|align="left"| {{flagicon|FRA}} '''[[Castres Olympique]]'''
+|5||5||0||0||'''10'''
+|}
+`);
+    expect(rows.map((r) => r.teamName)).toEqual(["Agen", "Sale Sharks", "Castres Olympique"]);
+  });
+
+  it("parses lettered RWC pool headings", () => {
+    const rows = parsePoolWikitableStandings(`
+===Pool A===
+{| class="wikitable"
+|-
+!Team!!P!!W!!D!!L!!Pts
+|-
+|align="left"| [[Japan national rugby union team|Japan]]
+|4||4||0||0||'''19'''
+|}
+`);
+    expect(rows[0]?.teamName).toBe("Japan");
+  });
+});
+
+describe("parseRugbyboxFixtures invoke module", () => {
+  it("parses #invoke:rugby box fixtures", () => {
+    const fixtures = parseRugbyboxFixtures(
+      `{{#invoke:rugby box|main
+|date = 8 September 2023
+|time = 21:15
+|home = {{ru-rt|FRA}}
+|score = 27–13
+|away = {{ru|NZL}}
+|stadium = [[Stade de France]]
+|attendance = 78,680
+|referee = [[Jaco Peyper]]
+}}`,
+      { defaultRound: "Pool A" },
+    );
+    expect(fixtures[0]).toMatchObject({
+      homeTeam: "France",
+      awayTeam: "New Zealand",
+      homeScore: 27,
+      awayScore: 13,
+      attendance: 78680,
+    });
+  });
+});
+
 describe("parsePremiershipSeasonWikitext", () => {
+  it("extracts European Challenge Cup infobox champion", () => {
+    const parsed = parsePremiershipSeasonWikitext({
+      pageTitle: "1996–97 European Challenge Cup",
+      wikipediaUrl: "https://en.wikipedia.org/wiki/1996%E2%80%9397_European_Challenge_Cup",
+      revisionId: 1,
+      wikitext: `{{Infobox European Cup Rugby season
+| name = 1996–97 European Challenge Cup
+| champions = {{flagicon|FRA}} [[CS Bourgoin-Jallieu|Bourgoin]]
+| runner-up = {{flagicon|FRA}} [[Castres Olympique]]
+}}
+`,
+      standings: [{ rank: 1, teamName: "Agen", played: 5, won: 5, draw: 0, lost: 0, pointsFor: 0, pointsAgainst: 0, pointsDiff: 0, triesFor: null, tryBonusPoints: 0, losingBonusPoints: 0, bonusPoints: 0, pointsDeduction: 0, points: 10, isChampionMarker: false, qualificationNotes: null }],
+    });
+    expect(parsed.seasonStartYear).toBe(1996);
+    expect(parsed.championName).toBe("Bourgoin");
+  });
+
   it("extracts table fixtures and playoff stages", () => {
     const parsed = parsePremiershipSeasonWikitext({
       pageTitle: "2024–25 Premiership Rugby",

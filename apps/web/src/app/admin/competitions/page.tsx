@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/shell/PageHeader";
+import {
+  competitionAdminDisplayName,
+  groupCompetitionsForAdmin,
+} from "@/lib/competition-admin-groups";
 
 type CompetitionRow = {
   id: string;
@@ -11,13 +15,6 @@ type CompetitionRow = {
   competitionType: string;
   sdmsCompCode: string | null;
   activeSeason: { label: string; syncedAt: string | null } | null;
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  domestic: "Domestic",
-  international: "International",
-  world_cup: "World Cup",
-  european: "European",
 };
 
 export default function CompetitionsAdminPage() {
@@ -84,12 +81,14 @@ export default function CompetitionsAdminPage() {
     setDeletingId(null);
   }
 
+  const groups = useMemo(() => groupCompetitionsForAdmin(competitions), [competitions]);
+
   return (
     <>
       <PageHeader
         eyebrow="CMS"
         title="Competitions & tables"
-        description="Domestic leagues, Internationals, Six Nations, Rugby World Cup. Import from Planet Rugby or sync SDMS tables."
+        description="Grouped as International, Club, Provincial, Regional, and Historic. Import from Planet Rugby or sync SDMS tables."
         actions={
           <div className="flex flex-wrap gap-2">
             <button
@@ -124,64 +123,76 @@ export default function CompetitionsAdminPage() {
           <p className="text-zinc-400 m-0">No competitions yet.</p>
         </div>
       ) : (
-        <div className="cms-card overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-zinc-500 border-b border-zinc-800">
-                <th className="py-2 pr-3">Competition</th>
-                <th className="py-2 pr-3">Type</th>
-                <th className="py-2 pr-3">SDMS code</th>
-                <th className="py-2 pr-3">Active season</th>
-                <th className="py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {competitions.map((c) => (
-                <tr key={c.id} className="border-b border-zinc-800/60">
-                  <td className="py-2 pr-3">
-                    <Link href={`/admin/competitions/${c.id}/edit`} className="text-emerald-400 font-medium">
-                      {c.name}
-                    </Link>
-                    <span className="block text-xs text-zinc-600">{c.slug}</span>
-                  </td>
-                  <td className="py-2 pr-3 text-zinc-400">
-                    {TYPE_LABELS[c.competitionType] ?? c.competitionType}
-                  </td>
-                  <td className="py-2 pr-3 font-mono text-xs text-zinc-500">
-                    {c.sdmsCompCode ?? "—"}
-                  </td>
-                  <td className="py-2 pr-3 text-zinc-400">
-                    {c.activeSeason?.label ?? "—"}
-                    {c.activeSeason?.syncedAt && (
-                      <span className="block text-xs text-zinc-600">
-                        Synced {new Date(c.activeSeason.syncedAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2 text-right whitespace-nowrap">
-                    <Link
-                      href={`/competitions/${c.slug}/table`}
-                      className="cms-btn cms-btn--secondary text-xs mr-2"
-                      target="_blank"
-                    >
-                      View table
-                    </Link>
-                    <Link href={`/admin/competitions/${c.id}/edit`} className="cms-btn cms-btn--secondary text-xs mr-2">
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={deletingId === c.id}
-                      onClick={() => remove(c.id, c.name)}
-                      className="cms-btn cms-btn--secondary text-xs text-red-400"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <section key={group.id} className="cms-card overflow-x-auto">
+              <h2 className="m-0 mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
+                {group.label}
+                <span className="ml-2 font-normal normal-case tracking-normal text-zinc-600">
+                  {group.competitions.length}
+                </span>
+              </h2>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-zinc-500 border-b border-zinc-800">
+                    <th className="py-2 pr-3">Competition</th>
+                    <th className="py-2 pr-3">SDMS code</th>
+                    <th className="py-2 pr-3">Active season</th>
+                    <th className="py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.competitions.map((c) => (
+                    <tr key={c.id} className="border-b border-zinc-800/60">
+                      <td className="py-2 pr-3">
+                        <Link
+                          href={`/admin/competitions/${c.id}/edit`}
+                          className="text-emerald-400 font-medium"
+                        >
+                          {competitionAdminDisplayName(c)}
+                        </Link>
+                        <span className="block text-xs text-zinc-600">{c.slug}</span>
+                      </td>
+                      <td className="py-2 pr-3 font-mono text-xs text-zinc-500">
+                        {c.sdmsCompCode ?? "—"}
+                      </td>
+                      <td className="py-2 pr-3 text-zinc-400">
+                        {c.activeSeason?.label ?? "—"}
+                        {c.activeSeason?.syncedAt && (
+                          <span className="block text-xs text-zinc-600">
+                            Synced {new Date(c.activeSeason.syncedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 text-right whitespace-nowrap">
+                        <Link
+                          href={`/competitions/${c.slug}/table`}
+                          className="cms-btn cms-btn--secondary text-xs mr-2"
+                          target="_blank"
+                        >
+                          View table
+                        </Link>
+                        <Link
+                          href={`/admin/competitions/${c.id}/edit`}
+                          className="cms-btn cms-btn--secondary text-xs mr-2"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={deletingId === c.id}
+                          onClick={() => remove(c.id, competitionAdminDisplayName(c))}
+                          className="cms-btn cms-btn--secondary text-xs text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
         </div>
       )}
     </>

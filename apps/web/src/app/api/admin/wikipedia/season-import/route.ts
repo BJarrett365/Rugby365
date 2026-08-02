@@ -3,12 +3,15 @@ import { apiErrorResponse } from "@/lib/api-errors";
 import {
   analyseWikipediaSeasonPage,
   importWikipediaSeasonPage,
-  premiershipWikipediaSeasonUrls,
+  wikipediaSeasonImportPresets,
 } from "@/lib/wikipedia-season-import-service";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const competitionSlug = searchParams.get("competition") ?? "premiership";
   return NextResponse.json({
-    presets: premiershipWikipediaSeasonUrls(),
+    competitionSlug,
+    presets: wikipediaSeasonImportPresets(competitionSlug),
   });
 }
 
@@ -17,8 +20,10 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       action?: "analyse" | "import";
       url?: string;
+      competitionSlug?: string;
       seasonStartYear?: number;
       mode?: "fill_missing" | "update_existing";
+      createMissingTeams?: boolean;
     };
 
     const url = body.url?.trim();
@@ -45,10 +50,34 @@ export async function POST(req: Request) {
       });
     }
 
+    const competitionSlug = body.competitionSlug ?? "premiership";
+
     const report = await importWikipediaSeasonPage(url, {
+      competitionSlug,
       seasonStartYear: body.seasonStartYear,
       mode: body.mode ?? "update_existing",
-      createMissingTeams: false,
+      createMissingTeams:
+        body.createMissingTeams ??
+        [
+          "challenge-cup",
+          "rugby-champions-cup",
+          "rugby-championship",
+          "currie-cup",
+          "top-14",
+          "super-rugby",
+          "championship",
+          "npc",
+          "six-nations",
+          "rugby-world-cup",
+          "rugby-europe-championship",
+          "end-of-year-internationals",
+          "autumn-nations-cup",
+          "nations-championship",
+          "world-rugby-nations-cup",
+        ].includes(competitionSlug) ||
+        competitionSlug.startsWith("currie-cup") ||
+        competitionSlug.startsWith("npc-") ||
+        competitionSlug.startsWith("autumn-nations-cup"),
     });
     return NextResponse.json(report);
   } catch (e) {

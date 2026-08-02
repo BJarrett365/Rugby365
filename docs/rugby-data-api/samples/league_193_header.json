@@ -1,23 +1,15 @@
 {
   "_meta": {
     "endpoint": "league_193_header",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/league/193/header",
     "status": 200,
-    "bytes": 234,
-    "captured_at": "2026-07-10T10:00:09Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:32.094Z",
+    "response_time_ms": 371,
+    "raw_response_id": "1b2e0e56-4342-4068-b857-2072cbf232f5"
   },
   "response": {
     "status": 200,
     "message": "Tournament header",
-    "tabs": [
-      "results",
-      "table",
-      "teams"
-    ],
     "data": {
       "id": 193,
       "nm": "U20 World Championship",

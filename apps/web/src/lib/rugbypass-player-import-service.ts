@@ -1,6 +1,7 @@
 import { eq, gte, lte, and, desc } from "drizzle-orm";
 import { fixtures, playerExternalMatches, players, teams } from "@rugby365/db";
 import {
+  cmsPlayerSlugToRugbyPassSlug,
   parseRugbyPassPlayerProfile,
   parseRugbyPassPlayerSlug,
   rugbyPassPlayerSlugCandidates,
@@ -93,13 +94,16 @@ async function findPlayerByRugbyPassIdentity(profile: RugbyPassPlayerProfile) {
   return bySlug ?? null;
 }
 
-async function resolveFixtureForMatch(input: {
-  kickoffAt: Date;
-  matchTitle: string;
-  teamName: string;
-  opponentName: string;
-  competitionName: string;
-}) {
+async function resolveFixtureForMatch(
+  input: {
+    kickoffAt: Date;
+    matchTitle: string;
+    teamName: string;
+    opponentName: string;
+    competitionName: string;
+  },
+  teamById: Record<string, string>,
+) {
   const db = getDb();
   const dayStart = new Date(input.kickoffAt);
   dayStart.setUTCHours(0, 0, 0, 0);
@@ -110,9 +114,6 @@ async function resolveFixtureForMatch(input: {
     .select()
     .from(fixtures)
     .where(and(gte(fixtures.kickoffAt, dayStart), lte(fixtures.kickoffAt, dayEnd)));
-
-  const allTeams = await db.select().from(teams);
-  const teamById = Object.fromEntries(allTeams.map((t) => [t.id, t.name]));
 
   for (const row of rows) {
     const home = row.homeTeamId ? teamById[row.homeTeamId] : null;
@@ -141,16 +142,21 @@ async function upsertExternalMatches(
   const db = getDb();
   let imported = 0;
   let linked = 0;
+  const allTeams = await db.select({ id: teams.id, name: teams.name }).from(teams);
+  const teamById = Object.fromEntries(allTeams.map((t) => [t.id, t.name]));
 
   for (const match of profile.recentMatches) {
     const kickoffAt = new Date(match.kickoffAt);
-    const fixtureId = await resolveFixtureForMatch({
-      kickoffAt,
-      matchTitle: match.matchTitle,
-      teamName: match.teamName,
-      opponentName: match.opponentName,
-      competitionName: match.competitionName,
-    });
+    const fixtureId = await resolveFixtureForMatch(
+      {
+        kickoffAt,
+        matchTitle: match.matchTitle,
+        teamName: match.teamName,
+        opponentName: match.opponentName,
+        competitionName: match.competitionName,
+      },
+      teamById,
+    );
     if (fixtureId) linked += 1;
 
     const [existing] = await db
@@ -194,7 +200,16 @@ async function upsertExternalMatches(
   return { imported, linked };
 }
 
-async function applyRugbyPassProfile(playerId: string, profile: RugbyPassPlayerProfile) {
+export type RugbyPassEnrichOptions = {
+  /** Skip recent-match import (faster profile-only backfill). */
+  skipMatches?: boolean;
+};
+
+async function applyRugbyPassProfile(
+  playerId: string,
+  profile: RugbyPassPlayerProfile,
+  options: RugbyPassEnrichOptions = {},
+) {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
   if (!player) throw new Error("Player not found");
@@ -220,6 +235,10 @@ async function applyRugbyPassProfile(playerId: string, profile: RugbyPassPlayerP
     })
     .where(eq(players.id, playerId));
 
+  if (options.skipMatches) {
+    return { fieldsUpdated, imported: 0, linked: 0 };
+  }
+
   const matchResult = await upsertExternalMatches(playerId, profile);
   return { fieldsUpdated, ...matchResult };
 }
@@ -227,45 +246,73 @@ async function applyRugbyPassProfile(playerId: string, profile: RugbyPassPlayerP
 export async function enrichPlayerFromRugbyPass(
   playerId: string,
   sourceUrl?: string,
+  options: RugbyPassEnrichOptions = {},
 ): Promise<RugbyPassPlayerImportResult> {
-  const db = getDb();
-  const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
-  if (!player) return { enriched: false, playerId, reason: "player_not_found" };
+  let url: string | undefined;
+  try {
+    const db = getDb();
+    const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+    if (!player) return { enriched: false, playerId, reason: "player_not_found" };
 
-  const slug =
-    (sourceUrl ? parseRugbyPassPlayerSlug(sourceUrl) : null) ??
-    player.rugbypassSlug ??
-    null;
-  const url =
-    sourceUrl ??
-    player.rugbypassUrl ??
-    (slug ? rugbyPassPlayerUrl(slug) : null);
+    const derivedSlug = player.slug
+      ? cmsPlayerSlugToRugbyPassSlug(player.slug, player.externalProviderId)
+      : null;
+    const slug =
+      (sourceUrl ? parseRugbyPassPlayerSlug(sourceUrl) : null) ??
+      player.rugbypassSlug ??
+      derivedSlug;
+    url =
+      sourceUrl ??
+      player.rugbypassUrl ??
+      (slug ? rugbyPassPlayerUrl(slug) : undefined);
 
-  if (!url) {
-    return { enriched: false, playerId, reason: "missing_rugbypass_url" };
+    if (!url) {
+      return { enriched: false, playerId, reason: "missing_rugbypass_url" };
+    }
+
+    const { html, url: resolvedUrl } = await fetchRugbyPassHtmlWithFallback(
+      url,
+      player.externalProviderId,
+    );
+    const profile = parseRugbyPassPlayerProfile(html, resolvedUrl);
+    if (!profile) return { enriched: false, playerId, reason: "parse_failed" };
+
+    const existing = await findPlayerByRugbyPassIdentity(profile);
+    if (existing && existing.id !== playerId) {
+      return { enriched: false, playerId, reason: "rugbypass_identity_already_linked" };
+    }
+
+    const result = await applyRugbyPassProfile(playerId, profile, options);
+    return {
+      enriched: true,
+      playerId,
+      sourceUrl: profile.sourceUrl,
+      fieldsUpdated: result.fieldsUpdated,
+      matchesImported: result.imported,
+      matchesLinked: result.linked,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const cause =
+      error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
+    const combined = `${message} ${cause}`;
+    if (combined.includes("404") || combined.includes("fetch failed")) {
+      return { enriched: false, playerId, reason: "not_found_on_rugbypass", sourceUrl: url };
+    }
+    if (combined.includes("does not match")) {
+      return { enriched: false, playerId, reason: "name_mismatch", sourceUrl: url };
+    }
+    if (
+      combined.includes("ENOTFOUND") ||
+      combined.includes("ECONNRESET") ||
+      combined.includes("ETIMEDOUT") ||
+      combined.includes("connect") ||
+      combined.includes("Failed query")
+    ) {
+      return { enriched: false, playerId, reason: "transient_db_error", sourceUrl: url };
+    }
+    return { enriched: false, playerId, reason: message.slice(0, 200), sourceUrl: url };
   }
-
-  const { html, url: resolvedUrl } = await fetchRugbyPassHtmlWithFallback(
-    url,
-    player.externalProviderId,
-  );
-  const profile = parseRugbyPassPlayerProfile(html, resolvedUrl);
-  if (!profile) return { enriched: false, playerId, reason: "parse_failed" };
-
-  const existing = await findPlayerByRugbyPassIdentity(profile);
-  if (existing && existing.id !== playerId) {
-    return { enriched: false, playerId, reason: "rugbypass_identity_already_linked" };
-  }
-
-  const result = await applyRugbyPassProfile(playerId, profile);
-  return {
-    enriched: true,
-    playerId,
-    sourceUrl: profile.sourceUrl,
-    fieldsUpdated: result.fieldsUpdated,
-    matchesImported: result.imported,
-    matchesLinked: result.linked,
-  };
 }
 
 export async function importRugbyPassPlayerByUrl(

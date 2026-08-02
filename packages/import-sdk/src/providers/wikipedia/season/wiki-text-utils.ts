@@ -29,6 +29,101 @@ export function parseWikiLinkLabel(value: string): string {
   return stripWikiMarkup(value);
 }
 
+const RU_COUNTRY_NAMES: Record<string, string> = {
+  arg: "Argentina",
+  aus: "Australia",
+  bel: "Belgium",
+  can: "Canada",
+  chi: "Chile",
+  civ: "Ivory Coast",
+  cze: "Czech Republic",
+  den: "Denmark",
+  eng: "England",
+  esp: "Spain",
+  fij: "Fiji",
+  fra: "France",
+  geo: "Georgia",
+  ger: "Germany",
+  hkg: "Hong Kong",
+  ire: "Ireland",
+  irl: "Ireland",
+  ita: "Italy",
+  jap: "Japan",
+  jpn: "Japan",
+  ken: "Kenya",
+  kor: "South Korea",
+  lat: "Latvia",
+  ltu: "Lithuania",
+  mda: "Moldova",
+  nam: "Namibia",
+  ned: "Netherlands",
+  nor: "Norway",
+  nz: "New Zealand",
+  nzl: "New Zealand",
+  pol: "Poland",
+  por: "Portugal",
+  rom: "Romania",
+  rou: "Romania",
+  rsa: "South Africa",
+  rus: "Russia",
+  sa: "South Africa",
+  sam: "Samoa",
+  sco: "Scotland",
+  spa: "Spain",
+  sui: "Switzerland",
+  swe: "Sweden",
+  tga: "Tonga",
+  ton: "Tonga",
+  uru: "Uruguay",
+  usa: "United States",
+  wal: "Wales",
+  zim: "Zimbabwe",
+  zaf: "South Africa",
+};
+
+export function ruCodeToCountryName(code: string): string | null {
+  const key = code.trim().toLowerCase();
+  return RU_COUNTRY_NAMES[key] ?? null;
+}
+
+/** Parse team labels from wiki links, plain text, or {{ru|NZL}} national templates. */
+export function parseWikiTeamLabel(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const namedRu = trimmed.match(
+    /\{\{\s*(?:ru-rt|rua-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|[^}]*\|\s*name\s*=\s*([^}|]+)/i,
+  );
+  if (namedRu) return stripWikiMarkup(namedRu[1]!).trim();
+
+  const ruMatch = trimmed.match(/\{\{\s*(?:ru-rt|rua-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|\s*([^}|]+)/i);
+  if (ruMatch) {
+    const token = ruMatch[1]!.trim();
+    const fromCode = ruCodeToCountryName(token);
+    if (fromCode) return fromCode;
+    // {{ru|Japan}} uses a display name rather than an ISO code.
+    if (!/^[A-Za-z]{2,3}$/.test(token) && !/^\d+$/.test(token)) return stripWikiMarkup(token);
+  }
+
+  const rutMatch = trimmed.match(/\{\{\s*(?:n?rut)\s*\|\s*([^}|]+)/i);
+  if (rutMatch) {
+    return stripWikiMarkup(rutMatch[1]!);
+  }
+
+  const linkLabel = parseWikiLinkLabel(trimmed);
+  if (linkLabel) {
+    const national = linkLabel
+      .replace(/\s+\(country\)$/i, "")
+      .replace(/\s+national rugby union team$/i, "")
+      .replace(/\s+rugby union team$/i, "")
+      .trim();
+    return national || linkLabel;
+  }
+
+  const fromBareCode = ruCodeToCountryName(trimmed);
+  return fromBareCode ?? trimmed;
+}
+
 export function parseAttendance(value: string | undefined): number | null {
   if (!value) return null;
   const cleaned = stripWikiMarkup(value).replace(/[^\d]/g, "");
@@ -179,8 +274,10 @@ export function parseTemplateParams(block: string): Record<string, string> {
 }
 
 export function detectSeasonStartYearFromTitle(title: string): number | null {
-  const cross = title.match(/(20\d{2})[–-](\d{2}|\d{4})/);
-  if (cross) return Number.parseInt(cross[1]!, 10);
-  const single = title.match(/\b(20\d{2})\b/);
-  return single ? Number.parseInt(single[1]!, 10) : null;
+  const cross = title.match(/(19|20)(\d{2})[–-](\d{2}|\d{4})/);
+  if (cross) return Number.parseInt(`${cross[1]}${cross[2]}`, 10);
+  const leading = title.match(/^(19|20)\d{2}\b/);
+  if (leading) return Number.parseInt(leading[0], 10);
+  const single = title.match(/\b(19|20)\d{2}\b/);
+  return single ? Number.parseInt(single[0], 10) : null;
 }

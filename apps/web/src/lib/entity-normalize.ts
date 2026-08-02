@@ -1,7 +1,16 @@
 import { normalizeProviderPlayerName } from "./match-entity-context";
 
+/** Wikipedia transfer notes often leak into player names. */
+const PLAYER_STATUS_SUFFIX =
+  /\s+(released|retired|left|departed|joined|signed|loaned|on\s+loan|deceased|died)$/i;
+
 export function normalizePlayerName(name: string): string {
-  return normalizeProviderPlayerName(name);
+  return normalizeProviderPlayerName(name)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(PLAYER_STATUS_SUFFIX, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Common club sponsors that should not create duplicate team identities. */
@@ -75,9 +84,45 @@ export function teamDedupTier(name: string): TeamDedupTier {
   return "senior";
 }
 
+/** Wikipedia / SDMS import debris in team slugs (flagicon templates + cite refs). */
+export function isJunkTeamSlug(slug: string): boolean {
+  return (
+    slug.startsWith("flagicon-") ||
+    slug.includes("ref-cite") ||
+    slug.includes("ref-name") ||
+    slug.includes("url-https") ||
+    slug.includes("access-date") ||
+    slug.length > 60
+  );
+}
+
+/** Pure numbers / table ranks that Wikipedia parsers sometimes treat as team names. */
+export function isJunkTeamName(name: string): boolean {
+  const trimmed = name.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  if (!trimmed) return true;
+  if (/^\d+$/.test(trimmed)) return true;
+  if (/^#?\d{1,3}$/.test(trimmed)) return true;
+  if (/^(seed|rank|pool|pos(?:ition)?|p|w|d|l|pf|pa|pd|bp|pts?)$/i.test(trimmed)) return true;
+  return false;
+}
+
+/** Extract club label from corrupted flagicon-* slugs for duplicate matching. */
+export function clubNameFromJunkSlug(slug: string): string | null {
+  const match = slug.match(/^flagicon-[a-z]+-([a-z0-9]+(?:-[a-z0-9]+)*?)-ref(?:-|$)/i);
+  if (!match) return null;
+  return match[1]!.replace(/-/g, " ").trim();
+}
+
+/** Alternate base names that should dedupe together (senior sides only). */
+const TEAM_DEDUP_BASE_ALIASES: Record<string, string> = {
+  "mpumalanga pumas": "pumas",
+  "t=mpumalanga pumas": "mpumalanga pumas",
+};
+
 /** Base club/country label with age/gender tier markers removed for duplicate matching. */
 export function teamDedupBaseName(name: string): string {
   let normalized = stripTeamSponsorAndSeasonLabels(name);
+  normalized = normalized.replace(/^t=/i, "").trim();
   normalized = normalized
     .replace(/\s*\(asst\.\)/gi, "")
     .replace(/\s*\(loan\)/gi, "")
@@ -95,7 +140,8 @@ export function teamDedupBaseName(name: string): string {
     .replace(/[),]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return normalized.toLowerCase();
+  const lower = normalized.toLowerCase();
+  return TEAM_DEDUP_BASE_ALIASES[lower] ?? lower;
 }
 
 /** Duplicate teams must share base name and tier — Women/U18/U20 never merge with senior sides. */

@@ -1,0 +1,479 @@
+{
+  "generatedAt": "2026-07-28T09:41:57.757Z",
+  "summary": {
+    "catalog": {
+      "endpoints": 26,
+      "fieldGaps": 15,
+      "byDisposition": {
+        "ingested": 0,
+        "partial": 18,
+        "raw_only": 16,
+        "not_pulled": 0,
+        "not_in_feed": 3,
+        "out_of_scope": 4,
+        "blocked_by_policy": 0
+      }
+    },
+    "rawResponses": {
+      "total": 955,
+      "byEntityType": {
+        "team": 81,
+        "match": 810,
+        "search": 2,
+        "competition": 56,
+        "country": 2,
+        "unknown": 4
+      },
+      "byImportStatus": {
+        "captured": 945,
+        "error": 10
+      }
+    },
+    "structured": {
+      "mappingCounts": [
+        {
+          "status": "confirmed",
+          "count": 24
+        },
+        {
+          "status": "unmapped",
+          "count": 27
+        }
+      ],
+      "fixturesWithExternalId": 690,
+      "fixturePlayers": 0,
+      "rugbyDataTeamStats": 0,
+      "rugbyDataPlayerStats": 0,
+      "rugbyDataEvents": 72,
+      "confirmedMappings": 24,
+      "generatedAt": "2026-07-28T09:41:57.750Z"
+    }
+  },
+  "notIngested": {
+    "endpoints": [
+      {
+        "id": "countries-list",
+        "method": "GET",
+        "path": "/countries/list",
+        "pullPhase": "discovery",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Discovery reference only; countries are not CMS entities. Stored in provider_raw_responses for audit.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Discovery reference only; countries are not CMS entities. Stored in provider_raw_responses for audit."
+      },
+      {
+        "id": "country-leagues",
+        "method": "GET",
+        "path": "/country/leagues",
+        "pullPhase": "discovery",
+        "disposition": "partial",
+        "targetTables": [
+          "data_integration_jobs"
+        ],
+        "reason": "League catalog extracted to job preview; individual country rows are not persisted as entities.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. League catalog extracted to job preview; individual country rows are not persisted as entities."
+      },
+      {
+        "id": "news-leagues",
+        "method": "GET",
+        "path": "/news/leagues",
+        "pullPhase": "discovery",
+        "disposition": "partial",
+        "targetTables": [
+          "data_integration_jobs"
+        ],
+        "reason": "League ids merged into discovery catalog only.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. League ids merged into discovery catalog only."
+      },
+      {
+        "id": "search",
+        "method": "GET",
+        "path": "/search",
+        "pullPhase": "global",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Lookup helper; entity resolution uses league/team lists instead.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Lookup helper; entity resolution uses league/team lists instead."
+      },
+      {
+        "id": "teams-global",
+        "method": "GET",
+        "path": "/teams",
+        "pullPhase": "global",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Global team directory is captured raw; structured import uses per-league /teams only.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Global team directory is captured raw; structured import uses per-league /teams only."
+      },
+      {
+        "id": "matches-by-date",
+        "method": "GET",
+        "path": "/matches",
+        "pullPhase": "date",
+        "disposition": "partial",
+        "targetTables": [
+          "fixtures",
+          "provider_entity_mappings"
+        ],
+        "reason": "Fixture rows created on date sweep; league metadata on each group is snapshot-only.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Fixture rows created on date sweep; league metadata on each group is snapshot-only."
+      },
+      {
+        "id": "matches-count",
+        "method": "GET",
+        "path": "/matches/count",
+        "pullPhase": "date",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Operational counter; no CMS table for match counts by date.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Operational counter; no CMS table for match counts by date."
+      },
+      {
+        "id": "league-header",
+        "method": "GET",
+        "path": "/league/:id/header",
+        "pullPhase": "league",
+        "disposition": "partial",
+        "targetTables": [
+          "competitions",
+          "competition_seasons",
+          "provider_entity_mappings"
+        ],
+        "reason": "Name and season label ingested; lid/category_id/slug/tabs stored only in raw payload.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Name and season label ingested; lid/category_id/slug/tabs stored only in raw payload."
+      },
+      {
+        "id": "league-teams",
+        "method": "GET",
+        "path": "/league/:id/teams",
+        "pullPhase": "league",
+        "disposition": "partial",
+        "targetTables": [
+          "teams",
+          "provider_entity_mappings"
+        ],
+        "reason": "Team id and name ingested; slug and group label are raw-only.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Team id and name ingested; slug and group label are raw-only."
+      },
+      {
+        "id": "league-matches-finished",
+        "method": "GET",
+        "path": "/league/:id/matches?match_type=finished",
+        "pullPhase": "league",
+        "disposition": "partial",
+        "targetTables": [
+          "fixtures",
+          "provider_entity_mappings"
+        ],
+        "reason": "Core fixture fields ingested; period scores and competitor form arrays are not.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Core fixture fields ingested; period scores and competitor form arrays are not."
+      },
+      {
+        "id": "league-matches-fixtures",
+        "method": "GET",
+        "path": "/league/:id/matches?match_type=fixtures",
+        "pullPhase": "league",
+        "disposition": "partial",
+        "targetTables": [
+          "fixtures",
+          "provider_entity_mappings"
+        ],
+        "reason": "Upcoming fixtures ingested; live minute/score refresh relies on day sync.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Upcoming fixtures ingested; live minute/score refresh relies on day sync."
+      },
+      {
+        "id": "league-table",
+        "method": "GET",
+        "path": "/league/:id/table",
+        "pullPhase": "league",
+        "disposition": "partial",
+        "targetTables": [
+          "standing_rows"
+        ],
+        "reason": "Overall view only; PF/PA/bonus/home-away splits and pool groups are not ingested.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Overall view only; PF/PA/bonus/home-away splits and pool groups are not ingested."
+      },
+      {
+        "id": "league-news",
+        "method": "GET",
+        "path": "/league/:id/news",
+        "pullPhase": "league",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "News/articles are editorial content; no CMS news ingest pipeline for Rugby Data.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. News/articles are editorial content; no CMS news ingest pipeline for Rugby Data."
+      },
+      {
+        "id": "team-header",
+        "method": "GET",
+        "path": "/team/:id/header",
+        "pullPhase": "team",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Team cn/gender/fid metadata captured raw; teams table filled from league lists.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Team cn/gender/fid metadata captured raw; teams table filled from league lists."
+      },
+      {
+        "id": "team-matches",
+        "method": "GET",
+        "path": "/team/:id/matches",
+        "pullPhase": "team",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Redundant with league/date fixture sources; captured for audit only.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Redundant with league/date fixture sources; captured for audit only."
+      },
+      {
+        "id": "team-news",
+        "method": "GET",
+        "path": "/team/:id/news",
+        "pullPhase": "team",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "No CMS news ingest from Rugby Data.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. No CMS news ingest from Rugby Data."
+      },
+      {
+        "id": "match-detail",
+        "method": "GET",
+        "path": "/match/:id/detail",
+        "pullPhase": "match",
+        "disposition": "partial",
+        "targetTables": [
+          "fixtures"
+        ],
+        "reason": "FT score/status/kickoff ingested; HT/ET/PS period scores not stored in dedicated columns.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. FT score/status/kickoff ingested; HT/ET/PS period scores not stored in dedicated columns."
+      },
+      {
+        "id": "match-info",
+        "method": "GET",
+        "path": "/match/:id/info",
+        "pullPhase": "match",
+        "disposition": "partial",
+        "targetTables": [
+          "match_events"
+        ],
+        "reason": "Scoring events ingested; SUB in/out player ids not linked; skipped when SDMS timeline exists.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Scoring events ingested; SUB in/out player ids not linked; skipped when SDMS timeline exists."
+      },
+      {
+        "id": "match-lineup",
+        "method": "GET",
+        "path": "/match/:id/lineup",
+        "pullPhase": "match",
+        "disposition": "partial",
+        "targetTables": [
+          "fixture_players",
+          "players",
+          "provider_entity_mappings"
+        ],
+        "reason": "Squad list ingested; substitutions array and rugby_goals on lineup rows are not.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Squad list ingested; substitutions array and rugby_goals on lineup rows are not."
+      },
+      {
+        "id": "match-stat",
+        "method": "GET",
+        "path": "/match/:id/stat",
+        "pullPhase": "match",
+        "disposition": "partial",
+        "targetTables": [
+          "team_match_stats"
+        ],
+        "reason": "Summary + sections jsonb ingested; turnovers_won not mapped from API.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Summary + sections jsonb ingested; turnovers_won not mapped from API."
+      },
+      {
+        "id": "match-player-stat",
+        "method": "GET",
+        "path": "/match/:id/player-stat",
+        "pullPhase": "match",
+        "disposition": "partial",
+        "targetTables": [
+          "player_match_performance_stats",
+          "players"
+        ],
+        "reason": "Core columns + extras jsonb; several stat types remain in extras only.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Core columns + extras jsonb; several stat types remain in extras only."
+      },
+      {
+        "id": "match-table",
+        "method": "GET",
+        "path": "/match/:id/table",
+        "pullPhase": "match",
+        "disposition": "raw_only",
+        "targetTables": [],
+        "reason": "Pool standings in match context not wired to standing_rows (league table used instead).",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Pool standings in match context not wired to standing_rows (league table used instead)."
+      },
+      {
+        "id": "favourite",
+        "method": "POST",
+        "path": "/favourite",
+        "pullPhase": "fcm",
+        "disposition": "out_of_scope",
+        "targetTables": [],
+        "reason": "FCM favourites are out of project scope.",
+        "whyNotIngested": "Explicitly excluded from project scope (e.g. FCM favourites). FCM favourites are out of project scope."
+      },
+      {
+        "id": "get-favourites",
+        "method": "GET",
+        "path": "/get-favourites",
+        "pullPhase": "fcm",
+        "disposition": "out_of_scope",
+        "targetTables": [],
+        "reason": "FCM favourites are out of project scope.",
+        "whyNotIngested": "Explicitly excluded from project scope (e.g. FCM favourites). FCM favourites are out of project scope."
+      },
+      {
+        "id": "favourite-count",
+        "method": "GET",
+        "path": "/favourite/count",
+        "pullPhase": "fcm",
+        "disposition": "out_of_scope",
+        "targetTables": [],
+        "reason": "FCM favourites are out of project scope.",
+        "whyNotIngested": "Explicitly excluded from project scope (e.g. FCM favourites). FCM favourites are out of project scope."
+      },
+      {
+        "id": "my-matches",
+        "method": "GET",
+        "path": "/my-matches",
+        "pullPhase": "fcm",
+        "disposition": "out_of_scope",
+        "targetTables": [],
+        "reason": "Personal match lists require FCM token; out of scope.",
+        "whyNotIngested": "Explicitly excluded from project scope (e.g. FCM favourites). Personal match lists require FCM token; out of scope."
+      }
+    ],
+    "fields": [
+      {
+        "feedId": "league-header",
+        "field": "lid, category_id, fid, lso, sg, tabs",
+        "disposition": "raw_only",
+        "reason": "No competition columns for provider secondary ids/slugs; kept in raw payload only.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. No competition columns for provider secondary ids/slugs; kept in raw payload only."
+      },
+      {
+        "feedId": "league-teams",
+        "field": "teams[].sg, group label",
+        "disposition": "raw_only",
+        "targetTable": "teams",
+        "reason": "Import uses name + external id; slug from API not written to teams.slug.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Import uses name + external id; slug from API not written to teams.slug."
+      },
+      {
+        "feedId": "league-matches-finished",
+        "field": "ht, et, ps, aimId, competitors.htf/atf",
+        "disposition": "raw_only",
+        "targetTable": "fixtures",
+        "reason": "No period-score columns on fixtures; form arrays have no target table.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. No period-score columns on fixtures; form arrays have no target table."
+      },
+      {
+        "feedId": "league-table",
+        "field": "nrr, prem[], bonus points, home/away views",
+        "disposition": "raw_only",
+        "targetTable": "standing_rows",
+        "reason": "Importer writes overall view only; bonus columns often absent in API.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Importer writes overall view only; bonus columns often absent in API."
+      },
+      {
+        "feedId": "match-detail",
+        "field": "ht, et, ps",
+        "disposition": "raw_only",
+        "targetTable": "fixtures",
+        "reason": "Period scores not modelled on fixtures table.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Period scores not modelled on fixtures table."
+      },
+      {
+        "feedId": "match-info",
+        "field": "SUB piId/poId/piNm/poNm",
+        "disposition": "partial",
+        "targetTable": "match_events",
+        "reason": "Substitution events created but in/out players not stored in payload or player_id FK.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Substitution events created but in/out players not stored in payload or player_id FK."
+      },
+      {
+        "feedId": "match-info",
+        "field": "events[].sc",
+        "disposition": "partial",
+        "targetTable": "match_events",
+        "reason": "Score string stored in payload only, not parsed into fixture state.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Score string stored in payload only, not parsed into fixture state."
+      },
+      {
+        "feedId": "match-lineup",
+        "field": "substitutions[], rugby_goals[], cards[]",
+        "disposition": "raw_only",
+        "targetTable": "fixture_players",
+        "reason": "Lineup importer reads lineup[] only; scoring on lineup rows not copied to fixture_players stats.",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Lineup importer reads lineup[] only; scoring on lineup rows not copied to fixture_players stats."
+      },
+      {
+        "feedId": "match-lineup",
+        "field": "pos",
+        "disposition": "partial",
+        "targetTable": "fixture_players",
+        "reason": "Often blank in API; position_name not derived from shirt number.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Often blank in API; position_name not derived from shirt number."
+      },
+      {
+        "feedId": "match-stat",
+        "field": "turnovers_won",
+        "disposition": "partial",
+        "targetTable": "team_match_stats",
+        "reason": "Mapper hardcodes turnoversWon to 0.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Mapper hardcodes turnoversWon to 0."
+      },
+      {
+        "feedId": "match-player-stat",
+        "field": "Penalty goals, Missed goals, Passes, Offloads, Missed tackles, Kick fromhand metres, cards",
+        "disposition": "partial",
+        "targetTable": "player_match_performance_stats",
+        "reason": "Stored in extras jsonb; not all map to typed performance columns.",
+        "whyNotIngested": "Some fields ingested; others remain in raw payload or extras jsonb only. Stored in extras jsonb; not all map to typed performance columns."
+      },
+      {
+        "feedId": "match-table",
+        "field": "pool table sc/cc/df/ded/wo_aet",
+        "disposition": "raw_only",
+        "targetTable": "standing_rows",
+        "reason": "Match-level pool tables not imported (league /table used instead).",
+        "whyNotIngested": "Pulled into provider_raw_responses but no structured importer writes to CMS tables. Match-level pool tables not imported (league /table used instead)."
+      },
+      {
+        "feedId": "any",
+        "field": "venue, referee, coaches, attendance",
+        "disposition": "not_in_feed",
+        "reason": "Not present in Rugby Data API payloads; requires SDMS/Wikipedia/CMS.",
+        "whyNotIngested": "Data does not exist in Rugby Data API responses. Not present in Rugby Data API payloads; requires SDMS/Wikipedia/CMS."
+      },
+      {
+        "feedId": "any",
+        "field": "player DOB, nationality, height, weight, image, bio",
+        "disposition": "not_in_feed",
+        "targetTable": "players",
+        "reason": "Not in Rugby Data API; requires Wikipedia/RugbyPass/CMS.",
+        "whyNotIngested": "Data does not exist in Rugby Data API responses. Not in Rugby Data API; requires Wikipedia/RugbyPass/CMS."
+      },
+      {
+        "feedId": "any",
+        "field": "commentary, transfers, rankings, youtube",
+        "disposition": "not_in_feed",
+        "reason": "Outside Rugby Data API scope entirely.",
+        "whyNotIngested": "Data does not exist in Rugby Data API responses. Outside Rugby Data API scope entirely."
+      }
+    ]
+  },
+  "dispositionLegend": {
+    "ingested": "Fully mapped into CMS tables by the import/enrich pipeline.",
+    "partial": "Some fields ingested; others remain in raw payload or extras jsonb only.",
+    "raw_only": "Pulled into provider_raw_responses but no structured importer writes to CMS tables.",
+    "not_pulled": "Endpoint not yet called by pull/import jobs.",
+    "not_in_feed": "Data does not exist in Rugby Data API responses.",
+    "out_of_scope": "Explicitly excluded from project scope (e.g. FCM favourites).",
+    "blocked_by_policy": "Ingest blocked by mapping rules, field locks, or SDMS-primary policy."
+  }
+}

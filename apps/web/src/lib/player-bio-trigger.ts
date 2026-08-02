@@ -6,6 +6,9 @@ export async function triggerPlayerBioRefresh(input: {
   trigger: BioRefreshTrigger;
   force?: boolean;
 }) {
+  if (process.env.SKIP_PLAYER_BIO_REFRESH === "1") {
+    return { queued: false, reason: "Skipped (SKIP_PLAYER_BIO_REFRESH=1)" };
+  }
   try {
     return await queuePlayerBioRefresh(input);
   } catch (error) {

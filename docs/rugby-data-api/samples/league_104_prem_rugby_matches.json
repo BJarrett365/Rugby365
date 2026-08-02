@@ -1,12 +1,11 @@
 {
   "_meta": {
     "endpoint": "league_104_prem_rugby_matches",
+    "path": "/api/v1/rugby-union/league/104/matches?match_type=finished",
     "status": 200,
-    "bytes": 41232,
-    "captured_at": "2026-07-10T10:02:46Z",
-    "auth": "none",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/league/104/matches?match_type=finished"
+    "captured_at": "2026-07-28T09:03:35.053Z",
+    "response_time_ms": 300,
+    "raw_response_id": "7d632ee4-3363-40e8-a771-e88495456033"
   },
   "response": {
     "status": 200,

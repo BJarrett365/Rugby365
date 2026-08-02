@@ -8,6 +8,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import {
+  competitionSeasons,
   players,
   squadAuditClubs,
   squadAuditJobs,
@@ -31,8 +32,6 @@ import { listSeasonScopedTeams } from "./season-scoped-picker-service";
 import { canonicalPremiershipTeamName } from "./transfer-match-service";
 import { resolvePremiershipSeason } from "./transfer-admin-service";
 import { DEFAULT_PREMIERSHIP_TRANSFER_SEASON } from "./premiership-transfer-constants";
-import { and, eq } from "drizzle-orm";
-import { competitionSeasons } from "@rugby365/db";
 
 export type SquadAuditClubStatus =
   | "not_started"

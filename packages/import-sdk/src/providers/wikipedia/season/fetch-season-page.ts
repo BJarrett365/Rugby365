@@ -24,8 +24,8 @@ export async function fetchWikipediaSeasonPage(input: string): Promise<Wikipedia
   });
 
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    if (attempt > 0) await sleep(1500 * 2 ** (attempt - 1));
+  for (let attempt = 0; attempt < 8; attempt++) {
+    if (attempt > 0) await sleep(3000 * 2 ** (attempt - 1));
     const res = await fetch(`https://${lang}.wikipedia.org/w/api.php?${params}`, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
     });
@@ -95,8 +95,8 @@ export async function fetchWikipediaSectionWikitext(
   });
 
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    if (attempt > 0) await sleep(1500 * 2 ** (attempt - 1));
+  for (let attempt = 0; attempt < 8; attempt++) {
+    if (attempt > 0) await sleep(3000 * 2 ** (attempt - 1));
     const res = await fetch(`https://${lang}.wikipedia.org/w/api.php?${params}`, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
     });

@@ -20,7 +20,26 @@ import { buildFixtureSlug } from "./fixture-slug";
 import { formatSeasonRangeLabel } from "./season-label-utils";
 import { canonicalPremiershipTeamName } from "./transfer-match-service";
 import { resolveVenue } from "./venue-admin-service";
-import { PREMIERSHIP_CHAMPIONS } from "./competition-champions-catalog";
+import {
+  PREMIERSHIP_CHAMPIONS,
+  CHALLENGE_CUP_CHAMPIONS,
+  CHAMPIONS_CUP_CHAMPIONS,
+  RUGBY_CHAMPIONSHIP_CHAMPIONS,
+  CURRIE_CUP_CHAMPIONS,
+  SIX_NATIONS_CHAMPIONS,
+  RUGBY_WORLD_CUP_CHAMPIONS,
+  RUGBY_EUROPE_CHAMPIONSHIP_CHAMPIONS,
+  END_OF_YEAR_INTERNATIONALS_SEASONS,
+  AUTUMN_NATIONS_CUP_SEASONS,
+  TOP_14_CHAMPIONS,
+  SUPER_RUGBY_CHAMPIONS,
+  RFU_CHAMPIONSHIP_CHAMPIONS,
+  NATIONS_CHAMPIONSHIP_SEASONS,
+  WORLD_RUGBY_NATIONS_CUP_SEASONS,
+  NPC_CHAMPIONS,
+} from "./competition-champions-catalog";
+import { isJunkTeamName, normalizeTeamName } from "./entity-normalize";
+import { formatSeasonLabelForKind } from "./season-label-utils";
 
 export const WIKIPEDIA_SEASON_PROVIDER = "wikipedia";
 
@@ -63,6 +82,30 @@ export type WikipediaSeasonImportReport = {
   unmappedTeams: string[];
 };
 
+function wikipediaSeasonKind(competitionSlug: string, competitionType: string): "club" | "international" | "tournament" {
+  if (competitionSlug.startsWith("currie-cup") || competitionSlug === "super-rugby" || competitionSlug === "npc" || competitionSlug.startsWith("npc-")) {
+    return "international";
+  }
+  if (
+    competitionSlug === "rugby-championship" ||
+    competitionSlug === "six-nations" ||
+    competitionSlug === "nations-championship" ||
+    competitionSlug === "international" ||
+    competitionSlug === "international-matches-n062z68w" ||
+    competitionSlug === "rugby-europe-championship" ||
+    competitionSlug === "end-of-year-internationals" ||
+    competitionSlug === "autumn-nations-cup" ||
+    competitionSlug.startsWith("autumn-nations-cup") ||
+    competitionType === "international" ||
+    competitionType === "world_cup"
+  ) {
+    return competitionType === "world_cup" || competitionSlug === "rugby-world-cup"
+      ? "tournament"
+      : "international";
+  }
+  return "club";
+}
+
 function emptyCounts(found = 0): WikipediaSeasonImportCounts {
   return { found, created: 0, updated: 0, skipped: 0, errors: 0 };
 }
@@ -92,15 +135,23 @@ function shortSlug(input: {
   return `${home}-v-${away}-${day}`.replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 }
 
-async function resolveSeasonTeam(name: string, createIfMissing: boolean) {
+async function resolveSeasonTeam(
+  name: string,
+  createIfMissing: boolean,
+  competitionSlug: string,
+) {
   const cleaned = name
     .replace(/<\/?[^>]+>/g, " ")
     .replace(/\([^)]*\)/g, " ")
     .replace(/\b\d+(?:st|nd|rd|th)\s+title\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!cleaned) return null;
-  const canonical = canonicalPremiershipTeamName(cleaned);
+  if (!cleaned || isJunkTeamName(cleaned)) return null;
+  const canonical =
+    competitionSlug === "premiership"
+      ? canonicalPremiershipTeamName(cleaned)
+      : normalizeTeamName(cleaned);
+  if (!canonical || isJunkTeamName(canonical)) return null;
   return resolveTeam({
     name: canonical,
     createIfMissing,
@@ -157,7 +208,7 @@ function pickBetterString(existing: string | null | undefined, incoming: string 
 
 async function upsertFixtureFromWiki(input: {
   row: WikipediaFixtureRow;
-  competition: { id: string; name: string };
+  competition: { id: string; name: string; slug: string };
   seasonId: string;
   pageTitle: string;
   mode: "fill_missing" | "update_existing";
@@ -169,8 +220,8 @@ async function upsertFixtureFromWiki(input: {
   refereeCounts: WikipediaSeasonImportCounts;
   unmappedTeams: Set<string>;
 }) {
-  const homeTeam = await resolveSeasonTeam(input.row.homeTeam, input.createMissingTeams);
-  const awayTeam = await resolveSeasonTeam(input.row.awayTeam, input.createMissingTeams);
+  const homeTeam = await resolveSeasonTeam(input.row.homeTeam, input.createMissingTeams, input.competition.slug);
+  const awayTeam = await resolveSeasonTeam(input.row.awayTeam, input.createMissingTeams, input.competition.slug);
   if (!homeTeam || !awayTeam) {
     if (!homeTeam) input.unmappedTeams.add(input.row.homeTeam);
     if (!awayTeam) input.unmappedTeams.add(input.row.awayTeam);
@@ -341,12 +392,40 @@ async function upsertFixtureFromWiki(input: {
   if (input.importAttendance && input.row.attendance != null) input.attendanceCounts.created += 1;
 }
 
+/** Clamp wiki-parsed ints into PostgreSQL integer range (bad cells can explode). */
+function clampStandingInt(value: number | null | undefined, fallback = 0): number {
+  if (value == null || !Number.isFinite(value)) return fallback;
+  const n = Math.trunc(value);
+  if (n > 2_147_483_647) return 2_147_483_647;
+  if (n < -2_147_483_648) return -2_147_483_648;
+  return n;
+}
+
+function standingRowValues(row: WikipediaStandingRow) {
+  return {
+    rank: clampStandingInt(row.rank),
+    played: clampStandingInt(row.played),
+    won: clampStandingInt(row.won),
+    draw: clampStandingInt(row.draw),
+    lost: clampStandingInt(row.lost),
+    pointsFor: clampStandingInt(row.pointsFor),
+    pointsAgainst: clampStandingInt(row.pointsAgainst),
+    pointsDiff: clampStandingInt(row.pointsDiff),
+    bonusPoints: clampStandingInt(row.bonusPoints),
+    tryBonusPoints: clampStandingInt(row.tryBonusPoints),
+    losingBonusPoints: clampStandingInt(row.losingBonusPoints),
+    pointsDeduction: clampStandingInt(row.pointsDeduction),
+    points: clampStandingInt(row.points),
+  };
+}
+
 async function importStandings(
   seasonId: string,
   rows: WikipediaStandingRow[],
   mode: "fill_missing" | "update_existing",
   createMissingTeams: boolean,
   unmappedTeams: Set<string>,
+  competitionSlug: string,
 ): Promise<WikipediaSeasonImportCounts> {
   const counts = emptyCounts(rows.length);
   const db = getDb();
@@ -357,12 +436,14 @@ async function importStandings(
 
   const syncedAt = new Date();
   for (const row of rows) {
-    const team = await resolveSeasonTeam(row.teamName, createMissingTeams);
+    const team = await resolveSeasonTeam(row.teamName, createMissingTeams, competitionSlug);
     if (!team) {
       unmappedTeams.add(row.teamName);
       counts.skipped += 1;
       continue;
     }
+
+    const values = standingRowValues(row);
 
     const [existing] = await db
       .select()
@@ -379,31 +460,16 @@ async function importStandings(
     if (existing && mode === "fill_missing") {
       // Prefer Wikipedia completed table when existing looks incomplete / inconsistent.
       const shouldReplace =
-        existing.played !== row.played ||
-        existing.points !== row.points ||
-        existing.rank !== row.rank;
+        existing.played !== values.played ||
+        existing.points !== values.points ||
+        existing.rank !== values.rank;
       if (!shouldReplace) {
         counts.skipped += 1;
         continue;
       }
       await db
         .update(standingRows)
-        .set({
-          rank: row.rank,
-          played: row.played,
-          won: row.won,
-          draw: row.draw,
-          lost: row.lost,
-          pointsFor: row.pointsFor,
-          pointsAgainst: row.pointsAgainst,
-          pointsDiff: row.pointsDiff,
-          bonusPoints: row.bonusPoints,
-          tryBonusPoints: row.tryBonusPoints,
-          losingBonusPoints: row.losingBonusPoints,
-          pointsDeduction: row.pointsDeduction,
-          points: row.points,
-          syncedAt,
-        })
+        .set({ ...values, syncedAt })
         .where(eq(standingRows.id, existing.id));
       counts.updated += 1;
       continue;
@@ -412,22 +478,7 @@ async function importStandings(
     if (existing) {
       await db
         .update(standingRows)
-        .set({
-          rank: row.rank,
-          played: row.played,
-          won: row.won,
-          draw: row.draw,
-          lost: row.lost,
-          pointsFor: row.pointsFor,
-          pointsAgainst: row.pointsAgainst,
-          pointsDiff: row.pointsDiff,
-          bonusPoints: row.bonusPoints,
-          tryBonusPoints: row.tryBonusPoints,
-          losingBonusPoints: row.losingBonusPoints,
-          pointsDeduction: row.pointsDeduction,
-          points: row.points,
-          syncedAt,
-        })
+        .set({ ...values, syncedAt })
         .where(eq(standingRows.id, existing.id));
       counts.updated += 1;
     } else {
@@ -435,19 +486,7 @@ async function importStandings(
         seasonId,
         teamId: team.id,
         view: "overall",
-        rank: row.rank,
-        played: row.played,
-        won: row.won,
-        draw: row.draw,
-        lost: row.lost,
-        pointsFor: row.pointsFor,
-        pointsAgainst: row.pointsAgainst,
-        pointsDiff: row.pointsDiff,
-        bonusPoints: row.bonusPoints,
-        tryBonusPoints: row.tryBonusPoints,
-        losingBonusPoints: row.losingBonusPoints,
-        pointsDeduction: row.pointsDeduction,
-        points: row.points,
+        ...values,
         syncedAt,
       });
       counts.created += 1;
@@ -467,13 +506,14 @@ export async function importWikipediaSeasonPage(
 ): Promise<WikipediaSeasonImportReport> {
   const mode = options.mode ?? "update_existing";
   const createMissingTeams = options.createMissingTeams ?? false;
+  const competitionSlug = options.competitionSlug ?? "premiership";
   const parsed = await parseWikipediaSeasonPage(url);
 
   const year = options.seasonStartYear ?? parsed.seasonStartYear;
   if (year == null) throw new Error(`Could not determine season year for ${url}`);
 
-  const competition = await getCompetitionBySlug(options.competitionSlug ?? "premiership");
-  if (!competition) throw new Error("Premiership competition not found");
+  const competition = await getCompetitionBySlug(competitionSlug);
+  if (!competition) throw new Error(`Competition not found: ${competitionSlug}`);
 
   if (parsed.seasonStartYear != null && parsed.seasonStartYear !== year) {
     throw new Error(
@@ -485,6 +525,7 @@ export async function importWikipediaSeasonPage(
     competitionId: competition.id,
     label: String(year),
     isActive: false,
+    seasonKind: wikipediaSeasonKind(competition.slug, competition.competitionType ?? "domestic"),
   });
 
   const unmappedTeams = new Set<string>();
@@ -492,7 +533,14 @@ export async function importWikipediaSeasonPage(
 
   let table = emptyCounts(parsed.standings.length);
   if (options.importTable !== false) {
-    table = await importStandings(season.id, parsed.standings, mode, createMissingTeams, unmappedTeams);
+    table = await importStandings(
+      season.id,
+      parsed.standings,
+      mode,
+      createMissingTeams,
+      unmappedTeams,
+      competition.slug,
+    );
   }
 
   const fixtureCounts = emptyCounts(parsed.fixtures.length);
@@ -508,7 +556,7 @@ export async function importWikipediaSeasonPage(
       try {
         await upsertFixtureFromWiki({
           row,
-          competition: { id: competition.id, name: competition.name },
+          competition: { id: competition.id, name: competition.name, slug: competition.slug },
           seasonId: season.id,
           pageTitle: parsed.pageTitle,
           mode,
@@ -532,7 +580,7 @@ export async function importWikipediaSeasonPage(
       try {
         await upsertFixtureFromWiki({
           row,
-          competition: { id: competition.id, name: competition.name },
+          competition: { id: competition.id, name: competition.name, slug: competition.slug },
           seasonId: season.id,
           pageTitle: parsed.pageTitle,
           mode,
@@ -554,7 +602,7 @@ export async function importWikipediaSeasonPage(
   let championTeamId: string | null = null;
   const championName = parsed.championName;
   if (options.importWinner !== false && championName) {
-    const champion = await resolveSeasonTeam(championName, createMissingTeams);
+    const champion = await resolveSeasonTeam(championName, createMissingTeams, competition.slug);
     if (champion) {
       championTeamId = champion.id;
       const db = getDb();
@@ -599,7 +647,10 @@ export async function importWikipediaSeasonPage(
     pageTitle: parsed.pageTitle,
     wikipediaUrl: parsed.wikipediaUrl,
     revisionId: parsed.revisionId,
-    seasonLabel: formatSeasonRangeLabel(year),
+    seasonLabel: formatSeasonLabelForKind(
+      year,
+      wikipediaSeasonKind(competition.slug, competition.competitionType ?? "domestic"),
+    ),
     seasonId: season.id,
     competitionId: competition.id,
     championName,
@@ -621,4 +672,159 @@ export function premiershipWikipediaSeasonUrls(): Array<{ startYear: number; url
     url: e.wikipediaUrl!,
     winner: e.winner,
   }));
+}
+
+export function challengeCupWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return CHALLENGE_CUP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function championsCupWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return CHAMPIONS_CUP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function rugbyChampionshipWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return RUGBY_CHAMPIONSHIP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function currieCupWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return CURRIE_CUP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function sixNationsWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return SIX_NATIONS_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function rugbyWorldCupWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return RUGBY_WORLD_CUP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function rugbyEuropeChampionshipWikipediaSeasonUrls(): Array<{
+  startYear: number;
+  url: string;
+  winner: string;
+}> {
+  return RUGBY_EUROPE_CHAMPIONSHIP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function endOfYearInternationalsWikipediaSeasonUrls(): Array<{
+  startYear: number;
+  url: string;
+  winner: string;
+}> {
+  return END_OF_YEAR_INTERNATIONALS_SEASONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function autumnNationsCupWikipediaSeasonUrls(): Array<{
+  startYear: number;
+  url: string;
+  winner: string;
+}> {
+  return AUTUMN_NATIONS_CUP_SEASONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function top14WikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return TOP_14_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function superRugbyWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return SUPER_RUGBY_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function rfuChampionshipWikipediaSeasonUrls(): Array<{ startYear: number; url: string; winner: string }> {
+  return RFU_CHAMPIONSHIP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function wikipediaSeasonImportPresets(
+  competitionSlug: string,
+): Array<{ startYear: number; url: string; winner: string }> {
+  if (competitionSlug === "challenge-cup") return challengeCupWikipediaSeasonUrls();
+  if (competitionSlug === "rugby-champions-cup") return championsCupWikipediaSeasonUrls();
+  if (competitionSlug === "rugby-championship") return rugbyChampionshipWikipediaSeasonUrls();
+  if (competitionSlug === "currie-cup" || competitionSlug.startsWith("currie-cup")) {
+    return currieCupWikipediaSeasonUrls();
+  }
+  if (competitionSlug === "six-nations") return sixNationsWikipediaSeasonUrls();
+  if (competitionSlug === "rugby-world-cup") return rugbyWorldCupWikipediaSeasonUrls();
+  if (competitionSlug === "rugby-europe-championship") {
+    return rugbyEuropeChampionshipWikipediaSeasonUrls();
+  }
+  if (competitionSlug === "end-of-year-internationals") {
+    return endOfYearInternationalsWikipediaSeasonUrls();
+  }
+  if (competitionSlug === "autumn-nations-cup" || competitionSlug.startsWith("autumn-nations-cup")) {
+    return autumnNationsCupWikipediaSeasonUrls();
+  }
+  if (competitionSlug === "top-14") return top14WikipediaSeasonUrls();
+  if (competitionSlug === "super-rugby") return superRugbyWikipediaSeasonUrls();
+  if (competitionSlug === "championship") return rfuChampionshipWikipediaSeasonUrls();
+  if (competitionSlug === "npc" || competitionSlug.startsWith("npc-")) {
+    return NPC_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
+      startYear: e.startYear,
+      url: e.wikipediaUrl!,
+      winner: e.winner,
+    }));
+  }
+  if (competitionSlug === "nations-championship") {
+    return NATIONS_CHAMPIONSHIP_SEASONS.filter((e) => e.wikipediaUrl).map((e) => ({
+      startYear: e.startYear,
+      url: e.wikipediaUrl!,
+      winner: e.winner,
+    }));
+  }
+  if (competitionSlug === "world-rugby-nations-cup") {
+    return WORLD_RUGBY_NATIONS_CUP_SEASONS.filter((e) => e.wikipediaUrl).map((e) => ({
+      startYear: e.startYear,
+      url: e.wikipediaUrl!,
+      winner: e.winner,
+    }));
+  }
+  return premiershipWikipediaSeasonUrls();
 }

@@ -60,11 +60,12 @@ export async function GET(req: Request) {
       );
     }
 
-    const [result, competitions, seasons] = await Promise.all([
+    const [result, competitions, seasonResult] = await Promise.all([
       listFixturesCms(filters),
       listCompetitions(),
       listAllSeasons(filters.competitionId ?? undefined),
     ]);
+    const seasons = seasonResult.seasons;
 
     return NextResponse.json({
       ...result,

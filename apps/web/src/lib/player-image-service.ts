@@ -537,3 +537,74 @@ export async function refreshPlayerPlanetRugbyImages(playerId: string, reason: s
     skippedPrimaryReplaceBecauseApproved: ctx.hasApprovedPrimary,
   };
 }
+
+export type RegisterAiCartoonAvatarInput = {
+  playerId: string;
+  imageUrl: string;
+  sourcePhotoUrl?: string | null;
+  widthPx?: number | null;
+  heightPx?: number | null;
+  caption?: string | null;
+  setPrimary?: boolean;
+  updatedBy?: string | null;
+};
+
+/**
+ * Register an AI-generated cartoon avatar in player_images (does not create players).
+ * Use after generating a stylised portrait from an approved source photo.
+ */
+export async function registerAiCartoonPlayerImage(input: RegisterAiCartoonAvatarInput) {
+  const db = getDb();
+  const imageUrl = input.imageUrl.trim();
+  if (!imageUrl) throw new Error("imageUrl is required");
+
+  const [existing] = await db
+    .select()
+    .from(playerImages)
+    .where(and(eq(playerImages.playerId, input.playerId), eq(playerImages.imageUrl, imageUrl)))
+    .limit(1);
+
+  let imageRow = existing ?? null;
+  if (!imageRow) {
+    const [inserted] = await db
+      .insert(playerImages)
+      .values({
+        playerId: input.playerId,
+        imageUrl,
+        canonicalUrl: imageUrl,
+        sourceProvider: "ai_cartoon",
+        sourcePageUrl: input.sourcePhotoUrl ?? null,
+        caption: input.caption ?? "AI cartoon avatar (style transfer from source photo)",
+        altText: input.caption ?? "Cartoon player portrait",
+        credit: "Rugby365 AI",
+        licence: "staff",
+        imageType: "portrait",
+        role: "gallery",
+        confidence: "high",
+        confidenceScore: 100,
+        status: "candidate",
+        isPublic: false,
+        isAiGenerated: true,
+        widthPx: input.widthPx ?? null,
+        heightPx: input.heightPx ?? null,
+        matchContext: {
+          sourcePhotoUrl: input.sourcePhotoUrl ?? null,
+          generator: "cursor-generate-image",
+          style: "cel-shaded-sports-avatar",
+        },
+        updatedBy: input.updatedBy ?? "system",
+        discoveredAt: now(),
+        updatedAt: now(),
+      })
+      .returning();
+    imageRow = inserted ?? null;
+  }
+
+  if (!imageRow) throw new Error("Failed to register cartoon avatar");
+
+  if (input.setPrimary) {
+    return applyPlayerImageAction(input.playerId, imageRow.id, "set_primary");
+  }
+
+  return { image: imageRow, player: await getPlayerRow(input.playerId) };
+}

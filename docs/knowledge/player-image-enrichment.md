@@ -55,6 +55,23 @@ Discovery refresh runs when:
 
 **Do not automatically replace an approved primary image.** If `primary_image_approved_at` is set, refresh only adds candidates.
 
+## Cartoon avatars
+
+Cartoon avatars are project-owned generated assets, not remote RugbyPass images.
+
+- Style reference: `docs/knowledge/assets/player-avatar-style-reference.png`
+- Generated files: `apps/web/public/player-avatars/*.png`
+- Provenance and restore manifest: `apps/web/public/player-avatars/manifest.json`
+- Source discovery: `npm run pull:player-images -- --wikipedia --planet`
+- Generation: `npm run generate:cartoons -- --limit=25`
+- Database restore/sync: `npm run sync:cartoons`
+
+Generation requires `OPENAI_API_KEY` in `.env` or Admin → Keys → OpenAI. Each output is
+normalized to the public player profile's 3:4 crop (1024×1365), registered in
+`player_images` with `is_ai_generated=true`, and linked to its source-photo URL.
+The manifest is updated after every successful generation so a fresh database can be
+reconnected to assets already committed in the project.
+
 ## Code
 
 | Area | Path |
@@ -65,3 +82,5 @@ Discovery refresh runs when:
 | Persist | `apps/web/src/lib/player-image-service.ts` |
 | API | `/api/admin/players/[id]/images` |
 | UI | `PlayerPlanetRugbyImagesPanel.tsx` |
+| Cartoon generation | `scripts/generate-cartoon-avatars.ts` |
+| Cartoon DB sync | `scripts/sync-cartoon-avatar-manifest.ts` |

@@ -1,12 +1,11 @@
 {
   "_meta": {
     "endpoint": "prem_rugby_match_5370_table",
+    "path": "/api/v1/rugby-union/match/5370/table?type=all",
     "status": 200,
-    "bytes": 7963,
-    "captured_at": "2026-07-10T10:02:44Z",
-    "auth": "none",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/match/5370/table?type=all"
+    "captured_at": "2026-07-28T09:03:37.474Z",
+    "response_time_ms": 339,
+    "raw_response_id": "798bf471-da98-4737-ad28-2074ff451ad5"
   },
   "response": {
     "status": 200,
@@ -33,12 +32,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "L",
               "W",
               "W",
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 266,
@@ -66,12 +65,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
-              "L",
               "W",
               "L",
               "W",
               "L",
-              "L"
+              "L",
+              "W"
             ],
             "team": {
               "id": 270,
@@ -101,10 +100,10 @@
             "lfm": [
               "L",
               "L",
+              "W",
+              "W",
               "L",
-              "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 273,
@@ -132,12 +131,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "W",
+              "W",
               "L",
               "W",
-              "W",
-              "W",
               "L",
-              "W"
+              "L"
             ],
             "team": {
               "id": 269,
@@ -365,12 +364,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "L",
               "W",
               "W",
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 266,
@@ -398,12 +397,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
-              "L",
               "W",
               "L",
               "W",
               "L",
-              "L"
+              "L",
+              "W"
             ],
             "team": {
               "id": 270,
@@ -431,12 +430,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "W",
+              "W",
               "L",
               "W",
-              "W",
-              "W",
               "L",
-              "W"
+              "L"
             ],
             "team": {
               "id": 269,
@@ -466,10 +465,10 @@
             "lfm": [
               "L",
               "L",
+              "W",
+              "W",
               "L",
-              "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 273,
@@ -697,12 +696,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "L",
               "W",
               "W",
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 266,
@@ -730,12 +729,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
-              "L",
               "W",
               "L",
               "W",
               "L",
-              "L"
+              "L",
+              "W"
             ],
             "team": {
               "id": 270,
@@ -763,12 +762,12 @@
             "lo_ap": 0,
             "ded": 0,
             "lfm": [
+              "W",
+              "W",
               "L",
               "W",
-              "W",
-              "W",
               "L",
-              "W"
+              "L"
             ],
             "team": {
               "id": 269,
@@ -798,10 +797,10 @@
             "lfm": [
               "L",
               "L",
+              "W",
+              "W",
               "L",
-              "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 273,

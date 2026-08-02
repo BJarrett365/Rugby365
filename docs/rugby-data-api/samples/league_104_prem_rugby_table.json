@@ -1,17 +1,15 @@
 {
   "_meta": {
     "endpoint": "league_104_prem_rugby_table",
+    "path": "/api/v1/rugby-union/league/104/table",
     "status": 200,
-    "bytes": 1887,
-    "captured_at": "2026-07-10T10:02:49Z",
-    "auth": "none",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/league/104/table"
+    "captured_at": "2026-07-28T09:03:34.467Z",
+    "response_time_ms": 339,
+    "raw_response_id": "82089e21-daa9-476a-b682-16c483be52f0"
   },
   "response": {
     "status": 200,
     "message": "Tournament Table",
-    "live_team_ids": [],
     "data": [
       [
         {
@@ -27,20 +25,20 @@
           "pts": 74,
           "nrr": "",
           "LFM": [
+            "L",
             "W",
             "W",
             "L",
             "W",
-            "W",
-            "L"
+            "W"
           ],
           "prem": [
+            "L",
             "W",
             "W",
             "L",
             "W",
-            "W",
-            "L"
+            "W"
           ]
         },
         {
@@ -56,20 +54,20 @@
           "pts": 69,
           "nrr": "",
           "LFM": [
-            "L",
             "W",
             "L",
             "W",
             "L",
-            "L"
+            "L",
+            "W"
           ],
           "prem": [
-            "L",
             "W",
             "L",
             "W",
             "L",
-            "L"
+            "L",
+            "W"
           ]
         },
         {
@@ -85,20 +83,20 @@
           "pts": 65,
           "nrr": "",
           "LFM": [
+            "W",
+            "W",
             "L",
             "W",
-            "W",
-            "W",
             "L",
-            "W"
+            "L"
           ],
           "prem": [
+            "W",
+            "W",
             "L",
             "W",
-            "W",
-            "W",
             "L",
-            "W"
+            "L"
           ]
         },
         {
@@ -116,18 +114,18 @@
           "LFM": [
             "L",
             "L",
+            "W",
+            "W",
             "L",
-            "W",
-            "W",
-            "L"
+            "W"
           ],
           "prem": [
             "L",
             "L",
+            "W",
+            "W",
             "L",
-            "W",
-            "W",
-            "L"
+            "W"
           ]
         },
         {

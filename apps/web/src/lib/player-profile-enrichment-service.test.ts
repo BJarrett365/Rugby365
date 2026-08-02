@@ -51,6 +51,14 @@ describe("mergeRugbyPassEnrichment", () => {
     expect(patch.rugbypassSlug).toBe("adam-brocklebank");
   });
 
+  it("never applies RugbyPass image URLs (images come from our image API)", () => {
+    const patch = mergeRugbyPassEnrichment(
+      { id: "p1", name: "Adam Brocklebank", imageUrl: null },
+      sampleProfile,
+    );
+    expect(patch.imageUrl).toBeUndefined();
+  });
+
   it("reports updated enrichment fields", () => {
     const patch = mergeRugbyPassEnrichment(
       { id: "p1", name: "Adam Brocklebank" },

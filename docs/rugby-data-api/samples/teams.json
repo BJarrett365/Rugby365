@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "teams",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/teams",
     "status": 200,
-    "bytes": 18113,
-    "captured_at": "2026-07-10T10:00:01Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:28.970Z",
+    "response_time_ms": 257,
+    "raw_response_id": "006fd602-f6ea-4579-ba79-a19a3fadc25c"
   },
   "response": {
     "status": 200,
@@ -1273,6 +1270,11 @@
         "id": 292,
         "nm": "Racing 92",
         "sg": "racing-92-292"
+      },
+      {
+        "id": 299,
+        "nm": "RC Vannes",
+        "sg": "rc-vannes-299"
       },
       {
         "id": 81,

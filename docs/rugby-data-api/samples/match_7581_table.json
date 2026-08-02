@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "match_7581_table",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/match/7581/table?type=all",
     "status": 200,
-    "bytes": 12060,
-    "captured_at": "2026-07-10T10:00:08Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:31.322Z",
+    "response_time_ms": 268,
+    "raw_response_id": "71508f90-617f-49a1-973f-990e45bde616"
   },
   "response": {
     "status": 200,
@@ -34,13 +31,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 204,
               "nm": "France U20",
@@ -66,13 +57,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 206,
               "nm": "Australia U20",
@@ -98,13 +83,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 207,
               "nm": "Spain U20",
@@ -130,11 +109,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 538,
               "nm": "Fiji U20",
@@ -163,8 +138,7 @@
             "lfm": [
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 208,
@@ -194,8 +168,6 @@
             "lfm": [
               "W",
               "W",
-              "W",
-              "L",
               "W"
             ],
             "team": {
@@ -226,9 +198,7 @@
             "lfm": [
               "W",
               "L",
-              "L",
-              "W",
-              "W"
+              "L"
             ],
             "team": {
               "id": 200,
@@ -285,13 +255,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 209,
               "nm": "New Zealand U20",
@@ -317,13 +281,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "L",
-              "W",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 203,
               "nm": "Italy U20",
@@ -349,13 +307,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 202,
               "nm": "Scotland U20",
@@ -381,11 +333,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 537,
               "nm": "Japan U20",
@@ -411,12 +359,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 205,
               "nm": "South Africa U20",
@@ -442,13 +385,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 201,
               "nm": "Wales U20",
@@ -474,13 +411,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 210,
               "nm": "Georgia U20",
@@ -506,11 +437,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 536,
               "nm": "Uruguay U20",
@@ -538,11 +465,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 538,
               "nm": "Fiji U20",
@@ -568,13 +491,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 206,
               "nm": "Australia U20",
@@ -600,13 +517,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 207,
               "nm": "Spain U20",
@@ -632,13 +543,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 204,
               "nm": "France U20",
@@ -667,8 +572,6 @@
             "lfm": [
               "W",
               "W",
-              "W",
-              "L",
               "W"
             ],
             "team": {
@@ -699,9 +602,7 @@
             "lfm": [
               "W",
               "L",
-              "L",
-              "W",
-              "W"
+              "L"
             ],
             "team": {
               "id": 200,
@@ -761,8 +662,7 @@
             "lfm": [
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 208,
@@ -789,13 +689,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 202,
               "nm": "Scotland U20",
@@ -821,11 +715,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 537,
               "nm": "Japan U20",
@@ -851,13 +741,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 209,
               "nm": "New Zealand U20",
@@ -883,13 +767,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "L",
-              "W",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 203,
               "nm": "Italy U20",
@@ -915,13 +793,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 210,
               "nm": "Georgia U20",
@@ -947,13 +819,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 201,
               "nm": "Wales U20",
@@ -979,12 +845,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 205,
               "nm": "South Africa U20",
@@ -1010,11 +871,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 536,
               "nm": "Uruguay U20",
@@ -1042,13 +899,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 204,
               "nm": "France U20",
@@ -1074,13 +925,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 206,
               "nm": "Australia U20",
@@ -1106,11 +951,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 538,
               "nm": "Fiji U20",
@@ -1136,13 +977,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 207,
               "nm": "Spain U20",
@@ -1171,8 +1006,6 @@
             "lfm": [
               "W",
               "W",
-              "W",
-              "L",
               "W"
             ],
             "team": {
@@ -1203,8 +1036,7 @@
             "lfm": [
               "L",
               "W",
-              "W",
-              "L"
+              "W"
             ],
             "team": {
               "id": 208,
@@ -1234,9 +1066,7 @@
             "lfm": [
               "W",
               "L",
-              "L",
-              "W",
-              "W"
+              "L"
             ],
             "team": {
               "id": 200,
@@ -1293,13 +1123,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 209,
               "nm": "New Zealand U20",
@@ -1325,13 +1149,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 202,
               "nm": "Scotland U20",
@@ -1357,13 +1175,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "L",
-              "W",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 203,
               "nm": "Italy U20",
@@ -1389,11 +1201,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 537,
               "nm": "Japan U20",
@@ -1419,12 +1227,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "W",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 205,
               "nm": "South Africa U20",
@@ -1450,13 +1253,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "W",
-              "W",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 201,
               "nm": "Wales U20",
@@ -1482,13 +1279,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "W",
-              "L",
-              "L",
-              "W",
-              "W"
-            ],
+            "lfm": [],
             "team": {
               "id": 210,
               "nm": "Georgia U20",
@@ -1514,11 +1305,7 @@
             "wo_ap": 0,
             "lo_ap": 0,
             "ded": 0,
-            "lfm": [
-              "L",
-              "L",
-              "L"
-            ],
+            "lfm": [],
             "team": {
               "id": 536,
               "nm": "Uruguay U20",

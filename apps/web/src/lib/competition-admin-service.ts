@@ -20,7 +20,9 @@ import {
   parseSeasonStartYear,
   seasonSlugForKind,
   seasonSlugFromStartYear,
-  usesDomesticSeasonCatalog,
+  seasonKindForCompetition,
+  usesCalendarYearSeasons,
+  usesDomesticSeasonCatalogForCompetition,
 } from "./season-label-utils";
 import {
   fixtureBelongsToSeason,
@@ -37,8 +39,13 @@ import { isPlayoffRound } from "./rugby-round-utils";
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
 
 export async function listAllSeasons(competitionId?: string) {
+  let seasonKind: "club" | "international" | "tournament" = "club";
   if (competitionId) {
-    await ensureRecentDomesticSeasons(competitionId);
+    const competition = await getCompetitionById(competitionId);
+    seasonKind = seasonKindForCompetition(competition?.slug, competition?.competitionType);
+    if (competition && !usesCalendarYearSeasons(competition.slug, competition.competitionType)) {
+      await ensureRecentDomesticSeasons(competitionId);
+    }
   }
 
   const db = getDb();
@@ -61,18 +68,26 @@ export async function listAllSeasons(competitionId?: string) {
     .where(and(...conditions))
     .orderBy(desc(competitionSeasons.year), asc(competitions.name));
 
-  return decorateSeasonPickerRows(
+  const seasons = decorateSeasonPickerRows(
     dedupeSeasonsByYear(
       rows.map((row) => ({
         ...row,
         year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
       })),
     ),
+    new Date(),
+    seasonKind,
   );
+
+  return { seasons, seasonKind };
 }
 
 export async function listSeasonsForPicker(competitionId: string) {
-  await ensureRecentDomesticSeasons(competitionId);
+  const competition = await getCompetitionById(competitionId);
+  const seasonKind = seasonKindForCompetition(competition?.slug, competition?.competitionType);
+  if (competition && !usesCalendarYearSeasons(competition.slug, competition.competitionType)) {
+    await ensureRecentDomesticSeasons(competitionId);
+  }
 
   const db = getDb();
   const rows = await db
@@ -96,6 +111,8 @@ export async function listSeasonsForPicker(competitionId: string) {
         year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
       })),
     ),
+    new Date(),
+    seasonKind,
   );
 }
 
@@ -336,7 +353,7 @@ export async function ensureRecentDomesticSeasons(
   referenceDate = new Date(),
 ) {
   const competition = await getCompetitionById(competitionId);
-  if (!competition || !usesDomesticSeasonCatalog(competition.competitionType)) {
+  if (!competition || !usesDomesticSeasonCatalogForCompetition(competition.slug, competition.competitionType)) {
     return;
   }
 
@@ -514,7 +531,7 @@ export async function reportDuplicateCompetitionSeasons(
 
 export async function syncDomesticSeasonCatalog(competitionId: string, referenceDate = new Date()) {
   const competition = await getCompetitionById(competitionId);
-  if (!competition || !usesDomesticSeasonCatalog(competition.competitionType)) {
+  if (!competition || !usesDomesticSeasonCatalogForCompetition(competition.slug, competition.competitionType)) {
     return;
   }
 
@@ -601,6 +618,8 @@ export async function getSeasonStandings(seasonId: string, view: StandingView = 
       pointsAgainst: standingRows.pointsAgainst,
       pointsDiff: standingRows.pointsDiff,
       bonusPoints: standingRows.bonusPoints,
+      tryBonusPoints: standingRows.tryBonusPoints,
+      losingBonusPoints: standingRows.losingBonusPoints,
       points: standingRows.points,
       form: standingRows.form,
       teamId: teams.id,
@@ -623,7 +642,7 @@ export async function getCompetitionStandingsBySlug(
   const competition = await getCompetitionBySlug(slug);
   if (!competition) return null;
 
-  if (usesDomesticSeasonCatalog(competition.competitionType)) {
+  if (usesDomesticSeasonCatalogForCompetition(competition.slug, competition.competitionType)) {
     await syncDomesticSeasonCatalog(competition.id);
     await normalizeCompetitionSeasonLabels(competition.id);
   }

@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "search_bath",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/search?q=bath",
     "status": 200,
-    "bytes": 115,
-    "captured_at": "2026-07-10T10:00:00Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:28.706Z",
+    "response_time_ms": 287,
+    "raw_response_id": "6c9cac9b-4e9d-45d2-85f8-7ea78afd18ec"
   },
   "response": {
     "status": 200,

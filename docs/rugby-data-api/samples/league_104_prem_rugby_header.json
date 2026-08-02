@@ -1,21 +1,15 @@
 {
   "_meta": {
     "endpoint": "league_104_prem_rugby_header",
+    "path": "/api/v1/rugby-union/league/104/header",
     "status": 200,
-    "bytes": 216,
-    "captured_at": "2026-07-10T10:02:46Z",
-    "auth": "none",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/league/104/header"
+    "captured_at": "2026-07-28T09:03:34.119Z",
+    "response_time_ms": 356,
+    "raw_response_id": "c9b4cc3e-309e-4769-ba39-5b6987088b65"
   },
   "response": {
     "status": 200,
     "message": "Tournament header",
-    "tabs": [
-      "results",
-      "table",
-      "teams"
-    ],
     "data": {
       "id": 104,
       "nm": "PREM Rugby",

@@ -13,7 +13,12 @@ const MAX_RETRIES = 2;
 
 export type RugbyDataApiRequestOptions = {
   path: string;
+  method?: "GET" | "POST";
   query?: Record<string, string | number | boolean | undefined | null>;
+  /** Extra request headers (timezone, difference, etc.). Never pass secrets here. */
+  headers?: Record<string, string | undefined | null>;
+  /** URL-encoded form body for POST endpoints (e.g. favourites). */
+  body?: Record<string, string | number | boolean | undefined | null>;
   entityType?: string;
   externalId?: string;
   timeoutMs?: number;
@@ -21,6 +26,10 @@ export type RugbyDataApiRequestOptions = {
   capture?: boolean;
   /** Skip metrics increment (tests). */
   skipMetrics?: boolean;
+  /** Incoming request token header — overrides CMS/env token when set. */
+  requestToken?: string;
+  /** Return upstream JSON envelope unchanged (for public /api/v1 routes). */
+  returnRawBody?: boolean;
 };
 
 export type RugbyDataApiResult<T = unknown> = {
@@ -33,6 +42,7 @@ export type RugbyDataApiResult<T = unknown> = {
   payloadHash?: string;
   rawResponseId?: string;
   errorMessage?: string;
+  rawBody?: unknown;
 };
 
 function buildQuery(query?: RugbyDataApiRequestOptions["query"]): string {
@@ -86,7 +96,7 @@ export async function rugbyDataApiFetch<T = unknown>(
   options: RugbyDataApiRequestOptions,
 ): Promise<RugbyDataApiResult<T>> {
   const baseUrl = await resolveRugbyDataApiBaseUrl();
-  const token = await resolveRugbyDataApiToken();
+  const token = options.requestToken?.trim() || (await resolveRugbyDataApiToken());
   const path = options.path.startsWith("/") ? options.path : `/${options.path}`;
   const endpoint = `${path}${buildQuery(options.query)}`;
   const url = `${baseUrl}${endpoint}`;
@@ -98,6 +108,24 @@ export async function rugbyDataApiFetch<T = unknown>(
   };
   if (token) {
     headers.token = token;
+  }
+  if (options.headers) {
+    for (const [key, value] of Object.entries(options.headers)) {
+      if (value == null || value === "") continue;
+      headers[key] = String(value);
+    }
+  }
+
+  const method = options.method ?? "GET";
+  let requestBody: string | undefined;
+  if (method === "POST" && options.body) {
+    const form = new URLSearchParams();
+    for (const [key, value] of Object.entries(options.body)) {
+      if (value == null) continue;
+      form.set(key, String(value));
+    }
+    requestBody = form.toString();
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
   }
 
   let lastError = "";
@@ -111,8 +139,9 @@ export async function rugbyDataApiFetch<T = unknown>(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(url, {
-        method: "GET",
+        method,
         headers,
+        body: requestBody,
         signal: controller.signal,
         cache: "no-store",
       });
@@ -209,6 +238,7 @@ export async function rugbyDataApiFetch<T = unknown>(
     payloadHash,
     rawResponseId,
     errorMessage: ok ? undefined : lastError || `HTTP ${status}`,
+    ...(options.returnRawBody ? { rawBody: body } : {}),
   };
 }
 
@@ -314,6 +344,143 @@ export async function fetchRugbyDataMatchTable(matchId: string | number) {
     query: { type: "all" },
     entityType: "match",
     externalId: String(matchId),
+  });
+}
+
+export async function fetchRugbyDataMatchesCount(date: string) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/matches/count",
+    query: { date },
+    entityType: "match",
+    externalId: date,
+  });
+}
+
+export async function fetchRugbyDataCountries() {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/countries/list",
+    entityType: "country",
+  });
+}
+
+export async function fetchRugbyDataCountryLeagues(query = "") {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/country/leagues",
+    query: { q: query },
+    entityType: "competition",
+  });
+}
+
+export async function fetchRugbyDataNewsLeagues() {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/news/leagues",
+    entityType: "competition",
+  });
+}
+
+export async function fetchRugbyDataSearch(query: string) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/search",
+    query: { q: query },
+    entityType: "search",
+    externalId: query,
+  });
+}
+
+export async function fetchRugbyDataLeagueNews(leagueId: string | number) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/league/${leagueId}/news`,
+    entityType: "competition",
+    externalId: String(leagueId),
+  });
+}
+
+export async function fetchRugbyDataTeamMatches(
+  teamId: string | number,
+  type: "finished" | "fixtures" | "all" = "finished",
+  timezone?: string,
+) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/team/${teamId}/matches`,
+    query: { type },
+    headers: timezone ? { timezone } : undefined,
+    entityType: "match",
+    externalId: String(teamId),
+  });
+}
+
+export async function fetchRugbyDataTeamHeader(teamId: string | number) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/team/${teamId}/header`,
+    entityType: "team",
+    externalId: String(teamId),
+  });
+}
+
+export async function fetchRugbyDataTeamNews(teamId: string | number) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/team/${teamId}/news`,
+    entityType: "team",
+    externalId: String(teamId),
+  });
+}
+
+export async function fetchRugbyDataFavourites(fcmToken: string, timezone?: string) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/get-favourites",
+    query: { fcm_token: fcmToken },
+    headers: timezone ? { timezone } : undefined,
+    entityType: "favourite",
+    externalId: fcmToken,
+  });
+}
+
+export async function fetchRugbyDataFavouritesCount(fcmToken: string, timezone?: string) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/favourite/count",
+    query: { fcm_token: fcmToken },
+    headers: timezone ? { timezone } : undefined,
+    entityType: "favourite",
+    externalId: fcmToken,
+  });
+}
+
+export async function fetchRugbyDataMyMatches(
+  fcmToken: string,
+  options?: { matchIds?: Array<string | number>; timezone?: string },
+) {
+  const query: Record<string, string> = { fcm_token: fcmToken };
+  if (options?.matchIds?.length) {
+    query["matches[]"] = options.matchIds.map(String).join(",");
+  }
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/my-matches",
+    query,
+    headers: options?.timezone ? { timezone: options.timezone } : undefined,
+    entityType: "match",
+    externalId: fcmToken,
+  });
+}
+
+export async function updateRugbyDataFavourite(options: {
+  fcmToken: string;
+  id: string | number;
+  type: "match" | "team" | "league";
+  isSave: boolean;
+  timezone?: string;
+}) {
+  return rugbyDataApiFetch({
+    path: "/api/v1/rugby-union/favourite",
+    method: "POST",
+    body: {
+      fcm_token: options.fcmToken,
+      id: options.id,
+      type: options.type,
+      is_save: options.isSave ? 1 : 0,
+    },
+    headers: options.timezone ? { timezone: options.timezone } : undefined,
+    entityType: "favourite",
+    externalId: String(options.id),
   });
 }
 

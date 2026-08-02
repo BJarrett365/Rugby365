@@ -1,5 +1,11 @@
-import { and, desc, eq } from "drizzle-orm";
-import { fixturePlayers, fixtures, matchEvents, playerMatchPerformanceStats } from "@rugby365/db";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import {
+  commentarySuggestions,
+  fixturePlayers,
+  fixtures,
+  matchEvents,
+  playerMatchPerformanceStats,
+} from "@rugby365/db";
 import {
   combineKickoffIso,
   fetchSdmsLineups,
@@ -113,12 +119,21 @@ async function importSdmsKeyEvents(
 
   // Drop stale SDMS rows (including legacy index-based ids like matchId:12)
   // so re-import restores missing conversions after feed growth/reorder.
+  const staleIds: string[] = [];
   for (const row of sdmsRows) {
     const payload = row.payload as Record<string, unknown>;
     const id = typeof payload.sdms_event_id === "string" ? payload.sdms_event_id : "";
     if (replaceExisting || !id || !incomingIds.has(id)) {
-      await db.delete(matchEvents).where(eq(matchEvents.id, row.id));
+      staleIds.push(row.id);
     }
+  }
+  if (staleIds.length > 0) {
+    // Clear commentary FKs before deleting events (no ON DELETE SET NULL).
+    await db
+      .update(commentarySuggestions)
+      .set({ triggerEventId: null })
+      .where(inArray(commentarySuggestions.triggerEventId, staleIds));
+    await db.delete(matchEvents).where(inArray(matchEvents.id, staleIds));
   }
 
   const known = replaceExisting ? new Set<string>() : await existingSdmsEventIds(fixtureId);

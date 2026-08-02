@@ -2,6 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { usesCalendarYearSeasons } from "@/lib/season-label-utils";
+
+const INTERNATIONAL_COMPETITION_SLUGS = new Set([
+  "six-nations",
+  "rugby-world-cup",
+  "rugby-europe-championship",
+  "end-of-year-internationals",
+  "autumn-nations-cup",
+  "nations-championship",
+  "world-rugby-nations-cup",
+]);
+
+function presetSeasonLabel(competitionSlug: string, startYear: number): string {
+  if (usesCalendarYearSeasons(competitionSlug, null)) {
+    return String(startYear);
+  }
+  return `${startYear}–${String(startYear + 1).slice(-2)}`;
+}
+
+function defaultPresetYear(competitionSlug: string): number {
+  const now = new Date();
+  if (usesCalendarYearSeasons(competitionSlug, null)) return now.getFullYear();
+  return now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+}
 
 type Preset = { startYear: number; url: string; winner: string };
 
@@ -41,6 +65,7 @@ type ImportReport = {
 };
 
 export default function WikipediaSeasonImportPage() {
+  const [competitionSlug, setCompetitionSlug] = useState("premiership");
   const [presets, setPresets] = useState<Preset[]>([]);
   const [url, setUrl] = useState("");
   const [year, setYear] = useState<number | "">("");
@@ -50,21 +75,22 @@ export default function WikipediaSeasonImportPage() {
   const [report, setReport] = useState<ImportReport | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/wikipedia/season-import")
+    fetch(`/api/admin/wikipedia/season-import?competition=${competitionSlug}`)
       .then((r) => r.json())
       .then((data) => {
         const rows = (data.presets ?? []) as Preset[];
         setPresets(rows);
-        const currentStart =
-          new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+        const currentStart = defaultPresetYear(competitionSlug);
         const first = rows.find((r) => r.startYear === currentStart) ?? rows[0];
         if (first) {
           setUrl(first.url);
           setYear(first.startYear);
         }
+        setAnalyse(null);
+        setReport(null);
       })
       .catch(() => undefined);
-  }, []);
+  }, [competitionSlug]);
 
   async function runAnalyse() {
     setBusy(true);
@@ -97,8 +123,22 @@ export default function WikipediaSeasonImportPage() {
         body: JSON.stringify({
           action: "import",
           url,
+          competitionSlug,
           seasonStartYear: typeof year === "number" ? year : undefined,
           mode: "update_existing",
+          createMissingTeams:
+            competitionSlug === "challenge-cup" ||
+            competitionSlug === "rugby-champions-cup" ||
+            competitionSlug === "rugby-championship" ||
+            competitionSlug === "currie-cup" ||
+            competitionSlug.startsWith("currie-cup") ||
+            competitionSlug === "top-14" ||
+            competitionSlug === "super-rugby" ||
+            competitionSlug === "championship" ||
+            competitionSlug === "npc" ||
+            competitionSlug.startsWith("npc-") ||
+            INTERNATIONAL_COMPETITION_SLUGS.has(competitionSlug) ||
+            competitionSlug.startsWith("autumn-nations-cup"),
         }),
       });
       const data = await res.json();
@@ -115,12 +155,37 @@ export default function WikipediaSeasonImportPage() {
     <div className="space-y-4">
       <PageHeader
         title="Wikipedia season import"
-        description="Analyse and import Premiership (and later other) season pages: table, fixtures, playoffs, attendance, champion."
+        description="Analyse and import season pages from Wikipedia: table standings (teams), fixtures, playoffs, attendance, and champion."
       />
 
       <div className="cms-card grid gap-3">
         <label className="text-sm">
-          <span className="block text-zinc-500 mb-1">Premiership preset</span>
+          <span className="block text-zinc-500 mb-1">Competition</span>
+          <select
+            className="cms-input w-full"
+            value={competitionSlug}
+            onChange={(e) => setCompetitionSlug(e.target.value)}
+          >
+            <option value="premiership">Premiership</option>
+            <option value="challenge-cup">Challenge Cup</option>
+            <option value="rugby-champions-cup">Investec Champions Cup</option>
+            <option value="rugby-championship">Rugby Championship</option>
+            <option value="currie-cup">Currie Cup</option>
+            <option value="top-14">Top 14</option>
+            <option value="super-rugby">Super Rugby</option>
+            <option value="championship">RFU Championship / Champ Rugby</option>
+            <option value="npc">NPC (NZ)</option>
+            <option value="six-nations">Six Nations</option>
+            <option value="rugby-world-cup">Rugby World Cup</option>
+            <option value="rugby-europe-championship">Rugby Europe Championship</option>
+            <option value="end-of-year-internationals">End-of-year Internationals</option>
+            <option value="autumn-nations-cup">Autumn Nations Cup</option>
+            <option value="nations-championship">Nations Championship</option>
+            <option value="world-rugby-nations-cup">World Rugby Nations Cup</option>
+          </select>
+        </label>
+        <label className="text-sm">
+          <span className="block text-zinc-500 mb-1">Season preset</span>
           <select
             className="cms-input w-full"
             value={typeof year === "number" ? String(year) : ""}
@@ -135,7 +200,7 @@ export default function WikipediaSeasonImportPage() {
           >
             {presets.map((p) => (
               <option key={p.startYear} value={p.startYear}>
-                {p.startYear}–{String(p.startYear + 1).slice(-2)} · {p.winner}
+                {presetSeasonLabel(competitionSlug, p.startYear)} · {p.winner}
               </option>
             ))}
           </select>

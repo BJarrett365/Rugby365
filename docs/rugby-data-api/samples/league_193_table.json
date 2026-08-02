@@ -1,19 +1,15 @@
 {
   "_meta": {
     "endpoint": "league_193_table",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/league/193/table",
     "status": 200,
-    "bytes": 2645,
-    "captured_at": "2026-07-10T10:00:10Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:32.377Z",
+    "response_time_ms": 276,
+    "raw_response_id": "022589f2-edcd-439c-ab33-1f172cd65eda"
   },
   "response": {
     "status": 200,
     "message": "Tournament Table",
-    "live_team_ids": [],
     "data": [
       [
         {
@@ -28,20 +24,8 @@
           "dr": 0,
           "pts": 15,
           "nrr": "",
-          "LFM": [
-            "W",
-            "W",
-            "W",
-            "W",
-            "W"
-          ],
-          "prem": [
-            "W",
-            "W",
-            "W",
-            "W",
-            "W"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool D",
@@ -55,20 +39,8 @@
           "dr": 0,
           "pts": 12,
           "nrr": "",
-          "LFM": [
-            "L",
-            "W",
-            "W",
-            "W",
-            "W"
-          ],
-          "prem": [
-            "L",
-            "W",
-            "W",
-            "W",
-            "W"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool D",
@@ -82,16 +54,8 @@
           "dr": 0,
           "pts": 5,
           "nrr": "",
-          "LFM": [
-            "W",
-            "L",
-            "L"
-          ],
-          "prem": [
-            "W",
-            "L",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool D",
@@ -105,20 +69,8 @@
           "dr": 0,
           "pts": 3,
           "nrr": "",
-          "LFM": [
-            "L",
-            "L",
-            "L",
-            "L",
-            "L"
-          ],
-          "prem": [
-            "L",
-            "L",
-            "L",
-            "L",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         }
       ],
       [
@@ -134,20 +86,8 @@
           "dr": 0,
           "pts": 15,
           "nrr": "",
-          "LFM": [
-            "W",
-            "W",
-            "W",
-            "L",
-            "W"
-          ],
-          "prem": [
-            "W",
-            "W",
-            "W",
-            "L",
-            "W"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool C",
@@ -161,18 +101,8 @@
           "dr": 0,
           "pts": 12,
           "nrr": "",
-          "LFM": [
-            "L",
-            "W",
-            "W",
-            "L"
-          ],
-          "prem": [
-            "L",
-            "W",
-            "W",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool C",
@@ -186,20 +116,8 @@
           "dr": 0,
           "pts": 8,
           "nrr": "",
-          "LFM": [
-            "W",
-            "L",
-            "L",
-            "W",
-            "W"
-          ],
-          "prem": [
-            "W",
-            "L",
-            "L",
-            "W",
-            "W"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool C",
@@ -213,16 +131,8 @@
           "dr": 0,
           "pts": 1,
           "nrr": "",
-          "LFM": [
-            "L",
-            "L",
-            "L"
-          ],
-          "prem": [
-            "L",
-            "L",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         }
       ],
       [
@@ -238,20 +148,8 @@
           "dr": 0,
           "pts": 15,
           "nrr": "",
-          "LFM": [
-            "W",
-            "W",
-            "W",
-            "W",
-            "W"
-          ],
-          "prem": [
-            "W",
-            "W",
-            "W",
-            "W",
-            "W"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool B",
@@ -265,20 +163,8 @@
           "dr": 0,
           "pts": 11,
           "nrr": "",
-          "LFM": [
-            "W",
-            "L",
-            "W",
-            "L",
-            "L"
-          ],
-          "prem": [
-            "W",
-            "L",
-            "W",
-            "L",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool B",
@@ -292,20 +178,8 @@
           "dr": 0,
           "pts": 7,
           "nrr": "",
-          "LFM": [
-            "L",
-            "W",
-            "L",
-            "W",
-            "L"
-          ],
-          "prem": [
-            "L",
-            "W",
-            "L",
-            "W",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         },
         {
           "grp": "Pool B",
@@ -319,16 +193,8 @@
           "dr": 0,
           "pts": 1,
           "nrr": "",
-          "LFM": [
-            "L",
-            "L",
-            "L"
-          ],
-          "prem": [
-            "L",
-            "L",
-            "L"
-          ]
+          "LFM": [],
+          "prem": []
         }
       ],
       [
@@ -347,11 +213,9 @@
           "LFM": [
             "W",
             "W",
-            "W",
             "W"
           ],
           "prem": [
-            "W",
             "W",
             "W",
             "W"
@@ -372,16 +236,12 @@
           "LFM": [
             "L",
             "W",
-            "W",
-            "L",
-            "L"
+            "W"
           ],
           "prem": [
             "L",
             "W",
-            "W",
-            "L",
-            "L"
+            "W"
           ]
         },
         {
@@ -399,16 +259,12 @@
           "LFM": [
             "W",
             "L",
-            "L",
-            "W",
-            "W"
+            "L"
           ],
           "prem": [
             "W",
             "L",
-            "L",
-            "W",
-            "W"
+            "L"
           ]
         },
         {

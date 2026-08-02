@@ -2,10 +2,13 @@ import {
   buildDomesticSeasonCatalog,
   canonicalSeasonPickerScore,
   currentDomesticSeasonStartYear,
+  formatSeasonLabelForKind,
   formatSeasonPickerLabel,
   formatSeasonRangeLabel,
   normalizeSeasonLabel,
   parseSeasonStartYear,
+  seasonKindForCompetition,
+  seasonStatusForCalendarYear,
   seasonStatusForStartYear,
   type SeasonStatus,
 } from "./season-label-utils";
@@ -60,17 +63,22 @@ export function dedupeSeasonsByYear<T extends SeasonPickerRow>(rows: T[]): T[] {
 export function decorateSeasonPickerRows<T extends SeasonPickerRow>(
   rows: T[],
   referenceDate = new Date(),
+  seasonKind: "club" | "international" | "tournament" = "club",
 ): Array<T & { status: SeasonStatus; displayLabel: string }> {
   return rows.map((row) => {
-    const status = seasonStatusForStartYear(row.year, referenceDate);
+    const label =
+      seasonKind === "club"
+        ? (normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(row.year))
+        : formatSeasonLabelForKind(row.year, seasonKind);
+    const status =
+      seasonKind === "club"
+        ? seasonStatusForStartYear(row.year, referenceDate)
+        : seasonStatusForCalendarYear(row.year, referenceDate);
     return {
       ...row,
-      label: normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(row.year),
+      label,
       status,
-      displayLabel: formatSeasonPickerLabel(
-        normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(row.year),
-        status,
-      ),
+      displayLabel: formatSeasonPickerLabel(label, status),
     };
   });
 }
@@ -82,14 +90,27 @@ export function decorateSeasonPickerRows<T extends SeasonPickerRow>(
 export function pickDefaultSeasonForPicker<T extends SeasonPickerRow>(
   rows: T[],
   referenceDate = new Date(),
+  seasonKind: "club" | "international" | "tournament" = "club",
 ): T | null {
   if (!rows.length) return null;
 
   const decorated =
     rows[0]?.status != null
       ? rows
-      : decorateSeasonPickerRows(rows, referenceDate);
+      : decorateSeasonPickerRows(rows, referenceDate, seasonKind);
   const sorted = [...decorated].sort((a, b) => b.year - a.year);
+
+  if (seasonKind !== "club") {
+    const currentYear = referenceDate.getFullYear();
+    return (
+      sorted.find((row) => row.year === currentYear) ??
+      sorted.find((row) => row.year === currentYear - 1) ??
+      sorted.find((row) => row.status === "current") ??
+      sorted[0] ??
+      null
+    );
+  }
+
   const currentYear = currentDomesticSeasonStartYear(referenceDate);
 
   return (

@@ -8,6 +8,7 @@ import {
   type SeasonCompetitionScopeValue,
 } from "@/components/admin/SeasonCompetitionScope";
 import type { TeamPickerGroup } from "@/lib/team-picker-groups";
+import { competitionEmptyTeamsHint } from "@/lib/competition-picker-labels";
 
 type TeamRow = {
   id: string;
@@ -30,6 +31,7 @@ export default function TeamsAdminPage() {
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [groups, setGroups] = useState<TeamPickerGroup[]>([]);
   const [scope, setScope] = useState<SeasonCompetitionScopeValue>({ competitionId: "", seasonId: "" });
+  const [competitions, setCompetitions] = useState<CompetitionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicateGroups, setDuplicateGroups] = useState(0);
@@ -40,8 +42,9 @@ export default function TeamsAdminPage() {
     fetch("/api/admin/competitions")
       .then((res) => res.json())
       .then((data) => {
-        const competitions = (data.competitions ?? []) as CompetitionRow[];
-        const prem = competitions.find((row) => row.slug === "premiership");
+        const rows = (data.competitions ?? []) as CompetitionRow[];
+        setCompetitions(rows);
+        const prem = rows.find((row) => row.slug === "premiership");
         if (prem?.activeSeason?.id) {
           setScope({ competitionId: prem.id, seasonId: prem.activeSeason.id });
         }
@@ -49,7 +52,25 @@ export default function TeamsAdminPage() {
       .catch(() => undefined);
   }, []);
 
+  const selectedCompetition = useMemo(
+    () => competitions.find((row) => row.id === scope.competitionId),
+    [competitions, scope.competitionId],
+  );
+
+  const rugbyChampionshipId = useMemo(
+    () => competitions.find((row) => row.slug === "rugby-championship")?.id ?? "",
+    [competitions],
+  );
+
+  const scopeReady = Boolean(!scope.competitionId || (scope.competitionId && scope.seasonId));
+
   const load = useCallback(async () => {
+    if (scope.competitionId && !scope.seasonId) {
+      setTeams([]);
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const params = new URLSearchParams({ grouped: "1" });
     if (scope.competitionId && scope.seasonId) {
@@ -68,6 +89,14 @@ export default function TeamsAdminPage() {
     setDuplicateRows(dupData.teams?.rows ?? 0);
     setLoading(false);
   }, [scope.competitionId, scope.seasonId]);
+
+  function handleScopeChange(next: SeasonCompetitionScopeValue) {
+    if (next.competitionId !== scope.competitionId || next.seasonId !== scope.seasonId) {
+      setTeams([]);
+      setGroups([]);
+    }
+    setScope(next);
+  }
 
   useEffect(() => {
     load().catch(() => setLoading(false));
@@ -119,7 +148,7 @@ export default function TeamsAdminPage() {
       <PageHeader
         eyebrow="CMS"
         title="Teams"
-        description="Manage national and club teams. Scoped by competition and season — standings first, fixtures fallback."
+        description="Manage national and club teams. Pick a competition (grouped International / Club / Provincial / Regional) and season."
         actions={
           <div className="flex flex-wrap gap-2">
             {duplicateRows > 0 ? (
@@ -145,7 +174,7 @@ export default function TeamsAdminPage() {
         <p className="text-sm text-zinc-400 m-0">
           Teams are loaded for the selected competition and canonical season only (not all-time).
         </p>
-        <SeasonCompetitionScope value={scope} onChange={setScope} />
+        <SeasonCompetitionScope value={scope} onChange={handleScopeChange} />
         <p className="text-xs text-zinc-500 m-0">
           <Link href="/admin/data-audit" className="text-zinc-300 underline">
             Data audit
@@ -156,9 +185,25 @@ export default function TeamsAdminPage() {
 
       {loading ? (
         <p className="text-zinc-500 text-sm">Loading…</p>
+      ) : !scopeReady ? (
+        <p className="text-zinc-500 text-sm">Loading season…</p>
       ) : teams.length === 0 ? (
-        <div className="cms-card">
-          <p className="text-zinc-400 m-0">No teams yet.</p>
+        <div className="cms-card space-y-3">
+          <p className="text-zinc-400 m-0">No teams yet for this competition and season.</p>
+          {competitionEmptyTeamsHint(selectedCompetition?.slug) ? (
+            <p className="text-sm text-zinc-300 m-0">
+              {competitionEmptyTeamsHint(selectedCompetition?.slug)}
+            </p>
+          ) : null}
+          {selectedCompetition?.slug === "championship" && rugbyChampionshipId ? (
+            <button
+              type="button"
+              className="cms-btn cms-btn--secondary text-sm"
+              onClick={() => handleScopeChange({ competitionId: rugbyChampionshipId, seasonId: "" })}
+            >
+              Switch to Rugby Championship
+            </button>
+          ) : null}
         </div>
       ) : visibleGroups.length === 0 ? (
         <div className="cms-card">

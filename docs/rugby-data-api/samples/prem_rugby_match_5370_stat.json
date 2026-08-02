@@ -1,12 +1,11 @@
 {
   "_meta": {
     "endpoint": "prem_rugby_match_5370_stat",
+    "path": "/api/v1/rugby-union/match/5370/stat",
     "status": 200,
-    "bytes": 1422,
-    "captured_at": "2026-07-10T10:02:40Z",
-    "auth": "none",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
-    "path": "/api/v1/rugby-union/match/5370/stat"
+    "captured_at": "2026-07-28T09:03:36.034Z",
+    "response_time_ms": 246,
+    "raw_response_id": "9098fcb7-3228-47b0-b565-d982deaa765b"
   },
   "response": {
     "status": 200,

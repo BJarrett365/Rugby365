@@ -14,6 +14,7 @@ import {
 import { getDb } from "./db";
 import { resolveTeam } from "./entity-resolve-service";
 import { parseSeasonStartYear } from "./season-label-utils";
+import { normalizeFormSequence } from "./standing-form";
 
 const VIEWS: StandingView[] = ["overall", "home", "away"];
 
@@ -101,15 +102,10 @@ export async function syncSeasonStandings(
         pointsAgainst: row.against ?? 0,
         pointsDiff: row.points_diff,
         bonusPoints: row.bonus_points ?? 0,
+        tryBonusPoints: row.try_bonus_points ?? 0,
+        losingBonusPoints: row.losing_bonus_points ?? 0,
         points: row.points,
-        form:
-          row.try_bonus_points != null || row.losing_bonus_points != null
-            ? JSON.stringify({
-                tbp: row.try_bonus_points ?? 0,
-                lbp: row.losing_bonus_points ?? 0,
-                lf: row.last_five ?? null,
-              })
-            : row.last_five ?? null,
+        form: normalizeFormSequence(row.last_five),
         syncedAt,
       });
       rowsUpserted += 1;

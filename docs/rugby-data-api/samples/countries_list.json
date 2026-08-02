@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "countries_list",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/countries/list",
     "status": 200,
-    "bytes": 9484,
-    "captured_at": "2026-07-10T09:59:58Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:27.855Z",
+    "response_time_ms": 402,
+    "raw_response_id": "af60ca6c-ce75-4b28-b5d9-f25f612b10d6"
   },
   "response": {
     "status": 200,

@@ -331,8 +331,35 @@ export async function getFixtureDatesInRange(
   endDateKey: string,
   timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
 ): Promise<string[]> {
-  const sdmsDates = await getSdmsDatesWithFixtures(season, startDateKey, endDateKey, timeZone);
-  return sdmsDates;
+  const [sdmsDates, dbDates] = await Promise.all([
+    getSdmsDatesWithFixtures(season, startDateKey, endDateKey, timeZone),
+    getDbFixtureDatesInRange(startDateKey, endDateKey, timeZone),
+  ]);
+  return [...new Set([...sdmsDates, ...dbDates])].sort();
+}
+
+async function getDbFixtureDatesInRange(
+  startDateKey: string,
+  endDateKey: string,
+  timeZone: string,
+): Promise<string[]> {
+  const db = getDb();
+  const start = utcInstantFromZonedWallClock(startDateKey, "00:00:00", timeZone);
+  const end = utcInstantFromZonedWallClock(addDaysToDateKey(endDateKey, 1), "00:00:00", timeZone);
+  const rows = await db
+    .select({ kickoffAt: fixtures.kickoffAt })
+    .from(fixtures)
+    .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)));
+
+  const dates = new Set<string>();
+  for (const row of rows) {
+    if (!row.kickoffAt) continue;
+    const dateKey = kickoffDateKey(row.kickoffAt.toISOString(), timeZone);
+    if (dateKey && dateKey >= startDateKey && dateKey <= endDateKey) {
+      dates.add(dateKey);
+    }
+  }
+  return [...dates];
 }
 
 /** Dates (YYYY-MM-DD) that have at least one SDMS fixture in a range (display timezone). */

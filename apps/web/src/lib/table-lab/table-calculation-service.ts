@@ -11,6 +11,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { detectNeutralVenueFromSnapshot, resolveHemisphereFromDb, normalizeTeamType } from "../team-hemisphere-utils";
 import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "../season-label-utils";
+import { parseStandingForm } from "../standing-form";
 import {
   fixtureBelongsToSeason,
   seasonKindFromCompetitionType,
@@ -546,22 +547,6 @@ async function loadPerspectives(input: {
   return perspectives;
 }
 
-function parseStandingFormMeta(form: string | null | undefined): {
-  tryBonusPoints?: number;
-  losingBonusPoints?: number;
-} {
-  if (!form?.startsWith("{")) return {};
-  try {
-    const parsed = JSON.parse(form) as { tbp?: number; lbp?: number };
-    return {
-      tryBonusPoints: parsed.tbp,
-      losingBonusPoints: parsed.lbp,
-    };
-  } catch {
-    return {};
-  }
-}
-
 function buildStandingsFromPerspectives(
   perspectives: TeamFixturePerspective[],
   metricFn?: (row: TeamFixturePerspective) => number | null,
@@ -589,9 +574,10 @@ async function trySyncedStandings(
   const rows = await getSeasonStandings(seasonId, view);
   if (!rows.length) return null;
   return rows.map((row) => {
-    const bonusMeta = parseStandingFormMeta(row.form);
-    const tryBonusPoints = bonusMeta.tryBonusPoints ?? null;
-    const losingBonusPoints = bonusMeta.losingBonusPoints ?? null;
+    // Legacy rows kept bonus splits inside `form`; prefer the dedicated columns.
+    const legacyMeta = parseStandingForm(row.form);
+    const tryBonusPoints = row.tryBonusPoints || legacyMeta.tryBonusPoints;
+    const losingBonusPoints = row.losingBonusPoints || legacyMeta.losingBonusPoints;
     return {
       rank: row.rank,
       teamId: row.teamId,

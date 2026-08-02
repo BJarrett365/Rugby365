@@ -36,6 +36,22 @@ export const PLANET_RUGBY_LEAGUE_PRESETS = [
     type: "domestic" as const,
   },
   {
+    id: "npc-results",
+    name: "NPC",
+    slug: "npc",
+    // Tournament page often 404s; SDMS import uses competition.sdmsCompCode.
+    url: "https://www.planetrugby.com/tournament/npc/results",
+    type: "domestic" as const,
+  },
+  {
+    id: "championship-results",
+    name: "RFU Championship",
+    slug: "championship",
+    // Tournament page 404s; SDMS import uses competition.sdmsCompCode directly.
+    url: "https://www.planetrugby.com/tournament/championship/results",
+    type: "domestic" as const,
+  },
+  {
     id: "rugby-championship-results",
     name: "Championship",
     slug: "rugby-championship",
@@ -67,7 +83,14 @@ export const PLANET_RUGBY_LEAGUE_PRESETS = [
     id: "nations-championship",
     name: "Nations Championship",
     slug: "nations-championship",
-    url: "https://www.planetrugby.com/tournament/international/fixtures",
+    url: "https://www.planetrugby.com/tournament/nations-championship/results",
+    type: "international" as const,
+  },
+  {
+    id: "world-rugby-nations-cup",
+    name: "World Rugby Nations Cup",
+    slug: "world-rugby-nations-cup",
+    url: "https://www.planetrugby.com/tournament/world-rugby-nations-cup/results",
     type: "international" as const,
   },
   {

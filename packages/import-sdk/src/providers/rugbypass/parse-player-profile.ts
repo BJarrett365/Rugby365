@@ -222,7 +222,12 @@ function parseCurrentTeam(html: string): string | null {
 function parseImageUrl(html: string): string | null {
   const img =
     html.match(/<img[^>]+class="player-image"[^>]+src="([^"]+)"/i)?.[1] ??
-    html.match(/<img[^>]+src="([^"]+)"[^>]+class="player-image"/i)?.[1];
+    html.match(/<img[^>]+src="([^"]+)"[^>]+class="player-image"/i)?.[1] ??
+    html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)?.[1] ??
+    html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i)?.[1] ??
+    html.match(
+      /<img[^>]+(?:src|data-src)="([^"]*\/players\/head\/[^"]+)"/i,
+    )?.[1];
   return img ? decodeHtmlEntities(img) : null;
 }
 

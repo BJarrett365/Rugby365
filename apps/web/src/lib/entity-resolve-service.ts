@@ -3,7 +3,7 @@ import { competitions, fixturePlayers, fixtures, matchEvents, players, teams } f
 import type { Sport365Lineups } from "@rugby365/match-operator-agent";
 import { getDb } from "./db";
 import { normalizeProviderPlayerName } from "./match-entity-context";
-import { normalizePlayerName, normalizeTeamName, normalizedEntityKey } from "./entity-normalize";
+import { normalizePlayerName, normalizeTeamName, normalizedEntityKey, isJunkTeamName } from "./entity-normalize";
 import { normalizeSlug } from "./fixture-admin-service";
 import {
   mergePlayerProfileFromSquad,
@@ -42,7 +42,7 @@ export async function resolveTeam(input: {
 }): Promise<TeamRow | null> {
   const db = getDb();
   const name = normalizeTeamName(input.name.trim());
-  if (!name) return null;
+  if (!name || isJunkTeamName(name)) return null;
   const imageUrl = input.imageUrl?.trim() || null;
 
   if (input.externalProviderId) {

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TeamPickerGroup } from "@/lib/team-picker-groups";
 import { pickDefaultSeasonForPicker } from "@/lib/season-list-utils";
+import { groupCompetitionsForAdmin } from "@/lib/competition-admin-groups";
+import { competitionPickerLabel } from "@/lib/competition-picker-labels";
 
 type CompetitionOption = {
   id: string;
@@ -50,16 +52,18 @@ export function SeasonCompetitionScope({ value, onChange, className }: Props) {
       setSeasons([]);
       return;
     }
+    setSeasons([]);
     setLoadingSeasons(true);
     fetch(`/api/admin/seasons?competitionId=${encodeURIComponent(value.competitionId)}`)
       .then((res) => res.json())
       .then((data) => {
         const rows: SeasonOption[] = data.seasons ?? [];
+        const seasonKind = (data.seasonKind ?? "club") as "club" | "international" | "tournament";
         setSeasons(rows);
         if (rows.length > 0) {
           const keepCurrent = value.seasonId && rows.some((row) => row.id === value.seasonId);
           if (!keepCurrent) {
-            const picked = pickDefaultSeasonForPicker(rows);
+            const picked = pickDefaultSeasonForPicker(rows, new Date(), seasonKind);
             if (picked) {
               onChange({ competitionId: value.competitionId, seasonId: picked.id });
             }
@@ -72,23 +76,33 @@ export function SeasonCompetitionScope({ value, onChange, className }: Props) {
   }, [value.competitionId]);
 
   const onCompetitionChange = (competitionId: string) => {
+    setSeasons([]);
     onChange({ competitionId, seasonId: "" });
   };
+
+  const competitionGroups = useMemo(
+    () => groupCompetitionsForAdmin(competitions),
+    [competitions],
+  );
 
   return (
     <div className={className ?? "flex flex-wrap gap-3"}>
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-zinc-400">Competition</span>
         <select
-          className="cms-select min-w-[12rem]"
+          className="cms-select min-w-[16rem]"
           value={value.competitionId}
           onChange={(e) => onCompetitionChange(e.target.value)}
         >
           <option value="">All competitions</option>
-          {competitions.map((row) => (
-            <option key={row.id} value={row.id}>
-              {row.name}
-            </option>
+          {competitionGroups.map((group) => (
+            <optgroup key={group.id} label={group.label}>
+              {group.competitions.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {competitionPickerLabel(row)}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </label>
@@ -109,6 +123,13 @@ export function SeasonCompetitionScope({ value, onChange, className }: Props) {
             </option>
           ))}
         </select>
+        {seasons.length > 1 ? (
+          <span className="text-xs text-zinc-500">
+            {seasons.length} seasons · scroll for{" "}
+            {seasons[seasons.length - 1]?.displayLabel ?? seasons[seasons.length - 1]?.label} →{" "}
+            {seasons[0]?.displayLabel ?? seasons[0]?.label}
+          </span>
+        ) : null}
       </label>
     </div>
   );

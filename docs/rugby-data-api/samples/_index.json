@@ -2,284 +2,280 @@
   {
     "name": "countries_list",
     "status": 200,
-    "bytes": 9484,
     "file": "countries_list.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
+    "endpoint": "/api/v1/rugby-union/countries/list",
+    "ok": true,
+    "ms": 451,
+    "raw_response_id": "af60ca6c-ce75-4b28-b5d9-f25f612b10d6"
   },
   {
     "name": "country_leagues",
     "status": 200,
-    "bytes": 29320,
     "file": "country_leagues.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "league_193_header",
-    "status": 200,
-    "bytes": 234,
-    "file": "league_193_header.json",
-    "top_keys": [
-      "status",
-      "message",
-      "tabs",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "league_193_matches",
-    "status": 200,
-    "bytes": 11307,
-    "file": "league_193_matches.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "league_193_news",
-    "status": 200,
-    "bytes": 119,
-    "file": "league_193_news.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data",
-      "pagination"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "league_193_table",
-    "status": 200,
-    "bytes": 2645,
-    "file": "league_193_table.json",
-    "top_keys": [
-      "status",
-      "message",
-      "live_team_ids",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "league_193_teams",
-    "status": 200,
-    "bytes": 1281,
-    "file": "league_193_teams.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7565_player_stat",
-    "status": 200,
-    "bytes": 11034,
-    "file": "match_7565_player_stat.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7581_detail",
-    "status": 200,
-    "bytes": 569,
-    "file": "match_7581_detail.json",
-    "top_keys": [
-      "status",
-      "message",
-      "tabs",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7581_info",
-    "status": 200,
-    "bytes": 1409,
-    "file": "match_7581_info.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7581_lineup",
-    "status": 200,
-    "bytes": 281,
-    "file": "match_7581_lineup.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7581_stat",
-    "status": 200,
-    "bytes": 1422,
-    "file": "match_7581_stat.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "match_7581_table",
-    "status": 200,
-    "bytes": 12060,
-    "file": "match_7581_table.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "matches_2026-07-08",
-    "status": 200,
-    "bytes": 18453,
-    "file": "matches_2026-07-08.json",
-    "top_keys": [
-      "status",
-      "data",
-      "metadata"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "matches_count_2026-07-08",
-    "status": 200,
-    "bytes": 103,
-    "file": "matches_count_2026-07-08.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
+    "endpoint": "/api/v1/rugby-union/country/leagues",
+    "ok": true,
+    "ms": 313,
+    "raw_response_id": "c4f10285-7122-4e39-a2c0-868b9f60e146"
   },
   {
     "name": "news_leagues",
     "status": 200,
-    "bytes": 2060,
     "file": "news_leagues.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "search",
-    "status": 403,
-    "bytes": 748,
-    "file": "search.json",
-    "top_keys": [
-      "type",
-      "title",
-      "status",
-      "detail",
-      "instance",
-      "error_code",
-      "error_name",
-      "error_category",
-      "ray_id",
-      "timestamp",
-      "zone",
-      "cloudflare_error",
-      "retryable",
-      "owner_action_required",
-      "what_you_should_do",
-      "footer"
-    ],
-    "auth": "none"
+    "endpoint": "/api/v1/rugby-union/news/leagues",
+    "ok": true,
+    "ms": 243,
+    "raw_response_id": "b35fdc1a-1a27-463a-8b44-cd328e5f6f6a"
   },
   {
     "name": "search_bath",
     "status": 200,
-    "bytes": 115,
     "file": "search_bath.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "team_243_header",
-    "status": 200,
-    "bytes": 181,
-    "file": "team_243_header.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data",
-      "tabs"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "team_243_matches",
-    "status": 200,
-    "bytes": 5860,
-    "file": "team_243_matches.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
-  },
-  {
-    "name": "team_243_news",
-    "status": 200,
-    "bytes": 119,
-    "file": "team_243_news.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data",
-      "pagination"
-    ],
-    "auth": "none"
+    "endpoint": "/api/v1/rugby-union/search?q=bath",
+    "ok": true,
+    "ms": 295,
+    "raw_response_id": "6c9cac9b-4e9d-45d2-85f8-7ea78afd18ec"
   },
   {
     "name": "teams",
     "status": 200,
-    "bytes": 18113,
     "file": "teams.json",
-    "top_keys": [
-      "status",
-      "message",
-      "data"
-    ],
-    "auth": "none"
+    "endpoint": "/api/v1/rugby-union/teams",
+    "ok": true,
+    "ms": 264,
+    "raw_response_id": "006fd602-f6ea-4579-ba79-a19a3fadc25c"
+  },
+  {
+    "name": "matches_2026-07-08",
+    "status": 200,
+    "file": "matches_2026-07-08.json",
+    "endpoint": "/api/v1/rugby-union/matches?type=all&date=2026-07-08",
+    "ok": true,
+    "ms": 335,
+    "raw_response_id": "96dc9513-6822-46e2-83ad-d487539e89d6"
+  },
+  {
+    "name": "matches_count_2026-07-08",
+    "status": 200,
+    "file": "matches_count_2026-07-08.json",
+    "endpoint": "/api/v1/rugby-union/matches/count?date=2026-07-08",
+    "ok": true,
+    "ms": 231,
+    "raw_response_id": "288351f1-09d6-43e2-9843-28df40a72341"
+  },
+  {
+    "name": "match_7581_info",
+    "status": 200,
+    "file": "match_7581_info.json",
+    "endpoint": "/api/v1/rugby-union/match/7581/info",
+    "ok": true,
+    "ms": 368,
+    "raw_response_id": "eb3f34f6-97e1-43d0-8ba8-9c0c306b03a1"
+  },
+  {
+    "name": "match_7581_detail",
+    "status": 200,
+    "file": "match_7581_detail.json",
+    "endpoint": "/api/v1/rugby-union/match/7581/detail",
+    "ok": true,
+    "ms": 363,
+    "raw_response_id": "89e9fa6f-4711-46c1-97f3-61d75f1e0f5d"
+  },
+  {
+    "name": "match_7581_stat",
+    "status": 200,
+    "file": "match_7581_stat.json",
+    "endpoint": "/api/v1/rugby-union/match/7581/stat",
+    "ok": true,
+    "ms": 271,
+    "raw_response_id": "bb8b4452-cf7b-43b1-ad05-ae143057c85f"
+  },
+  {
+    "name": "match_7565_player_stat",
+    "status": 200,
+    "file": "match_7565_player_stat.json",
+    "endpoint": "/api/v1/rugby-union/match/7565/player-stat",
+    "ok": true,
+    "ms": 160,
+    "raw_response_id": "515bc1f2-628b-437a-83ac-15030173a413"
+  },
+  {
+    "name": "match_7581_lineup",
+    "status": 200,
+    "file": "match_7581_lineup.json",
+    "endpoint": "/api/v1/rugby-union/match/7581/lineup",
+    "ok": true,
+    "ms": 348,
+    "raw_response_id": "f8eb33b9-524f-4cc9-9a97-a64acc64ed57"
+  },
+  {
+    "name": "match_7581_table",
+    "status": 200,
+    "file": "match_7581_table.json",
+    "endpoint": "/api/v1/rugby-union/match/7581/table?type=all",
+    "ok": true,
+    "ms": 275,
+    "raw_response_id": "71508f90-617f-49a1-973f-990e45bde616"
+  },
+  {
+    "name": "league_193_matches",
+    "status": 200,
+    "file": "league_193_matches.json",
+    "endpoint": "/api/v1/rugby-union/league/193/matches?match_type=finished",
+    "ok": true,
+    "ms": 395,
+    "raw_response_id": "da5a8aa6-c73d-4811-9df2-84c3c6090283"
+  },
+  {
+    "name": "league_193_header",
+    "status": 200,
+    "file": "league_193_header.json",
+    "endpoint": "/api/v1/rugby-union/league/193/header",
+    "ok": true,
+    "ms": 378,
+    "raw_response_id": "1b2e0e56-4342-4068-b857-2072cbf232f5"
+  },
+  {
+    "name": "league_193_table",
+    "status": 200,
+    "file": "league_193_table.json",
+    "endpoint": "/api/v1/rugby-union/league/193/table",
+    "ok": true,
+    "ms": 282,
+    "raw_response_id": "022589f2-edcd-439c-ab33-1f172cd65eda"
+  },
+  {
+    "name": "league_193_teams",
+    "status": 200,
+    "file": "league_193_teams.json",
+    "endpoint": "/api/v1/rugby-union/league/193/teams",
+    "ok": true,
+    "ms": 260,
+    "raw_response_id": "046f9e36-ac2c-4f42-bb3d-d91d224a8e8b"
+  },
+  {
+    "name": "league_193_news",
+    "status": 200,
+    "file": "league_193_news.json",
+    "endpoint": "/api/v1/rugby-union/league/193/news",
+    "ok": true,
+    "ms": 160,
+    "raw_response_id": "ef4f78a6-c654-4b92-aeac-84ddcdfe3f9a"
+  },
+  {
+    "name": "team_243_matches",
+    "status": 200,
+    "file": "team_243_matches.json",
+    "endpoint": "/api/v1/rugby-union/team/243/matches?type=finished",
+    "ok": true,
+    "ms": 414,
+    "raw_response_id": "2360748e-d696-49af-b19d-c767f57d6f14"
+  },
+  {
+    "name": "team_243_header",
+    "status": 200,
+    "file": "team_243_header.json",
+    "endpoint": "/api/v1/rugby-union/team/243/header",
+    "ok": true,
+    "ms": 308,
+    "raw_response_id": "6ba528c0-f490-4836-b22c-23136a62c349"
+  },
+  {
+    "name": "team_243_news",
+    "status": 200,
+    "file": "team_243_news.json",
+    "endpoint": "/api/v1/rugby-union/team/243/news",
+    "ok": true,
+    "ms": 237,
+    "raw_response_id": "5315f7dc-e7d5-4c6c-8892-33d3e1fb0366"
+  },
+  {
+    "name": "league_104_prem_rugby_header",
+    "status": 200,
+    "file": "league_104_prem_rugby_header.json",
+    "endpoint": "/api/v1/rugby-union/league/104/header",
+    "ok": true,
+    "ms": 364,
+    "raw_response_id": "c9b4cc3e-309e-4769-ba39-5b6987088b65"
+  },
+  {
+    "name": "league_104_prem_rugby_table",
+    "status": 200,
+    "file": "league_104_prem_rugby_table.json",
+    "endpoint": "/api/v1/rugby-union/league/104/table",
+    "ok": true,
+    "ms": 347,
+    "raw_response_id": "82089e21-daa9-476a-b682-16c483be52f0"
+  },
+  {
+    "name": "league_104_prem_rugby_teams",
+    "status": 200,
+    "file": "league_104_prem_rugby_teams.json",
+    "endpoint": "/api/v1/rugby-union/league/104/teams",
+    "ok": true,
+    "ms": 276,
+    "raw_response_id": "9a59129b-f64a-4d09-aabc-0285c23f7aa7"
+  },
+  {
+    "name": "league_104_prem_rugby_matches",
+    "status": 200,
+    "file": "league_104_prem_rugby_matches.json",
+    "endpoint": "/api/v1/rugby-union/league/104/matches?match_type=finished",
+    "ok": true,
+    "ms": 311,
+    "raw_response_id": "7d632ee4-3363-40e8-a771-e88495456033"
+  },
+  {
+    "name": "prem_rugby_match_5370_info",
+    "status": 200,
+    "file": "prem_rugby_match_5370_info.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/info",
+    "ok": true,
+    "ms": 457,
+    "raw_response_id": "062430d3-52ae-4dbf-8454-74214da885f1"
+  },
+  {
+    "name": "prem_rugby_match_5370_detail",
+    "status": 200,
+    "file": "prem_rugby_match_5370_detail.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/detail",
+    "ok": true,
+    "ms": 271,
+    "raw_response_id": "d8a43823-e7f6-4a23-baf3-f2e0551f36db"
+  },
+  {
+    "name": "prem_rugby_match_5370_stat",
+    "status": 200,
+    "file": "prem_rugby_match_5370_stat.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/stat",
+    "ok": true,
+    "ms": 252,
+    "raw_response_id": "9098fcb7-3228-47b0-b565-d982deaa765b"
+  },
+  {
+    "name": "prem_rugby_match_5370_player_stat",
+    "status": 200,
+    "file": "prem_rugby_match_5370_player_stat.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/player-stat",
+    "ok": true,
+    "ms": 246,
+    "raw_response_id": "b3edf589-c6ca-46eb-8f31-169897a4944d"
+  },
+  {
+    "name": "prem_rugby_match_5370_lineup",
+    "status": 200,
+    "file": "prem_rugby_match_5370_lineup.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/lineup",
+    "ok": true,
+    "ms": 848,
+    "raw_response_id": "cb934edc-7f5f-4690-9a37-f1ab4eb850b9"
+  },
+  {
+    "name": "prem_rugby_match_5370_table",
+    "status": 200,
+    "file": "prem_rugby_match_5370_table.json",
+    "endpoint": "/api/v1/rugby-union/match/5370/table?type=all",
+    "ok": true,
+    "ms": 346,
+    "raw_response_id": "798bf471-da98-4737-ad28-2074ff451ad5"
   }
 ]

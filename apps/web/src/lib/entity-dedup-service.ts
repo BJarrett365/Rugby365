@@ -8,11 +8,14 @@ import {
   playerBioSuggestions,
   playerCareerStints,
   playerExternalMatches,
+  playerImageLearningRules,
+  playerImages,
   playerInjuries,
   playerLegends,
   playerMatchPerformanceStats,
   playerMatchRatings,
   playerProfileVerificationReports,
+  playerRadarCaches,
   playerRatings,
   playerSeasonStats,
   playerSelectionTrends,
@@ -20,6 +23,7 @@ import {
   playerSuspensions,
   playerTransfers,
   players,
+  providerEntityMappings,
   standingRows,
   teamCoachingStaff,
   teamMatchStats,
@@ -30,13 +34,17 @@ import {
 import { getDb } from "./db";
 import {
   canonicalPlayerDisplayName,
+  clubNameFromJunkSlug,
   entityNameQualityScore,
+  isJunkTeamSlug,
   isSdmsExternalId,
   normalizePlayerName,
   normalizeTeamName,
   normalizedEntityKey,
+  teamDedupKey,
 } from "./entity-normalize";
 import { normalizeSlug } from "./fixture-admin-service";
+import { parseWikiTeamLabel } from "@rugby365/import-sdk";
 
 export type DuplicateEntityRow = {
   id: string;
@@ -65,18 +73,14 @@ function scorePlayer(row: DuplicateEntityRow): number {
   let score = entityNameQualityScore(row.name);
   if (row.externalProviderId) score += 5;
   if (isSdmsExternalId(row.externalProviderId)) score += 8;
+  if (row.sourceProvider === "sport365" || row.sourceProvider === "sdms") score += 3;
+  if (row.sourceProvider === "rugby_data") score += 2;
+  // Prefer clean display names over transfer-note junk ("… released").
+  if (/\b(released|retired|left|departed|joined|signed|loaned|deceased|died)\b/i.test(row.name)) {
+    score -= 40;
+  }
+  if (/<[^>]+>/.test(row.name) || /__legacy__/i.test(row.slug)) score -= 20;
   return score;
-}
-
-function isJunkTeamSlug(slug: string): boolean {
-  return (
-    slug.startsWith("flagicon-") ||
-    slug.includes("ref-cite") ||
-    slug.includes("ref-name") ||
-    slug.includes("url-https") ||
-    slug.includes("access-date") ||
-    slug.length > 60
-  );
 }
 
 function scoreTeam(row: DuplicateEntityRow): number {
@@ -89,7 +93,24 @@ function scoreTeam(row: DuplicateEntityRow): number {
   if (!isJunkTeamSlug(row.slug)) score += 12;
   if (row.slug.length <= 32) score += 4;
   if (isJunkTeamSlug(row.slug)) score -= 80;
+  if (/^\{\{/.test(row.name)) score -= 50;
+  if (/^t=/i.test(row.name)) score -= 8;
   return score;
+}
+
+function teamDedupKeysForRow(row: DuplicateEntityRow): string[] {
+  const keys = new Set<string>();
+  const primary = normalizedEntityKey(row.name, "team");
+  if (primary) keys.add(primary);
+  if (isJunkTeamSlug(row.slug)) {
+    const fromSlug = clubNameFromJunkSlug(row.slug);
+    if (fromSlug) keys.add(teamDedupKey(fromSlug));
+  }
+  if (/^\{\{/.test(row.name)) {
+    const parsed = parseWikiTeamLabel(row.name);
+    if (parsed) keys.add(teamDedupKey(parsed));
+  }
+  return [...keys];
 }
 
 function buildDuplicateGroups(
@@ -98,11 +119,15 @@ function buildDuplicateGroups(
 ): DuplicateEntityGroup[] {
   const buckets = new Map<string, DuplicateEntityRow[]>();
   for (const row of rows) {
-    const key = normalizedEntityKey(row.name, kind);
-    if (!key) continue;
-    const bucket = buckets.get(key) ?? [];
-    bucket.push(row);
-    buckets.set(key, bucket);
+    const keys =
+      kind === "team"
+        ? teamDedupKeysForRow(row)
+        : [normalizedEntityKey(row.name, kind)].filter((key): key is string => Boolean(key));
+    for (const key of keys) {
+      const bucket = buckets.get(key) ?? [];
+      if (!bucket.some((candidate) => candidate.id === row.id)) bucket.push(row);
+      buckets.set(key, bucket);
+    }
   }
 
   const groups: DuplicateEntityGroup[] = [];
@@ -125,6 +150,57 @@ function buildDuplicateGroups(
   }
 
   return groups.sort((a, b) => a.normalizedName.localeCompare(b.normalizedName));
+}
+
+/** Merge overlapping duplicate groups (transitive links via shared team rows). */
+function consolidateDuplicateGroups(groups: DuplicateEntityGroup[]): DuplicateEntityGroup[] {
+  if (groups.length <= 1) return groups;
+
+  const parent = new Map<string, string>();
+  const find = (id: string): string => {
+    const current = parent.get(id) ?? id;
+    if (current !== id) {
+      const root = find(current);
+      parent.set(id, root);
+      return root;
+    }
+    return id;
+  };
+  const union = (a: string, b: string) => {
+    parent.set(find(a), find(b));
+  };
+
+  const rowsById = new Map<string, DuplicateEntityRow>();
+  for (const group of groups) {
+    for (const row of group.rows) {
+      rowsById.set(row.id, row);
+      union(group.canonicalId, row.id);
+    }
+  }
+
+  const components = new Map<string, DuplicateEntityRow[]>();
+  for (const row of rowsById.values()) {
+    const root = find(row.id);
+    const bucket = components.get(root) ?? [];
+    if (!bucket.some((candidate) => candidate.id === row.id)) bucket.push(row);
+    components.set(root, bucket);
+  }
+
+  const consolidated: DuplicateEntityGroup[] = [];
+  for (const bucket of components.values()) {
+    if (bucket.length < 2) continue;
+    const sorted = [...bucket].sort((a, b) => scoreTeam(b) - scoreTeam(a) || a.name.localeCompare(b.name));
+    const canonical = sorted[0]!;
+    consolidated.push({
+      key: normalizedEntityKey(canonical.name, "team"),
+      normalizedName: normalizeTeamName(canonical.name),
+      canonicalId: canonical.id,
+      rows: sorted,
+      duplicateIds: sorted.slice(1).map((row) => row.id),
+    });
+  }
+
+  return consolidated.sort((a, b) => a.normalizedName.localeCompare(b.normalizedName));
 }
 
 export async function findDuplicatePlayers(): Promise<DuplicateEntityGroup[]> {
@@ -152,7 +228,7 @@ export async function findDuplicateTeams(): Promise<DuplicateEntityGroup[]> {
       sourceProvider: teams.sourceProvider,
     })
     .from(teams);
-  return buildDuplicateGroups(rows, "team");
+  return consolidateDuplicateGroups(buildDuplicateGroups(rows, "team"));
 }
 
 /** Merge duplicate player rows into a canonical player, rewiring related records. */
@@ -211,6 +287,28 @@ export async function mergePlayerRecords(
     }
     patch.externalProviderId = bestExternal.id;
     patch.sourceProvider = bestExternal.source;
+  }
+
+  if (patch.rugbypassPlayerId || patch.rugbypassSlug) {
+    // Unique indexes on rugbypass_player_id / rugbypass_slug — clear every holder first.
+    if (patch.rugbypassPlayerId) {
+      await db
+        .update(players)
+        .set({ rugbypassPlayerId: null, rugbypassSlug: null, rugbypassUrl: null })
+        .where(eq(players.rugbypassPlayerId, patch.rugbypassPlayerId));
+    }
+    if (patch.rugbypassSlug) {
+      await db
+        .update(players)
+        .set({ rugbypassSlug: null, rugbypassUrl: null })
+        .where(eq(players.rugbypassSlug, patch.rugbypassSlug));
+    }
+    for (const duplicateId of duplicateIds) {
+      await db
+        .update(players)
+        .set({ rugbypassPlayerId: null, rugbypassSlug: null, rugbypassUrl: null })
+        .where(eq(players.id, duplicateId));
+    }
   }
 
   await db.update(players).set(patch).where(eq(players.id, canonicalId));
@@ -416,6 +514,32 @@ export async function mergePlayerRecords(
       .set({ playerId: canonicalId })
       .where(eq(playerLegends.playerId, duplicateId));
 
+    const imageRows = await db.select().from(playerImages).where(eq(playerImages.playerId, duplicateId));
+    for (const row of imageRows) {
+      const [existing] = await db
+        .select({ id: playerImages.id })
+        .from(playerImages)
+        .where(and(eq(playerImages.playerId, canonicalId), eq(playerImages.imageUrl, row.imageUrl)))
+        .limit(1);
+      if (existing) await db.delete(playerImages).where(eq(playerImages.id, row.id));
+      else await db.update(playerImages).set({ playerId: canonicalId }).where(eq(playerImages.id, row.id));
+    }
+
+    await db
+      .update(playerImageLearningRules)
+      .set({ playerId: canonicalId })
+      .where(eq(playerImageLearningRules.playerId, duplicateId));
+
+    // Radar caches are regenerable; drop dupes rather than risk unique collisions.
+    await db.delete(playerRadarCaches).where(eq(playerRadarCaches.playerId, duplicateId));
+
+    await db
+      .update(providerEntityMappings)
+      .set({ rugby365Id: canonicalId })
+      .where(
+        and(eq(providerEntityMappings.entityType, "player"), eq(providerEntityMappings.rugby365Id, duplicateId)),
+      );
+
     await db
       .update(fixtures)
       .set({ rugby365PotmPlayerId: canonicalId })
@@ -437,7 +561,7 @@ async function mergeTeamRecords(canonicalId: string, duplicateIds: string[]) {
   if (!canonical) throw new Error("Canonical team not found");
 
   const patch: Partial<typeof teams.$inferInsert> = {
-    name: normalizeTeamName(canonical.name),
+    name: normalizeTeamName(canonical.name).replace(/^t=/i, "").trim(),
   };
 
   for (const duplicateId of duplicateIds) {
@@ -594,18 +718,31 @@ export async function dedupePlayers(): Promise<DedupeSummary> {
   const groups = await findDuplicatePlayers();
   const details: DedupeSummary["details"] = [];
   let deleted = 0;
+  const errors: string[] = [];
 
   for (const group of groups) {
-    await mergePlayerRecords(group.canonicalId, group.duplicateIds);
-    deleted += group.duplicateIds.length;
-    details.push({
-      key: group.key,
-      kept: group.canonicalId,
-      removed: group.duplicateIds,
-    });
+    try {
+      await mergePlayerRecords(group.canonicalId, group.duplicateIds, {
+        displayName: canonicalPlayerDisplayName(group.normalizedName),
+      });
+      deleted += group.duplicateIds.length;
+      details.push({
+        key: group.key,
+        kept: group.canonicalId,
+        removed: group.duplicateIds,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${group.normalizedName}: ${message}`);
+      console.error(`  ✗ merge failed for ${group.normalizedName}: ${message}`);
+    }
   }
 
-  return { groups: groups.length, merged: groups.length, deleted, details };
+  if (errors.length) {
+    console.error(`Player dedupe completed with ${errors.length} group error(s).`);
+  }
+
+  return { groups: groups.length, merged: details.length, deleted, details };
 }
 
 export async function dedupeTeams(): Promise<DedupeSummary> {

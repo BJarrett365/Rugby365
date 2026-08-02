@@ -240,6 +240,13 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "API",
     },
     {
+      title: "Rugby Union API",
+      href: "/api/v1/rugby-union/teams",
+      description:
+        "Local Rugby Union API (match, league, team, discovery). Same contract as Postman collection.",
+      status: "API",
+    },
+    {
       title: "OpenAI keys",
       href: "/admin/keys/openai",
       description: "Configure OpenAI API key and default model for AI-assisted CMS features.",

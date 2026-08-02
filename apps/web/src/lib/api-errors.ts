@@ -47,28 +47,32 @@ export function isDbUnavailable(error: unknown, depth = 0): boolean {
   return false;
 }
 
-function isSchemaMismatch(error: unknown, depth = 0): boolean {
-  if (!error || depth > 10) return false;
+
+function schemaMismatchDetail(error: unknown, depth = 0): string | null {
+  if (!error || depth > 10) return null;
   if (typeof error === "object") {
     const err = error as { message?: string; cause?: unknown };
     if (typeof err.message === "string") {
-      const m = err.message.toLowerCase();
-      if (m.includes("does not exist") && (m.includes("column") || m.includes("relation"))) {
-        return true;
+      const m = err.message;
+      if (/does not exist/i.test(m) && (/column/i.test(m) || /relation/i.test(m))) {
+        return m;
       }
-      if (m.startsWith("failed query:") && isSchemaMismatch(err.cause, depth + 1)) return true;
+      if (m.startsWith("Failed query:")) {
+        return schemaMismatchDetail(err.cause, depth + 1);
+      }
     }
-    if (err.cause) return isSchemaMismatch(err.cause, depth + 1);
+    if (err.cause) return schemaMismatchDetail(err.cause, depth + 1);
   }
-  return false;
+  return null;
 }
 
 export function friendlyErrorMessage(error: unknown, fallback: string): string {
   if (isDbUnavailable(error)) {
     return "Database is not running. In the rugby365 folder run: npm run db:up (Docker Desktop must be open), then refresh.";
   }
-  if (isSchemaMismatch(error)) {
-    return "Database schema is out of date. In the rugby365 folder run: npm run db:migrate (or npm run db:up), then refresh.";
+  const schemaDetail = schemaMismatchDetail(error);
+  if (schemaDetail) {
+    return `Database schema is out of date (${schemaDetail}). In the rugby365 folder run: npm run db:migrate (or npm run db:up), then refresh.`;
   }
   if (error instanceof Error && error.message.startsWith("Failed query:")) {
     const cause = (error as { cause?: Error }).cause;

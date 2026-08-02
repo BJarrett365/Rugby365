@@ -1,14 +1,11 @@
 {
   "_meta": {
     "endpoint": "match_7581_info",
-    "method": "GET",
-    "base_url": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com",
     "path": "/api/v1/rugby-union/match/7581/info",
     "status": 200,
-    "bytes": 1409,
-    "captured_at": "2026-07-10T10:00:04Z",
-    "auth": "none",
-    "user_agent": "browser"
+    "captured_at": "2026-07-28T09:03:29.905Z",
+    "response_time_ms": 361,
+    "raw_response_id": "eb3f34f6-97e1-43d0-8ba8-9c0c306b03a1"
   },
   "response": {
     "status": 200,
@@ -62,12 +59,26 @@
           "team": "Argentina U20",
           "lfm": [
             "L",
-            "W",
-            "W",
             "L",
+            "L",
+            "W",
             "W"
           ],
           "matches": [
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "Australia U20",
+              "atid": 206,
+              "ft": "29-52"
+            },
+            {
+              "htn": "Argentina U20",
+              "htid": 208,
+              "atn": "Scotland U20",
+              "atid": 202,
+              "ft": "26-44"
+            },
             {
               "htn": "Argentina U20",
               "htid": 208,
@@ -88,20 +99,6 @@
               "atn": "USA U20",
               "atid": 539,
               "ft": "78-14"
-            },
-            {
-              "htn": "South Africa U20",
-              "htid": 205,
-              "atn": "Argentina U20",
-              "atid": 208,
-              "ft": "48-24"
-            },
-            {
-              "htn": "Argentina U20",
-              "htid": 208,
-              "atn": "Spain U20",
-              "atid": 207,
-              "ft": "33-30"
             }
           ]
         },
@@ -109,12 +106,26 @@
           "team": "Ireland U20",
           "lfm": [
             "W",
-            "L",
-            "L",
             "W",
-            "W"
+            "W",
+            "L",
+            "L"
           ],
           "matches": [
+            {
+              "htn": "Italy U20",
+              "htid": 203,
+              "atn": "Ireland U20",
+              "atid": 200,
+              "ft": "26-34"
+            },
+            {
+              "htn": "Ireland U20",
+              "htid": 200,
+              "atn": "Fiji U20",
+              "atid": 538,
+              "ft": "24-19"
+            },
             {
               "htn": "Ireland U20",
               "htid": 200,
@@ -135,20 +146,6 @@
               "atn": "Ireland U20",
               "atid": 200,
               "ft": "34-27"
-            },
-            {
-              "htn": "Ireland U20",
-              "htid": 200,
-              "atn": "Scotland U20",
-              "atid": 202,
-              "ft": "47-14"
-            },
-            {
-              "htn": "Ireland U20",
-              "htid": 200,
-              "atn": "Wales U20",
-              "atid": 201,
-              "ft": "48-33"
             }
           ]
         }

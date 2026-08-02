@@ -99,8 +99,7 @@ export function mergeRugbyPassEnrichment(
   if (heightCm != null) patch.heightCm = heightCm;
   const weightKg = pickNumber(existing.weightKg ?? null, profile.weightKg);
   if (weightKg != null) patch.weightKg = weightKg;
-  const imageUrl = pickString(existing.imageUrl ?? null, profile.imageUrl);
-  if (imageUrl) patch.imageUrl = imageUrl;
+  // Player images come from our dedicated image API — never overwrite from RugbyPass.
   const bioSummary = pickString(existing.bioSummary ?? null, profile.bioSummary);
   if (bioSummary) patch.bioSummary = bioSummary;
 
@@ -124,7 +123,6 @@ export function enrichmentFieldsUpdated(
     "countryName",
     "heightCm",
     "weightKg",
-    "imageUrl",
     "bioSummary",
   ] as const) {
     if (patch[key] !== undefined && patch[key] !== existing[key]) fields.push(key);

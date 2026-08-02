@@ -10,7 +10,7 @@ import {
   teams,
 } from "@rugby365/db";
 import { getDb } from "./db";
-import { normalizeTeamName } from "./entity-normalize";
+import { normalizeTeamName, isJunkTeamSlug } from "./entity-normalize";
 import { kickoffInSeason } from "./season-label-utils";
 import { canonicalPremiershipTeamName } from "./transfer-match-service";
 import {
@@ -76,6 +76,9 @@ export function dedupeSeasonTeamsByCanonicalIdentity(
       const aAlias = canonicalPremiershipTeamName(a.name) === a.name ? 1 : 0;
       const bAlias = canonicalPremiershipTeamName(b.name) === b.name ? 1 : 0;
       if (bAlias !== aAlias) return bAlias - aAlias;
+      const aJunk = isJunkTeamSlug(a.slug) ? 0 : 1;
+      const bJunk = isJunkTeamSlug(b.slug) ? 0 : 1;
+      if (bJunk !== aJunk) return bJunk - aJunk;
       return a.slug.length - b.slug.length || a.name.localeCompare(b.name);
     });
     const best = sorted[0]!;

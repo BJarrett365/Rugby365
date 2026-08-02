@@ -1,0 +1,854 @@
+{
+  "info": {
+    "_postman_id": "74a16cca-d68e-457b-88a8-a158acfd1b1c",
+    "name": "Rugby Union Apis",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49367767"
+  },
+  "variable": [
+    {
+      "key": "rugby_data_api_base_url",
+      "value": "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com"
+    },
+    {
+      "key": "rugby_data_api_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Rugby Union",
+      "item": [
+        {
+          "name": "Match Detail",
+          "item": [
+            {
+              "name": "Match info",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7581/info",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7581",
+                    "info"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Match Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7581/detail",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7581",
+                    "detail"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Match Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7581/stat",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7581",
+                    "stat"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Match player Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7565/player-stat",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7565",
+                    "player-stat"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Match Lineup",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7581/lineup",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7581",
+                    "lineup"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Standings",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/match/7581/table?type=all",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "match",
+                    "7581",
+                    "table"
+                  ],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "all"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Match Listing",
+          "item": [
+            {
+              "name": "Match Listing",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  },
+                  {
+                    "key": "difference",
+                    "value": "-5",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/matches?type=all&date=2026-07-08",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "matches"
+                  ],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "all",
+                      "description": "all,live,finished"
+                    },
+                    {
+                      "key": "country_id",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "isWeb",
+                      "value": "true",
+                      "disabled": true
+                    },
+                    {
+                      "key": "date",
+                      "value": "2026-07-08"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Match Counter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/matches/count?date=2026-07-08",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "matches",
+                    "count"
+                  ],
+                  "query": [
+                    {
+                      "key": "date",
+                      "value": "2026-07-08"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Favourites (Add or Remove) Copy",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "fcm_token",
+                      "value": "example-fcm-token",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "194",
+                      "type": "text"
+                    },
+                    {
+                      "key": "type",
+                      "value": "league",
+                      "type": "text",
+                      "description": "match,team,league"
+                    },
+                    {
+                      "key": "is_save",
+                      "value": "1",
+                      "type": "text",
+                      "description": "1 for save and 0 for remove"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/favourite",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "favourite"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Favourites",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/get-favourites?fcm_token=example-fcm-token",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "get-favourites"
+                  ],
+                  "query": [
+                    {
+                      "key": "fcm_token",
+                      "value": "example-fcm-token"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Favourites counter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/favourite/count?fcm_token=example-fcm-token",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "favourite",
+                    "count"
+                  ],
+                  "query": [
+                    {
+                      "key": "fcm_token",
+                      "value": "example-fcm-token"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Matches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/my-matches?fcm_token=example-fcm-token",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "my-matches"
+                  ],
+                  "query": [
+                    {
+                      "key": "fcm_token",
+                      "value": "example-fcm-token"
+                    },
+                    {
+                      "key": "matches[]",
+                      "value": "7571,7573,7581",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Teams Listing",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/teams",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "League Detail",
+          "item": [
+            {
+              "name": "League Matches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/league/193/matches?match_type=finished",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "league",
+                    "193",
+                    "matches"
+                  ],
+                  "query": [
+                    {
+                      "key": "match_type",
+                      "value": "finished"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "League Header",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/league/193/header",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "league",
+                    "193",
+                    "header"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "League Standing",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/league/193/table",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "league",
+                    "193",
+                    "table"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "team",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/league/193/teams",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "league",
+                    "193",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "news",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/league/193/news",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "league",
+                    "193",
+                    "news"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Team Detail",
+          "item": [
+            {
+              "name": "Team Matches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "timezone",
+                    "value": "Asia/Karachi"
+                  },
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/team/243/matches?type=finished",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "team",
+                    "243",
+                    "matches"
+                  ],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "finished"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Team Header",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/team/243/header",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "team",
+                    "243",
+                    "header"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Team news",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "token",
+                    "value": "{{rugby_data_api_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/team/243/news",
+                  "host": [
+                    "{{rugby_data_api_base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "rugby-union",
+                    "team",
+                    "243",
+                    "news"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "countries Listing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "token",
+                "value": "{{rugby_data_api_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/countries/list",
+              "host": [
+                "{{rugby_data_api_base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rugby-union",
+                "countries",
+                "list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "country leagues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "token",
+                "value": "{{rugby_data_api_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/country/leagues?q=",
+              "host": [
+                "{{rugby_data_api_base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rugby-union",
+                "country",
+                "leagues"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "news leagues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "token",
+                "value": "{{rugby_data_api_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/news/leagues",
+              "host": [
+                "{{rugby_data_api_base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rugby-union",
+                "news",
+                "leagues"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Seach",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "token",
+                "value": "{{rugby_data_api_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{rugby_data_api_base_url}}/api/v1/rugby-union/search?q=",
+              "host": [
+                "{{rugby_data_api_base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rugby-union",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
