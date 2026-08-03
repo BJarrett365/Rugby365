@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   buildCompetitionSlots,
   parseSdmsHeadToHeadRecords,
   type HeadToHeadCompetitionRecord,
 } from "@/lib/head-to-head-shared";
+import { buildPreviousMeetingHref } from "@/lib/match-schedule-utils";
 import { TeamCrest } from "./TeamCrest";
 
 function H2HBar({
@@ -60,6 +62,7 @@ export function MatchHeadToHeadPublic({
   headToHead,
   lastFiveMeetings,
   competitionName,
+  competitionId,
 }: {
   homeName: string;
   awayName: string;
@@ -68,6 +71,8 @@ export function MatchHeadToHeadPublic({
   headToHead: Record<string, unknown>[];
   lastFiveMeetings: Record<string, unknown>[];
   competitionName: string;
+  /** SDMS / Planet Rugby competition code for building meeting links when rows only have numeric ids. */
+  competitionId?: string | null;
 }) {
   const slots = useMemo(
     () => buildCompetitionSlots(parseSdmsHeadToHeadRecords(headToHead)),
@@ -144,8 +149,12 @@ export function MatchHeadToHeadPublic({
               const home = String(row.home_team_name ?? row.home_team ?? homeName);
               const away = String(row.away_team_name ?? row.away_team ?? awayName);
               const matchId = String(row.match_id ?? row.id ?? i);
-              return (
-                <li key={`${matchId}-${i}`} className="pr-h2h-meetings__item">
+              const href = buildPreviousMeetingHref(row, {
+                competitionId,
+                competitionName,
+              });
+              const body = (
+                <>
                   <div className="pr-h2h-meetings__meta">
                     <span>{formatMeetingDate(date)}</span>
                     <span className="pr-h2h-meetings__comp">{comp}</span>
@@ -161,6 +170,21 @@ export function MatchHeadToHeadPublic({
                       <TeamCrest name={away} size="sm" />
                     </span>
                   </div>
+                </>
+              );
+              return (
+                <li key={`${matchId}-${i}`} className="pr-h2h-meetings__item">
+                  {href ? (
+                    <Link
+                      href={href}
+                      className="pr-h2h-meetings__link"
+                      aria-label={`${home} ${meetingScore(row)} ${away}, ${formatMeetingDate(date)}`}
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    body
+                  )}
                 </li>
               );
             })}

@@ -117,6 +117,12 @@ export function matchProviderLabel(provider: MatchCmsProvider | string): string 
       return "World Rugby";
     case "club_website":
       return "Club Source";
+    case "rugby_kickoff":
+      return "Rugby Kick Off";
+    case "gracenote":
+      return "Gracenote";
+    case "pa_media":
+      return "PA Media";
     default:
       return provider;
   }
@@ -216,7 +222,10 @@ export type MatchCmsListRow = {
   awayTeamId: string | null;
   awayTeamName: string | null;
   venueId: string | null;
+  venueHasCoords: boolean;
   refereeId: string | null;
+  homeCoachId: string | null;
+  awayCoachId: string | null;
   hasLineups: boolean;
   hasTeamStats: boolean;
   hasPlayerStats: boolean;

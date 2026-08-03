@@ -9,6 +9,7 @@ const GROUP_LABEL: Record<string, string> = {
   core: "Core",
   rules: "Rules",
   ops: "Operations",
+  rd: "Research & Development",
   changelog: "Changelog",
 };
 
@@ -26,7 +27,7 @@ export default function KnowledgeIndexPage() {
       .catch(() => setError("Failed to load knowledge base"));
   }, []);
 
-  const groups = ["core", "rules", "ops", "changelog"] as const;
+  const groups = ["core", "rules", "ops", "rd", "changelog"] as const;
 
   return (
     <>

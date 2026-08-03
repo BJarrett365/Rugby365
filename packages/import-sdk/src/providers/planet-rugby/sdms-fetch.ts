@@ -5,6 +5,9 @@ export type SdmsMatchDetail = {
   date: string;
   time: string;
   status: string;
+  /** Live match clock minute from SDMS (may exceed 40 / 80 in stoppage). */
+  minutes?: number;
+  seconds?: number;
   competition_id?: string | number;
   competition_name: string;
   home_team_id?: string;

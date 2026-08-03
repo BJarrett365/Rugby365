@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SecretKeyField } from "@/components/admin/SecretKeyField";
 import { PageHeader } from "@/components/shell/PageHeader";
 
 type IntegrationStatus = {
@@ -13,11 +14,13 @@ type IntegrationStatus = {
 
 type Config = {
   projectUrl: string;
+  projectUrlHost?: string;
   hasAnonKey: boolean;
   anonKeyMasked?: string;
   hasServiceRoleKey: boolean;
   serviceRoleKeyMasked?: string;
   configured: boolean;
+  anonConfigured?: boolean;
   projectUrlSource: "environment" | "admin" | "none";
   anonKeySource: "environment" | "admin" | "none";
   serviceRoleKeySource: "environment" | "admin" | "none";
@@ -94,7 +97,12 @@ export default function SupabaseKeysPage() {
     const res = await fetch("/api/admin/integrations/supabase", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "test" }),
+      body: JSON.stringify({
+        action: "test",
+        projectUrl: projectUrl.trim() || undefined,
+        serviceRoleKey: serviceRoleKey.trim() || undefined,
+        anonKey: anonKey.trim() || undefined,
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -106,19 +114,30 @@ export default function SupabaseKeysPage() {
   }
 
   async function clearKeys() {
-    if (!confirm("Remove stored Supabase keys from the CMS? Project URL is kept.")) return;
+    if (
+      !confirm(
+        "Remove stored Supabase URL and keys from the CMS? Environment variables are not cleared.",
+      )
+    ) {
+      return;
+    }
     const res = await fetch("/api/admin/integrations/supabase", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "clear" }),
+      body: JSON.stringify({
+        action: "clear",
+        clearProjectUrl: true,
+        clearAnonKey: true,
+        clearServiceRoleKey: true,
+      }),
     });
     const data = await res.json();
     if (res.ok) {
       setAnonKey("");
       setServiceRoleKey("");
-      setMessage("Stored Supabase keys cleared.");
+      setMessage("Stored Supabase URL and keys cleared.");
       setConfig(data);
-      if (data.projectUrl) setProjectUrl(data.projectUrl);
+      setProjectUrl(data.projectUrl ?? "");
     }
   }
 
@@ -206,12 +225,17 @@ export default function SupabaseKeysPage() {
     <>
       <PageHeader
         eyebrow="Keys"
-        title="Supabase"
-        description="Project URL and API keys for Supabase Auth, Database, Storage and Edge Functions."
+        title="Supabase (advanced)"
+        description="Anon key, bootstrap buckets, fixture mirror and full CMS sync. Primary URL + service_role live on the API keys hub."
         actions={
-          <Link href="/admin" className="cms-btn cms-btn--secondary touch-target">
-            Admin dashboard
-          </Link>
+          <>
+            <Link href="/admin/keys#supabase" className="cms-btn cms-btn--primary touch-target">
+              API keys hub
+            </Link>
+            <Link href="/admin" className="cms-btn cms-btn--secondary touch-target">
+              Admin dashboard
+            </Link>
+          </>
         }
       />
 
@@ -250,8 +274,18 @@ export default function SupabaseKeysPage() {
             <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-sm space-y-1">
               <p className="m-0 text-zinc-300">
                 Status:{" "}
-                <span className={config?.configured ? "text-emerald-400" : "text-zinc-500"}>
-                  {config?.configured ? "Configured" : "Not configured"}
+                <span
+                  className={
+                    config?.configured || config?.anonConfigured
+                      ? "text-emerald-400"
+                      : "text-zinc-500"
+                  }
+                >
+                  {config?.configured
+                    ? "Configured (URL + service_role)"
+                    : config?.anonConfigured
+                      ? "Partial (URL + anon)"
+                      : "Not configured"}
                 </span>
               </p>
               <p className="m-0 text-zinc-500 break-all">
@@ -285,41 +319,61 @@ export default function SupabaseKeysPage() {
               />
             </label>
 
-            <label className="block text-sm">
-              <span className="text-zinc-400">
-                Anon / publishable key{" "}
-                {config?.hasAnonKey && config.anonKeySource === "admin"
-                  ? "(saved — leave blank to keep)"
-                  : ""}
-              </span>
-              <input
-                type="password"
-                className="cms-input mt-1 w-full font-mono text-sm"
-                value={anonKey}
-                onChange={(e) => setAnonKey(e.target.value)}
-                autoComplete="off"
-                placeholder={config?.hasAnonKey ? "••••••••" : "eyJhbGciOi…"}
-                disabled={Boolean(config?.envAnonKeyOverride)}
-              />
-            </label>
+            <SecretKeyField
+              label={
+                config?.hasAnonKey && config.anonKeySource === "admin"
+                  ? "Anon / publishable key (saved — leave blank to keep)"
+                  : "Anon / publishable key"
+              }
+              value={anonKey}
+              masked={config?.anonKeyMasked}
+              dirty={Boolean(anonKey)}
+              onChange={setAnonKey}
+              onRevealFill={setAnonKey}
+              placeholder={config?.hasAnonKey ? "••••••••" : "eyJhbGciOi…"}
+              disabled={Boolean(config?.envAnonKeyOverride)}
+              revealUrl="/api/admin/integrations/supabase"
+              revealBody={{ field: "anonKey" }}
+              canReveal={
+                Boolean(config?.hasAnonKey) &&
+                config?.anonKeySource === "admin" &&
+                !config?.envAnonKeyOverride
+              }
+              envOverride={Boolean(config?.envAnonKeyOverride)}
+              envKeyName="SUPABASE_ANON_KEY"
+              onStatus={(msg, kind) => {
+                if (kind === "error") setError(msg);
+              }}
+            />
 
-            <label className="block text-sm">
-              <span className="text-zinc-400">
-                Service role key{" "}
-                {config?.hasServiceRoleKey && config.serviceRoleKeySource === "admin"
-                  ? "(saved — leave blank to keep)"
-                  : "(server-only)"}
-              </span>
-              <input
-                type="password"
-                className="cms-input mt-1 w-full font-mono text-sm"
-                value={serviceRoleKey}
-                onChange={(e) => setServiceRoleKey(e.target.value)}
-                autoComplete="off"
-                placeholder={config?.hasServiceRoleKey ? "••••••••" : "optional — never expose to browser"}
-                disabled={Boolean(config?.envServiceRoleOverride)}
-              />
-            </label>
+            <SecretKeyField
+              label={
+                config?.hasServiceRoleKey && config.serviceRoleKeySource === "admin"
+                  ? "Service role key (saved — leave blank to keep)"
+                  : "Service role key (server-only)"
+              }
+              value={serviceRoleKey}
+              masked={config?.serviceRoleKeyMasked}
+              dirty={Boolean(serviceRoleKey)}
+              onChange={setServiceRoleKey}
+              onRevealFill={setServiceRoleKey}
+              placeholder={
+                config?.hasServiceRoleKey ? "••••••••" : "optional — never expose to browser"
+              }
+              disabled={Boolean(config?.envServiceRoleOverride)}
+              revealUrl="/api/admin/integrations/supabase"
+              revealBody={{ field: "serviceRoleKey" }}
+              canReveal={
+                Boolean(config?.hasServiceRoleKey) &&
+                config?.serviceRoleKeySource === "admin" &&
+                !config?.envServiceRoleOverride
+              }
+              envOverride={Boolean(config?.envServiceRoleOverride)}
+              envKeyName="SUPABASE_SERVICE_ROLE_KEY"
+              onStatus={(msg, kind) => {
+                if (kind === "error") setError(msg);
+              }}
+            />
 
             <div className="flex flex-wrap gap-2">
               <button
@@ -338,10 +392,19 @@ export default function SupabaseKeysPage() {
               <button
                 type="button"
                 className="cms-btn cms-btn--secondary"
-                disabled={testing || !config?.configured}
+                disabled={
+                  testing ||
+                  !(
+                    config?.configured ||
+                    config?.anonConfigured ||
+                    projectUrl.trim() ||
+                    serviceRoleKey.trim() ||
+                    anonKey.trim()
+                  )
+                }
                 onClick={testConnection}
               >
-                {testing ? "Testing…" : "Test connection"}
+                {testing ? "Testing…" : "Test Supabase connection"}
               </button>
               {config?.anonKeySource === "admin" || config?.serviceRoleKeySource === "admin" ? (
                 <button type="button" className="cms-btn cms-btn--secondary" onClick={clearKeys}>

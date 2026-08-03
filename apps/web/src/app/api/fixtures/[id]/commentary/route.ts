@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq, asc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { fixtures, matchCommentary, teams } from "@rugby365/db";
 import { getDb } from "@/lib/db";
 import { publishPendingCommentaryForFixture } from "@/lib/publish-commentary-service";
@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .select()
     .from(matchCommentary)
     .where(eq(matchCommentary.fixtureId, id))
-    .orderBy(asc(matchCommentary.minute), asc(matchCommentary.publishedAt));
+    .orderBy(desc(matchCommentary.minute), desc(matchCommentary.publishedAt));
 
   if (lines.length === 0 && (fixture.status === "full_time" || fixture.status === "live")) {
     await publishPendingCommentaryForFixture(id);
@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       .select()
       .from(matchCommentary)
       .where(eq(matchCommentary.fixtureId, id))
-      .orderBy(asc(matchCommentary.minute), asc(matchCommentary.publishedAt));
+      .orderBy(desc(matchCommentary.minute), desc(matchCommentary.publishedAt));
   }
 
   return NextResponse.json({ lines });

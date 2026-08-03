@@ -9,7 +9,7 @@ import {
 } from "./MatchDetailSections";
 import { MatchDetailTabs } from "./MatchDetailTabs";
 import type { MatchDetailTab } from "@/lib/match-detail-tabs";
-import { TeamProfileLinkFromContext } from "./EntityProfileLinks";
+import { PlayerProfileLink, TeamProfileLinkFromContext } from "./EntityProfileLinks";
 import { LineupsPitchView } from "./LineupsPitchView";
 import { MatchEventTimelineStrip } from "./MatchEventTimelineStrip";
 import { MatchMomentumChart } from "./MatchMomentumChart";
@@ -19,9 +19,12 @@ import { MatchLiveTablesPanel } from "./MatchLiveTablesPanel";
 import { MatchBettingIntelligencePanel } from "./MatchBettingIntelligencePanel";
 import { MatchHeaderWinProbability } from "./MatchHeaderWinProbability";
 import { MatchAnimationSection } from "./MatchAnimationSection";
+import { MatchAudioCommentaryPanel } from "./MatchAudioCommentaryPanel";
+import { MatchHeaderMediaActions } from "./MatchHeaderMediaActions";
 import { MatchYoutubeEmbedSection } from "./MatchYoutubeEmbedSection";
 import { TeamCrest } from "./TeamCrest";
 import { WeatherIcon } from "./WeatherIcon";
+import { EMPTY_MATCH_ANIMATION_AUDIO } from "@/lib/match-animation-public-audio";
 import { collectHeaderCards, resolveHalfTimeScore } from "@/lib/match-header-utils";
 import { buildMatchAnimationPublicPayload } from "@/lib/match-animation-public-service";
 import { buildMatchBettingIntelligence } from "@/lib/match-betting-intelligence-service";
@@ -151,6 +154,22 @@ function MatchDetailPanel({
     return <MatchAnimationSection payload={animationPayload} />;
   }
 
+  if (tab === "audio") {
+    const audio = animationPayload?.audio ?? EMPTY_MATCH_ANIMATION_AUDIO;
+    return (
+      <MatchAudioCommentaryPanel
+        matchId={detail.match_id}
+        initialAudio={audio}
+        matchStatus={detail.status}
+        matchMinute={animationPayload?.matchMinute ?? 0}
+        matchSecond={animationPayload?.matchSecond ?? 0}
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
+        commentaryHref={cmsFixture?.slug ? `/matches/${cmsFixture.slug}/commentary` : null}
+      />
+    );
+  }
+
   if (tab === "watchalong") {
     return (
       <MatchYoutubeEmbedSection
@@ -213,8 +232,12 @@ function MatchDetailPanel({
         entities={entities}
         ratings={data.matchRatings}
         rugby365PotmName={data.rugby365PotmName}
+        rugby365PotmSlug={data.rugby365PotmSlug}
         officialPotmName={data.officialPotmName}
+        officialPotmSlug={data.officialPotmSlug}
         matchStatus={detail.status}
+        homeKit={data.lineupKits?.home ?? null}
+        awayKit={data.lineupKits?.away ?? null}
       />
     );
   }
@@ -229,6 +252,7 @@ function MatchDetailPanel({
         headToHead={detail.head_to_head ?? []}
         lastFiveMeetings={detail.last_five_meetings ?? []}
         competitionName={detail.competition_name}
+        competitionId={data.competitionExternalId}
       />
     );
   }
@@ -288,12 +312,28 @@ function MatchDetailPanel({
           <div className="match-potm-banner cms-card">
             {data.rugby365PotmName && (
               <p>
-                <strong>Rugby365 Player of the Match:</strong> {data.rugby365PotmName}
+                <strong>Rugby365 Player of the Match:</strong>{" "}
+                <PlayerProfileLink
+                  name={data.rugby365PotmName}
+                  slug={data.rugby365PotmSlug}
+                  externalId={
+                    data.matchRatings.find((r) => r.isRugby365Potm)?.externalPlayerId
+                  }
+                  context={entities}
+                />
               </p>
             )}
             {data.officialPotmName && (
               <p>
-                <strong>Official Player of the Match:</strong> {data.officialPotmName}
+                <strong>Official Player of the Match:</strong>{" "}
+                <PlayerProfileLink
+                  name={data.officialPotmName}
+                  slug={data.officialPotmSlug}
+                  externalId={
+                    data.matchRatings.find((r) => r.isOfficialPotm)?.externalPlayerId
+                  }
+                  context={entities}
+                />
               </p>
             )}
           </div>
@@ -544,6 +584,23 @@ export async function MatchDetailView({
               matchStatus={detail.status}
             />
 
+            <MatchHeaderMediaActions
+              audioReady={
+                animationPayload.audio?.status === "scripts_ready" ||
+                animationPayload.audio?.status === "streaming"
+              }
+              scriptCount={animationPayload.audio?.scriptCount ?? 0}
+              hasAnimation={
+                animationBadge === "LIVE" ||
+                animationBadge === "REPLAY" ||
+                animationPayload.availability.showLiveControls ||
+                animationPayload.availability.showReplayControls ||
+                animationPayload.availability.showFullTimeResult
+              }
+              hasWatchalong={hasWatchalong}
+              hasHighlights={hasHighlights}
+            />
+
             {(homeCoach || awayCoach || refName) ? (
               <div className="pr-mc-header__footer">
                 <div className="pr-mc-header__footer-side pr-mc-header__footer-side--home">
@@ -610,7 +667,6 @@ export async function MatchDetailView({
 
           <MatchDetailTabs
             activeTab={resolvedTab}
-            animationBadge={animationBadge}
             hasWatchalong={hasWatchalong}
             hasHighlights={hasHighlights}
           />
@@ -618,7 +674,11 @@ export async function MatchDetailView({
           <MatchDetailPanel
             tab={resolvedTab}
             data={data}
-            animationPayload={resolvedTab === "animation" ? animationPayload : null}
+            animationPayload={
+              resolvedTab === "animation" || resolvedTab === "audio"
+                ? animationPayload
+                : null
+            }
             bettingIntel={bettingIntel}
           />
         </div>

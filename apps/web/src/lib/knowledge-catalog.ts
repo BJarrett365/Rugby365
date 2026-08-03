@@ -9,7 +9,7 @@ export type KnowledgePageMeta = {
   description: string;
   /** Relative to docs/knowledge/ */
   file: string;
-  group: "core" | "rules" | "ops" | "changelog";
+  group: "core" | "rules" | "ops" | "rd" | "changelog";
 };
 
 export const KNOWLEDGE_PAGES: KnowledgePageMeta[] = [
@@ -98,6 +98,22 @@ export const KNOWLEDGE_PAGES: KnowledgePageMeta[] = [
     group: "ops",
   },
   {
+    slug: "commentary-rules",
+    title: "Commentary Rules",
+    description:
+      "Commentary Intelligence Engine: 10 layers, personalities, blending, anti-Opta rules, and how scripts are compiled.",
+    file: "commentary-rules.md",
+    group: "ops",
+  },
+  {
+    slug: "audio-commentary-rules",
+    title: "Audio Commentary Rules",
+    description:
+      "Live Audio Commentary: Lead + Analyst voices, Currie Cup defaults, match overrides, ElevenLabs TTS, Match Animation bursts.",
+    file: "audio-commentary-rules.md",
+    group: "ops",
+  },
+  {
     slug: "public-match-centre",
     title: "Public Match Centre",
     description: "Approved plan: Rugby365 as SoT, Planet Rugby presentation, modules and phases.",
@@ -115,9 +131,17 @@ export const KNOWLEDGE_PAGES: KnowledgePageMeta[] = [
     slug: "player-value",
     title: "Ratings & Market Value",
     description:
-      "How Match Ratings, Player (Career) Ratings and Market Values are calculated.",
+      "How Match Ratings, Player / Coach / Referee profile ratings and Player Market Values are calculated.",
     file: "player-value.md",
     group: "ops",
+  },
+  {
+    slug: "betting-intelligence-rd",
+    title: "Betting Intelligence R&D",
+    description:
+      "betting-intel-v1.1 production notes, frozen v1 baseline, accuracy lessons, and Phase B–C roadmap.",
+    file: "betting-intelligence-rd.md",
+    group: "rd",
   },
   {
     slug: "player-image-enrichment",

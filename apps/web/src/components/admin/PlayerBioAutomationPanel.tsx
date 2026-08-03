@@ -29,7 +29,7 @@ type BioVariants = Record<PlayerProfileBioType, PlayerBioSections>;
 
 const SECTION_LABELS: Record<keyof PlayerBioSections, string> = {
   shortIntro: "Short intro",
-  fullBio: "Full profile bio",
+  fullBio: "Full profile",
   playingStyle: "Playing style",
   strengths: "Strengths",
   areasToImprove: "Areas to improve",
@@ -60,11 +60,20 @@ function emptySections(): PlayerBioSections {
 export function PlayerBioAutomationPanel({
   playerId,
   onApplied,
+  preferredTab,
 }: {
   playerId: string;
   onApplied?: () => void;
+  /** Sync CMS Club / International / Scout category into the bio tab */
+  preferredTab?: PlayerProfileBioType;
 }) {
-  const [activeTab, setActiveTab] = useState<PlayerProfileBioType>("domestic");
+  const [activeTab, setActiveTab] = useState<PlayerProfileBioType>(
+    preferredTab ?? "domestic",
+  );
+
+  useEffect(() => {
+    if (preferredTab) setActiveTab(preferredTab);
+  }, [preferredTab]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
@@ -220,11 +229,11 @@ export function PlayerBioAutomationPanel({
     <div className="cms-card mb-4 border border-sky-900/40">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h3 className="font-semibold m-0">Bio profiles</h3>
-        <span className="text-xs text-zinc-500">Domestic, international and scouting saved separately</span>
+        <span className="text-xs text-zinc-500">Club, International and Scout saved separately</span>
       </div>
       <p className="text-sm text-zinc-500 mt-0 mb-3">
         Each profile is stored independently. Player updates (club moves, caps, ratings, match stats) queue
-        refresh suggestions for the relevant profile types without overwriting the others.
+        refresh suggestions for the relevant Club / International / Scout profiles without overwriting the others.
       </p>
 
       <div className="cms-tabs mb-4">

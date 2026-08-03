@@ -4,20 +4,21 @@ import Link from "next/link";
 import { FixturesScheduleBoard } from "@/components/matches/FixturesScheduleBoard";
 import { PublicFixturesTabs } from "@/components/matches/PublicFixturesTabs";
 
+/** Public Live Centre — scores, fixtures and match schedule. */
 export default function MatchesPage() {
   return (
     <div className="pr-mc-fixtures-page">
       <nav className="pr-mc-breadcrumbs" aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href="/matches">Live Centre</Link>
         <span className="pr-mc-breadcrumbs__sep" aria-hidden>
           ›
         </span>
-        <span className="pr-mc-breadcrumbs__current">Live Scores &amp; Fixtures</span>
+        <span className="pr-mc-breadcrumbs__current">Scores &amp; Fixtures</span>
       </nav>
 
       <header className="pr-mc-fixtures-page__header">
         <div className="pr-mc-fixtures-page__title-row">
-          <h1 className="pr-mc-fixtures-page__title">Live Rugby Scores &amp; Fixtures</h1>
+          <h1 className="pr-mc-fixtures-page__title">Live Centre</h1>
           <span className="pr-mc-pr-badge" title="Planet Rugby" aria-hidden>
             PR
           </span>

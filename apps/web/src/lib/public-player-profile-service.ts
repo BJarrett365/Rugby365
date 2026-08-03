@@ -99,6 +99,8 @@ export type PublicPlayerProfile = {
   age: number | null;
   heightCm: number | null;
   weightKg: number | null;
+  school: string | null;
+  university: string | null;
   nationName: string | null;
   nationCode: string | null;
   club: { name: string; slug: string | null; imageUrl: string | null } | null;
@@ -1176,6 +1178,8 @@ export async function getPublicPlayerProfile(
     age: calculatePlayerAge(player.birthDate),
     heightCm: player.heightCm,
     weightKg: player.weightKg,
+    school: player.school?.trim() || null,
+    university: player.university?.trim() || null,
     nationName,
     nationCode: player.nationCode,
     club: clubName

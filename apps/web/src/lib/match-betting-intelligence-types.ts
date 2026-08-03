@@ -1,6 +1,6 @@
 /**
  * Planet Rugby Betting Intelligence — types for Match Centre.
- * Odds / value bets remain optional until bookmaker feeds exist.
+ * Value bets are always modelled; bookmaker edge appears when odds are linked.
  */
 
 export type BettingIntelligenceSubTab =
@@ -26,6 +26,10 @@ export type BettingSignalKey =
   | "referee"
   | "venue"
   | "weather"
+  | "weather_fit"
+  | "international_quality"
+  | "fatigue"
+  | "travel"
   | "momentum";
 
 export type BettingSignal = {
@@ -145,6 +149,37 @@ export type BetBuilderSuggestion = {
   explanation: string;
 };
 
+/** Ranked selection most likely to land (and valued vs market when odds exist). */
+export type ValueBetPick = {
+  id: string;
+  market: string;
+  selection: string;
+  /** Modelled chance the selection happens */
+  likelihoodPct: number;
+  reason: string;
+  marketPct: number | null;
+  edgePct: number | null;
+  bestDecimal: number | null;
+  label: "VALUE" | "LIKELY" | "FAIR" | "SHORT";
+};
+
+/** Narrative Betting Intelligence insight (Insights tab). */
+export type TeamNarrativeInsight = {
+  key: string;
+  label: string;
+  body: string;
+  sampleSize: number;
+};
+
+/** Match-level market angle (handicap, totals, halves — Betway-style coverage). */
+export type MatchMarketInsight = {
+  key: string;
+  label: string;
+  body: string;
+  /** Optional modelled number for the angle (line, total, margin). */
+  modelValue?: string | null;
+};
+
 export type MatchBettingIntelligence = {
   fixtureId: string | null;
   homeName: string;
@@ -153,6 +188,13 @@ export type MatchBettingIntelligence = {
   awayImageUrl: string | null;
   prediction: MatchBettingPrediction;
   signals: BettingSignal[];
+  /** 6–10 narrative insights per team (varied per match) */
+  insights: {
+    home: TeamNarrativeInsight[];
+    away: TeamNarrativeInsight[];
+  };
+  /** Match market angles: handicap, totals, team totals, margin, halves */
+  marketInsights: MatchMarketInsight[];
   whyTitle: string;
   whyLead: string;
   confidence: MatchBettingConfidence;
@@ -192,15 +234,9 @@ export type MatchBettingIntelligence = {
     impliedDrawPct: number | null;
     impliedAwayPct: number | null;
   } | null;
-  valueBets: Array<{
-    selection: string;
-    ourPct: number;
-    marketPct: number;
-    edgePct: number;
-    bestDecimal: number | null;
-    label: "VALUE" | "FAIR" | "SHORT";
-  }>;
-  /** Modules that still need external feeds / premium */
+  /** Best valued / most likely selections (max ~5), ranked */
+  valueBets: ValueBetPick[];
+  /** Optional notes when odds feed is missing */
   comingSoon: Array<{
     id: BettingIntelligenceSubTab;
     title: string;

@@ -20,9 +20,25 @@ type Config = {
   configured: boolean;
   gracenoteKeySource: string;
   paKeySource: string;
-  docs?: { gracenote: string; paMedia: string };
+  docs?: { gracenote: string; paMedia: string; rugbyKickoff?: string };
   note?: string;
   envOverride?: { gracenote: boolean; paMedia: boolean };
+};
+
+type KickoffSyncSummary = {
+  listingsParsed: number;
+  matched: number;
+  unmatched: number;
+  fixturesUpdated: number;
+  broadcastersUpserted: number;
+  matches: Array<{
+    externalId: string;
+    homeName: string;
+    awayName: string;
+    competition: string;
+    fixtureId: string | null;
+    providers: string[];
+  }>;
 };
 
 export default function TvScheduleKeysPage() {
@@ -36,6 +52,8 @@ export default function TvScheduleKeysPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [kickoffBusy, setKickoffBusy] = useState(false);
+  const [kickoffSummary, setKickoffSummary] = useState<KickoffSyncSummary | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -120,12 +138,39 @@ export default function TvScheduleKeysPage() {
     }
   }
 
+  async function runRugbyKickoff(action: "preview_rugbykickoff" | "sync_rugbykickoff") {
+    setKickoffBusy(true);
+    setError("");
+    setMessage("");
+    const res = await fetch("/api/admin/integrations/tv-schedule", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, internationalOnly: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.message ?? data.error ?? "Rugby Kick Off sync failed");
+      setKickoffSummary(null);
+    } else {
+      setMessage(data.message ?? "Done.");
+      setKickoffSummary({
+        listingsParsed: data.listingsParsed ?? 0,
+        matched: data.matched ?? 0,
+        unmatched: data.unmatched ?? 0,
+        fixturesUpdated: data.fixturesUpdated ?? 0,
+        broadcastersUpserted: data.broadcastersUpserted ?? 0,
+        matches: Array.isArray(data.matches) ? data.matches : [],
+      });
+    }
+    setKickoffBusy(false);
+  }
+
   return (
     <>
       <PageHeader
         eyebrow="Keys"
         title="TV Schedule"
-        description="EPG providers for rugby union where-to-watch — Gracenote or PA Media. Manual CMS broadcasters work without a key."
+        description="UK international TV from Rugby Kick Off, plus optional Gracenote / PA Media EPG keys. Manual CMS broadcasters always work."
         actions={
           <Link href="/admin" className="cms-btn cms-btn--secondary touch-target">
             Admin dashboard
@@ -133,11 +178,79 @@ export default function TvScheduleKeysPage() {
         }
       />
 
+      <div className="cms-card space-y-4 max-w-2xl mb-4">
+        <p className="text-sm text-zinc-300 m-0">Rugby Kick Off — assign UK TV to fixtures</p>
+        <p className="text-sm text-zinc-400 m-0">
+          Reads{" "}
+          <a
+            href={config?.docs?.rugbyKickoff ?? "https://www.rugbykickoff.com/"}
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-400 hover:underline"
+          >
+            rugbykickoff.com
+          </a>{" "}
+          (UK) and assigns channels onto <strong className="text-zinc-300 font-medium">existing</strong>{" "}
+          CMS fixtures only. Never creates fixtures. Re-running replaces Kick Off TV rows — no
+          duplicate channels per match.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="cms-btn cms-btn--secondary touch-target"
+            disabled={kickoffBusy}
+            onClick={() => void runRugbyKickoff("preview_rugbykickoff")}
+          >
+            {kickoffBusy ? "Working…" : "Preview matches"}
+          </button>
+          <button
+            type="button"
+            className="cms-btn cms-btn--primary touch-target"
+            disabled={kickoffBusy}
+            onClick={() => {
+              if (
+                !confirm(
+                  "Assign UK TV from Rugby Kick Off onto matching existing fixtures? No new fixtures will be created.",
+                )
+              ) {
+                return;
+              }
+              void runRugbyKickoff("sync_rugbykickoff");
+            }}
+          >
+            {kickoffBusy ? "Assigning…" : "Assign UK TV to fixtures"}
+          </button>
+        </div>
+        {kickoffSummary ? (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-sm space-y-2">
+            <p className="m-0 text-zinc-300">
+              {kickoffSummary.listingsParsed} listings → {kickoffSummary.fixturesUpdated} fixtures
+              {kickoffSummary.broadcastersUpserted
+                ? ` · ${kickoffSummary.broadcastersUpserted} channels`
+                : ""}
+              {kickoffSummary.unmatched ? ` · ${kickoffSummary.unmatched} skipped (no fixture)` : ""}
+            </p>
+            <ul className="m-0 pl-4 space-y-1 text-zinc-500 max-h-56 overflow-y-auto">
+              {kickoffSummary.matches.slice(0, 40).map((row) => (
+                <li key={row.externalId}>
+                  {row.homeName} v {row.awayName}
+                  {row.providers.length ? ` — ${row.providers.join(", ")}` : " — no providers"}
+                  {row.fixtureId ? (
+                    <span className="text-emerald-500"> · fixture</span>
+                  ) : (
+                    <span className="text-amber-500"> · skipped</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
       <div className="cms-card space-y-4 max-w-2xl">
         <p className="text-sm text-zinc-400 m-0">
-          Planet Rugby / SDMS do not include TV listings. Add broadcasters per match under{" "}
-          <strong className="text-zinc-300 font-medium">TV / streaming schedule</strong>, or store an
-          EPG API key here for future automated sync.
+          Optional EPG API keys for broader automation. Per-match edits stay under{" "}
+          <strong className="text-zinc-300 font-medium">TV / streaming schedule</strong>.
         </p>
         {config?.note ? <p className="text-sm text-zinc-500 m-0">{config.note}</p> : null}
 

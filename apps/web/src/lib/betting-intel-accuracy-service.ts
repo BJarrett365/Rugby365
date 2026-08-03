@@ -6,6 +6,7 @@ import { and, desc, gte, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { fixtures, teams } from "@rugby365/db";
 import { getDb } from "./db";
 import { isFixtureRatingsPublished } from "./match-rating-math";
+import { BETTING_INTEL_MODEL } from "./match-betting-intelligence-math";
 import { gradeModelPick } from "./match-betting-pick-grade";
 import { enrichScheduleFixturesWithWinProbability } from "./schedule-win-probability";
 import type { ScheduleFixture } from "./match-schedule-utils";
@@ -252,6 +253,6 @@ export async function buildBettingIntelAccuracyReport(options?: {
       : null,
     series,
     recent: graded.slice(0, 25),
-    modelVersion: "betting-intel-v1",
+    modelVersion: BETTING_INTEL_MODEL,
   };
 }

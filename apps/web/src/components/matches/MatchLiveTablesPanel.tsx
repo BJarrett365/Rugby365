@@ -6,6 +6,42 @@ import { CompetitionLiveTable } from "@/components/competitions/CompetitionLiveT
 import type { MatchTableContext } from "@/lib/match-table-context";
 import type { RugbyTableResult } from "@/lib/table-lab/table-types";
 
+const LIVE_POLL_MS = 15_000;
+
+async function fetchLiveTable(tableContext: MatchTableContext): Promise<RugbyTableResult> {
+  const endpoint = tableContext.competitionSlug
+    ? `/api/competitions/by-slug/${encodeURIComponent(tableContext.competitionSlug)}/live-table`
+    : null;
+
+  if (endpoint) {
+    const url = new URL(endpoint, window.location.origin);
+    if (tableContext.externalMatchId) {
+      url.searchParams.set("syncMatchId", tableContext.externalMatchId);
+    }
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    const data = (await res.json()) as { result?: RugbyTableResult; error?: string };
+    if (!res.ok || !data.result) throw new Error(data.error || "Failed to load live table");
+    return data.result;
+  }
+
+  const res = await fetch("/api/admin/tables/calculate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      tableId: "live_table",
+      context: {
+        competitionId: tableContext.competitionId,
+        seasonId: tableContext.seasonId,
+        includeLiveMatches: true,
+        showMovement: true,
+      },
+    }),
+  });
+  const data = (await res.json()) as RugbyTableResult & { error?: string };
+  if (!res.ok) throw new Error(data.error || "Failed to load live table");
+  return data;
+}
+
 export function MatchLiveTablesPanel({ tableContext }: { tableContext: MatchTableContext | null }) {
   const [result, setResult] = useState<RugbyTableResult | null>(null);
   const [loading, setLoading] = useState(Boolean(tableContext?.competitionId && tableContext.seasonId));
@@ -19,55 +55,47 @@ export function MatchLiveTablesPanel({ tableContext }: { tableContext: MatchTabl
     }
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    const endpoint = tableContext.competitionSlug
-      ? `/api/competitions/by-slug/${encodeURIComponent(tableContext.competitionSlug)}/live-table`
-      : null;
-
-    const request = endpoint
-      ? fetch(endpoint).then(async (res) => {
-          const data = (await res.json()) as { result?: RugbyTableResult; error?: string };
-          if (!res.ok || !data.result) throw new Error(data.error || "Failed to load live table");
-          return data.result;
+    const load = (opts?: { silent?: boolean }) => {
+      if (!opts?.silent) {
+        setLoading(true);
+        setError(null);
+      }
+      return fetchLiveTable(tableContext)
+        .then((data) => {
+          if (!cancelled) setResult(data);
         })
-      : fetch("/api/admin/tables/calculate", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            tableId: "live_table",
-            context: {
-              competitionId: tableContext.competitionId,
-              seasonId: tableContext.seasonId,
-              includeLiveMatches: true,
-              showMovement: true,
-            },
-          }),
-        }).then(async (res) => {
-          const data = (await res.json()) as RugbyTableResult & { error?: string };
-          if (!res.ok) throw new Error(data.error || "Failed to load live table");
-          return data;
+        .catch((err: unknown) => {
+          if (!cancelled && !opts?.silent) {
+            setError(err instanceof Error ? err.message : "Failed to load live table");
+            setResult(null);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
+    };
 
-    request
-      .then((data) => {
-        if (!cancelled) setResult(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load live table");
-          setResult(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    void load();
+
+    if (tableContext.isLive) {
+      intervalId = setInterval(() => {
+        void load({ silent: true });
+      }, LIVE_POLL_MS);
+    }
 
     return () => {
       cancelled = true;
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [tableContext?.competitionId, tableContext?.seasonId, tableContext?.competitionSlug]);
+  }, [
+    tableContext?.competitionId,
+    tableContext?.seasonId,
+    tableContext?.competitionSlug,
+    tableContext?.externalMatchId,
+    tableContext?.isLive,
+  ]);
 
   if (!tableContext?.competitionId) {
     return (

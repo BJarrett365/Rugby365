@@ -443,6 +443,13 @@ export function parseWikipediaArchiveFromHtml(input: {
       heightCm: parseHeightCm(infobox.params.height),
       weightKg: parseWeightKg(infobox.params.weight),
       school: stripWikiMarkup(infobox.params.school) || undefined,
+      university:
+        stripWikiMarkup(
+          infobox.params.university ??
+            infobox.params.alma_mater ??
+            infobox.params.almaMater ??
+            infobox.params.college,
+        ) || undefined,
       relatives: stripWikiMarkup(infobox.params.relatives) || undefined,
       positions: parsePositions(infobox.params.position),
       currentTeam: stripWikiMarkup(infobox.params.currentclub ?? infobox.params.currentteam) || undefined,

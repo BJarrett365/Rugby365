@@ -191,9 +191,9 @@ export function sectionsForBioTab(bioType: PlayerProfileBioType): Array<keyof Pl
 }
 
 export const BIO_TAB_LABELS: Record<PlayerProfileBioType, string> = {
-  domestic: "Domestic bio",
+  domestic: "Club bio",
   international: "International bio",
-  scouting: "Scouting bio",
+  scouting: "Scout bio",
 };
 
 export function bioTypesForRefresh(input: {

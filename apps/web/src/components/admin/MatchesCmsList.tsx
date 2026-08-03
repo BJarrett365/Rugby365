@@ -75,6 +75,9 @@ const OPS_BUCKETS: Array<{ id: TodayOpsBucket; label: string }> = [
   { id: "missing_lineups", label: "No lineups" },
   { id: "missing_venue", label: "No venue" },
   { id: "missing_referee", label: "No ref" },
+  { id: "missing_coach", label: "No coach" },
+  { id: "missing_weather", label: "No weather" },
+  { id: "pregame_not_ready", label: "Pre-game gaps" },
 ];
 
 /** Dense DD-MM-YYYY HH:MM for list scanning. */

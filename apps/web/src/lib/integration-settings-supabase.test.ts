@@ -55,12 +55,15 @@ describe("getSupabasePublicConfig", () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY = "service-environment-key-value";
     const config = await getSupabasePublicConfig();
     expect(config.configured).toBe(true);
+    expect(config.anonConfigured).toBe(true);
     expect(config.projectUrl).toBe("https://demo.supabase.co");
+    expect(config.projectUrlHost).toBe("demo.supabase.co");
     expect(config.projectUrlSource).toBe("environment");
     expect(config.anonKeySource).toBe("environment");
     expect(config.serviceRoleKeySource).toBe("environment");
-    expect(config.anonKeyMasked).toContain("…");
-    expect(config.serviceRoleKeyMasked).toContain("…");
+    expect(config.anonKeyMasked).toMatch(/•/);
+    expect(config.serviceRoleKeyMasked).toMatch(/•/);
+    expect(config.serviceRoleKeyMasked).toMatch(/alue$/);
   });
 });
 

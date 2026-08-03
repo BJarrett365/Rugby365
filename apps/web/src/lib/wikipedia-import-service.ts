@@ -13,6 +13,10 @@ import {
 import { getDb } from "./db";
 import { resolvePlayer, resolveTeam } from "./entity-resolve-service";
 import { normalizeSlug } from "./fixture-admin-service";
+import {
+  resolveWikidataRequestOptions,
+  resolveWikipediaRequestOptions,
+} from "./mediawiki-settings";
 import { countryNameLooksLikeClubTeam } from "./player-profile-fields";
 import { normalizeSocialAccounts, type PlayerSocialAccounts } from "./player-profile-utils";
 import { getWikimediaEnterpriseAccessToken } from "./wikimedia-enterprise-client";
@@ -112,7 +116,10 @@ async function attachWikidataProfile(archive: WikipediaPlayerArchive): Promise<W
   const needsSocial = !archive.twitter || !archive.instagram || !archive.facebook || !archive.website;
   if (!needsBio && !needsSocial) return archive;
 
-  const profile = await fetchWikidataPlayerProfile(archive.wikidataId);
+  const profile = await fetchWikidataPlayerProfile(
+    archive.wikidataId,
+    await resolveWikidataRequestOptions(),
+  );
   return {
     ...archive,
     birthDate: archive.birthDate ?? profile.birthDate,
@@ -269,6 +276,11 @@ async function applyWikipediaPlayerArchive(
         patch.school = school;
         fieldsUpdated.push("school");
       }
+      const university = pickString(player.university, archive.university);
+      if (university) {
+        patch.university = university;
+        fieldsUpdated.push("university");
+      }
       const relatives = pickString(player.relatives, archive.relatives);
       if (relatives) {
         patch.relatives = relatives;
@@ -297,6 +309,7 @@ async function applyWikipediaPlayerArchive(
       patch.heightCm = player.heightCm ?? archive.heightCm ?? null;
       patch.weightKg = player.weightKg ?? archive.weightKg ?? null;
       patch.school = player.school ?? archive.school ?? null;
+      patch.university = player.university ?? archive.university ?? null;
       patch.relatives = player.relatives ?? archive.relatives ?? null;
       patch.positions = player.positions?.length ? player.positions : (positions ?? null);
       patch.imageUrl = player.imageUrl ?? archive.imageUrl ?? null;
@@ -323,6 +336,7 @@ async function applyWikipediaPlayerArchive(
       heightCm: archive.heightCm ?? null,
       weightKg: archive.weightKg ?? null,
       school: archive.school ?? null,
+      university: archive.university ?? null,
       relatives: archive.relatives ?? null,
       positions: positions ?? null,
       imageUrl: archive.imageUrl ?? null,
@@ -419,9 +433,10 @@ export async function enrichPlayerFromWikipedia(
   // When an editor pasted a specific article URL, only try that page (identity check).
   if (!explicitSource) {
     candidates.push(
-      ...prioritizePlayerArticleTitles(await findWikipediaPlayerArticleTitles(name), name).filter(
-        (title) => !candidates.includes(title),
-      ),
+      ...prioritizePlayerArticleTitles(
+        await findWikipediaPlayerArticleTitles(name, await resolveWikipediaRequestOptions()),
+        name,
+      ).filter((title) => !candidates.includes(title)),
     );
   }
 
@@ -540,6 +555,7 @@ async function importPlayerArchive(
           heightCm: archive.heightCm ?? null,
           weightKg: archive.weightKg ?? null,
           school: archive.school ?? null,
+          university: archive.university ?? null,
           relatives: archive.relatives ?? null,
           positions: positions ?? null,
           positionName: positionName ?? null,

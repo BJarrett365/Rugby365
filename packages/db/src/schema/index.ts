@@ -73,6 +73,18 @@ export const competitions = pgTable(
     wikipediaUrl: text("wikipedia_url"),
     wikidataId: text("wikidata_id"),
     archiveSyncedAt: timestamp("archive_synced_at", { withTimezone: true }),
+    /** Stable key from competition-catalog.ts when matched. */
+    catalogKey: text("catalog_key"),
+    catalogGroup: text("catalog_group"),
+    countryName: text("country_name"),
+    region: text("region"),
+    gender: text("gender"),
+    ageGroup: text("age_group"),
+    format: text("format"),
+    level: text("level"),
+    seasonStructure: text("season_structure"),
+    /** current | former */
+    lifecycleStatus: text("lifecycle_status").default("current"),
   },
   (table) => [
     uniqueIndex("competitions_external_provider_id_unique")
@@ -81,6 +93,9 @@ export const competitions = pgTable(
     uniqueIndex("competitions_sdms_comp_code_unique")
       .on(table.sdmsCompCode)
       .where(sql`${table.sdmsCompCode} is not null`),
+    index("competitions_catalog_key_idx").on(table.catalogKey),
+    index("competitions_catalog_group_idx").on(table.catalogGroup),
+    index("competitions_region_lifecycle_idx").on(table.region, table.lifecycleStatus),
   ],
 );
 
@@ -191,6 +206,7 @@ export const players = pgTable(
     heightCm: integer("height_cm"),
     weightKg: integer("weight_kg"),
     school: text("school"),
+    university: text("university"),
     relatives: text("relatives"),
     positions: jsonb("positions"),
     imageUrl: text("image_url"),
@@ -760,6 +776,10 @@ export const fixtures = pgTable("fixtures", {
     onDelete: "set null",
   }),
   officialPotmName: text("official_potm_name"),
+  /** Approved shirt the home side wore (may be away/third kit). */
+  homeTeamKitId: uuid("home_team_kit_id"),
+  /** Approved shirt the away side wore. */
+  awayTeamKitId: uuid("away_team_kit_id"),
 });
 
 /** Where to watch a fixture — CMS manual now; Gracenote / PA Media later. */
@@ -2194,5 +2214,669 @@ export const dataIntegrationMetrics = pgTable(
       table.provider,
       table.metricDate,
     ),
+  ],
+);
+
+/** Team of the Week — one edition per competition / season / round. */
+export const teamOfWeekEditions = pgTable(
+  "team_of_week_editions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => competitionSeasons.id, { onDelete: "cascade" }),
+    roundKey: text("round_key").notNull(),
+    roundNumber: integer("round_number"),
+    roundName: text("round_name").notNull(),
+    roundStartDate: timestamp("round_start_date", { withTimezone: true }),
+    roundEndDate: timestamp("round_end_date", { withTimezone: true }),
+    status: text("status").notNull().default("draft"),
+    isProvisional: boolean("is_provisional").notNull().default(false),
+    fixtureCount: integer("fixture_count").notNull().default(0),
+    completedFixtureCount: integer("completed_fixture_count").notNull().default(0),
+    postponedPolicy: text("postponed_policy").notNull().default("exclude"),
+    methodVersion: text("method_version").notNull().default("totw-v1"),
+    previousEditionId: uuid("previous_edition_id"),
+    roundSummary: jsonb("round_summary").notNull().default({}),
+    editorialIntro: text("editorial_intro"),
+    generatedAt: timestamp("generated_at", { withTimezone: true }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    createdBy: text("created_by"),
+    approvedBy: text("approved_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_of_week_editions_comp_season_round_unique").on(
+      table.competitionId,
+      table.seasonId,
+      table.roundKey,
+    ),
+    index("team_of_week_editions_status_idx").on(table.status),
+    index("team_of_week_editions_competition_idx").on(table.competitionId, table.seasonId),
+  ],
+);
+
+export const teamOfWeekEditionFixtures = pgTable(
+  "team_of_week_edition_fixtures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => teamOfWeekEditions.id, { onDelete: "cascade" }),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    fixtureStatus: text("fixture_status"),
+    included: boolean("included").notNull().default(true),
+    includedAt: timestamp("included_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_of_week_edition_fixtures_unique").on(table.editionId, table.fixtureId),
+  ],
+);
+
+export const teamOfWeekSelections = pgTable(
+  "team_of_week_selections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => teamOfWeekEditions.id, { onDelete: "cascade" }),
+    playerId: uuid("player_id").references(() => players.id, { onDelete: "set null" }),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    fixtureId: uuid("fixture_id").references(() => fixtures.id, { onDelete: "set null" }),
+    selectionType: text("selection_type").notNull(),
+    positionCode: text("position_code"),
+    shirtNumber: integer("shirt_number"),
+    matchRating: real("match_rating"),
+    selectionScore: real("selection_score"),
+    confidencePct: integer("confidence_pct"),
+    rankAtPosition: integer("rank_at_position"),
+    shortReason: text("short_reason"),
+    fullReason: text("full_reason"),
+    isAutomated: boolean("is_automated").notNull().default(true),
+    isManualOverride: boolean("is_manual_override").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    snapshot: jsonb("snapshot").notNull().default({}),
+    /** Snapshot of approved Shirt Library kit used on published graphics. */
+    shirtId: uuid("shirt_id"),
+    shirtVersionId: uuid("shirt_version_id"),
+    kitType: text("kit_type"),
+    shirtSelectionMethod: text("shirt_selection_method"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("team_of_week_selections_edition_idx").on(table.editionId, table.selectionType)],
+);
+
+export const teamOfWeekAwards = pgTable(
+  "team_of_week_awards",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => teamOfWeekEditions.id, { onDelete: "cascade" }),
+    awardType: text("award_type").notNull(),
+    playerId: uuid("player_id").references(() => players.id, { onDelete: "set null" }),
+    coachId: uuid("coach_id").references(() => coaches.id, { onDelete: "set null" }),
+    refereeId: uuid("referee_id").references(() => referees.id, { onDelete: "set null" }),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    fixtureId: uuid("fixture_id").references(() => fixtures.id, { onDelete: "set null" }),
+    rating: real("rating"),
+    score: real("score"),
+    shortReason: text("short_reason"),
+    fullReason: text("full_reason"),
+    snapshot: jsonb("snapshot").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_of_week_awards_edition_type_unique").on(table.editionId, table.awardType),
+  ],
+);
+
+export const teamOfWeekOverrides = pgTable(
+  "team_of_week_overrides",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    editionId: uuid("edition_id")
+      .notNull()
+      .references(() => teamOfWeekEditions.id, { onDelete: "cascade" }),
+    selectionId: uuid("selection_id").references(() => teamOfWeekSelections.id, {
+      onDelete: "set null",
+    }),
+    slotShirtNumber: integer("slot_shirt_number"),
+    selectionType: text("selection_type"),
+    originalPlayerId: uuid("original_player_id").references(() => players.id, {
+      onDelete: "set null",
+    }),
+    replacementPlayerId: uuid("replacement_player_id").references(() => players.id, {
+      onDelete: "set null",
+    }),
+    reason: text("reason").notNull(),
+    editorLabel: text("editor_label"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("team_of_week_overrides_edition_idx").on(table.editionId)],
+);
+
+/** Competition-level required kit set for Shirt Library readiness. */
+export const competitionShirtRequirements = pgTable(
+  "competition_shirt_requirements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    homeRequired: boolean("home_required").notNull().default(true),
+    awayRequired: boolean("away_required").notNull().default(true),
+    thirdRequired: boolean("third_required").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("competition_shirt_requirements_comp_unique").on(table.competitionId),
+  ],
+);
+
+/**
+ * Shirt Library master record — draft → review → approved for pitch use.
+ * Public pitch features must only consume APPROVED shirts via the resolver.
+ */
+export const teamShirts = pgTable(
+  "team_shirts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => competitionSeasons.id, { onDelete: "cascade" }),
+    kitType: text("kit_type").notNull(),
+    name: text("name").notNull(),
+    status: text("status").notNull().default("DRAFT"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    isHistoric: boolean("is_historic").notNull().default(false),
+    validFrom: timestamp("valid_from", { withTimezone: true }),
+    validTo: timestamp("valid_to", { withTimezone: true }),
+    /** Optional link to Crest Library asset used on this kit. */
+    crestId: uuid("crest_id"),
+    approvedVersionId: uuid("approved_version_id"),
+    approvedForPitchUse: boolean("approved_for_pitch_use").notNull().default(false),
+    useOnLineups: boolean("use_on_lineups").notNull().default(true),
+    useOnTeamOfWeek: boolean("use_on_team_of_week").notNull().default(true),
+    useOnMatchAnimations: boolean("use_on_match_animations").notNull().default(true),
+    useOnSocialGraphics: boolean("use_on_social_graphics").notNull().default(true),
+    useOnBettingGraphics: boolean("use_on_betting_graphics").notNull().default(true),
+    createdBy: text("created_by"),
+    updatedBy: text("updated_by"),
+    approvedBy: text("approved_by"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("team_shirts_competition_season_idx").on(table.competitionId, table.seasonId),
+    index("team_shirts_team_status_idx").on(table.teamId, table.status),
+    index("team_shirts_crest_idx").on(table.crestId),
+  ],
+);
+
+export const teamShirtVersions = pgTable(
+  "team_shirt_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    shirtId: uuid("shirt_id")
+      .notNull()
+      .references(() => teamShirts.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("DRAFT"),
+    bodyColour: text("body_colour").notNull(),
+    secondaryColour: text("secondary_colour"),
+    sleeveColour: text("sleeve_colour"),
+    collarColour: text("collar_colour"),
+    cuffColour: text("cuff_colour"),
+    sidePanelColour: text("side_panel_colour"),
+    patternType: text("pattern_type").notNull().default("PLAIN"),
+    patternColour: text("pattern_colour"),
+    patternSettings: jsonb("pattern_settings").notNull().default({}),
+    numberColour: text("number_colour").notNull().default("#FFFFFF"),
+    numberBorderColour: text("number_border_colour"),
+    crestEnabled: boolean("crest_enabled").notNull().default(true),
+    svgConfig: jsonb("svg_config").notNull().default({}),
+    createdBy: text("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_shirt_versions_shirt_version_unique").on(table.shirtId, table.versionNumber),
+    index("team_shirt_versions_shirt_idx").on(table.shirtId),
+  ],
+);
+
+export const teamShirtReviews = pgTable(
+  "team_shirt_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    shirtId: uuid("shirt_id")
+      .notNull()
+      .references(() => teamShirts.id, { onDelete: "cascade" }),
+    versionId: uuid("version_id").references(() => teamShirtVersions.id, { onDelete: "set null" }),
+    status: text("status").notNull(),
+    reviewNotes: text("review_notes"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("team_shirt_reviews_shirt_idx").on(table.shirtId, table.createdAt)],
+);
+
+export const teamShirtReferences = pgTable(
+  "team_shirt_references",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    shirtId: uuid("shirt_id")
+      .notNull()
+      .references(() => teamShirts.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    imageType: text("image_type").notNull().default("front"),
+    sourceUrl: text("source_url"),
+    sourceName: text("source_name"),
+    notes: text("notes"),
+    seasonLabel: text("season_label"),
+    uploadedBy: text("uploaded_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("team_shirt_references_shirt_idx").on(table.shirtId)],
+);
+
+/** CMS-publishable public Shirt Library competition/season page. */
+export const shirtLibraryCompetitionPages = pgTable(
+  "shirt_library_competition_pages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competitions.id, { onDelete: "cascade" }),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => competitionSeasons.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("DRAFT"),
+    title: text("title"),
+    subtitle: text("subtitle"),
+    description: text("description"),
+    mapEnabled: boolean("map_enabled").notNull().default(true),
+    flagsEnabled: boolean("flags_enabled").notNull().default(true),
+    colourLegendEnabled: boolean("colour_legend_enabled").notNull().default(true),
+    aboutSectionEnabled: boolean("about_section_enabled").notNull().default(true),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("shirt_library_competition_pages_comp_season_unique").on(
+      table.competitionId,
+      table.seasonId,
+    ),
+    index("shirt_library_competition_pages_status_idx").on(table.status),
+  ],
+);
+
+export const shirtLibraryCompetitionPageTeams = pgTable(
+  "shirt_library_competition_page_teams",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pageId: uuid("page_id")
+      .notNull()
+      .references(() => shirtLibraryCompetitionPages.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    homeShirtId: uuid("home_shirt_id").references(() => teamShirts.id, {
+      onDelete: "set null",
+    }),
+    awayShirtId: uuid("away_shirt_id").references(() => teamShirts.id, {
+      onDelete: "set null",
+    }),
+    thirdShirtId: uuid("third_shirt_id").references(() => teamShirts.id, {
+      onDelete: "set null",
+    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isVisible: boolean("is_visible").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("shirt_library_competition_page_teams_page_team_unique").on(
+      table.pageId,
+      table.teamId,
+    ),
+    index("shirt_library_competition_page_teams_page_idx").on(table.pageId, table.sortOrder),
+  ],
+);
+
+/**
+ * Crest Library master record — draft → review → approved for shirts / match centre.
+ * Public surfaces should prefer resolveApprovedTeamCrest() over raw teams.image_url.
+ */
+export const teamCrests = pgTable(
+  "team_crests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "set null",
+    }),
+    name: text("name").notNull(),
+    status: text("status").notNull().default("DRAFT"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    isHistoric: boolean("is_historic").notNull().default(false),
+    approvedVersionId: uuid("approved_version_id"),
+    approvedForPitchUse: boolean("approved_for_pitch_use").notNull().default(false),
+    useOnShirts: boolean("use_on_shirts").notNull().default(true),
+    useOnMatchCentre: boolean("use_on_match_centre").notNull().default(true),
+    useOnSocialGraphics: boolean("use_on_social_graphics").notNull().default(true),
+    createdBy: text("created_by"),
+    updatedBy: text("updated_by"),
+    approvedBy: text("approved_by"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("team_crests_team_status_idx").on(table.teamId, table.status),
+    index("team_crests_competition_season_idx").on(table.competitionId, table.seasonId),
+  ],
+);
+
+export const teamCrestVersions = pgTable(
+  "team_crest_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    crestId: uuid("crest_id")
+      .notNull()
+      .references(() => teamCrests.id, { onDelete: "cascade" }),
+    versionNumber: integer("version_number").notNull(),
+    status: text("status").notNull().default("DRAFT"),
+    title: text("title"),
+    description: text("description"),
+    aboutCrest: text("about_crest"),
+    primaryColour: text("primary_colour"),
+    secondaryColour: text("secondary_colour"),
+    accentColour: text("accent_colour"),
+    colours: jsonb("colours").notNull().default([]),
+    officialImageUrl: text("official_image_url"),
+    replicaImageUrl: text("replica_image_url"),
+    sourceUrl: text("source_url"),
+    sourceName: text("source_name"),
+    notes: text("notes"),
+    createdBy: text("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_crest_versions_crest_version_unique").on(
+      table.crestId,
+      table.versionNumber,
+    ),
+    index("team_crest_versions_crest_idx").on(table.crestId),
+  ],
+);
+
+export const teamCrestReviews = pgTable(
+  "team_crest_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    crestId: uuid("crest_id")
+      .notNull()
+      .references(() => teamCrests.id, { onDelete: "cascade" }),
+    versionId: uuid("version_id").references(() => teamCrestVersions.id, {
+      onDelete: "set null",
+    }),
+    status: text("status").notNull(),
+    reviewNotes: text("review_notes"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("team_crest_reviews_crest_idx").on(table.crestId, table.createdAt)],
+);
+
+/** Live Audio Commentary — Lead + Analyst broadcast rewrite (never TTS of written prose). */
+export const audioVoiceProfiles = pgTable(
+  "audio_voice_profiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    displayName: text("display_name").notNull(),
+    role: text("role").notNull(),
+    accent: text("accent"),
+    locale: text("locale").notNull().default("en-ZA"),
+    /** Plexa-style Creator Profile middle segment (e.g. South African English). */
+    organisationLabel: text("organisation_label"),
+    /** Plexa-style Creator Profile topic (e.g. Currie Cup). */
+    topicLabel: text("topic_label"),
+    /** journalist | television | analyst | former_player | storyteller */
+    voiceStyle: text("voice_style").notNull().default("journalist"),
+    /** balanced | energetic | calm */
+    deliveryStyle: text("delivery_style").notNull().default("balanced"),
+    /** Optional TTS / rewrite direction prompt (admin-editable). */
+    aiPrompt: text("ai_prompt"),
+    /** auto | elevenlabs | openai */
+    provider: text("provider").notNull().default("elevenlabs"),
+    /** Server-only — never expose to public Match Animation payloads. */
+    elevenlabsVoiceId: text("elevenlabs_voice_id"),
+    /** OpenAI voice name (alloy, onyx, nova, …) — server-only. */
+    openaiVoice: text("openai_voice"),
+    /** Speaking rate 0.75–1.5 (OpenAI speed; ElevenLabs via voice settings / post). */
+    speed: real("speed").notNull().default(1),
+    /** energetic | calm | analytical | broadcast | custom short text */
+    tone: text("tone").notNull().default("broadcast"),
+    /** Optional pitch hint when provider supports it. */
+    pitch: text("pitch"),
+    /** ElevenLabs stability 0–1 */
+    stability: real("stability"),
+    /** ElevenLabs similarity_boost 0–1 */
+    similarityBoost: real("similarity_boost"),
+    /** ElevenLabs style exaggeration 0–1 */
+    styleExaggeration: real("style_exaggeration"),
+    competitionScope: text("competition_scope"),
+    isDefault: boolean("is_default").notNull().default(false),
+    status: text("status").notNull().default("active"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("audio_voice_profiles_role_scope_idx").on(table.role, table.competitionScope),
+  ],
+);
+
+/** Competition-scoped default duo + ambience (Currie Cup SA Lead/Analyst, etc.). */
+export const audioCommentaryDefaults = pgTable(
+  "audio_commentary_defaults",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionScope: text("competition_scope").notNull().unique(),
+    label: text("label").notNull(),
+    accentLabel: text("accent_label"),
+    locale: text("locale").notNull().default("en-ZA"),
+    stadiumAmbienceKey: text("stadium_ambience_key"),
+    /** 1–4 presenters (default 2 = Lead + Analyst). */
+    presenterCount: integer("presenter_count").notNull().default(2),
+    leadProfileId: uuid("lead_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    analystProfileId: uuid("analyst_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    sidelineProfileId: uuid("sideline_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    guestProfileId: uuid("guest_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    voiceStyle: text("voice_style").default("journalist"),
+    deliveryStyle: text("delivery_style").default("balanced"),
+    optimiseDualCommentary: boolean("optimise_dual_commentary").notNull().default(true),
+    emphasiseScoreboard: boolean("emphasise_scoreboard").notNull().default(true),
+    aiPrompt: text("ai_prompt"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("audio_commentary_defaults_scope_idx").on(table.competitionScope)],
+);
+
+/** Per-match voice overrides — null profile/speed/tone fields inherit competition defaults. */
+export const audioMatchVoiceSettings = pgTable(
+  "audio_match_voice_settings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .unique()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    /** Null = inherit competition default presenter count. */
+    presenterCount: integer("presenter_count"),
+    leadProfileId: uuid("lead_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    analystProfileId: uuid("analyst_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    sidelineProfileId: uuid("sideline_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    guestProfileId: uuid("guest_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    leadSpeed: real("lead_speed"),
+    analystSpeed: real("analyst_speed"),
+    sidelineSpeed: real("sideline_speed"),
+    guestSpeed: real("guest_speed"),
+    leadTone: text("lead_tone"),
+    analystTone: text("analyst_tone"),
+    sidelineTone: text("sideline_tone"),
+    guestTone: text("guest_tone"),
+    leadVoiceStyle: text("lead_voice_style"),
+    analystVoiceStyle: text("analyst_voice_style"),
+    sidelineVoiceStyle: text("sideline_voice_style"),
+    guestVoiceStyle: text("guest_voice_style"),
+    leadDeliveryStyle: text("lead_delivery_style"),
+    analystDeliveryStyle: text("analyst_delivery_style"),
+    sidelineDeliveryStyle: text("sideline_delivery_style"),
+    guestDeliveryStyle: text("guest_delivery_style"),
+    /**
+     * Per-role voice ID / provider overrides for this match only.
+     * Admin-only — never ship on public Match Animation APIs.
+     */
+    voiceOverrides: jsonb("voice_overrides").$type<Record<string, unknown>>().default({}),
+    optimiseDualCommentary: boolean("optimise_dual_commentary"),
+    emphasiseScoreboard: boolean("emphasise_scoreboard"),
+    aiPrompt: text("ai_prompt"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("audio_match_voice_settings_fixture_idx").on(table.fixtureId)],
+);
+
+export const audioCommentaryScripts = pgTable(
+  "audio_commentary_scripts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    commentaryId: uuid("commentary_id").references(() => matchCommentary.id, {
+      onDelete: "set null",
+    }),
+    minute: integer("minute").notNull(),
+    second: integer("second").notNull().default(0),
+    combinationType: text("combination_type").notNull(),
+    priority: integer("priority").notNull().default(0),
+    layers: jsonb("layers").notNull().default([]),
+    leadScript: text("lead_script").notNull(),
+    analystScript: text("analyst_script").notNull(),
+    sidelineScript: text("sideline_script").notNull().default(""),
+    guestScript: text("guest_script").notNull().default(""),
+    /** How many presenters this script was planned for (1–4). */
+    presenterCount: integer("presenter_count").notNull().default(2),
+    status: text("status").notNull().default("draft"),
+    sourceBody: text("source_body"),
+    facts: jsonb("facts"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("audio_commentary_scripts_fixture_minute_idx").on(
+      table.fixtureId,
+      table.minute,
+      table.second,
+    ),
+    index("audio_commentary_scripts_fixture_status_idx").on(table.fixtureId, table.status),
+    index("audio_commentary_scripts_commentary_idx").on(table.commentaryId),
+  ],
+);
+
+export const audioCommentarySegments = pgTable(
+  "audio_commentary_segments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    scriptId: uuid("script_id").references(() => audioCommentaryScripts.id, {
+      onDelete: "cascade",
+    }),
+    speaker: text("speaker").notNull(),
+    voiceProfileId: uuid("voice_profile_id").references(() => audioVoiceProfiles.id, {
+      onDelete: "set null",
+    }),
+    storagePath: text("storage_path"),
+    durationMs: integer("duration_ms"),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("audio_commentary_segments_fixture_idx").on(table.fixtureId, table.status),
+    index("audio_commentary_segments_script_idx").on(table.scriptId),
+  ],
+);
+
+export const audioCommentaryJobs = pgTable(
+  "audio_commentary_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    scriptId: uuid("script_id").references(() => audioCommentaryScripts.id, {
+      onDelete: "set null",
+    }),
+    jobType: text("job_type").notNull(),
+    status: text("status").notNull().default("queued"),
+    error: text("error"),
+    payload: jsonb("payload").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("audio_commentary_jobs_status_idx").on(table.status, table.createdAt),
+    index("audio_commentary_jobs_fixture_idx").on(table.fixtureId, table.jobType),
   ],
 );

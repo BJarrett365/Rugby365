@@ -69,6 +69,9 @@ function NavSection({
 }
 
 function bottomNavActive(pathname: string, href: string): boolean {
+  if (href === "/matches") {
+    return pathname === "/matches" || pathname.startsWith("/matches/");
+  }
   if (href === "/admin") return pathname === "/admin";
   const hubKey = ADMIN_HUB_KEYS.find((k) => k.href === href);
   if (hubKey) return hubKeyActive(pathname, hubKey);
@@ -92,8 +95,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="admin-shell" data-cms-theme="planet-rugby">
       <header className="admin-shell__header no-print">
         <div className="admin-shell__header-row">
-          <Link href="/admin" className="admin-shell__brand">
-            Rugby365 CMS
+          <Link href="/matches" className="admin-shell__brand">
+            Rugby365
           </Link>
           <button
             type="button"

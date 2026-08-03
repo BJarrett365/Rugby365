@@ -1,5 +1,10 @@
 /** Missing-data warnings for Matches CMS list (Phase B). */
 
+import {
+  evaluatePregameReadiness,
+  isPregameStatus,
+} from "./match-pregame-readiness";
+
 export type MatchWarningCode =
   | "competition"
   | "season"
@@ -7,6 +12,9 @@ export type MatchWarningCode =
   | "away_team"
   | "venue"
   | "referee"
+  | "home_coach"
+  | "away_coach"
+  | "weather"
   | "lineups"
   | "team_stats"
   | "player_stats"
@@ -20,6 +28,10 @@ export type MatchWarningFlags = {
   awayTeamId: string | null;
   venueId: string | null;
   refereeId: string | null;
+  homeCoachId?: string | null;
+  awayCoachId?: string | null;
+  /** Venue has lat/lng so Open-Meteo weather can resolve. */
+  venueHasCoords?: boolean;
   hasLineups: boolean;
   hasTeamStats: boolean;
   hasPlayerStats: boolean;
@@ -89,6 +101,44 @@ export function collectMatchWarnings(flags: MatchWarningFlags): MatchWarning[] {
       href: page("edit"),
     });
   }
+
+  // Pre-game staff + weather — surface before kickoff so ops can fix gaps early.
+  if (isPregameStatus(flags.status)) {
+    const pregame = evaluatePregameReadiness({
+      venueId: flags.venueId,
+      venueHasCoords: Boolean(flags.venueHasCoords),
+      refereeId: flags.refereeId,
+      homeCoachId: flags.homeCoachId ?? null,
+      awayCoachId: flags.awayCoachId ?? null,
+    });
+    for (const check of pregame.checks) {
+      if (check.ok) continue;
+      if (check.code === "stadium" || check.code === "referee") continue; // already flagged above
+      if (check.code === "weather") {
+        out.push({
+          code: "weather",
+          label: "Weather (venue coords)",
+          actionLabel: "Geocode venue",
+          href: page("edit"),
+        });
+      } else if (check.code === "home_coach") {
+        out.push({
+          code: "home_coach",
+          label: "Home coach",
+          actionLabel: "Assign coach",
+          href: page("edit"),
+        });
+      } else if (check.code === "away_coach") {
+        out.push({
+          code: "away_coach",
+          label: "Away coach",
+          actionLabel: "Assign coach",
+          href: page("edit"),
+        });
+      }
+    }
+  }
+
   if (!flags.primaryApiMatchId) {
     out.push({
       code: "primary_mapping",
@@ -142,7 +192,10 @@ export type TodayOpsBucket =
   | "unmapped"
   | "missing_lineups"
   | "missing_venue"
-  | "missing_referee";
+  | "missing_referee"
+  | "missing_coach"
+  | "missing_weather"
+  | "pregame_not_ready";
 
 export type TodayOpsRow = MatchWarningFlags & {
   id: string;
@@ -173,6 +226,21 @@ export function classifyTodayBucket(
   if (!row.hasLineups && FINISHED_LIKE.has(status)) buckets.push("missing_lineups");
   if (!row.venueId) buckets.push("missing_venue");
   if (!row.refereeId) buckets.push("missing_referee");
+
+  if (isPregameStatus(status)) {
+    const pregame = evaluatePregameReadiness({
+      venueId: row.venueId,
+      venueHasCoords: Boolean(row.venueHasCoords),
+      refereeId: row.refereeId,
+      homeCoachId: row.homeCoachId ?? null,
+      awayCoachId: row.awayCoachId ?? null,
+    });
+    if (!pregame.ready) buckets.push("pregame_not_ready");
+    if (pregame.missing.includes("home_coach") || pregame.missing.includes("away_coach")) {
+      buckets.push("missing_coach");
+    }
+    if (pregame.missing.includes("weather")) buckets.push("missing_weather");
+  }
 
   return buckets;
 }

@@ -11,6 +11,10 @@ import {
 } from "@rugby365/db";
 import { getDb } from "./db";
 import { normalizeTeamName } from "./entity-normalize";
+import {
+  isNationsChampionshipSlug,
+  nationsChampionshipHemisphereForTeam,
+} from "./nations-championship-hemisphere";
 import { kickoffInSeason } from "./season-label-utils";
 import { canonicalPremiershipTeamName } from "./transfer-match-service";
 import {
@@ -194,9 +198,16 @@ export async function listSeasonScopedTeams(
     }
   }
 
-  const deduped = dedupeSeasonTeamsByCanonicalIdentity(scopedTeams, competition.slug).sort((a, b) =>
+  let deduped = dedupeSeasonTeamsByCanonicalIdentity(scopedTeams, competition.slug).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
+
+  // Nations Championship is a fixed 12-nation pool — ignore stray fixtures (e.g. Canada).
+  if (isNationsChampionshipSlug(competition.slug)) {
+    deduped = deduped.filter((team) =>
+      Boolean(nationsChampionshipHemisphereForTeam(team.canonicalName || team.name)),
+    );
+  }
 
   const links: TeamCompetitionLink[] = deduped.map((team) => ({
     teamId: team.id,

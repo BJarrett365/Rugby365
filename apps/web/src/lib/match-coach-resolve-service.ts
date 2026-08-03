@@ -32,7 +32,7 @@ const TEAM_HEAD_COACH_DEFAULTS: Record<
     nationality: "South Africa",
   },
   cheetahs: {
-    name: "Franco Smith",
+    name: "Frans Steyn",
     nationality: "South Africa",
   },
   lions: {
@@ -61,6 +61,127 @@ const TEAM_HEAD_COACH_DEFAULTS: Record<
     wikipediaUrl: "https://en.wikipedia.org/wiki/John_Dobson_(rugby_union)",
     nationality: "South Africa",
   },
+  // Bunnings NPC / NZ provincial (2026 season)
+  canterbury: {
+    name: "Alex Robertson",
+    nationality: "New Zealand",
+  },
+  auckland: {
+    name: "Steven Bates",
+    nationality: "New Zealand",
+  },
+  otago: {
+    name: "Mark Brown",
+    nationality: "New Zealand",
+  },
+  waikato: {
+    name: "Leon Holden",
+    nationality: "New Zealand",
+  },
+  taranaki: {
+    name: "Jarrad Hoeata",
+    nationality: "New Zealand",
+  },
+  "counties-manukau": {
+    name: "Reon Graham",
+    nationality: "New Zealand",
+  },
+  "hawke-s-bay": {
+    name: "Brock James",
+    nationality: "Australia",
+  },
+  "hawkes-bay": {
+    name: "Brock James",
+    nationality: "Australia",
+  },
+  wellington: {
+    name: "Trent Renata",
+    nationality: "New Zealand",
+  },
+  "bay-of-plenty": {
+    name: "Richard Watt",
+    nationality: "New Zealand",
+  },
+  southland: {
+    name: "Scott Eade",
+    nationality: "New Zealand",
+  },
+  northland: {
+    name: "Ryan Martin",
+    nationality: "New Zealand",
+  },
+  manawatu: {
+    name: "Wesley Clarke",
+    nationality: "New Zealand",
+  },
+  tasman: {
+    name: "Jono Phillips",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Tasman_(National_Provincial_Championship)",
+    nationality: "New Zealand",
+  },
+  "tasman-makos": {
+    name: "Jono Phillips",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Tasman_(National_Provincial_Championship)",
+    nationality: "New Zealand",
+  },
+  mako: {
+    name: "Jono Phillips",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Tasman_(National_Provincial_Championship)",
+    nationality: "New Zealand",
+  },
+  "north-harbour": {
+    name: "Jimmy Maher",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/North_Harbour_(National_Provincial_Championship)",
+    nationality: "New Zealand",
+  },
+  "north-harbour-rays": {
+    name: "Jimmy Maher",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/North_Harbour_(National_Provincial_Championship)",
+    nationality: "New Zealand",
+  },
+
+  // URC (common missing sides)
+  leinster: { name: "Leo Cullen", nationality: "Ireland" },
+  munster: { name: "Clayton McMillan", nationality: "New Zealand" },
+  ulster: { name: "Richie Murphy", nationality: "Ireland" },
+  connacht: { name: "Pete Wilkins", nationality: "England" },
+  "glasgow-warriors": { name: "Franco Smith", nationality: "South Africa" },
+  edinburgh: { name: "Sean Everitt", nationality: "South Africa" },
+  cardiff: { name: "Matt Sherratt", nationality: "Wales" },
+  ospreys: { name: "Mark Jones", nationality: "Wales" },
+  scarlets: { name: "Dwayne Peel", nationality: "Wales" },
+  dragons: { name: "Filo Paulo", nationality: "New Zealand" },
+  benetton: { name: "Marco Bortolami", nationality: "Italy" },
+  zebre: { name: "Massimo Brunello", nationality: "Italy" },
+
+  // Internationals
+  italy: { name: "Gonzalo Quesada", nationality: "Argentina" },
+  japan: { name: "Eddie Jones", nationality: "Australia" },
+  "united-states": { name: "Scott Lawrence", nationality: "United States" },
+  usa: { name: "Scott Lawrence", nationality: "United States" },
+  samoa: { name: "Mahonri Schwalger", nationality: "Samoa" },
+  georgia: { name: "Pierre-Henry Broncan", nationality: "France" },
+  canada: { name: "Kingsley Jones", nationality: "Wales" },
+  uruguay: { name: "Esteban Meneses", nationality: "Uruguay" },
+  chile: { name: "Pablo Lemoine", nationality: "Uruguay" },
+  "new-zealand": { name: "Scott Robertson", nationality: "New Zealand" },
+  australia: { name: "Joe Schmidt", nationality: "New Zealand" },
+
+  // Top 14
+  "stade-toulousain": { name: "Ugo Mola", nationality: "France" },
+  toulouse: { name: "Ugo Mola", nationality: "France" },
+  "la-rochelle": { name: "Ronan O'Gara", nationality: "Ireland" },
+  "racing-92": { name: "Patrice Collazo", nationality: "France" },
+  "bordeaux-begles": { name: "Yannick Bru", nationality: "France" },
+  "section-paloise": { name: "Sébastien Piqueronies", nationality: "France" },
+  pau: { name: "Sébastien Piqueronies", nationality: "France" },
+  montpellier: { name: "Joan Caudullo", nationality: "France" },
+
+  // Tier 2 internationals
+  portugal: { name: "Simon Mannix", nationality: "New Zealand" },
+  spain: { name: "Pablo Bouza", nationality: "Argentina" },
+  tonga: { name: "Tevita Tu'ifua", nationality: "Tonga" },
+  "hong-kong": { name: "Logan Asplin", nationality: "New Zealand" },
 };
 
 function slugifyTeamLabel(value: string): string {

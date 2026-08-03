@@ -283,7 +283,11 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
       awayTeamId: fixtures.awayTeamId,
       awayTeamName: awayTeam.name,
       venueId: fixtures.venueId,
+      venueLatitude: venues.latitude,
+      venueLongitude: venues.longitude,
       refereeId: fixtures.refereeId,
+      homeCoachId: fixtures.homeCoachId,
+      awayCoachId: fixtures.awayCoachId,
       rugbyDataExternalId: rugbyDataMap.externalId,
       primarySource: sql<string | null>`(${fixtures.providerSnapshot} ->> 'primarySource')`,
       hasLineups: hasLineupsExpr,
@@ -297,6 +301,7 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
     .leftJoin(awayTeam, eq(fixtures.awayTeamId, awayTeam.id))
     .leftJoin(competitions, eq(fixtures.competitionId, competitions.id))
     .leftJoin(competitionSeasons, eq(fixtures.seasonId, competitionSeasons.id))
+    .leftJoin(venues, eq(fixtures.venueId, venues.id))
     .leftJoin(
       rugbyDataMap,
       and(
@@ -343,6 +348,7 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
     const hasTeamStats = Boolean(row.hasTeamStats);
     const hasPlayerStats = Boolean(row.hasPlayerStats);
     const primaryApiMatchId = row.rugbyDataExternalId ?? null;
+    const venueHasCoords = row.venueLatitude != null && row.venueLongitude != null;
     const warningCount = matchWarningCount({
       competitionId: row.competitionId,
       seasonId: row.seasonId,
@@ -350,6 +356,9 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
       awayTeamId: row.awayTeamId,
       venueId: row.venueId,
       refereeId: row.refereeId,
+      homeCoachId: row.homeCoachId,
+      awayCoachId: row.awayCoachId,
+      venueHasCoords,
       hasLineups,
       hasTeamStats,
       hasPlayerStats,
@@ -376,7 +385,10 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
       awayTeamId: row.awayTeamId,
       awayTeamName: row.awayTeamName,
       venueId: row.venueId,
+      venueHasCoords,
       refereeId: row.refereeId,
+      homeCoachId: row.homeCoachId,
+      awayCoachId: row.awayCoachId,
       hasLineups,
       hasTeamStats,
       hasPlayerStats,
@@ -406,6 +418,9 @@ export async function listFixturesCms(filters: MatchCmsListFilters = {}): Promis
           missing_lineups: 0,
           missing_venue: 0,
           missing_referee: 0,
+          missing_coach: 0,
+          missing_weather: 0,
+          pregame_not_ready: 0,
         };
         for (const m of matches) {
           if (m.warningCount > 0) summary.missing_data += 1;

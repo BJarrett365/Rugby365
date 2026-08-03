@@ -14,7 +14,8 @@ export type MatchCmsSection =
   | "animation"
   | "h2h"
   | "sources"
-  | "commentary";
+  | "commentary"
+  | "audio";
 
 const SECTIONS: Array<{ id: MatchCmsSection; label: string; path: string }> = [
   { id: "info", label: "Match Info", path: "edit" },
@@ -28,6 +29,7 @@ const SECTIONS: Array<{ id: MatchCmsSection; label: string; path: string }> = [
   { id: "h2h", label: "Head to Head", path: "h2h" },
   { id: "sources", label: "Sources", path: "sources" },
   { id: "commentary", label: "Live Commentary", path: "commentary" },
+  { id: "audio", label: "Audio", path: "audio" },
 ];
 
 export function matchCmsSectionHref(matchId: string, section: MatchCmsSection): string {

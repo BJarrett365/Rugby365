@@ -55,6 +55,16 @@ export type ScheduleFixture = {
   additionalInfo?: string | null;
   /** Planet Rugby Betting Intelligence win % (upcoming fixtures). */
   winProbability?: ScheduleWinProbability | null;
+  /** Live Audio Commentary ready (scripts exist). */
+  hasAudio?: boolean;
+  /** Ready script count when hasAudio. */
+  audioScriptCount?: number;
+  /** Match Animation publicly enabled (tracker settings). */
+  hasAnimation?: boolean;
+  /** Watchalong YouTube URL present. */
+  hasWatchalong?: boolean;
+  /** Highlights YouTube URL present. */
+  hasHighlights?: boolean;
   homeTeam: ScheduleTeam | null;
   awayTeam: ScheduleTeam | null;
   externalMatchId?: string | null;
@@ -371,5 +381,52 @@ export function matchDetailHref(fixture: ScheduleFixture): string | null {
     homeTeamSlug: homeSlug,
     awayTeamSlug: awaySlug,
     matchDate: fixture.matchDate,
+  });
+}
+
+/**
+ * Build a public Match Centre href for an SDMS previous-meetings / H2H row.
+ * Prefer string competition codes; numeric SDMS ids fall back to the current match context.
+ */
+export function buildPreviousMeetingHref(
+  row: Record<string, unknown>,
+  fallback?: { competitionId?: string | null; competitionName?: string | null },
+): string | null {
+  const matchId = String(row.match_id ?? row.id ?? "").trim();
+  if (!matchId) return null;
+
+  const homeSlug =
+    String(row.home_team_slug ?? "").trim() ||
+    slugifySegment(String(row.home_team_name ?? row.home_team ?? ""));
+  const awaySlug =
+    String(row.away_team_slug ?? "").trim() ||
+    slugifySegment(String(row.away_team_name ?? row.away_team ?? ""));
+  const matchDate = String(row.date ?? row.match_date ?? "").trim().slice(0, 10);
+  const competitionName =
+    String(row.competition_name ?? row.competition ?? fallback?.competitionName ?? "").trim();
+  const competitionSlug =
+    String(row.competition_slug ?? "").trim() || slugifySegment(competitionName);
+
+  let competitionId = String(
+    row.competition_external_id ?? row.competition_id ?? "",
+  ).trim();
+  // Previous-meetings payloads often use numeric internal ids (e.g. 2); PR URLs need codes.
+  if (!competitionId || /^\d+$/.test(competitionId)) {
+    const fb = String(fallback?.competitionId ?? "").trim();
+    if (fb && !/^\d+$/.test(fb)) competitionId = fb;
+  }
+
+  if (!homeSlug || !awaySlug || !matchDate || !/^\d{4}-\d{2}-\d{2}$/.test(matchDate)) {
+    return null;
+  }
+  if (!competitionId || !competitionSlug) return null;
+
+  return buildMatchDetailPath({
+    matchId,
+    competitionName: competitionSlug,
+    competitionId,
+    homeTeamSlug: homeSlug,
+    awayTeamSlug: awaySlug,
+    matchDate,
   });
 }

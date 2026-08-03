@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { groupByCompetition, type ScheduleCompetition } from "./match-schedule-utils";
+import {
+  buildPreviousMeetingHref,
+  groupByCompetition,
+  type ScheduleCompetition,
+} from "./match-schedule-utils";
+
+describe("buildPreviousMeetingHref", () => {
+  it("builds a match centre path and replaces numeric competition ids", () => {
+    const href = buildPreviousMeetingHref(
+      {
+        match_id: "ej5vom19",
+        date: "2025-09-13",
+        competition_id: 2,
+        competition_name: "Currie Cup",
+        competition_slug: "currie-cup",
+        home_team_slug: "griquas",
+        away_team_slug: "cheetahs",
+      },
+      { competitionId: "pd9ro98v", competitionName: "Currie Cup" },
+    );
+    expect(href).toBe(
+      "/matches/ej5vom19/currie-cup/pd9ro98v/griquas-v-cheetahs/2025-09-13",
+    );
+  });
+
+  it("returns null without a match id", () => {
+    expect(buildPreviousMeetingHref({ date: "2025-09-13" })).toBeNull();
+  });
+});
 
 describe("groupByCompetition", () => {
   const competitionById: Record<string, ScheduleCompetition> = {

@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { PlayerRadarBundle, RadarSpoke } from "@/lib/player-radar-build";
-import { RADAR_TYPE_LABELS, type RadarType } from "@/lib/player-radar-metrics";
+import {
+  metricsForRadarType,
+  RADAR_METRICS,
+  RADAR_TYPE_LABELS,
+  type RadarType,
+} from "@/lib/player-radar-metrics";
 
 const TYPE_ORDER: RadarType[] = [
   "overall",
@@ -14,6 +19,13 @@ const TYPE_ORDER: RadarType[] = [
   "kicking",
   "discipline",
 ];
+
+type FrameSpoke = {
+  key: string;
+  label: string;
+  percentile: number | null;
+  spoke: RadarSpoke | null;
+};
 
 function formatSpokeValue(spoke: RadarSpoke): string {
   if (spoke.playerValue == null || !Number.isFinite(spoke.playerValue)) return "—";
@@ -30,6 +42,48 @@ function formatAvg(spoke: RadarSpoke, which: "position" | "competition"): string
   return v.toFixed(1);
 }
 
+function buildFrameSpokes(
+  radar: PlayerRadarBundle,
+  type: RadarType,
+  spokes: RadarSpoke[],
+): { frame: FrameSpoke[]; hasData: boolean } {
+  const plottable = spokes.filter((s) => s.percentile != null);
+  if (plottable.length >= 3) {
+    return {
+      hasData: true,
+      frame: plottable.map((spoke) => ({
+        key: spoke.key,
+        label: spoke.label,
+        percentile: spoke.percentile,
+        spoke,
+      })),
+    };
+  }
+
+  if (spokes.length >= 3) {
+    return {
+      hasData: false,
+      frame: spokes.map((spoke) => ({
+        key: spoke.key,
+        label: spoke.label,
+        percentile: null,
+        spoke,
+      })),
+    };
+  }
+
+  const keys = metricsForRadarType(type, radar.positionFamily);
+  return {
+    hasData: false,
+    frame: keys.map((key) => ({
+      key,
+      label: RADAR_METRICS[key].label,
+      percentile: null,
+      spoke: null,
+    })),
+  };
+}
+
 export function PlayerPerformanceRadar({
   radar,
   playerName,
@@ -43,8 +97,11 @@ export function PlayerPerformanceRadar({
   const [hoverKey, setHoverKey] = useState<string | null>(null);
 
   const view = radar.radars[type] ?? radar.radars.overall;
-  const spokes = view?.spokes ?? [];
-  const plottable = spokes.filter((s) => s.percentile != null);
+  const spokes = view?.spokes;
+  const { frame, hasData } = useMemo(
+    () => buildFrameSpokes(radar, type, spokes ?? []),
+    [radar, type, spokes],
+  );
 
   const size = compact ? 200 : 320;
   const cx = size / 2;
@@ -52,14 +109,13 @@ export function PlayerPerformanceRadar({
   const radius = size * (compact ? 0.32 : 0.36);
 
   const points = useMemo(() => {
-    const plot = spokes.filter((s) => s.percentile != null);
-    const n = Math.max(plot.length, 1);
-    return plot.map((spoke, i) => {
+    const n = Math.max(frame.length, 3);
+    return frame.map((item, i) => {
       const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
-      const pct = Math.max(0, Math.min(100, spoke.percentile ?? 0));
+      const pct = item.percentile == null ? 0 : Math.max(0, Math.min(100, item.percentile));
       const r = (pct / 100) * radius;
       return {
-        spoke,
+        ...item,
         x: cx + Math.cos(angle) * r,
         y: cy + Math.sin(angle) * r,
         lx: cx + Math.cos(angle) * (radius + (compact ? 14 : 22)),
@@ -68,34 +124,32 @@ export function PlayerPerformanceRadar({
         ay: cy + Math.sin(angle) * radius,
       };
     });
-  }, [spokes, cx, cy, radius, compact]);
+  }, [frame, cx, cy, radius, compact]);
 
   if (!radar.enabled) {
     return <p className="pr-mc-transfers-muted">Performance radar is not published for this player.</p>;
   }
 
-  if (!view || plottable.length < 3) {
-    return (
-      <div className="pr-perf-radar pr-perf-radar--empty">
-        <p className="pr-mc-transfers-muted">
-          {view?.summary ||
-            `${playerName} does not yet have enough position-comparable minutes for a radar.`}
-        </p>
-      </div>
-    );
-  }
-
-  const polygon = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const hovered = hoverKey ? points.find((p) => p.spoke.key === hoverKey) : null;
+  const polygon = hasData
+    ? points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")
+    : "";
+  const hovered = hoverKey ? points.find((p) => p.key === hoverKey) : null;
   const availableTypes = TYPE_ORDER.filter((t) => {
     const r = radar.radars[t];
     if (!r) return false;
     if (r.unavailableReason === "awaiting_source_metrics") return !compact;
     return (r.spokes?.filter((s) => s.percentile != null).length ?? 0) >= 3 || t === type;
   });
+  const emptySummary =
+    view?.summary ||
+    `${playerName} does not yet have enough position-comparable minutes for a radar.`;
 
   return (
-    <figure className={`pr-perf-radar${compact ? " pr-perf-radar--compact" : ""}`}>
+    <figure
+      className={`pr-perf-radar${compact ? " pr-perf-radar--compact" : ""}${
+        hasData ? "" : " pr-perf-radar--empty"
+      }`}
+    >
       {!compact ? (
         <p className="pr-perf-radar__title">{radar.title}</p>
       ) : (
@@ -104,7 +158,7 @@ export function PlayerPerformanceRadar({
 
       {!compact ? (
         <div className="pr-perf-radar__types" role="tablist" aria-label="Radar type">
-          {availableTypes.map((t) => (
+          {(availableTypes.length ? availableTypes : [type]).map((t) => (
             <button
               key={t}
               type="button"
@@ -126,7 +180,11 @@ export function PlayerPerformanceRadar({
           width={size}
           height={size}
           role="img"
-          aria-label={`${playerName} ${view.typeLabel} radar: ${view.summary}`}
+          aria-label={
+            hasData
+              ? `${playerName} ${view?.typeLabel ?? "Overall"} radar: ${view?.summary ?? ""}`
+              : `${playerName} performance radar placeholder`
+          }
         >
           {[0.25, 0.5, 0.75, 1].map((scale) => (
             <polygon
@@ -144,7 +202,7 @@ export function PlayerPerformanceRadar({
           ))}
           {points.map((p) => (
             <line
-              key={`axis-${p.spoke.key}`}
+              key={`axis-${p.key}`}
               className="pr-perf-radar__axis"
               x1={cx}
               y1={cy}
@@ -152,22 +210,26 @@ export function PlayerPerformanceRadar({
               y2={p.ay}
             />
           ))}
-          <polygon className="pr-perf-radar__shape" points={polygon} />
+          {hasData ? <polygon className="pr-perf-radar__shape" points={polygon} /> : null}
           {points.map((p) => (
-            <g key={p.spoke.key}>
-              <circle
-                className={`pr-perf-radar__dot${hoverKey === p.spoke.key ? " is-hover" : ""}`}
-                cx={p.x}
-                cy={p.y}
-                r={hoverKey === p.spoke.key ? 5 : 3.5}
-                onMouseEnter={() => setHoverKey(p.spoke.key)}
-                onMouseLeave={() => setHoverKey(null)}
-                onFocus={() => setHoverKey(p.spoke.key)}
-                onBlur={() => setHoverKey(null)}
-                tabIndex={0}
-                role="img"
-                aria-label={`${p.spoke.label}: ${formatSpokeValue(p.spoke)}, ${p.spoke.percentile}th percentile`}
-              />
+            <g key={p.key}>
+              {hasData && p.spoke ? (
+                <circle
+                  className={`pr-perf-radar__dot${hoverKey === p.key ? " is-hover" : ""}`}
+                  cx={p.x}
+                  cy={p.y}
+                  r={hoverKey === p.key ? 5 : 3.5}
+                  onMouseEnter={() => setHoverKey(p.key)}
+                  onMouseLeave={() => setHoverKey(null)}
+                  onFocus={() => setHoverKey(p.key)}
+                  onBlur={() => setHoverKey(null)}
+                  tabIndex={0}
+                  role="img"
+                  aria-label={`${p.label}: ${formatSpokeValue(p.spoke)}, ${p.percentile}th percentile`}
+                />
+              ) : (
+                <circle className="pr-perf-radar__dot pr-perf-radar__dot--empty" cx={p.ax} cy={p.ay} r={2.5} />
+              )}
               {!compact ? (
                 <text
                   className="pr-perf-radar__label"
@@ -176,7 +238,7 @@ export function PlayerPerformanceRadar({
                   textAnchor="middle"
                   dominantBaseline="middle"
                 >
-                  {p.spoke.label}
+                  {p.label}
                 </text>
               ) : null}
             </g>
@@ -193,9 +255,9 @@ export function PlayerPerformanceRadar({
           ))}
         </svg>
 
-        {hovered && !compact ? (
+        {hovered?.spoke && !compact ? (
           <div className="pr-perf-radar__tooltip" role="status">
-            <strong>{hovered.spoke.label}</strong>
+            <strong>{hovered.label}</strong>
             <dl>
               <div>
                 <dt>Player</dt>
@@ -211,7 +273,7 @@ export function PlayerPerformanceRadar({
               </div>
               <div>
                 <dt>Percentile</dt>
-                <dd>{hovered.spoke.percentile ?? "—"}</dd>
+                <dd>{hovered.percentile ?? "—"}</dd>
               </div>
               <div>
                 <dt>Rank</dt>
@@ -231,13 +293,17 @@ export function PlayerPerformanceRadar({
       </div>
 
       <figcaption className="pr-perf-radar__written">
-        {type === radar.defaultType ? radar.summary : view.summary}
+        {hasData
+          ? type === radar.defaultType
+            ? radar.summary
+            : view?.summary
+          : emptySummary}
       </figcaption>
 
-      {!compact ? (
+      {!compact && hasData ? (
         <div className="pr-perf-radar__seo">
           <h4 className="pr-perf-radar__seo-heading">
-            {view.typeLabel} metrics — {radar.title}
+            {view?.typeLabel} metrics — {radar.title}
           </h4>
           <div className="pr-player-table-wrap">
             <table className="pr-mc-transfers-table pr-player-table">

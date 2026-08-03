@@ -84,6 +84,7 @@ export const WikipediaPlayerArchiveSchema = z.object({
   heightCm: z.number().optional(),
   weightKg: z.number().optional(),
   school: z.string().optional(),
+  university: z.string().optional(),
   relatives: z.string().optional(),
   positions: z.array(z.string()).optional(),
   currentTeam: z.string().optional(),

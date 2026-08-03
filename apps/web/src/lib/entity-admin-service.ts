@@ -966,6 +966,8 @@ export async function updatePlayer(
     birthPlace: string | null;
     heightCm: number | null;
     weightKg: number | null;
+    school: string | null;
+    university: string | null;
     socialAccounts: Record<string, string | null>;
     squadNumber: number | null;
     bioSummary: string | null;
@@ -1038,6 +1040,10 @@ export async function updatePlayer(
       ...(input.birthPlace !== undefined ? { birthPlace: input.birthPlace?.trim() || null } : {}),
       ...(input.heightCm !== undefined ? { heightCm: input.heightCm ?? null } : {}),
       ...(input.weightKg !== undefined ? { weightKg: input.weightKg ?? null } : {}),
+      ...(input.school !== undefined ? { school: input.school?.trim() || null } : {}),
+      ...(input.university !== undefined
+        ? { university: input.university?.trim() || null }
+        : {}),
       ...(input.socialAccounts !== undefined ? { socialAccounts: input.socialAccounts } : {}),
       ...(input.squadNumber !== undefined ? { squadNumber: input.squadNumber ?? null } : {}),
       ...(input.bioSummary !== undefined ? { bioSummary: input.bioSummary?.trim() || null } : {}),

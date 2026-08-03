@@ -420,18 +420,26 @@ export function emptySquadRankings(): SquadPlayerRankings {
   return { ...EMPTY_SQUAD_RANKINGS };
 }
 
+export type LineupSquadContext = {
+  teamId: string;
+  jerseyNumber: number | null;
+  squadRole: string | null;
+  positionName: string | null;
+};
+
 function careerFormRatingDisplay(
   link: CmsEntityLink,
   rankings: SquadPlayerRankings,
+  squad?: LineupSquadContext | null,
 ): MatchRatingDisplay {
   return {
     playerId: link.id,
     externalPlayerId: link.externalProviderId,
-    teamId: "",
+    teamId: squad?.teamId ?? "",
     playerName: link.name,
-    jerseyNumber: null,
-    positionName: null,
-    squadRole: "starter",
+    jerseyNumber: squad?.jerseyNumber ?? null,
+    positionName: squad?.positionName ?? null,
+    squadRole: normalizeSquadRole(squad?.squadRole ?? null, squad?.jerseyNumber ?? null),
     minutesPlayed: 0,
     careerRating: rankings.careerRating,
     careerModel: CAREER_RATING_MODEL,
@@ -467,6 +475,7 @@ function careerFormRatingDisplay(
 export async function attachCareerAndFormToLineupRatings(
   ratings: MatchRatingDisplay[],
   playerLinks: CmsEntityLink[],
+  squadByPlayerId?: Map<string, LineupSquadContext> | null,
 ): Promise<MatchRatingDisplay[]> {
   const linkById = new Map<string, CmsEntityLink>();
   for (const link of playerLinks) {
@@ -485,6 +494,7 @@ export async function attachCareerAndFormToLineupRatings(
 
   for (const playerId of allIds) {
     const rank = rankings.get(playerId) ?? emptySquadRankings();
+    const squad = squadByPlayerId?.get(playerId) ?? null;
     const existing = byPlayer.get(playerId);
     if (existing) {
       if (existing.careerRating == null && rank.careerRating != null) {
@@ -494,13 +504,26 @@ export async function attachCareerAndFormToLineupRatings(
         existing.formRating = rank.formRating;
         existing.formLabel = rank.formLabel;
       }
+      // Pre-match career/form rows historically had empty teamId — fill from squad.
+      if ((!existing.teamId || existing.teamId === "") && squad?.teamId) {
+        existing.teamId = squad.teamId;
+      }
+      if (existing.jerseyNumber == null && squad?.jerseyNumber != null) {
+        existing.jerseyNumber = squad.jerseyNumber;
+      }
+      if (!existing.positionName && squad?.positionName) {
+        existing.positionName = squad.positionName;
+      }
+      if (squad?.squadRole) {
+        existing.squadRole = normalizeSquadRole(squad.squadRole, existing.jerseyNumber);
+      }
       byPlayer.set(playerId, existing);
       continue;
     }
     const link = linkById.get(playerId);
     if (!link) continue;
     if (rank.careerRating == null && rank.formRating == null) continue;
-    byPlayer.set(playerId, careerFormRatingDisplay(link, rank));
+    byPlayer.set(playerId, careerFormRatingDisplay(link, rank, squad));
   }
 
   return [...byPlayer.values()];
@@ -608,9 +631,31 @@ export async function getAdminFixtureLineupRatings(
     }
   }
 
-  const ratings = await attachCareerAndFormToLineupRatings(bundle.ratings, [
-    ...linkById.values(),
-  ]);
+  const squadContextRows = await db
+    .select({
+      playerId: fixturePlayers.playerId,
+      teamId: fixturePlayers.teamId,
+      jerseyNumber: fixturePlayers.jerseyNumber,
+      squadRole: fixturePlayers.squadRole,
+      positionName: fixturePlayers.positionName,
+    })
+    .from(fixturePlayers)
+    .where(eq(fixturePlayers.fixtureId, fixtureId));
+  const squadByPlayerId = new Map<string, LineupSquadContext>();
+  for (const row of squadContextRows) {
+    squadByPlayerId.set(row.playerId, {
+      teamId: row.teamId,
+      jerseyNumber: row.jerseyNumber,
+      squadRole: row.squadRole,
+      positionName: row.positionName,
+    });
+  }
+
+  const ratings = await attachCareerAndFormToLineupRatings(
+    bundle.ratings,
+    [...linkById.values()],
+    squadByPlayerId,
+  );
   return { ...bundle, ratings };
 }
 

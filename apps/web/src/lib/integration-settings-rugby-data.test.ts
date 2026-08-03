@@ -47,7 +47,7 @@ describe("getRugbyDataApiPublicConfig", () => {
     expect(config.tokenSource).toBe("environment");
     expect(config.baseUrlSource).toBe("environment");
     expect(config.hasApiToken).toBe(true);
-    expect(config.apiTokenMasked).toContain("…");
+    expect(config.apiTokenMasked).toMatch(/•/);
     expect(config.baseUrl).toBe("https://example.test");
   });
 });

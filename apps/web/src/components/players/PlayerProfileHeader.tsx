@@ -162,7 +162,7 @@ export function PlayerProfileHeader({
       <aside className="pr-player-profile-header__aside" aria-label="Ratings and value">
         <div className="pr-player-profile-header__analytics">
           <div className="pr-player-analytics-tile pr-player-analytics-tile--rating">
-            <span className="pr-player-analytics-tile__label">Rugby365 Rating</span>
+            <span className="pr-player-analytics-tile__label">Rating</span>
             <strong className="pr-player-analytics-tile__value">
               {formatStatValue(profile.rating.current)}
             </strong>
@@ -177,7 +177,7 @@ export function PlayerProfileHeader({
           {value ? (
             valueHref ? (
               <Link href={valueHref} className="pr-player-analytics-tile pr-player-analytics-tile--link">
-                <span className="pr-player-analytics-tile__label">Market Value</span>
+                <span className="pr-player-analytics-tile__label">Estimated Market Value</span>
                 <strong className="pr-player-analytics-tile__value">{value.marketValueLabel}</strong>
                 <span className="pr-player-analytics-tile__trend">{value.trendLabel}</span>
                 <span className="pr-player-analytics-tile__sub">
@@ -186,7 +186,7 @@ export function PlayerProfileHeader({
               </Link>
             ) : (
               <div className="pr-player-analytics-tile">
-                <span className="pr-player-analytics-tile__label">Market Value</span>
+                <span className="pr-player-analytics-tile__label">Estimated Market Value</span>
                 <strong className="pr-player-analytics-tile__value">{value.marketValueLabel}</strong>
                 <span className="pr-player-analytics-tile__trend">{value.trendLabel}</span>
                 <span className="pr-player-analytics-tile__sub">
@@ -197,7 +197,9 @@ export function PlayerProfileHeader({
           ) : null}
 
           <div className="pr-player-analytics-tile">
-            <span className="pr-player-analytics-tile__label">Contract</span>
+            <span className="pr-player-analytics-tile__label">
+              {profile.contract.salaryIsReported ? "Contract" : "Estimated Contract"}
+            </span>
             <strong className="pr-player-analytics-tile__value">
               {profile.contract.reportedSalaryLabel ?? value?.contractValueLabel ?? "—"}
             </strong>

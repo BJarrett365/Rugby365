@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../styles/pr-cms-theme.css";
 @import "../styles/pr-public-match-centre.css";
+@import "../styles/team-of-week.css";
 
 /* ─── Surface design tokens ─── */
 :root {
@@ -1038,7 +1039,7 @@ html[data-surface="print"] .no-print {
 .match-detail-tabs {
   display: flex;
   flex-wrap: nowrap;
-  gap: 0.25rem 1.25rem;
+  gap: 0.15rem 0.7rem;
   margin-bottom: 1.5rem;
   padding-bottom: 0;
   border-bottom: 1px solid #27272a;
@@ -1051,10 +1052,10 @@ html[data-surface="print"] .no-print {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.75rem 0.2rem 0.85rem;
+  gap: 0.3rem;
+  padding: 0.75rem 0.1rem 0.85rem;
   min-height: 44px;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #d4d4d8;
   text-decoration: none;
@@ -1092,6 +1093,16 @@ html[data-surface="print"] .no-print {
 .match-detail-tabs__badge--unavailable {
   background: #52525b;
   color: #e4e4e7;
+}
+
+.match-detail-tabs__badge--audio {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+.match-detail-tabs__badge--audio.is-ready {
+  background: #166534;
+  color: #ecfccb;
 }
 
 .match-detail-tabs__tab:hover {

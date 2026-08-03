@@ -40,17 +40,22 @@ import {
 } from "@/lib/match-animation-player-stats";
 import {
   playMatchAnimationCue,
-  readMatchAnimationSoundEnabled,
   soundCueForSignalKind,
   unlockMatchAnimationAudio,
-  writeMatchAnimationSoundEnabled,
 } from "@/lib/match-animation-audio";
+import {
+  EMPTY_MATCH_ANIMATION_AUDIO,
+  captionForAnimationClock,
+} from "@/lib/match-animation-public-audio";
+import { useMatchAudioListenState } from "@/hooks/useMatchAudioListenState";
+import { useMatchCommentarySpeech } from "@/hooks/useMatchCommentarySpeech";
 import { MediaImage } from "@/components/media/MediaImage";
 import {
   MatchAnimationPlayerStatChips,
   MatchAnimationPlayerStatsLeaders,
 } from "./MatchAnimationPlayerStats";
 import { MatchAnimationInsightCarousel } from "./MatchAnimationInsightCarousel";
+import { MatchAnimationAudioBar } from "./MatchAnimationAudioBar";
 
 const SPEEDS = [1, 2, 5, 10] as const;
 const INTRO_SEEN_KEY = "r365-ma-intro-seen";
@@ -113,7 +118,7 @@ export function MatchAnimationPanel({
   const [eventIndex, setEventIndex] = useState(0);
   const [mode, setMode] = useState<"full" | "highlights">("full");
   const [localPaused, setLocalPaused] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const { soundEnabled, volume, toggleSound, handleVolumeChange } = useMatchAudioListenState();
   const [view, setView] = useState<ViewMode>("empty");
   const [ftAnimating, setFtAnimating] = useState(true);
   const [activeSignal, setActiveSignal] = useState<AnimationSignal | null>(null);
@@ -129,12 +134,6 @@ export function MatchAnimationPanel({
   const conversionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialised = useRef(false);
   const soundEnabledRef = useRef(false);
-
-  useEffect(() => {
-    const enabled = readMatchAnimationSoundEnabled();
-    setSoundEnabled(enabled);
-    soundEnabledRef.current = enabled;
-  }, []);
 
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
@@ -271,7 +270,7 @@ export function MatchAnimationPanel({
       if (document.visibilityState === "visible") void refresh();
     };
     document.addEventListener("visibilitychange", onVis);
-    const id = window.setInterval(() => void refresh(), 30_000);
+    const id = window.setInterval(() => void refresh(), 15_000);
     return () => {
       document.removeEventListener("visibilitychange", onVis);
       window.clearInterval(id);
@@ -547,7 +546,9 @@ export function MatchAnimationPanel({
       ? 100
       : Math.min(100, (resolvedClock.minute / 80) * 100);
 
-  const timelineEvents =
+  // Live / FT: newest first so the latest update is visible at the top.
+  // Replay: chronological so "Watch from Start" reads naturally.
+  const timelineSource =
     mode === "highlights"
       ? events.filter((e) =>
           /try|conversion|penalty|drop|card|red|yellow|scrum|line.?out|sub|replacement|tmo|overturn|decision/i.test(
@@ -555,6 +556,8 @@ export function MatchAnimationPanel({
           ),
         )
       : events;
+  const timelineEvents =
+    view === "replay" ? timelineSource : [...timelineSource].reverse();
 
   const statusText =
     view === "full_time" || availability.phase === "full_time"
@@ -595,13 +598,24 @@ export function MatchAnimationPanel({
     else resumeAutoReplay();
   }
 
-  function toggleSound() {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    soundEnabledRef.current = next;
-    writeMatchAnimationSoundEnabled(next);
-    if (next) void unlockMatchAnimationAudio();
-  }
+  const audioState = livePayload.audio ?? EMPTY_MATCH_ANIMATION_AUDIO;
+  const showAudioCaptions =
+    view === "live" || view === "replay" || view === "full_time";
+  const activeAudioCaption =
+    showAudioCaptions && audioState.captions.length
+      ? captionForAnimationClock(
+          audioState.captions,
+          resolvedClock.minute,
+          resolvedClock.second,
+        )
+      : null;
+  useMatchCommentarySpeech({
+    matchId: payload.matchId,
+    enabled: soundEnabled && showAudioCaptions,
+    volume,
+    status: audioState.status,
+    caption: activeAudioCaption,
+  });
 
   function startReplay(opts?: { highlights?: boolean; fromKickOff?: boolean }) {
     if (opts?.highlights) setMode("highlights");
@@ -634,6 +648,19 @@ export function MatchAnimationPanel({
           {payload.venueName ? ` · ${payload.venueName}` : ""}
         </p>
       </header>
+
+      {view !== "empty" ? (
+        <MatchAnimationAudioBar
+          audio={audioState}
+          soundEnabled={soundEnabled}
+          volume={volume}
+          clockMinute={resolvedClock.minute}
+          clockSecond={resolvedClock.second}
+          showCaptions={showAudioCaptions}
+          onToggleSound={toggleSound}
+          onVolumeChange={handleVolumeChange}
+        />
+      ) : null}
 
       {view !== "countdown" && view !== "empty" ? (
         <MatchAnimationScoreboard
@@ -969,15 +996,6 @@ export function MatchAnimationPanel({
                 ) : null}
               </>
             )}
-            <button
-              type="button"
-              className={`pr-ma-btn pr-ma-btn--sound${soundEnabled ? " is-active" : ""}`}
-              onClick={toggleSound}
-              aria-pressed={soundEnabled}
-              title={soundEnabled ? "Mute try and conversion sounds" : "Enable try and conversion sounds"}
-            >
-              {soundEnabled ? "Sound on" : "Sound off"}
-            </button>
             <div className="pr-ma-speeds" role="group" aria-label="Playback speed">
               {SPEEDS.map((s) => (
                 <button
@@ -1014,7 +1032,11 @@ export function MatchAnimationPanel({
           </div>
 
           {timelineEvents.length > 0 ? (
-            <div className="pr-ma-timeline" role="list" aria-label="Match timeline">
+            <div
+              className="pr-ma-timeline"
+              role="list"
+              aria-label={view === "replay" ? "Match timeline" : "Live timeline"}
+            >
               {timelineEvents.map((ev) => {
                 const idx = events.findIndex((e) => e.id === ev.id);
                 const active = idx === eventIndex;

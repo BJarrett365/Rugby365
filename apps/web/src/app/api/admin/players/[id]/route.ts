@@ -128,6 +128,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.weightKg !== undefined
         ? { weightKg: body.weightKg === null || body.weightKg === "" ? null : Number(body.weightKg) }
         : {}),
+      ...(body.school !== undefined
+        ? { school: body.school ? String(body.school) : null }
+        : {}),
+      ...(body.university !== undefined
+        ? { university: body.university ? String(body.university) : null }
+        : {}),
       ...(body.socialAccounts !== undefined && typeof body.socialAccounts === "object"
         ? {
             socialAccounts: normalizeSocialAccounts(body.socialAccounts) as Record<string, string | null>,

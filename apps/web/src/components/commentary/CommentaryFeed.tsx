@@ -6,9 +6,27 @@ import { CommentaryEntryForm } from "./CommentaryEntryForm";
 export type CommentaryLine = {
   id: string;
   minute: number;
+  second?: number | null;
   body: string;
   publishedAt: string;
 };
+
+function formatCommentaryClock(minute: number, second?: number | null): string {
+  const m = Math.max(0, Math.floor(minute));
+  const s = Math.max(0, Math.min(59, Math.floor(second ?? 0)));
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/** Newest match-minute first (live feed style). */
+function sortCommentaryNewestFirst(lines: CommentaryLine[]): CommentaryLine[] {
+  return [...lines].sort((a, b) => {
+    if (b.minute !== a.minute) return b.minute - a.minute;
+    const aAt = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const bAt = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    if (bAt !== aAt) return bAt - aAt;
+    return b.body.localeCompare(a.body);
+  });
+}
 
 export type FixtureSummary = {
   id: string;
@@ -128,7 +146,7 @@ export function CommentaryFeed({
     fetch(`/api/fixtures/${fixtureId}/commentary`)
       .then((r) => r.json())
       .then((d) => {
-        setLines(d.lines ?? []);
+        setLines(sortCommentaryNewestFirst(d.lines ?? []));
         setLoaded(true);
       });
 
@@ -138,7 +156,7 @@ export function CommentaryFeed({
       if (msg.type === "commentary.append") {
         setLines((prev) => {
           if (prev.some((l) => l.id === msg.line.id)) return prev;
-          return [...prev, msg.line];
+          return sortCommentaryNewestFirst([msg.line, ...prev]);
         });
       }
     };
@@ -166,7 +184,7 @@ export function CommentaryFeed({
           onPublished={(line) => {
             setLines((prev) => {
               if (prev.some((l) => l.id === line.id)) return prev;
-              return [...prev, line].sort((a, b) => a.minute - b.minute || a.body.localeCompare(b.body));
+              return sortCommentaryNewestFirst([line, ...prev]);
             });
           }}
         />
@@ -175,7 +193,9 @@ export function CommentaryFeed({
         {lines.length === 0 && <li className="commentary-feed__item text-zinc-500">{emptyMessage}</li>}
         {lines.map((line) => (
           <li key={line.id} className="commentary-feed__item">
-            <span className="commentary-feed__minute">{line.minute}&apos;</span>
+            <span className="commentary-feed__minute">
+              {formatCommentaryClock(line.minute, line.second)}
+            </span>
             <span>{line.body}</span>
           </li>
         ))}

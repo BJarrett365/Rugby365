@@ -24,6 +24,7 @@ import {
   type MatchWarning,
   type MatchWarningCode,
 } from "./match-cms-warnings";
+import { resolveWikipediaRequestOptions } from "./mediawiki-settings";
 import { chatCompletion, getOpenAiApiKey, parseJsonObject } from "./openai-client";
 import { writeAuditLog } from "./provider-mapping-service";
 import { PROVIDER_RUGBY_DATA } from "./provider-mapping-types";
@@ -80,13 +81,14 @@ export type MatchIssuesReport = {
   };
 };
 
-const WIKI_UA = "Rugby365MatchIssues/1.0 (CMS verification; local)";
+const WIKI_UA_FALLBACK = "Rugby365MatchIssues/1.0 (CMS verification; local)";
 
 function wikiArticleUrl(title: string): string {
   return `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
 }
 
 async function wikiSearchTitles(query: string, limit = 5): Promise<string[]> {
+  const wiki = await resolveWikipediaRequestOptions();
   const params = new URLSearchParams({
     action: "query",
     list: "search",
@@ -95,9 +97,11 @@ async function wikiSearchTitles(query: string, limit = 5): Promise<string[]> {
     format: "json",
     origin: "*",
   });
-  const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, {
-    headers: { "User-Agent": WIKI_UA },
-  });
+  const headers: Record<string, string> = {
+    "User-Agent": wiki.userAgent || WIKI_UA_FALLBACK,
+  };
+  if (wiki.accessToken) headers.Authorization = `Bearer ${wiki.accessToken}`;
+  const res = await fetch(`${wiki.apiBaseUrl}?${params}`, { headers });
   if (!res.ok) return [];
   const data = (await res.json()) as { query?: { search?: Array<{ title: string }> } };
   return (data.query?.search ?? []).map((hit) => hit.title);
@@ -111,6 +115,8 @@ function severityFor(code: MatchWarningCode): "error" | "warning" {
     code === "away_team" ||
     code === "venue" ||
     code === "referee" ||
+    code === "home_coach" ||
+    code === "away_coach" ||
     code === "duplicate"
   ) {
     return "error";
@@ -139,7 +145,11 @@ async function loadIssueFlags(fixtureId: string) {
       homeTeamId: fixtures.homeTeamId,
       awayTeamId: fixtures.awayTeamId,
       venueId: fixtures.venueId,
+      venueLatitude: venues.latitude,
+      venueLongitude: venues.longitude,
       refereeId: fixtures.refereeId,
+      homeCoachId: fixtures.homeCoachId,
+      awayCoachId: fixtures.awayCoachId,
       venueName: fixtures.venueName,
       refereeName: fixtures.refereeName,
       kickoffAt: fixtures.kickoffAt,
@@ -160,6 +170,7 @@ async function loadIssueFlags(fixtureId: string) {
       )`,
     })
     .from(fixtures)
+    .leftJoin(venues, eq(fixtures.venueId, venues.id))
     .where(eq(fixtures.id, fixtureId))
     .limit(1);
 
@@ -180,6 +191,7 @@ async function loadIssueFlags(fixtureId: string) {
 
   return {
     ...row,
+    venueHasCoords: row.venueLatitude != null && row.venueLongitude != null,
     primaryApiMatchId: mapping?.externalId ?? null,
   };
 }
@@ -264,7 +276,10 @@ async function buildVenueSuggestions(input: {
     }
 
     try {
-      const titles = await findWikipediaVenueArticleTitles(textName);
+      const titles = await findWikipediaVenueArticleTitles(
+        textName,
+        await resolveWikipediaRequestOptions(),
+      );
       for (const title of titles.slice(0, 3)) {
         const slugKey = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
         const [byWiki] = await db
@@ -605,6 +620,9 @@ export async function getMatchIssuesReport(
     awayTeamId: flags.awayTeamId,
     venueId: flags.venueId,
     refereeId: flags.refereeId,
+    homeCoachId: flags.homeCoachId,
+    awayCoachId: flags.awayCoachId,
+    venueHasCoords: flags.venueHasCoords,
     hasLineups: Boolean(flags.hasLineups),
     hasTeamStats: Boolean(flags.hasTeamStats),
     hasPlayerStats: Boolean(flags.hasPlayerStats),

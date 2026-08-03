@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MatchDatePicker } from "./MatchDatePicker";
+import { MatchMediaIcon, type MatchMediaIconVariant } from "./MatchMediaIcons";
 import { TeamCrest } from "./TeamCrest";
 import { WeatherIcon } from "./WeatherIcon";
 import {
@@ -21,6 +22,8 @@ import {
   type ScheduleFixture,
 } from "./match-schedule-utils";
 import { gradeModelPick } from "@/lib/match-betting-pick-grade";
+import type { MatchDetailTab } from "@/lib/match-detail-tabs";
+import { matchDetailTabHref } from "@/lib/match-detail-tabs";
 import { resolveWeatherCondition } from "@/lib/weather-condition";
 
 function CompactMatchRow({
@@ -189,6 +192,50 @@ function modelPickOutcome(fixture: ScheduleFixture): {
     : { favored: null, correct: null };
 }
 
+type ScheduleMediaAction = {
+  tab: MatchDetailTab;
+  title: string;
+  variant: MatchMediaIconVariant;
+  label: string;
+};
+
+function scheduleMediaActions(fixture: ScheduleFixture): ScheduleMediaAction[] {
+  const actions: ScheduleMediaAction[] = [];
+  if (fixture.hasAudio) {
+    actions.push({
+      tab: "audio",
+      title: "Live Audio Commentary",
+      variant: "listen",
+      label: "Audio",
+    });
+  }
+  if (fixture.hasAnimation) {
+    actions.push({
+      tab: "animation",
+      title: "Match Animation",
+      variant: "animation",
+      label: "Animation",
+    });
+  }
+  if (fixture.hasWatchalong) {
+    actions.push({
+      tab: "watchalong",
+      title: "Watchalong",
+      variant: "watchalong",
+      label: "Watchalong",
+    });
+  }
+  if (fixture.hasHighlights) {
+    actions.push({
+      tab: "highlights",
+      title: "Match Highlights",
+      variant: "highlights",
+      label: "Highlights",
+    });
+  }
+  return actions;
+}
+
 function TeamMetrics({
   showScores,
   score,
@@ -267,6 +314,7 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
     Boolean(infoTitle);
   const pick = modelPickOutcome(fixture);
   const wp = fixture.winProbability;
+  const mediaActions = scheduleMediaActions(fixture);
 
   return (
     <article className={`pr-mc-match-row${hasFooter ? " pr-mc-match-row--with-footer" : ""}`}>
@@ -318,6 +366,26 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
         ) : (
           <span className="pr-mc-match-info-btn pr-mc-match-info-btn--disabled">Match Info</span>
         )}
+        {detailHref && mediaActions.length > 0 ? (
+          <div className="pr-mc-match-row__media" aria-label="Match media">
+            {mediaActions.map((action) => (
+              <Link
+                key={action.tab}
+                href={matchDetailTabHref(detailHref, action.tab)}
+                className={`pr-mc-match-media pr-mc-match-media--${action.variant}`}
+                title={action.title}
+                aria-label={action.title}
+              >
+                <MatchMediaIcon
+                  variant={action.variant}
+                  size={12}
+                  className="pr-mc-match-media__icon"
+                />
+                <span className="sr-only">{action.label}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {hasFooter ? (

@@ -37,7 +37,7 @@ import { SDMS_PROVIDER } from "./entity-resolve-service";
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/half\s*time|halftime|^ht\b/i.test(status)) return "half_time";
   if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
 }

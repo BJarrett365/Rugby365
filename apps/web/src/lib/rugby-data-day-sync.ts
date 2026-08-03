@@ -72,7 +72,20 @@ export function parseRugbyDataScore(score: string | null | undefined): {
 export function rugbyDataStatusToFixtureStatus(status: string | null | undefined): string {
   const s = (status ?? "").trim().toLowerCase();
   if (!s) return "scheduled";
-  if (s === "finished" || s === "ft" || s === "full time" || s === "fulltime") return "full_time";
+  if (
+    s === "finished" ||
+    s === "ft" ||
+    s === "full time" ||
+    s === "fulltime" ||
+    s === "result" ||
+    s === "result only" ||
+    s === "final" ||
+    s === "completed" ||
+    s === "aet" ||
+    s.includes("result only")
+  ) {
+    return "full_time";
+  }
   if (s.includes("half") && (s.includes("time") || s === "ht")) return "half_time";
   if (
     s.includes("inprogress") ||

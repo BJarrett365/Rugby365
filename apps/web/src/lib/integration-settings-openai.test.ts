@@ -41,6 +41,6 @@ describe("getOpenAiPublicConfig", () => {
     const config = await getOpenAiPublicConfig();
     expect(config.configured).toBe(true);
     expect(config.keySource).toBe("environment");
-    expect(config.apiKeyMasked).toContain("…");
+    expect(config.apiKeyMasked).toMatch(/•/);
   });
 });

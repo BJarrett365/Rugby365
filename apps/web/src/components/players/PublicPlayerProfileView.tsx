@@ -12,6 +12,7 @@ import { PlayerRankingCard } from "@/components/players/PlayerRankingCard";
 import { ValueTimelineChart } from "@/components/players/ValueTimelineChart";
 import { ValueBreakdown } from "@/components/players/ValueBreakdown";
 import { PlayerBadge } from "@/components/players/PlayerBadge";
+import { PlayerProfileInformation } from "@/components/players/PlayerProfileInformation";
 import { ScoutIntelligencePanel } from "@/components/players/ScoutIntelligencePanel";
 import { ScoutRriCard } from "@/components/players/ScoutRriCard";
 import { movementTypeLabel } from "@/lib/transfer-types";
@@ -33,9 +34,9 @@ const TAB_LABELS: Record<(typeof PUBLIC_PLAYER_TABS)[number], string> = {
 };
 
 const VIEWS: Array<{ id: PublicPlayerView; label: string }> = [
-  { id: "domestic", label: "Domestic" },
+  { id: "domestic", label: "Club" },
   { id: "international", label: "International" },
-  { id: "scouting", label: "Scouting" },
+  { id: "scouting", label: "Scout" },
 ];
 
 function Fact({ label, value }: { label: string; value: string | null | undefined }) {
@@ -219,7 +220,7 @@ export function PublicPlayerProfileView({
       {tab === "overview" ? (
         <section className="pr-player-section" aria-labelledby="overview-heading">
           <h2 id="overview-heading">
-            {profile.view === "scouting" ? "Scouting report" : "Overview"}
+            {profile.view === "scouting" ? "Scout report" : "Overview"}
           </h2>
           {profile.intro ? <p className="pr-player-intro">{profile.intro}</p> : null}
           {profile.view === "scouting" ? (
@@ -283,13 +284,23 @@ export function PublicPlayerProfileView({
 
           {profile.playerValue ? (
             <div className="pr-player-grid pr-player-grid--value">
-              <div className="pr-player-card">
-                <h3>Value timeline</h3>
-                <ValueTimelineChart
-                  timeline={profile.playerValue.timeline}
-                  currentValueGbp={profile.playerValue.marketValueGbp}
-                  peakValueGbp={profile.playerValue.peakCareerValueGbp}
-                />
+              <div className="pr-player-card pr-player-card--value-stack">
+                <div>
+                  <h3>Value timeline</h3>
+                  <ValueTimelineChart
+                    timeline={profile.playerValue.timeline}
+                    currentValueGbp={profile.playerValue.marketValueGbp}
+                    peakValueGbp={profile.playerValue.peakCareerValueGbp}
+                  />
+                </div>
+                <div className="pr-player-value-stack__radar">
+                  <h3>Performance radar</h3>
+                  <PlayerPerformanceRadar
+                    radar={profile.performanceRadar}
+                    playerName={profile.name}
+                    compact
+                  />
+                </div>
               </div>
               <div className="pr-player-card">
                 <h3>Value breakdown</h3>
@@ -351,52 +362,9 @@ export function PublicPlayerProfileView({
             <MediaGallery items={profile.gallery} playerName={profile.name} title="Player gallery" />
           ) : null}
 
-          <div className="pr-player-grid">
-            <div className="pr-player-card">
-              <h3>Player information</h3>
-              <dl className="pr-player-info-list">
-                <Fact label="Full name" value={profile.fullName ?? profile.name} />
-                <Fact label="Known as" value={profile.name} />
-                <Fact label="Date of birth" value={formatDate(profile.birthDate)} />
-                <Fact label="Place of birth" value={profile.birthPlace} />
-                <Fact label="Nationality" value={profile.nationName} />
-                <Fact label="Preferred foot" value={profile.preferredFoot} />
-                <Fact label="Playing style" value={profile.playingStyle} />
-                <Fact
-                  label="Club debut"
-                  value={profile.clubDebutOn ? formatDate(profile.clubDebutOn) : null}
-                />
-                <Fact
-                  label="Agent"
-                  value={
-                    profile.agent
-                      ? [profile.agent.name, profile.agent.agency].filter(Boolean).join(" · ")
-                      : null
-                  }
-                />
-                <Fact label="Contract expires" value={profile.contract.expiresLabel} />
-                <Fact
-                  label="Salary"
-                  value={
-                    profile.contract.reportedSalaryLabel
-                      ? `${profile.contract.reportedSalaryLabel}/yr (reported)`
-                      : profile.playerValue?.contractValueLabel
-                        ? `${profile.playerValue.contractValueLabel}/yr (estimate)`
-                        : null
-                  }
-                />
-                <Fact label="Main position" value={profile.positionName} />
-                <Fact
-                  label="Other positions"
-                  value={profile.otherPositions.length ? profile.otherPositions.join(", ") : null}
-                />
-                <Fact label="Current club" value={profile.club?.name} />
-                <Fact label="Current competition" value={profile.competitionName} />
-                <Fact label="International team" value={profile.internationalTeam?.name} />
-                <Fact label="Career status" value={profile.careerStatus} />
-              </dl>
-            </div>
+          <PlayerProfileInformation key={profile.view} profile={profile} />
 
+          <div className="pr-player-grid">
             <div className="pr-player-card">
               <h3>{season ? `${season.seasonLabel} snapshot` : "Season snapshot"}</h3>
               {season ? (
@@ -431,15 +399,6 @@ export function PublicPlayerProfileView({
               <p className="pr-player-footnote">
                 <Link href={pathFor(profile, { tab: "stats" })}>Position detail</Link>
               </p>
-            </div>
-
-            <div className="pr-player-card">
-              <h3>Performance radar</h3>
-              <PlayerPerformanceRadar
-                radar={profile.performanceRadar}
-                playerName={profile.name}
-                compact
-              />
             </div>
 
             <div className="pr-player-card">
@@ -676,7 +635,11 @@ export function PublicPlayerProfileView({
 
       {tab === "value" ? (
         profile.playerValue ? (
-          <PlayerValuePanel value={profile.playerValue} />
+          <PlayerValuePanel
+            value={profile.playerValue}
+            radar={profile.performanceRadar}
+            playerName={profile.name}
+          />
         ) : (
           <section className="pr-player-section" aria-labelledby="value-heading">
             <h2 id="value-heading">Player Value</h2>

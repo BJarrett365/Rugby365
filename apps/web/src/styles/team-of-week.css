@@ -1,0 +1,402 @@
+/* Team of the Week — competition page + social-friendly composition */
+
+.totw-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.totw-link:hover {
+  color: var(--totw-gold, #d4a84b);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.totw a.pr-lineup-pitch__surname.totw-link:hover {
+  border-color: var(--pr-lineup-accent, #e7bc63);
+}
+
+.totw {
+  --totw-navy: #07141c;
+  --totw-panel: #0d2430;
+  --totw-panel-2: #12323e;
+  --totw-gold: #d4a84b;
+  --totw-gold-soft: rgba(212, 168, 75, 0.18);
+  --totw-line: rgba(255, 255, 255, 0.08);
+  color: #f5f7f8;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(20, 90, 110, 0.35), transparent 55%),
+    linear-gradient(180deg, #081820 0%, var(--totw-navy) 40%, #061018 100%);
+  border: 1px solid var(--totw-line);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 1.5rem;
+  margin-top: 1rem;
+}
+
+.totw__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.totw__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.totw__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+}
+
+.totw__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--totw-gold);
+  color: #111;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.totw__pill--warn {
+  background: #c47a22;
+  color: #fff;
+}
+
+.totw__powered {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 14rem;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.totw__awards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.totw-award {
+  background: linear-gradient(160deg, var(--totw-panel-2), var(--totw-panel));
+  border: 1px solid var(--totw-line);
+  border-radius: 10px;
+  padding: 0.9rem;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 0.75rem;
+  min-height: 118px;
+}
+
+.totw-award__label {
+  grid-column: 1 / -1;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--totw-gold);
+  font-weight: 700;
+}
+
+.totw-award__img {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #0a1a22;
+  border: 1px solid var(--totw-line);
+}
+
+.totw-award__img--empty {
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--totw-gold);
+}
+
+.totw-award__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.totw-award__sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.totw-award__rating {
+  margin: 0.35rem 0 0;
+  color: var(--totw-gold);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.totw-award__stats {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.35;
+}
+
+.totw__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  align-items: start;
+}
+
+/* Reuse Match Centre pitch; mixed kits via per-player accent */
+.totw-pitch-wrap {
+  margin-bottom: 0;
+}
+
+.totw-pitch-wrap__label {
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.75);
+  margin: 0 0 0.65rem;
+  font-weight: 700;
+}
+
+.totw-pitch-mixed {
+  min-height: 36rem;
+}
+
+.totw-pitch-mixed .pr-lineup-pitch__player {
+  width: 4.5rem;
+  cursor: default;
+}
+
+.totw-pitch__team {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: rgba(247, 247, 245, 0.62);
+  text-align: center;
+  max-width: 4.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+.totw-slot__jersey {
+  margin: 0 auto;
+  width: 36px;
+  height: 40px;
+}
+
+.totw-slot__rating {
+  display: inline-flex;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--totw-gold);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--totw-gold);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.totw-bench {
+  background: var(--totw-panel);
+  border: 1px solid var(--totw-line);
+  border-radius: 10px;
+  padding: 0.85rem;
+}
+
+.totw-bench__title {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--totw-gold);
+  font-weight: 800;
+}
+
+.totw-bench__row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--totw-line);
+}
+
+.totw-bench__row:first-of-type {
+  border-top: 0;
+}
+
+.totw-bench__name {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.totw-bench__team {
+  margin: 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.totw__bottom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.totw-panel {
+  background: var(--totw-panel);
+  border: 1px solid var(--totw-line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.totw-panel__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.totw-panel__title--gold {
+  color: var(--totw-gold);
+}
+.totw-panel__title--green {
+  color: #7dcea0;
+}
+.totw-panel__title--red {
+  color: #e07474;
+}
+
+.totw-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.totw-panel li {
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--totw-line);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.totw-panel li:first-child {
+  border-top: 0;
+}
+
+.totw__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+.totw-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  background: var(--totw-panel);
+  border: 1px solid var(--totw-line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.totw-summary__title {
+  width: 100%;
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--totw-gold);
+  font-weight: 800;
+}
+
+.totw-summary__stat {
+  font-size: 0.8rem;
+}
+
+.totw-summary__stat strong {
+  display: block;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+.totw-top-team {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background: linear-gradient(135deg, #163848, var(--totw-panel));
+  border: 1px solid var(--totw-line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.totw-top-team img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.totw-archive {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.totw-archive a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--totw-line);
+  background: var(--totw-panel);
+  color: inherit;
+  text-decoration: none;
+}
+
+.totw-archive a:hover {
+  border-color: var(--totw-gold);
+}
+
+.totw-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 960px) {
+  .totw__awards,
+  .totw__bottom,
+  .totw__footer,
+  .totw__main {
+    grid-template-columns: 1fr;
+  }
+
+  .totw-pitch-mixed {
+    min-height: 30rem;
+  }
+}

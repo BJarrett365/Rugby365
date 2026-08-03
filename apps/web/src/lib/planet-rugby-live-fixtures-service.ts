@@ -8,8 +8,9 @@ import {
   utcInstantFromZonedWallClock,
   type SdmsFixtureRow,
 } from "@rugby365/import-sdk";
-import { and, gte, lt } from "drizzle-orm";
-import { fixtures } from "@rugby365/db";
+import { and, eq, gte, lt } from "drizzle-orm";
+import { fixtures, referees } from "@rugby365/db";
+import { extractYoutubeVideoId } from "./youtube-embed";
 import {
   addDaysToDateKey,
   monthBoundsFromDateKey,
@@ -31,7 +32,7 @@ import { weatherConditionFromText } from "./weather-condition";
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/half\s*time|halftime|^ht\b/i.test(status)) return "half_time";
   if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
 }
@@ -78,6 +79,8 @@ function mapDbFixture(
     weatherNote?: string | null;
     refereeName?: string | null;
     isNeutralVenue?: boolean | null;
+    watchalongYoutubeUrl?: string | null;
+    highlightsYoutubeUrl?: string | null;
     externalMatchId: string | null;
     planetRugbyUrl: string | null;
     homeTeam: {
@@ -133,6 +136,8 @@ function mapDbFixture(
       : null,
     refereeName: row.refereeName?.trim() || null,
     isNeutralVenue: Boolean(row.isNeutralVenue),
+    hasWatchalong: Boolean(extractYoutubeVideoId(row.watchalongYoutubeUrl)),
+    hasHighlights: Boolean(extractYoutubeVideoId(row.highlightsYoutubeUrl)),
     homeTeam: toScheduleTeam(row.homeTeam, icons?.home),
     awayTeam: toScheduleTeam(row.awayTeam, icons?.away),
     externalMatchId: row.externalMatchId,
@@ -200,8 +205,12 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
   const { start, end } = dayBoundsInTimezone(dateKey, timeZone);
 
   const rows = await db
-    .select()
+    .select({
+      fixture: fixtures,
+      linkedRefereeName: referees.name,
+    })
     .from(fixtures)
+    .leftJoin(referees, eq(fixtures.refereeId, referees.id))
     .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)))
     .orderBy(fixtures.kickoffAt);
 
@@ -209,8 +218,10 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
   const teamById = Object.fromEntries(teamRows.map((t) => [t.id, t]));
 
   return rows
-    .map((f) => ({
+    .map(({ fixture: f, linkedRefereeName }) => ({
       ...f,
+      // Prefer linked referee entity name when text column is empty/stale.
+      refereeName: linkedRefereeName?.trim() || f.refereeName?.trim() || null,
       homeTeam: f.homeTeamId ? teamById[f.homeTeamId] : null,
       awayTeam: f.awayTeamId ? teamById[f.awayTeamId] : null,
     }))
@@ -334,7 +345,32 @@ export async function getScheduleForDate(
 
   function pushUnique(fixture: ScheduleFixture) {
     const identity = fixtureScheduleKey(fixture);
-    if (identity && seen.has(identity)) return;
+    if (identity && seen.has(identity)) {
+      // Prefer richer CMS rows over sparse SDMS placeholders (e.g. missing referee).
+      const idx = merged.findIndex((row) => fixtureScheduleKey(row) === identity);
+      if (idx >= 0) {
+        const existing = merged[idx]!;
+        const preferIncoming =
+          (fixture.source === "db" && existing.source !== "db") ||
+          (Boolean(fixture.refereeName?.trim()) && !existing.refereeName?.trim()) ||
+          (Boolean(fixture.venue?.trim()) && !existing.venue?.trim());
+        if (preferIncoming) {
+          merged[idx] = {
+            ...existing,
+            ...fixture,
+            venue: fixture.venue?.trim() || existing.venue,
+            refereeName: fixture.refereeName?.trim() || existing.refereeName,
+            competitionName: fixture.competitionName ?? existing.competitionName,
+            sdmsCompetitionId: fixture.sdmsCompetitionId ?? existing.sdmsCompetitionId,
+            homeTeam: fixture.homeTeam ?? existing.homeTeam,
+            awayTeam: fixture.awayTeam ?? existing.awayTeam,
+          };
+          if (fixture.source === "db") seen.add(fixture.id);
+          if (fixture.externalMatchId) seen.add(`ext:${fixture.externalMatchId}`);
+        }
+      }
+      return;
+    }
     if (identity) seen.add(identity);
     if (fixture.source === "db") seen.add(fixture.id);
     if (fixture.externalMatchId) seen.add(`ext:${fixture.externalMatchId}`);
@@ -362,6 +398,13 @@ export async function getScheduleForDate(
         mapped.awayTeam = { ...mapped.awayTeam, slug: row.away_team_slug };
       }
       if (!mapped.externalMatchId) mapped.externalMatchId = row.match_id;
+      // Prefer fresh SDMS scoreline/status for live matches (CMS can lag entity sync).
+      const sdmsStatus = sdmsStatusToFixtureStatus(row.status);
+      if (/live|half_time/i.test(sdmsStatus) || /live|half_time/i.test(mapped.status)) {
+        mapped.status = sdmsStatus;
+        if (typeof row.home_team_score === "number") mapped.homeScore = row.home_team_score;
+        if (typeof row.away_team_score === "number") mapped.awayScore = row.away_team_score;
+      }
       if (fixtureOnCalendarDate(mapped, dateKey)) {
         pushUnique(mapped);
       }

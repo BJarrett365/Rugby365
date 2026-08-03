@@ -14,7 +14,14 @@ import {
   type SdmsMatchStatsBundle,
 } from "@rugby365/import-sdk";
 import { and, asc, eq, inArray, or } from "drizzle-orm";
-import { competitions, competitionSeasons, fixtures, matchEvents, players } from "@rugby365/db";
+import {
+  competitions,
+  competitionSeasons,
+  fixturePlayers,
+  fixtures,
+  matchEvents,
+  players,
+} from "@rugby365/db";
 import { getDb } from "./db";
 import {
   mapCmsEventsToPublicKeyEvents,
@@ -43,6 +50,8 @@ import {
   syncSdmsMatchEntityLinks,
   ensureSdmsProvidersRegistered,
 } from "./match-entity-sync-service";
+import { syncFixtureLiveStateFromSdms } from "./fixture-live-score-sync";
+import { isLiveFixtureStatus } from "./table-lab/live-table-service";
 import {
   attachCareerAndFormToLineupRatings,
   calculateAndPersistFixtureMatchRatings,
@@ -54,8 +63,51 @@ import { autoImportSdmsMatchToCms } from "./sdms-auto-import-service";
 import { isFixtureRatingsPublished } from "./match-rating-math";
 import type { CmsEntityLink } from "./match-entity-context";
 import type { MatchTableContext } from "./match-table-context";
+import { resolveTeamCrestImageUrl } from "./crest-library-service";
+import { resolveApprovedTeamShirt } from "./shirt-library-service";
+import type { ShirtSvgConfig } from "./shirt-library-types";
 
 export type { MatchTableContext } from "./match-table-context";
+
+export type MatchLineupKit = {
+  kitType: string;
+  svgConfig: ShirtSvgConfig;
+  crestUrl: string | null;
+  isFallback: boolean;
+};
+
+async function resolveMatchLineupKit(input: {
+  teamId: string | null | undefined;
+  teamName: string;
+  competitionId: string | null | undefined;
+  seasonId: string | null | undefined;
+  matchId: string | null | undefined;
+  kitType: "HOME" | "AWAY";
+}): Promise<MatchLineupKit | null> {
+  if (!input.teamId) return null;
+  try {
+    const [shirt, crestUrl] = await Promise.all([
+      resolveApprovedTeamShirt({
+        teamId: input.teamId,
+        teamName: input.teamName,
+        competitionId: input.competitionId,
+        seasonId: input.seasonId,
+        matchId: input.matchId,
+        kitType: input.kitType,
+      }),
+      resolveTeamCrestImageUrl(input.teamId),
+    ]);
+    if (shirt.isFallback) return null;
+    return {
+      kitType: String(shirt.kitType),
+      svgConfig: shirt.svgConfig,
+      crestUrl,
+      isFallback: false,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export type MatchStaffLink = {
   id: string;
@@ -93,10 +145,13 @@ export type MatchDetailPageData = {
   matchStats: SdmsMatchStatsBundle | null;
   playerStats: SdmsMatchPlayerStats | null;
   planetRugbyUrl: string;
+  /** Planet Rugby / SDMS competition code (e.g. pd9ro98v), not numeric internal ids. */
+  competitionExternalId: string | null;
   kickoffAt: string;
   cmsFixture: {
     id: string;
     slug: string;
+    seasonId: string | null;
     squadCount: number;
     entitySyncRan: boolean;
     autoImported: boolean;
@@ -107,7 +162,10 @@ export type MatchDetailPageData = {
   entities: MatchEntityContext;
   matchRatings: MatchRatingDisplay[];
   rugby365PotmName: string | null;
+  /** Public profile slug for Rugby365 POTM when known. */
+  rugby365PotmSlug: string | null;
   officialPotmName: string | null;
+  officialPotmSlug: string | null;
   homeCoach: MatchStaffLink | null;
   awayCoach: MatchStaffLink | null;
   referee: MatchStaffLink | null;
@@ -125,11 +183,22 @@ export type MatchDetailPageData = {
   bonusPoints: MatchBonusPoints | null;
   /** Key events for public Match Details (CMS preferred, Sub On/Off paired). */
   keyEvents: PublicKeyEvent[];
+  /** Approved Shirt Library kits for lineup pitch (null side = use accent fallback jersey). */
+  lineupKits: {
+    home: MatchLineupKit | null;
+    away: MatchLineupKit | null;
+  };
 };
 
 async function resolveMatchTableContext(
   detail: SdmsMatchDetail,
-  cmsFixtureRow: { competitionId: string | null; seasonId: string | null } | null,
+  cmsFixtureRow: {
+    id?: string | null;
+    competitionId: string | null;
+    seasonId: string | null;
+    status?: string | null;
+    externalMatchId?: string | null;
+  } | null,
 ): Promise<MatchTableContext | null> {
   const db = getDb();
   const sdmsCompId = String(detail.competition_id ?? "").trim();
@@ -189,12 +258,58 @@ async function resolveMatchTableContext(
     seasonId = active?.id ?? null;
   }
 
+  const fixtureStatus = cmsFixtureRow?.status ?? detail.status ?? "";
   return {
     competitionId,
     seasonId,
     competitionSlug,
     competitionName,
+    fixtureId: cmsFixtureRow?.id ?? null,
+    externalMatchId: cmsFixtureRow?.externalMatchId ?? detail.match_id ?? null,
+    isLive: isLiveFixtureStatus(fixtureStatus) || isLiveFixtureStatus(detail.status),
   };
+}
+
+function competitionCodeFromPlanetUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parts = new URL(url).pathname.split("/").filter(Boolean);
+    // /matches/{id}/{compSlug}/{compId}/...
+    const code = parts[3]?.trim() || null;
+    return code && !/^\d+$/.test(code) ? code : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveCompetitionExternalId(
+  detail: SdmsMatchDetail,
+  cmsFixtureRow: {
+    competitionId: string | null;
+    planetRugbyUrl?: string | null;
+  } | null,
+): Promise<string | null> {
+  const fromDetail = String(detail.competition_id ?? "").trim();
+  if (fromDetail && !/^\d+$/.test(fromDetail)) return fromDetail;
+
+  const fromStoredUrl = competitionCodeFromPlanetUrl(cmsFixtureRow?.planetRugbyUrl);
+  if (fromStoredUrl) return fromStoredUrl;
+
+  const competitionId = cmsFixtureRow?.competitionId;
+  if (!competitionId) return null;
+
+  const db = getDb();
+  const [row] = await db
+    .select({
+      sdmsCompCode: competitions.sdmsCompCode,
+      externalProviderId: competitions.externalProviderId,
+    })
+    .from(competitions)
+    .where(eq(competitions.id, competitionId))
+    .limit(1);
+
+  const code = String(row?.sdmsCompCode ?? row?.externalProviderId ?? "").trim();
+  return code && !/^\d+$/.test(code) ? code : null;
 }
 
 export async function getMatchDetailForPage(matchId: string): Promise<MatchDetailPageData | null> {
@@ -224,15 +339,6 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
         detail.away_team_id,
       )
     : null;
-
-  const planetRugbyUrl = buildPlanetRugbyMatchUrl({
-    match_external_id: detail.match_id,
-    competition_slug: detail.competition_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-    competition_external_id: String(detail.competition_id ?? ""),
-    home_team: detail.home_team_slug,
-    away_team: detail.away_team_slug,
-    match_date: detail.date,
-  });
 
   try {
     await ensureSdmsProvidersRegistered(detail, lineups);
@@ -265,6 +371,16 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     }
   } else {
     try {
+      // Always push live score/clock into CMS so Live Table matches the header.
+      // Full entity sync stays throttled separately.
+      await syncFixtureLiveStateFromSdms(cmsFixtureRow.id, detail);
+    } catch (error) {
+      console.warn(
+        `[match-detail] live score sync failed for ${matchId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+    try {
       const sync = await syncSdmsMatchEntityLinks(cmsFixtureRow.id, matchId);
       entitySyncRan = sync.synced;
     } catch (error) {
@@ -274,6 +390,24 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       );
     }
   }
+
+  const competitionExternalId = await resolveCompetitionExternalId(detail, cmsFixtureRow);
+  const planetRugbyUrl =
+    (cmsFixtureRow?.planetRugbyUrl &&
+    !/\/matches\/[^/]+\/[^/]+\/\d+\//.test(cmsFixtureRow.planetRugbyUrl)
+      ? cmsFixtureRow.planetRugbyUrl
+      : null) ??
+    buildPlanetRugbyMatchUrl({
+      match_external_id: detail.match_id,
+      competition_slug: detail.competition_name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""),
+      competition_external_id: competitionExternalId ?? String(detail.competition_id ?? ""),
+      home_team: detail.home_team_slug,
+      away_team: detail.away_team_slug,
+      match_date: detail.date,
+    });
 
   const squadPlayerIds = cmsFixtureRow ? await listFixtureSquadPlayerIds(cmsFixtureRow.id) : [];
 
@@ -311,39 +445,110 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       null)
     : null;
 
-  // Career (+ Form) before kick-off; Match + refreshed Career after full time.
-  const playerLinksById = new Map<string, CmsEntityLink>();
-  for (const link of Object.values(entities.playersByExternalId)) {
-    playerLinksById.set(link.id, link);
-  }
-  for (const link of Object.values(entities.playersByName)) {
-    playerLinksById.set(link.id, link);
-  }
-  const unresolvedSquadIds = squadPlayerIds.filter((id) => !playerLinksById.has(id));
-  if (unresolvedSquadIds.length > 0) {
+  const potmPlayerIds = [
+    ...new Set(
+      [
+        ratingsPublished ? ratingsBundle.rugby365PotmPlayerId : null,
+        ratingsPublished ? ratingsBundle.officialPotmPlayerId : null,
+        ratingsPublished
+          ? (ratingsBundle.ratings.find((r) => r.isRugby365Potm)?.playerId ?? null)
+          : null,
+        ratingsPublished
+          ? (ratingsBundle.ratings.find((r) => r.isOfficialPotm)?.playerId ?? null)
+          : null,
+      ].filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const potmSlugById = new Map<string, string>();
+  if (potmPlayerIds.length > 0) {
     const db = getDb();
-    const rows = await db
-      .select({
-        id: players.id,
-        slug: players.slug,
-        name: players.name,
-        externalProviderId: players.externalProviderId,
-      })
+    const potmRows = await db
+      .select({ id: players.id, slug: players.slug })
       .from(players)
-      .where(inArray(players.id, unresolvedSquadIds));
-    for (const row of rows) {
-      playerLinksById.set(row.id, {
-        id: row.id,
-        slug: row.slug,
-        name: row.name,
-        externalProviderId: row.externalProviderId,
-      });
-    }
+      .where(inArray(players.id, potmPlayerIds));
+    for (const row of potmRows) potmSlugById.set(row.id, row.slug);
   }
-  const matchRatings = await attachCareerAndFormToLineupRatings(
-    ratingsPublished ? ratingsBundle.ratings : [],
-    [...playerLinksById.values()],
-  );
+  const rugby365PotmPlayerId =
+    ratingsBundle.rugby365PotmPlayerId ??
+    ratingsBundle.ratings.find((r) => r.isRugby365Potm)?.playerId ??
+    null;
+  const officialPotmPlayerId =
+    ratingsBundle.officialPotmPlayerId ??
+    ratingsBundle.ratings.find((r) => r.isOfficialPotm)?.playerId ??
+    null;
+  const rugby365PotmSlug = rugby365PotmPlayerId
+    ? (potmSlugById.get(rugby365PotmPlayerId) ?? null)
+    : null;
+  const officialPotmSlug = officialPotmPlayerId
+    ? (potmSlugById.get(officialPotmPlayerId) ?? null)
+    : null;
+
+  let matchRatings: MatchRatingDisplay[] = [];
+  if (ratingsPublished) {
+    const playerLinksById = new Map<string, CmsEntityLink>();
+    for (const link of Object.values(entities.playersByExternalId)) {
+      playerLinksById.set(link.id, link);
+    }
+    for (const link of Object.values(entities.playersByName)) {
+      playerLinksById.set(link.id, link);
+    }
+    const unresolvedSquadIds = squadPlayerIds.filter((id) => !playerLinksById.has(id));
+    if (unresolvedSquadIds.length > 0) {
+      const db = getDb();
+      const rows = await db
+        .select({
+          id: players.id,
+          slug: players.slug,
+          name: players.name,
+          externalProviderId: players.externalProviderId,
+        })
+        .from(players)
+        .where(inArray(players.id, unresolvedSquadIds));
+      for (const row of rows) {
+        playerLinksById.set(row.id, {
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          externalProviderId: row.externalProviderId,
+        });
+      }
+    }
+    const squadByPlayerId = new Map<
+      string,
+      {
+        teamId: string;
+        jerseyNumber: number | null;
+        squadRole: string | null;
+        positionName: string | null;
+      }
+    >();
+    if (cmsFixtureRow) {
+      const squadRows = await getDb()
+        .select({
+          playerId: fixturePlayers.playerId,
+          teamId: fixturePlayers.teamId,
+          jerseyNumber: fixturePlayers.jerseyNumber,
+          squadRole: fixturePlayers.squadRole,
+          positionName: fixturePlayers.positionName,
+        })
+        .from(fixturePlayers)
+        .where(eq(fixturePlayers.fixtureId, cmsFixtureRow.id));
+      for (const row of squadRows) {
+        squadByPlayerId.set(row.playerId, {
+          teamId: row.teamId,
+          jerseyNumber: row.jerseyNumber,
+          squadRole: row.squadRole,
+          positionName: row.positionName,
+        });
+      }
+    }
+
+    matchRatings = await attachCareerAndFormToLineupRatings(
+      ratingsBundle.ratings,
+      [...playerLinksById.values()],
+      squadByPlayerId,
+    );
+  }
 
   const tableContext = await resolveMatchTableContext(detail, cmsFixtureRow);
 
@@ -443,7 +648,10 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
           const db = getDb();
           await db
             .update(fixtures)
-            .set({ refereeId: resolved.id })
+            .set({
+              refereeId: resolved.id,
+              refereeName: resolved.name,
+            })
             .where(eq(fixtures.id, cmsFixtureRow.id));
           if (ratingsPublished) {
             await calculateAndPersistFixtureStaffMatchRatings(cmsFixtureRow.id);
@@ -547,17 +755,40 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     }
   }
 
+  const [homeKit, awayKit] = await Promise.all([
+    resolveMatchLineupKit({
+      teamId: cmsFixtureRow?.homeTeamId,
+      teamName: detail.home_team_name,
+      competitionId: cmsFixtureRow?.competitionId,
+      seasonId: cmsFixtureRow?.seasonId,
+      matchId: cmsFixtureRow?.id,
+      kitType: "HOME",
+    }),
+    // Currie Cup (and most domestic comps): away also defaults to HOME unless
+    // the fixture has an explicit away_team_kit_id (clash override).
+    resolveMatchLineupKit({
+      teamId: cmsFixtureRow?.awayTeamId,
+      teamName: detail.away_team_name,
+      competitionId: cmsFixtureRow?.competitionId,
+      seasonId: cmsFixtureRow?.seasonId,
+      matchId: cmsFixtureRow?.id,
+      kitType: "HOME",
+    }),
+  ]);
+
   return {
     detail,
     lineups,
     matchStats,
     playerStats,
     planetRugbyUrl,
+    competitionExternalId,
     kickoffAt: sdmsScheduleKickoffIso(detail.date, detail.time),
     cmsFixture: cmsFixtureRow
       ? {
           id: cmsFixtureRow.id,
           slug: cmsFixtureRow.slug,
+          seasonId: cmsFixtureRow.seasonId ?? null,
           squadCount: squadPlayerIds.length,
           entitySyncRan,
           autoImported,
@@ -569,7 +800,9 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     entities,
     matchRatings,
     rugby365PotmName,
+    rugby365PotmSlug,
     officialPotmName: ratingsBundle.officialPotmName,
+    officialPotmSlug,
     homeCoach,
     awayCoach,
     referee,
@@ -577,5 +810,6 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     venue,
     broadcasters,
     keyEvents,
+    lineupKits: { home: homeKit, away: awayKit },
   };
 }

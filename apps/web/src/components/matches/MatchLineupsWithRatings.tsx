@@ -83,6 +83,7 @@ function LineupColumn({
             <DualRatingCell
               rating={rating}
               mode={ratingsPublished ? "completed" : "scheduled"}
+              jerseyNumber={p.jerseyNumber}
             />
           </td>
         </tr>
@@ -104,7 +105,7 @@ function LineupColumn({
               key={`${side}-badge-${p.providerId || p.name}`}
               name={p.name}
               imageUrl={link?.imageUrl}
-              rating={rating?.careerRating ?? null}
+              rating={ratingsPublished ? rating?.careerRating ?? null : null}
               positionName={p.positionName}
               slug={link?.slug}
               size="micro"
@@ -120,8 +121,8 @@ function LineupColumn({
             <th>Player</th>
             <th>Pos</th>
             <th>Role</th>
-            <th title="Career (35–99) | Match (1–10) or Form">
-              {ratingsPublished ? "Career | Match" : "Career | Form"}
+            <th title="Career (35–99) | Match (1–10)">
+              Career | Match
             </th>
           </tr>
         </thead>
@@ -137,7 +138,7 @@ function LineupColumn({
                 <th>Player</th>
                 <th>Pos</th>
                 <th>Role</th>
-                <th>{ratingsPublished ? "Career | Match" : "Career | Form"}</th>
+                <th>Career | Match</th>
               </tr>
             </thead>
             <tbody>{renderRows(lineup.substitutes, "b")}</tbody>
@@ -153,14 +154,18 @@ export function MatchLineupsWithRatings({
   entities,
   ratings,
   rugby365PotmName,
+  rugby365PotmSlug = null,
   officialPotmName,
+  officialPotmSlug = null,
   matchStatus,
 }: {
   lineups: MappedLineups;
   entities: MatchEntityContext;
   ratings: MatchRatingDisplay[];
   rugby365PotmName: string | null;
+  rugby365PotmSlug?: string | null;
   officialPotmName: string | null;
+  officialPotmSlug?: string | null;
   matchStatus?: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -197,22 +202,31 @@ export function MatchLineupsWithRatings({
             (1–10)
           </>
         ) : (
-          <>
-            <strong>Career</strong> shows before kick-off · <strong>Form</strong> from recent matches
-            · <strong>Match</strong> ratings publish after full time
-          </>
+          <>Player ratings publish after full time.</>
         )}
       </p>
       {ratingsPublished && (rugby365PotmName || officialPotmName) && (
         <div className="match-potm-banner cms-card">
           {rugby365PotmName && (
             <p>
-              <strong>Rugby365 Player of the Match:</strong> {rugby365PotmName}
+              <strong>Rugby365 Player of the Match:</strong>{" "}
+              <PlayerProfileLink
+                name={rugby365PotmName}
+                slug={rugby365PotmSlug}
+                externalId={ratings.find((r) => r.isRugby365Potm)?.externalPlayerId}
+                context={entities}
+              />
             </p>
           )}
           {officialPotmName && (
             <p>
-              <strong>Official Player of the Match:</strong> {officialPotmName}
+              <strong>Official Player of the Match:</strong>{" "}
+              <PlayerProfileLink
+                name={officialPotmName}
+                slug={officialPotmSlug}
+                externalId={ratings.find((r) => r.isOfficialPotm)?.externalPlayerId}
+                context={entities}
+              />
             </p>
           )}
         </div>
