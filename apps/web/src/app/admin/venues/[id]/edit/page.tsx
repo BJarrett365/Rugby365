@@ -33,6 +33,7 @@ export default function EditVenuePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [wikiBusy, setWikiBusy] = useState(false);
+  const [geoBusy, setGeoBusy] = useState(false);
   const [wikiMessage, setWikiMessage] = useState("");
   const [error, setError] = useState("");
   const [venueName, setVenueName] = useState("");
@@ -43,7 +44,10 @@ export default function EditVenuePage() {
     slug: "",
     city: "",
     countryName: "",
+    countryCode: "",
     capacity: "",
+    latitude: "",
+    longitude: "",
     teamId: "",
   });
 
@@ -61,7 +65,10 @@ export default function EditVenuePage() {
           slug: detail.venue.slug,
           city: detail.venue.city ?? "",
           countryName: detail.venue.countryName ?? "",
+          countryCode: detail.venue.countryCode ?? "",
           capacity: detail.venue.capacity != null ? String(detail.venue.capacity) : "",
+          latitude: detail.venue.latitude != null ? String(detail.venue.latitude) : "",
+          longitude: detail.venue.longitude != null ? String(detail.venue.longitude) : "",
           teamId: detail.venue.teamId ?? "",
         });
       }
@@ -96,6 +103,29 @@ export default function EditVenuePage() {
     setWikiBusy(false);
   }
 
+  async function geocodeVenue() {
+    setGeoBusy(true);
+    setWikiMessage("");
+    setError("");
+    const res = await fetch(`/api/admin/venues/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "geocode", force: true }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setWikiMessage(
+        `Geocoded — ${data.result?.latitude}, ${data.result?.longitude}${
+          data.result?.countryCode ? ` (${data.result.countryCode})` : ""
+        }`,
+      );
+      await load();
+    } else {
+      setError(data.error ?? data.result?.reason ?? "Geocode failed");
+    }
+    setGeoBusy(false);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -106,6 +136,9 @@ export default function EditVenuePage() {
       body: JSON.stringify({
         ...values,
         capacity: values.capacity ? Number(values.capacity) : null,
+        latitude: values.latitude ? Number(values.latitude) : null,
+        longitude: values.longitude ? Number(values.longitude) : null,
+        countryCode: values.countryCode || null,
         teamId: values.teamId || null,
       }),
     });
@@ -133,14 +166,24 @@ export default function EditVenuePage() {
         eyebrow="CMS"
         title={venueName || "Edit venue"}
         actions={
-          <button
-            type="button"
-            disabled={wikiBusy}
-            onClick={() => void enrichFromWikipedia()}
-            className="cms-btn cms-btn--secondary touch-target"
-          >
-            {wikiBusy ? "Fetching Wiki…" : "Enrich from Wikipedia"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={geoBusy}
+              onClick={() => void geocodeVenue()}
+              className="cms-btn cms-btn--secondary touch-target"
+            >
+              {geoBusy ? "Geocoding…" : "Geocode (Open-Meteo)"}
+            </button>
+            <button
+              type="button"
+              disabled={wikiBusy}
+              onClick={() => void enrichFromWikipedia()}
+              className="cms-btn cms-btn--secondary touch-target"
+            >
+              {wikiBusy ? "Fetching Wiki…" : "Enrich from Wikipedia"}
+            </button>
+          </div>
         }
       />
 
@@ -182,6 +225,35 @@ export default function EditVenuePage() {
             onChange={(e) => setValues((v) => ({ ...v, countryName: e.target.value }))}
           />
         </label>
+        <label className="block">
+          <span className="text-sm text-zinc-400">Country code (ISO)</span>
+          <input
+            className="cms-input w-full mt-1"
+            value={values.countryCode}
+            onChange={(e) => setValues((v) => ({ ...v, countryCode: e.target.value }))}
+            placeholder="e.g. GB, FR, ZA"
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-sm text-zinc-400">Latitude</span>
+            <input
+              className="cms-input w-full mt-1"
+              value={values.latitude}
+              onChange={(e) => setValues((v) => ({ ...v, latitude: e.target.value }))}
+              placeholder="51.4559"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-zinc-400">Longitude</span>
+            <input
+              className="cms-input w-full mt-1"
+              value={values.longitude}
+              onChange={(e) => setValues((v) => ({ ...v, longitude: e.target.value }))}
+              placeholder="-0.3415"
+            />
+          </label>
+        </div>
         <label className="block">
           <span className="text-sm text-zinc-400">Capacity</span>
           <input

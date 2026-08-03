@@ -10,6 +10,11 @@ export function MatchCmsInfoHeader({
   awayTeam,
   kickoffAt,
   status,
+  halfTimeHome,
+  halfTimeAway,
+  attendance,
+  competitionSlug,
+  competitionName,
   actions,
 }: {
   matchId: string;
@@ -17,6 +22,11 @@ export function MatchCmsInfoHeader({
   awayTeam?: TeamRef | null;
   kickoffAt?: string | Date | null;
   status?: string | null;
+  halfTimeHome?: number | null;
+  halfTimeAway?: number | null;
+  attendance?: number | null;
+  competitionSlug?: string | null;
+  competitionName?: string | null;
   actions?: React.ReactNode;
 }) {
   const kickoff = kickoffAt ? new Date(kickoffAt) : null;
@@ -32,6 +42,7 @@ export function MatchCmsInfoHeader({
     kickoff && !Number.isNaN(kickoff.getTime())
       ? kickoff.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
       : "—";
+  const hasHt = halfTimeHome != null && halfTimeAway != null;
 
   return (
     <div className="match-cms-info">
@@ -76,6 +87,35 @@ export function MatchCmsInfoHeader({
           <span className="match-cms-info__label">Status</span>
           <span className="match-cms-info__value">{status ?? "—"}</span>
         </div>
+        {hasHt ? (
+          <div>
+            <span className="match-cms-info__label">HT</span>
+            <span className="match-cms-info__value">
+              {halfTimeHome}–{halfTimeAway}
+            </span>
+          </div>
+        ) : null}
+        {attendance != null ? (
+          <div>
+            <span className="match-cms-info__label">Attendance</span>
+            <span className="match-cms-info__value">{attendance.toLocaleString("en-GB")}</span>
+          </div>
+        ) : null}
+        {competitionSlug ? (
+          <div>
+            <span className="match-cms-info__label">Table</span>
+            <span className="match-cms-info__value">
+              <Link
+                href={`/competitions/${competitionSlug}/table`}
+                className="match-cms-team-link"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {competitionName ? `${competitionName} Full Table` : "Full Table"}
+              </Link>
+            </span>
+          </div>
+        ) : null}
         {actions ? <div className="match-cms-info__actions">{actions}</div> : null}
       </div>
     </div>

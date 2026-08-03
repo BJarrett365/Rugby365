@@ -153,8 +153,15 @@ export const venues = pgTable(
     name: text("name").notNull(),
     city: text("city"),
     countryName: text("country_name"),
+    /** ISO 3166-1 alpha-2 when known — used for Open-Meteo geocoding filter. */
+    countryCode: text("country_code"),
     capacity: integer("capacity"),
     recordAttendance: integer("record_attendance"),
+    latitude: real("latitude"),
+    longitude: real("longitude"),
+    geocodedAt: timestamp("geocoded_at", { withTimezone: true }),
+    geocodeSource: text("geocode_source"),
+    geocodeQuery: text("geocode_query"),
     teamId: uuid("team_id").references(() => teams.id),
     sourceProvider: text("source_provider").notNull().default("manual"),
     wikipediaUrl: text("wikipedia_url"),
@@ -190,6 +197,9 @@ export const players = pgTable(
     /** Approved Planet Rugby (or CMS) primary image — never auto-replaced when set. */
     primaryImageId: uuid("primary_image_id"),
     primaryImageApprovedAt: timestamp("primary_image_approved_at", { withTimezone: true }),
+    /** Transparent cutout PNG for FUT-style Player Badge (separate from primary gallery photo). */
+    badgeImageUrl: text("badge_image_url"),
+    badgeImageId: uuid("badge_image_id"),
     bioSummary: text("bio_summary"),
     wikipediaUrl: text("wikipedia_url"),
     wikidataId: text("wikidata_id"),
@@ -213,6 +223,15 @@ export const players = pgTable(
     preferredFoot: text("preferred_foot"),
     /** Optional public status override (injured | suspended | unattached | …). */
     statusOverride: text("status_override"),
+    /** Contract end date for public profile (e.g. 2027-06-30 → Jun 2027). */
+    contractExpiresOn: date("contract_expires_on"),
+    /** Reported / verified annual salary in GBP (nullable = unknown; model estimate used as fallback). */
+    reportedSalaryGbp: integer("reported_salary_gbp"),
+    salaryAsOf: date("salary_as_of"),
+    agentName: text("agent_name"),
+    agentAgency: text("agent_agency"),
+    /** CMS override for club debut; else derived from first appearance. */
+    clubDebutOn: date("club_debut_on"),
     profileUpdatedAt: timestamp("profile_updated_at", { withTimezone: true }),
     lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
   },
@@ -227,6 +246,35 @@ export const players = pgTable(
       .on(table.rugbypassPlayerId)
       .where(sql`${table.rugbypassPlayerId} is not null`),
     index("players_publish_status_idx").on(table.publishStatus),
+  ],
+);
+
+/** Structured public titles / trophies for profile milestones (World Cup, Top 14, …). */
+export const playerTitles = pgTable(
+  "player_titles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    /** world_cup | top_14 | premiership | six_nations | urc | champions_cup | other */
+    titleType: text("title_type").notNull().default("other"),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    seasonLabel: text("season_label"),
+    year: integer("year"),
+    title: text("title").notNull(),
+    count: integer("count").notNull().default(1),
+    sourceUrl: text("source_url"),
+    visibility: text("visibility").notNull().default("public"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_titles_player_idx").on(table.playerId),
+    index("player_titles_type_idx").on(table.titleType),
   ],
 );
 
@@ -261,9 +309,9 @@ export const playerImages = pgTable(
     isAiGenerated: boolean("is_ai_generated").notNull().default(false),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     updatedBy: text("updated_by"),
-    /** headshot | action | international | club | historic | hero | gallery | portrait | celebration | training | injury | retirement */
+    /** headshot | action | international | club | historic | hero | gallery | portrait | celebration | training | injury | retirement | badge_cutout */
     imageType: text("image_type").notNull().default("action"),
-    /** primary | current_club | current_international | career | legend | gallery | none */
+    /** primary | current_club | current_international | career | legend | gallery | badge | none */
     role: text("role").notNull().default("gallery"),
     /** high | medium | low */
     confidence: text("confidence").notNull().default("low"),
@@ -466,6 +514,160 @@ export const playerLegends = pgTable(
   ],
 );
 
+/** Editorial Planet Rugby Legends collections (GOAT, Captains, All Blacks, …). */
+export const legendCollections = pgTable(
+  "legend_collections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    label: text("label").notNull(),
+    description: text("description"),
+    /** player | coach */
+    entityKind: text("entity_kind").notNull().default("player"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isPublic: boolean("is_public").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("legend_collections_kind_idx").on(table.entityKind)],
+);
+
+/** Members of a legend collection — player XOR coach. */
+export const legendCollectionMembers = pgTable(
+  "legend_collection_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => legendCollections.id, { onDelete: "cascade" }),
+    playerId: uuid("player_id").references(() => players.id, { onDelete: "cascade" }),
+    coachId: uuid("coach_id").references(() => coaches.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("legend_collection_members_player_unique")
+      .on(table.collectionId, table.playerId)
+      .where(sql`${table.playerId} is not null`),
+    uniqueIndex("legend_collection_members_coach_unique")
+      .on(table.collectionId, table.coachId)
+      .where(sql`${table.coachId} is not null`),
+    index("legend_collection_members_player_idx").on(table.playerId),
+    index("legend_collection_members_coach_idx").on(table.coachId),
+  ],
+);
+
+/**
+ * Planet Rugby Legend Score snapshot (0–100 components + overall).
+ * Model versioned so we can recalculate without losing CMS overrides.
+ */
+export const playerLegendScores = pgTable("player_legend_scores", {
+  playerId: uuid("player_id")
+    .primaryKey()
+    .references(() => players.id, { onDelete: "cascade" }),
+  modelVersion: text("model_version").notNull().default("legend-score-v1"),
+  overallScore: integer("overall_score").notNull().default(0),
+  careerRating: integer("career_rating"),
+  peakRating: integer("peak_rating"),
+  legacyRating: integer("legacy_rating"),
+  influenceRating: integer("influence_rating"),
+  leadershipRating: integer("leadership_rating"),
+  trophyScore: integer("trophy_score"),
+  internationalScore: integer("international_score"),
+  clubScore: integer("club_score"),
+  /** none | nominee | inductee | rugby_icon | hall_of_fame */
+  hallOfFameStatus: text("hall_of_fame_status").notNull().default("none"),
+  eraRank: integer("era_rank"),
+  allTimeRank: integer("all_time_rank"),
+  components: jsonb("components").notNull().default({}),
+  /** CMS overrides for any component / overall (applied after model). */
+  overrides: jsonb("overrides").notNull().default({}),
+  calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Rugby365 Scout Intelligence — Recruitment Index (RRI) snapshot.
+ * Combines ability, potential, form, availability, contract and character into
+ * a club-facing 0–100 recruitment score with CMS override support.
+ */
+export const playerScoutProfiles = pgTable(
+  "player_scout_profiles",
+  {
+    playerId: uuid("player_id")
+      .primaryKey()
+      .references(() => players.id, { onDelete: "cascade" }),
+    modelVersion: text("model_version").notNull().default("rri-v1"),
+    rriScore: integer("rri_score").notNull().default(0),
+    rriBand: text("rri_band").notNull().default("Watchlist"),
+    rriGrade: text("rri_grade").notNull().default("C"),
+    /** sign_now | monitor | loan | academy | do_not_pursue */
+    recommendation: text("recommendation").notNull().default("monitor"),
+    recommendationConfidence: integer("recommendation_confidence").notNull().default(50),
+    aiSummary: text("ai_summary"),
+    overallRating: integer("overall_rating"),
+    potential: integer("potential"),
+    currentAbility: integer("current_ability"),
+    ceiling: integer("ceiling"),
+    physicalScore: integer("physical_score"),
+    attackScore: integer("attack_score"),
+    defenceScore: integer("defence_score"),
+    setPieceScore: integer("set_piece_score"),
+    disciplineScore: integer("discipline_score"),
+    leadershipScore: integer("leadership_score"),
+    availabilityScore: integer("availability_score"),
+    /** low | medium | high | excellent */
+    riskInjury: text("risk_injury").notNull().default("medium"),
+    riskContract: text("risk_contract").notNull().default("medium"),
+    riskAdaptation: text("risk_adaptation").notNull().default("medium"),
+    riskDiscipline: text("risk_discipline").notNull().default("medium"),
+    factors: jsonb("factors").notNull().default([]),
+    scorecard: jsonb("scorecard").notNull().default({}),
+    playerDna: jsonb("player_dna").notNull().default({}),
+    physicalIntelligence: jsonb("physical_intelligence").notNull().default({}),
+    careerProjection: jsonb("career_projection").notNull().default({}),
+    marketIntelligence: jsonb("market_intelligence").notNull().default({}),
+    tacticalIntelligence: jsonb("tactical_intelligence").notNull().default({}),
+    scoutRating: jsonb("scout_rating").notNull().default({}),
+    overrides: jsonb("overrides").notNull().default({}),
+    cmsNotes: text("cms_notes"),
+    published: boolean("published").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_scout_profiles_rri_idx").on(table.rriScore),
+    index("player_scout_profiles_recommendation_idx").on(table.recommendation),
+  ],
+);
+
+/** Manual scout observation reports that accumulate over time. */
+export const playerScoutNotes = pgTable(
+  "player_scout_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    observedOn: date("observed_on"),
+    venue: text("venue"),
+    matchContext: text("match_context"),
+    notes: text("notes").notNull(),
+    /** high | medium | low */
+    confidence: text("confidence").notNull().default("medium"),
+    recommendation: text("recommendation"),
+    createdBy: text("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_scout_notes_player_idx").on(table.playerId),
+    index("player_scout_notes_observed_idx").on(table.observedOn),
+  ],
+);
+
 export const playerExternalMatches = pgTable(
   "player_external_matches",
   {
@@ -515,6 +717,9 @@ export const fixtures = pgTable("fixtures", {
   status: text("status").notNull().default("scheduled"),
   homeScore: integer("home_score").notNull().default(0),
   awayScore: integer("away_score").notNull().default(0),
+  /** Explicit half-time score for public fixtures board / match centre. */
+  halfTimeHome: integer("half_time_home"),
+  halfTimeAway: integer("half_time_away"),
   matchMinute: integer("match_minute").notNull().default(0),
   matchSecond: integer("match_second").notNull().default(0),
   period: text("period").notNull().default("not_started"),
@@ -531,6 +736,10 @@ export const fixtures = pgTable("fixtures", {
   isNeutralVenue: boolean("is_neutral_venue").notNull().default(false),
   venueId: uuid("venue_id").references(() => venues.id),
   attendance: integer("attendance"),
+  /** Short public note for fixtures board “additional information”. */
+  additionalInfo: text("additional_info"),
+  /** Manual weather override when venue GEO / Open-Meteo is missing. */
+  weatherNote: text("weather_note"),
   refereeId: uuid("referee_id").references(() => referees.id),
   homeCoachId: uuid("home_coach_id").references(() => coaches.id),
   awayCoachId: uuid("away_coach_id").references(() => coaches.id),
@@ -552,6 +761,35 @@ export const fixtures = pgTable("fixtures", {
   }),
   officialPotmName: text("official_potm_name"),
 });
+
+/** Where to watch a fixture — CMS manual now; Gracenote / PA Media later. */
+export const fixtureBroadcasters = pgTable(
+  "fixture_broadcasters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    broadcasterName: text("broadcaster_name").notNull(),
+    channelName: text("channel_name"),
+    region: text("region"),
+    platform: text("platform").notNull().default("tv"),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    endAt: timestamp("end_at", { withTimezone: true }),
+    url: text("url"),
+    sourceProvider: text("source_provider").notNull().default("manual"),
+    externalId: text("external_id"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("fixture_broadcasters_fixture_id_idx").on(table.fixtureId),
+    uniqueIndex("fixture_broadcasters_fixture_external_unique")
+      .on(table.fixtureId, table.sourceProvider, table.externalId)
+      .where(sql`${table.externalId} is not null`),
+  ],
+);
 
 export const playerTransfers = pgTable(
   "player_transfers",
@@ -1089,6 +1327,46 @@ export const playerRatings = pgTable("player_ratings", {
   radarSummaryApproved: boolean("radar_summary_approved").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Rugby365 Player Value snapshots (market / transfer / contract / future).
+ * Not a football transfer fee — overall market worth for profile display.
+ */
+export const playerMarketValues = pgTable(
+  "player_market_values",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    /** Calendar year this snapshot represents (for timeline). */
+    asOfYear: integer("as_of_year").notNull(),
+    isCurrent: boolean("is_current").notNull().default(true),
+    modelVersion: text("model_version").notNull().default("player-value-v1"),
+    currency: text("currency").notNull().default("GBP"),
+    marketValueGbp: integer("market_value_gbp").notNull(),
+    transferValueGbp: integer("transfer_value_gbp").notNull(),
+    contractValueGbp: integer("contract_value_gbp").notNull(),
+    futureValueGbp: integer("future_value_gbp").notNull(),
+    peakCareerValueGbp: integer("peak_career_value_gbp").notNull(),
+    riskScore: integer("risk_score").notNull().default(0),
+    confidence: real("confidence").notNull().default(0.5),
+    trendPct: real("trend_pct"),
+    trendLabel: text("trend_label"),
+    ratingBandLabel: text("rating_band_label"),
+    baseValueGbp: integer("base_value_gbp"),
+    factors: jsonb("factors").notNull().default([]),
+    recommendations: jsonb("recommendations").notNull().default({}),
+    mediaCheck: jsonb("media_check").notNull().default({}),
+    timeline: jsonb("timeline").notNull().default([]),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_market_values_player_idx").on(table.playerId),
+    uniqueIndex("player_market_values_player_year_unique").on(table.playerId, table.asOfYear),
+  ],
+);
 
 /**
  * Cached position-percentile radar payloads (rebuilt after season stats / imports).
@@ -1742,6 +2020,45 @@ export const providerRawResponses = pgTable(
     index("provider_raw_responses_provider_retrieved_idx").on(table.provider, table.retrievedAt),
     index("provider_raw_responses_entity_ext_idx").on(table.entityType, table.externalId),
     index("provider_raw_responses_import_status_idx").on(table.importStatus),
+  ],
+);
+
+/**
+ * Bookmaker odds snapshots (Oddschecker scrape / paste).
+ * Used for Betting Intelligence Odds + Value Bets vs Planet Rugby probability.
+ */
+export const matchOddsSnapshots = pgTable(
+  "match_odds_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id").references(() => fixtures.id, { onDelete: "set null" }),
+    provider: text("provider").notNull().default("oddschecker"),
+    sourceUrl: text("source_url").notNull(),
+    marketKey: text("market_key").notNull().default("winner"),
+    marketLabel: text("market_label").notNull().default("Winner"),
+    competitionName: text("competition_name"),
+    homeName: text("home_name"),
+    awayName: text("away_name"),
+    kickoffLabel: text("kickoff_label"),
+    bookmakerCount: integer("bookmaker_count").notNull().default(0),
+    outcomes: jsonb("outcomes").notNull().default([]),
+    bestHomeDecimal: real("best_home_decimal"),
+    bestDrawDecimal: real("best_draw_decimal"),
+    bestAwayDecimal: real("best_away_decimal"),
+    impliedHome: real("implied_home"),
+    impliedDraw: real("implied_draw"),
+    impliedAway: real("implied_away"),
+    rawResponseId: uuid("raw_response_id").references(() => providerRawResponses.id, {
+      onDelete: "set null",
+    }),
+    scrapedAt: timestamp("scraped_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("match_odds_snapshots_fixture_idx").on(table.fixtureId),
+    index("match_odds_snapshots_source_url_idx").on(table.sourceUrl),
+    index("match_odds_snapshots_scraped_at_idx").on(table.scrapedAt),
   ],
 );
 

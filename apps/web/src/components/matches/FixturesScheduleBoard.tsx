@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MatchDatePicker } from "./MatchDatePicker";
 import { TeamCrest } from "./TeamCrest";
+import { WeatherIcon } from "./WeatherIcon";
 import {
   competitionDisplayName,
   dateKeyLocal,
@@ -19,6 +20,7 @@ import {
   type ScheduleCompetition,
   type ScheduleFixture,
 } from "./match-schedule-utils";
+import { resolveWeatherCondition } from "@/lib/weather-condition";
 
 function CompactMatchRow({
   fixture,
@@ -165,19 +167,49 @@ function CompactMatchRow({
 function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
   const home = fixture.homeTeam?.name ?? "TBC";
   const away = fixture.awayTeam?.name ?? "TBC";
-  const finished = fixture.status === "full_time" || fixture.status === "live";
-  const showScores = finished;
+  const showScores =
+    fixture.status === "full_time" ||
+    fixture.status === "live" ||
+    fixture.status === "half_time" ||
+    /result|finished|ft/i.test(fixture.status);
   const detailHref = matchDetailHref(fixture);
   const status = publicMatchStatusLabel(fixture.status, fixture.kickoffAt, fixture.matchDate);
+  const hasHt =
+    fixture.halfTimeHome != null &&
+    fixture.halfTimeAway != null &&
+    Number.isFinite(fixture.halfTimeHome) &&
+    Number.isFinite(fixture.halfTimeAway);
+  const tvTitle = fixture.tvLabels?.length ? fixture.tvLabels.join(" · ") : null;
+  const weatherTitle = fixture.weather?.summary ?? null;
+  const infoTitle = fixture.additionalInfo ?? null;
+  const refereeTitle = fixture.refereeName?.trim() || null;
+  const venueTitle = fixture.venue?.trim() || null;
+  const attendanceTitle =
+    fixture.attendance != null
+      ? `Attendance ${fixture.attendance.toLocaleString("en-GB")}`
+      : null;
+  const hasFooter =
+    Boolean(venueTitle) ||
+    Boolean(refereeTitle) ||
+    Boolean(weatherTitle) ||
+    Boolean(attendanceTitle) ||
+    Boolean(tvTitle) ||
+    Boolean(infoTitle);
 
   return (
-    <article className="pr-mc-match-row">
+    <article className={`pr-mc-match-row${hasFooter ? " pr-mc-match-row--with-footer" : ""}`}>
       <div className="pr-mc-match-row__meta">
         <span className="pr-mc-match-row__round">{fixture.round?.trim() || "—"}</span>
-        {fixture.venue ? <span className="pr-mc-match-row__venue">{fixture.venue}</span> : null}
       </div>
 
-      <div className="pr-mc-match-row__status">{status}</div>
+      <div className="pr-mc-match-row__status">
+        <span>{status}</span>
+        {hasHt ? (
+          <span className="pr-mc-match-row__ht" title="Half-time score">
+            HT {fixture.halfTimeHome}–{fixture.halfTimeAway}
+          </span>
+        ) : null}
+      </div>
 
       <div className="pr-mc-match-row__teams">
         <div className="pr-mc-team">
@@ -201,6 +233,90 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
           <span className="pr-mc-match-info-btn pr-mc-match-info-btn--disabled">Match Info</span>
         )}
       </div>
+
+      {hasFooter ? (
+        <div className="pr-mc-match-row__footer" aria-label="Match details">
+          {venueTitle ? (
+            <span className="pr-mc-match-extra" title={venueTitle} aria-label={`Stadium: ${venueTitle}`}>
+              <span className="pr-mc-match-extra__icon" aria-hidden>
+                S
+              </span>
+              <span className="pr-mc-match-extra__text">{venueTitle}</span>
+            </span>
+          ) : null}
+          {refereeTitle ? (
+            <span
+              className="pr-mc-match-extra"
+              title={`Referee: ${refereeTitle}`}
+              aria-label={`Referee: ${refereeTitle}`}
+            >
+              <span className="pr-mc-match-extra__icon" aria-hidden>
+                R
+              </span>
+              <span className="pr-mc-match-extra__text">Ref {refereeTitle}</span>
+            </span>
+          ) : null}
+          {weatherTitle ? (
+            <span
+              className="pr-mc-match-extra"
+              title={weatherTitle}
+              aria-label={`Weather: ${weatherTitle}`}
+            >
+              <span className="pr-mc-match-extra__icon pr-mc-match-extra__icon--weather" aria-hidden>
+                <WeatherIcon
+                  kind={
+                    fixture.weather?.icon ??
+                    resolveWeatherCondition({
+                      summary: fixture.weather?.conditionLabel ?? fixture.weather?.summary,
+                    }).kind
+                  }
+                  title={fixture.weather?.conditionLabel ?? undefined}
+                />
+              </span>
+              <span className="pr-mc-match-extra__text">
+                {fixture.weather?.temperatureC != null
+                  ? `${Math.round(fixture.weather.temperatureC)}°C`
+                  : fixture.weather?.conditionLabel && fixture.weather.conditionLabel !== "Weather"
+                    ? fixture.weather.conditionLabel
+                    : "Weather"}
+                {fixture.weather?.windSpeedKmh != null
+                  ? ` · ${Math.round(fixture.weather.windSpeedKmh)} km/h${
+                      fixture.weather.windCompass ? ` ${fixture.weather.windCompass}` : ""
+                    }`
+                  : ""}
+              </span>
+            </span>
+          ) : null}
+          {attendanceTitle ? (
+            <span
+              className="pr-mc-match-extra"
+              title={attendanceTitle}
+              aria-label={attendanceTitle}
+            >
+              <span className="pr-mc-match-extra__icon" aria-hidden>
+                A
+              </span>
+              <span className="pr-mc-match-extra__text">{attendanceTitle}</span>
+            </span>
+          ) : null}
+          {tvTitle ? (
+            <span className="pr-mc-match-extra" title={tvTitle} aria-label={`TV: ${tvTitle}`}>
+              <span className="pr-mc-match-extra__icon" aria-hidden>
+                TV
+              </span>
+              <span className="pr-mc-match-extra__text">{tvTitle}</span>
+            </span>
+          ) : null}
+          {infoTitle ? (
+            <span className="pr-mc-match-extra" title={infoTitle} aria-label={infoTitle}>
+              <span className="pr-mc-match-extra__icon" aria-hidden>
+                i
+              </span>
+              <span className="pr-mc-match-extra__text">{infoTitle}</span>
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -520,7 +636,17 @@ export function FixturesScheduleBoard({
                     }
                   >
                     {isPublic ? (
-                      <span className="pr-mc-competition-block__title">{publicLabel}</span>
+                      <>
+                        <span className="pr-mc-competition-block__title">{publicLabel}</span>
+                        {group.slug ? (
+                          <Link
+                            href={`/competitions/${group.slug}/table`}
+                            className="pr-mc-competition-block__table"
+                          >
+                            Full Table
+                          </Link>
+                        ) : null}
+                      </>
                     ) : (
                       <>
                         <span className="fixtures-competition-block__icon" aria-hidden>

@@ -22,6 +22,12 @@ type Props = {
   /** Animate conversion kick between the posts. */
   conversionFlight?: "idle" | "kicking" | "success" | "miss" | null;
   conversionSide?: "home" | "away";
+  /** Live intensity: possession / attack / dangerous (opp 22). */
+  intensity?: "possession" | "attack" | "dangerous" | null;
+  /** Show dashed kick path (dropout / penalty / free kick). */
+  showKickPath?: boolean;
+  /** Optional phase label over the shade (Attack / Defence / In Possession). */
+  phaseLabel?: string | null;
 };
 
 function toSvgY(yPercent: number): number {
@@ -37,7 +43,6 @@ function fitNameTagLine(text: string, maxChars: number): string {
 
 function nameTagWidth(lines: string[]): number {
   const longest = lines.reduce((n, line) => Math.max(n, line.length), 0);
-  // ~0.55em per char at fontSize 2.6 in this viewBox
   return Math.min(72, Math.max(18, longest * 1.55 + 4));
 }
 
@@ -57,6 +62,9 @@ export function MatchAnimationPitch({
   showLineoutArrow = false,
   conversionFlight = null,
   conversionSide = "home",
+  intensity = null,
+  showKickPath = false,
+  phaseLabel = null,
 }: Props) {
   const bx = Math.min(98, Math.max(2, ballX));
   const by = Math.min(95, Math.max(5, ballY));
@@ -66,6 +74,48 @@ export function MatchAnimationPitch({
 
   const zoneBand =
     fieldZone && !darkened ? fieldZoneBand(fieldZone, possession) : null;
+
+  /**
+   * F365-style dark shade:
+   * - Attack / dangerous → wedge toward the try line being attacked
+   * - Possession → shade the half containing the ball
+   * - Defence (own_22) → shade own half
+   */
+  const attackTowardRight = possession !== "away";
+  const shade =
+    !darkened && intensity
+      ? intensity === "dangerous" || intensity === "attack"
+        ? attackTowardRight
+          ? { points: "42,4 98,4 98,52 50,38", labelX: 72, labelY: 16 }
+          : { points: "2,4 58,4 50,38 2,52", labelX: 28, labelY: 16 }
+        : fieldZone === "own_22"
+          ? attackTowardRight
+            ? { points: "2,4 38,4 42,52 2,52", labelX: 18, labelY: 16 }
+            : { points: "62,4 98,4 98,52 58,52", labelX: 82, labelY: 16 }
+          : bx < 50
+            ? { points: "2,4 50,4 50,52 2,52", labelX: 26, labelY: 16 }
+            : { points: "50,4 98,4 98,52 50,52", labelX: 74, labelY: 16 }
+      : null;
+
+  const tryThreat = !darkened && (fieldZone === "opp_22" || fieldZone === "ingoal");
+  const tryZone =
+    tryThreat && possession === "away"
+      ? { x: 0, width: fieldZone === "ingoal" ? 10 : 22 }
+      : tryThreat
+        ? { x: fieldZone === "ingoal" ? 90 : 78, width: fieldZone === "ingoal" ? 10 : 22 }
+        : null;
+
+  const intensityLabel =
+    phaseLabel?.trim() ||
+    (intensity === "dangerous"
+      ? "Try threat"
+      : intensity === "attack"
+        ? "Attack"
+        : intensity === "possession"
+          ? fieldZone === "own_22"
+            ? "Defence"
+            : "In Possession"
+          : null);
 
   const postsX = conversionSide === "away" ? 5 : 95;
   const teeX = conversionSide === "away" ? 18 : 82;
@@ -87,14 +137,13 @@ export function MatchAnimationPitch({
   const labelX = Math.min(100 - tagWidth / 2 - 2, Math.max(tagWidth / 2 + 2, bx));
   const ariaPossession = [teamLine, playerLine].filter(Boolean).join(", ");
 
-  // Line-out: arrow points into field from touch
   const lineoutIntoField = by < 50;
   const arrowTipY = lineoutIntoField ? svgY + 10 : svgY - 10;
   const dashEndY = lineoutIntoField ? Math.min(40, svgY + 18) : Math.max(16, svgY - 18);
 
   return (
     <div
-      className={`pr-ma-pitch${lit ? " pr-ma-pitch--lit" : ""}${darkened ? " pr-ma-pitch--dark" : ""}${reducedMotion ? " pr-ma-pitch--reduced" : ""}`}
+      className={`pr-ma-pitch${lit ? " pr-ma-pitch--lit" : ""}${darkened ? " pr-ma-pitch--dark" : ""}${reducedMotion ? " pr-ma-pitch--reduced" : ""}${intensity === "dangerous" ? " pr-ma-pitch--dangerous" : ""}${intensity === "attack" ? " pr-ma-pitch--attack" : ""}${intensity === "possession" ? " pr-ma-pitch--possession" : ""}`}
       role="img"
       aria-label={
         ariaPossession
@@ -113,6 +162,10 @@ export function MatchAnimationPitch({
             <stop offset="0%" stopColor={possessionColour} stopOpacity="0" />
             <stop offset="50%" stopColor={possessionColour} stopOpacity="0.28" />
             <stop offset="100%" stopColor={possessionColour} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="pr-ma-try-red" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#ef5350" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#c62828" stopOpacity="0.55" />
           </linearGradient>
           <filter id="pr-ma-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="0.6" result="blur" />
@@ -135,8 +188,39 @@ export function MatchAnimationPitch({
           />
         ))}
 
+        {/* Dark attack / defence / possession shade */}
+        {shade ? (
+          <polygon
+            className={`pr-ma-pitch__shade${intensity === "dangerous" ? " pr-ma-pitch__shade--danger" : intensity === "attack" ? " pr-ma-pitch__shade--attack" : " pr-ma-pitch__shade--hold"}`}
+            points={shade.points}
+            fill={
+              intensity === "dangerous"
+                ? "rgba(8, 18, 14, 0.38)"
+                : intensity === "attack"
+                  ? "rgba(8, 20, 14, 0.48)"
+                  : "rgba(6, 16, 14, 0.55)"
+            }
+          />
+        ) : null}
+
+        {/* Red try-zone when a try is imminent */}
+        {tryZone ? (
+          <rect
+            className={`pr-ma-pitch__try-zone${fieldZone === "ingoal" ? " pr-ma-pitch__try-zone--imminent" : " pr-ma-pitch__try-zone--threat"}`}
+            x={tryZone.x}
+            y="1.5"
+            width={tryZone.width}
+            height="53"
+            fill={
+              fieldZone === "ingoal"
+                ? "rgba(198, 40, 40, 0.72)"
+                : "url(#pr-ma-try-red)"
+            }
+          />
+        ) : null}
+
         {/* Field status highlight */}
-        {zoneBand ? (
+        {zoneBand && !tryZone ? (
           <rect
             className="pr-ma-pitch__zone"
             x={zoneBand.x}
@@ -147,7 +231,15 @@ export function MatchAnimationPitch({
           />
         ) : null}
 
-        <rect x="1.5" y="1.5" width="97" height="53" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="0.35" />
+        <rect
+          x="1.5"
+          y="1.5"
+          width="97"
+          height="53"
+          fill="none"
+          stroke="rgba(255,255,255,0.75)"
+          strokeWidth="0.35"
+        />
         <line x1="5" y1="1.5" x2="5" y2="54.5" stroke="rgba(255,255,255,0.65)" strokeWidth="0.3" />
         <line x1="95" y1="1.5" x2="95" y2="54.5" stroke="rgba(255,255,255,0.65)" strokeWidth="0.3" />
         <line x1="22" y1="1.5" x2="22" y2="54.5" stroke="rgba(255,255,255,0.35)" strokeWidth="0.25" />
@@ -161,6 +253,36 @@ export function MatchAnimationPitch({
         <line x1="93.5" y1="20" x2="96.5" y2="20" stroke="#f5f5f5" strokeWidth="0.55" />
         <line x1="5" y1="22" x2="5" y2="34" stroke={homeColour} strokeWidth="0.45" opacity="0.7" />
         <line x1="95" y1="22" x2="95" y2="34" stroke={awayColour} strokeWidth="0.45" opacity="0.7" />
+
+        {/* Phase label inside dark shade */}
+        {shade && intensityLabel ? (
+          <g className="pr-ma-pitch__phase" transform={`translate(${shade.labelX}, ${shade.labelY})`}>
+            <text
+              x="0"
+              y="0"
+              textAnchor="middle"
+              fill="#f7f7f5"
+              fontSize="3.2"
+              fontWeight="800"
+              style={{ fontFamily: "system-ui, sans-serif" }}
+            >
+              {intensityLabel}
+            </text>
+            {teamLine ? (
+              <text
+                x="0"
+                y="4"
+                textAnchor="middle"
+                fill={possessionColour}
+                fontSize="2.4"
+                fontWeight="700"
+                style={{ fontFamily: "system-ui, sans-serif" }}
+              >
+                {teamLine}
+              </text>
+            ) : null}
+          </g>
+        ) : null}
 
         {/* Line-out arrow */}
         {showLineoutArrow ? (
@@ -183,6 +305,18 @@ export function MatchAnimationPitch({
               fill="rgba(76, 175, 80, 0.75)"
               stroke="rgba(255,255,255,0.5)"
               strokeWidth="0.2"
+            />
+          </g>
+        ) : null}
+
+        {showKickPath && !showLineoutArrow ? (
+          <g className="pr-ma-pitch__kick-path" aria-hidden>
+            <path
+              d={`M ${bx} ${svgY} Q ${(bx + (possession === "away" ? 20 : 80)) / 2} ${Math.max(8, svgY - 14)} ${possession === "away" ? Math.min(92, bx + 28) : Math.max(8, bx - 28)} ${svgY - 2}`}
+              fill="none"
+              stroke="rgba(255,255,255,0.75)"
+              strokeWidth="0.4"
+              strokeDasharray="1.4 0.9"
             />
           </g>
         ) : null}
@@ -236,7 +370,7 @@ export function MatchAnimationPitch({
             cx={bx}
             cy={svgY}
             r="5"
-            fill={possessionColour}
+            fill={tryThreat ? "#ef5350" : possessionColour}
             opacity="0.18"
             className="pr-ma-pitch__spot"
           />
@@ -262,7 +396,7 @@ export function MatchAnimationPitch({
           />
         </g>
 
-        {tagLines.length > 0 && !darkened ? (
+        {tagLines.length > 0 && !darkened && !shade ? (
           <g className="pr-ma-pitch__name-tag" transform={`translate(${labelX}, ${labelY})`}>
             <rect
               x={-tagWidth / 2}

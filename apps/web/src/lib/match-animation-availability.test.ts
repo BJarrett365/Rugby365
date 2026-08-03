@@ -34,6 +34,7 @@ describe("PUBLIC_MATCH_TAB_ORDER", () => {
       "lineups",
       "tables",
       "head-to-head",
+      "betting",
     ]);
   });
 });

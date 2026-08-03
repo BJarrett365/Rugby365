@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "@rugby365/commentary": "*",
     "@rugby365/commentary-research": "*",
     "@rugby365/db": "*",

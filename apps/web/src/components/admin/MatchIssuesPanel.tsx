@@ -58,6 +58,15 @@ function confidencePct(n: number): string {
   return `${Math.round(n * 100)}%`;
 }
 
+/** Focused CMS page for an issue code (API `href` is a function and does not serialize). */
+function issuePageHref(fixtureId: string, code: string): string {
+  if (code === "lineups") return `/admin/matches/${fixtureId}/lineups`;
+  if (code === "team_stats") return `/admin/matches/${fixtureId}/stats`;
+  if (code === "player_stats") return `/admin/matches/${fixtureId}/player-stats`;
+  if (code === "primary_mapping") return `/admin/matches/${fixtureId}/sources`;
+  return `/admin/matches/${fixtureId}/edit`;
+}
+
 /** Post-match issues template — Wiki + AI verify, one-click venue/ref fixes, duplicates. */
 export function MatchIssuesPanel({
   fixtureId,
@@ -312,17 +321,7 @@ export function MatchIssuesPanel({
                       <span className="text-xs text-zinc-500 ml-2">{issue.code}</span>
                     </div>
                     <Link
-                      href={
-                        issue.code === "lineups"
-                          ? `#lineups`
-                          : issue.code === "team_stats"
-                            ? `#team-stats`
-                            : issue.code === "player_stats"
-                              ? `#player-stats`
-                              : issue.code === "primary_mapping"
-                                ? `#sources`
-                                : `#issues`
-                      }
+                      href={issuePageHref(fixtureId, issue.code)}
                       className="cms-btn cms-btn--secondary text-xs"
                     >
                       {issue.actionLabel}

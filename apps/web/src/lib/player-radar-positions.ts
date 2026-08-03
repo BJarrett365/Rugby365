@@ -104,3 +104,50 @@ export function positionCohortFamilies(family: RadarPositionFamily): RadarPositi
       return [family];
   }
 }
+
+/** XV order (1–15), then generic families, then unknown / bench. */
+const POSITION_SORT_ORDER: RadarPositionFamily[] = [
+  "loosehead_prop",
+  "prop",
+  "hooker",
+  "tighthead_prop",
+  "lock",
+  "blindside_flanker",
+  "flanker",
+  "openside_flanker",
+  "number_eight",
+  "scrum_half",
+  "fly_half",
+  "inside_centre",
+  "centre",
+  "outside_centre",
+  "left_wing",
+  "wing",
+  "right_wing",
+  "full_back",
+  "unknown",
+];
+
+export function positionSortRank(positionName: string | null | undefined): number {
+  const n = (positionName ?? "").toLowerCase().replace(/[_-]+/g, " ").trim();
+  if (
+    n.includes("replacement") ||
+    n.includes("bench") ||
+    n.includes("reserve") ||
+    n.includes("substitute")
+  ) {
+    return POSITION_SORT_ORDER.length + 1;
+  }
+  const family = normalizePositionFamily(positionName);
+  const idx = POSITION_SORT_ORDER.indexOf(family);
+  return idx >= 0 ? idx : POSITION_SORT_ORDER.length;
+}
+
+export function compareByPlayingPosition(
+  a: { name: string; position?: string | null },
+  b: { name: string; position?: string | null },
+): number {
+  const rankDiff = positionSortRank(a.position) - positionSortRank(b.position);
+  if (rankDiff !== 0) return rankDiff;
+  return a.name.localeCompare(b.name);
+}

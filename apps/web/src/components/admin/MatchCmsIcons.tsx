@@ -90,6 +90,19 @@ export function IconYoutube({ className = "w-3.5 h-3.5", title }: IconProps) {
   );
 }
 
+/** TV set — TV / streaming schedule. */
+export function IconTv({ className = "w-3.5 h-3.5", title }: IconProps) {
+  return (
+    <svg className={`${base} ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden={title ? undefined : true}>
+      {title ? <title>{title}</title> : null}
+      <rect x="2" y="7" width="20" height="13" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 7V3" />
+      <path d="m8 3 4 4 4-4" />
+    </svg>
+  );
+}
+
 export function IconChat({ className = "w-3.5 h-3.5", title }: IconProps) {
   return (
     <svg className={`${base} ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden={title ? undefined : true}>

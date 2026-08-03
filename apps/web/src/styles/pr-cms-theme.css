@@ -782,6 +782,67 @@
   color: var(--pr-gold);
 }
 
+/* Competition section nav (fixtures / results / table / stats) */
+.competition-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--pr-border, rgba(255, 255, 255, 0.1));
+}
+
+.competition-nav__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.1rem 0.65rem;
+  margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
+  color: var(--pr-grey, #a7adac);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.competition-nav__link:hover {
+  color: var(--pr-white, #f7f7f5);
+}
+
+.competition-nav__link.is-active {
+  border-bottom-color: var(--pr-gold, #e7bc63);
+  color: var(--pr-gold, #e7bc63);
+}
+
+.competition-stats__segment {
+  display: inline-flex;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--pr-border, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  background: var(--pr-mc-navy, #0f2a31);
+}
+
+.competition-stats__segment-btn {
+  flex: 1;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--pr-grey, #a7adac);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.competition-stats__segment-btn:hover {
+  color: var(--pr-white, #f7f7f5);
+}
+
+.competition-stats__segment-btn.is-active {
+  background: var(--pr-gold, #e7bc63);
+  color: var(--pr-mc-navy, #0f2a31);
+}
+
 .admin-shell .matches-page-actions {
   display: flex;
   flex-wrap: wrap;
@@ -929,6 +990,37 @@
 
 .admin-shell a:not(.cms-btn):hover {
   text-decoration: underline;
+}
+
+/* Competition stats / nav — keep body link gold from forcing board text */
+.admin-shell .competition-nav__link {
+  color: var(--pr-grey);
+  text-decoration: none;
+}
+
+.admin-shell .competition-nav__link:hover {
+  color: var(--pr-white);
+  text-decoration: none;
+}
+
+.admin-shell .competition-nav__link.is-active {
+  color: var(--pr-gold);
+  text-decoration: none;
+}
+
+.admin-shell .stat-board__name {
+  color: var(--pr-white) !important;
+  text-decoration: none;
+}
+
+.admin-shell .stat-board__name:hover {
+  color: var(--pr-gold) !important;
+  text-decoration: none;
+}
+
+.admin-shell .stat-board__more {
+  color: var(--pr-gold) !important;
+  text-decoration: none;
 }
 
 .admin-shell .ring-amber-400\/60,
@@ -1809,6 +1901,38 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.admin-shell .match-cms-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-shell .match-cms-subnav__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid transparent;
+  color: #a7adac;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.admin-shell .match-cms-subnav__link:hover {
+  color: #f7f7f5;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-shell .match-cms-subnav__link.is-active {
+  color: #0f2a31;
+  background: #e7bc63;
+  border-color: #e7bc63;
 }
 
 .admin-shell .match-cms-editor-form {

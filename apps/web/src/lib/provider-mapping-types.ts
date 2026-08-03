@@ -8,6 +8,8 @@ export const PROVIDER_RUGBYPASS = "rugbypass" as const;
 export const PROVIDER_LIVESPORT = "livesport" as const;
 export const PROVIDER_WORLD_RUGBY = "world_rugby" as const;
 export const PROVIDER_CLUB_WEBSITE = "club_website" as const;
+export const PROVIDER_ODDSCHECKER = "oddschecker" as const;
+export const PROVIDER_BMBETS = "bmbets" as const;
 export const PROVIDER_MANUAL = "manual" as const;
 export const PROVIDER_AI = "ai" as const;
 
@@ -20,6 +22,8 @@ export const DATA_INTEGRATION_PROVIDERS = [
   PROVIDER_LIVESPORT,
   PROVIDER_WORLD_RUGBY,
   PROVIDER_CLUB_WEBSITE,
+  PROVIDER_ODDSCHECKER,
+  PROVIDER_BMBETS,
   PROVIDER_MANUAL,
   PROVIDER_AI,
 ] as const;

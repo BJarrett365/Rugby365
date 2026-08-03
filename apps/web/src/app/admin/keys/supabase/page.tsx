@@ -38,6 +38,7 @@ export default function SupabaseKeysPage() {
   const [testing, setTesting] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [mirroring, setMirroring] = useState(false);
+  const [syncingAll, setSyncingAll] = useState(false);
   const [mirrorDate, setMirrorDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -162,6 +163,42 @@ export default function SupabaseKeysPage() {
       );
     }
     setMirroring(false);
+    await load();
+  }
+
+  async function syncAllData() {
+    if (
+      !confirm(
+        "Upsert all mapped Rugby365 tables into Supabase? This can take several minutes and overwrites matching rows by primary key.",
+      )
+    ) {
+      return;
+    }
+    setSyncingAll(true);
+    setError("");
+    setMessage("");
+    const res = await fetch("/api/admin/integrations/supabase", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "sync-all" }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.ok === false) {
+      setError(
+        (data.errors ?? [data.error ?? data.message ?? "Full sync failed"]).join(" · ") ||
+          "Full sync failed",
+      );
+    } else {
+      const synced = Array.isArray(data.tables)
+        ? data.tables.filter((t: { skipped?: boolean; error?: string }) => !t.skipped && !t.error)
+            .length
+        : 0;
+      setMessage(
+        `Mapped ${data.totalUpserted ?? 0} rows across ${synced} tables to Supabase` +
+          (data.finishedAt ? ` · finished ${data.finishedAt}` : ""),
+      );
+    }
+    setSyncingAll(false);
     await load();
   }
 
@@ -317,9 +354,9 @@ export default function SupabaseKeysPage() {
               <h2 className="text-zinc-200 text-sm m-0">Integration</h2>
               <p className="text-xs text-zinc-500 m-0">
                 Creates public Storage buckets (<code className="text-zinc-500">rugby365-media</code>,{" "}
-                <code className="text-zinc-500">rugby365-live</code>) and mirrors daily fixtures into{" "}
-                <code className="text-zinc-500">live_fixtures</code>. Approved player images are mirrored
-                to Storage automatically.
+                <code className="text-zinc-500">rugby365-live</code>), mirrors daily fixtures into{" "}
+                <code className="text-zinc-500">live_fixtures</code>, and can upsert the full CMS
+                schema into Supabase. Approved player images are mirrored to Storage automatically.
               </p>
               {config?.integration ? (
                 <p className="text-xs text-zinc-400 m-0">
@@ -336,6 +373,14 @@ export default function SupabaseKeysPage() {
                   onClick={bootstrap}
                 >
                   {bootstrapping ? "Bootstrapping…" : "Bootstrap buckets"}
+                </button>
+                <button
+                  type="button"
+                  className="cms-btn cms-btn--primary"
+                  disabled={syncingAll || !config?.hasServiceRoleKey}
+                  onClick={syncAllData}
+                >
+                  {syncingAll ? "Mapping data…" : "Map all data to Supabase"}
                 </button>
               </div>
               <label className="block text-sm">
@@ -366,9 +411,14 @@ export default function SupabaseKeysPage() {
       <div className="cms-card max-w-2xl mt-4 text-sm text-zinc-400">
         <h2 className="text-zinc-200 text-base mt-0">What runs automatically</h2>
         <ul className="m-0 pl-4 space-y-1">
+          <li>
+            <strong className="text-zinc-300">Map all data</strong> upserts teams, players, fixtures,
+            events, stats, transfers, ratings and related CMS tables into Supabase by primary key
+          </li>
           <li>Schedule / Rugby Data day sync → upserts <code className="text-zinc-500">live_fixtures</code> + JSON in Storage</li>
           <li>Approve / set primary player image → mirror file into <code className="text-zinc-500">rugby365-media</code></li>
           <li>Anon key is safe for client RLS reads; service role stays server-only</li>
+          <li>Skipped on full sync: integration credentials, raw provider payloads, sandbox/audit ops tables</li>
         </ul>
       </div>
     </>

@@ -18,6 +18,7 @@ const TAB_LABELS: Record<(typeof PUBLIC_MATCH_TAB_ORDER)[number], string> = {
   lineups: "Line-ups",
   tables: "Tables",
   "head-to-head": "Head-to-Head",
+  betting: "Betting Intel",
 };
 
 export function MatchDetailTabs({

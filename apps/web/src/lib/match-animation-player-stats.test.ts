@@ -4,6 +4,8 @@ import {
   animationStatCategoryForEvent,
   buildMatchAnimationPlayerStats,
   resolveAnimationPlayerStatChips,
+  resolveAttackDefenceOverlayChips,
+  resolveOverlayPitchPhase,
 } from "./match-animation-player-stats";
 
 function emptySide() {
@@ -81,5 +83,50 @@ describe("buildMatchAnimationPlayerStats", () => {
     expect(animationStatCategoryForEvent("conversion")).toBe("kicking");
     expect(animationStatCategoryForEvent("knock_on")).toBe("errors");
     expect(animationStatCategoryForEvent("carry")).toBe("carries");
+  });
+
+  it("builds Fin Smith-style attack + defence overlay chips", () => {
+    const stats: SdmsMatchPlayerStats = {
+      home: {
+        ...emptySide(),
+        attack: {
+          match_id: "m1",
+          detail_list: [
+            {
+              player_id: "p10",
+              player_name: "Fin Smith",
+              metres: 9,
+              defenders_beaten: 1,
+              clean_breaks: 0,
+            },
+          ],
+        },
+        defend: {
+          match_id: "m1",
+          detail_list: [
+            {
+              player_id: "p10",
+              player_name: "Fin Smith",
+              tackles: 6,
+              missed_tackles: 1,
+            },
+          ],
+        },
+      },
+      away: emptySide(),
+    };
+    const bundle = buildMatchAnimationPlayerStats(stats);
+    const chips = resolveAttackDefenceOverlayChips({
+      bundle,
+      playerName: "Fin Smith",
+    });
+    expect(chips.map((c) => `${c.categoryLabel}:${c.metricLabel}`)).toEqual([
+      "Attack:Metres",
+      "Attack:Def beaten",
+      "Defence:Tackles",
+      "Defence:Missed",
+    ]);
+    expect(resolveOverlayPitchPhase("try", chips)).toBe("attack");
+    expect(resolveOverlayPitchPhase("conversion", chips)).toBe("attack");
   });
 });

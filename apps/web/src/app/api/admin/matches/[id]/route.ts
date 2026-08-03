@@ -61,6 +61,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.attendance !== undefined
         ? { attendance: body.attendance === null || body.attendance === "" ? null : Number(body.attendance) }
         : {}),
+      ...(body.halfTimeHome !== undefined
+        ? {
+            halfTimeHome:
+              body.halfTimeHome === null || body.halfTimeHome === ""
+                ? null
+                : Number(body.halfTimeHome),
+          }
+        : {}),
+      ...(body.halfTimeAway !== undefined
+        ? {
+            halfTimeAway:
+              body.halfTimeAway === null || body.halfTimeAway === ""
+                ? null
+                : Number(body.halfTimeAway),
+          }
+        : {}),
+      ...(body.additionalInfo !== undefined
+        ? { additionalInfo: body.additionalInfo ? String(body.additionalInfo) : null }
+        : {}),
+      ...(body.weatherNote !== undefined
+        ? { weatherNote: body.weatherNote ? String(body.weatherNote) : null }
+        : {}),
       ...(body.refereeId !== undefined ? { refereeId: body.refereeId ? String(body.refereeId) : null } : {}),
       ...(body.homeCoachId !== undefined ? { homeCoachId: body.homeCoachId ? String(body.homeCoachId) : null } : {}),
       ...(body.awayCoachId !== undefined ? { awayCoachId: body.awayCoachId ? String(body.awayCoachId) : null } : {}),

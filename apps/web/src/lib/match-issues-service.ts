@@ -120,11 +120,11 @@ function severityFor(code: MatchWarningCode): "error" | "warning" {
 
 function issueHref(code: MatchWarningCode): (id: string) => string {
   return (id: string) => {
-    if (code === "lineups") return `/admin/matches/${id}/edit#lineups`;
-    if (code === "team_stats") return `/admin/matches/${id}/edit#team-stats`;
-    if (code === "player_stats") return `/admin/matches/${id}/edit#player-stats`;
-    if (code === "primary_mapping") return `/admin/matches/${id}/edit#sources`;
-    return `/admin/matches/${id}/edit#issues`;
+    if (code === "lineups") return `/admin/matches/${id}/lineups`;
+    if (code === "team_stats") return `/admin/matches/${id}/stats`;
+    if (code === "player_stats") return `/admin/matches/${id}/player-stats`;
+    if (code === "primary_mapping") return `/admin/matches/${id}/sources`;
+    return `/admin/matches/${id}/edit`;
   };
 }
 

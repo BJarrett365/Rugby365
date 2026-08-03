@@ -12,6 +12,7 @@ import { WikipediaCareerTables } from "@/components/admin/WikipediaCareerTables"
 import { PlayerLegendSection } from "@/components/admin/PlayerLegendSection";
 import { PlayerTransferConflictWarning } from "@/components/admin/PlayerTransferConflictWarning";
 import { PlayerDevelopmentChartCmsPanel } from "@/components/admin/PlayerDevelopmentChartCmsPanel";
+import { PlayerMatchRatingsPanel } from "@/components/admin/PlayerMatchRatingsPanel";
 import { PlayerRadarCmsPanel } from "@/components/admin/PlayerRadarCmsPanel";
 import type { PlayerSeasonStatsRow } from "@/lib/player-season-stats-service";
 import { wikipediaCareerTotals } from "@/lib/player-career-stint-utils";
@@ -43,6 +44,32 @@ const PlayerBioAutomationPanel = dynamic(
   {
     ssr: false,
     loading: () => <p className="text-zinc-500 text-sm cms-card mb-4">Loading bio automation…</p>,
+  },
+);
+
+const PlayerPublicProfileDataPanel = dynamic(
+  () =>
+    import("@/components/admin/PlayerPublicProfileDataPanel").then((m) => ({
+      default: m.PlayerPublicProfileDataPanel,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-zinc-500 text-sm cms-card mb-4">Loading public profile data…</p>
+    ),
+  },
+);
+
+const PlayerScoutIntelligencePanel = dynamic(
+  () =>
+    import("@/components/admin/PlayerScoutIntelligencePanel").then((m) => ({
+      default: m.PlayerScoutIntelligencePanel,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-zinc-500 text-sm cms-card mb-4">Loading Scout Intelligence…</p>
+    ),
   },
 );
 
@@ -140,6 +167,11 @@ type SquadAppearance = {
   awayTeam: string | null;
   competitionName: string | null;
   seasonLabel: string;
+  matchRating: number | null;
+  matchRatingStatus: string | null;
+  matchMinutes: number | null;
+  matchRatingChange: number | null;
+  matchPerformanceTrend: string | null;
 };
 
 type MatchEventRow = {
@@ -256,6 +288,9 @@ export default function EditPlayerPage() {
   const [rugbypassUrl, setRugbypassUrl] = useState("");
   const [rugbypassImporting, setRugbypassImporting] = useState(false);
   const [rugbypassImportError, setRugbypassImportError] = useState("");
+  const [wikipediaUrl, setWikipediaUrl] = useState("");
+  const [wikipediaImporting, setWikipediaImporting] = useState(false);
+  const [wikipediaImportError, setWikipediaImportError] = useState("");
 
   const squadGroups = useMemo(
     () =>
@@ -325,6 +360,11 @@ export default function EditPlayerPage() {
               ),
             )
           : ""),
+    );
+    setWikipediaUrl(
+      externalLinks?.wikipedia ??
+        (player?.wikipediaUrl ? String(player.wikipediaUrl) : "") ??
+        "",
     );
     setTransfers((d.transfers as Transfer[]) ?? []);
     setCareerTimeline((d.careerTimeline as CareerTimelineEntry[]) ?? []);
@@ -435,6 +475,43 @@ export default function EditPlayerPage() {
     setRugbypassImporting(false);
   }
 
+  async function importFromWikipedia() {
+    setWikipediaImporting(true);
+    setWikipediaImportError("");
+    const res = await fetch(`/api/admin/players/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "enrich-wikipedia",
+        ...(wikipediaUrl.trim() ? { sourceUrl: wikipediaUrl.trim() } : {}),
+        ...(values.name.trim() ? { name: values.name.trim() } : {}),
+      }),
+    });
+    const data = await res.json();
+    // Always reload — pasted URL may have been saved even when archive pull failed.
+    await load();
+    if (!res.ok) {
+      const reason = String(data.reason ?? data.error ?? "Wikipedia lookup failed");
+      if (reason.startsWith("name_mismatch:")) {
+        const wikiName = reason.slice("name_mismatch:".length);
+        setWikipediaImportError(
+          `Wikipedia page is for “${wikiName}”, which does not match this CMS player. Check the URL against RugbyPass.`,
+        );
+      } else if (reason === "no_matching_wikipedia_article") {
+        setWikipediaImportError(
+          "No matching Wikipedia article found. URL was saved if valid — verify it matches this player (and RugbyPass).",
+        );
+      } else if (reason === "invalid_wikipedia_url") {
+        setWikipediaImportError(
+          "Invalid Wikipedia URL. Use a full article link, e.g. https://en.wikipedia.org/wiki/Antoine_Dupont",
+        );
+      } else {
+        setWikipediaImportError(reason);
+      }
+    }
+    setWikipediaImporting(false);
+  }
+
   async function addTransfer(e: React.FormEvent) {
     e.preventDefault();
     if (!transferForm.toTeamId) {
@@ -503,6 +580,14 @@ export default function EditPlayerPage() {
       <AiAssistPanel entityType="player" entityId={id} onApplied={() => void load()} />
 
       <PlayerBioAutomationPanel playerId={id} onApplied={() => void load()} />
+
+      <PlayerPublicProfileDataPanel playerId={id} onApplied={() => void load()} />
+
+      <PlayerScoutIntelligencePanel
+        playerId={id}
+        playerSlug={values.slug || null}
+        onApplied={() => void load()}
+      />
 
       <div className="cms-card mb-4 border border-emerald-900/40">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -620,25 +705,14 @@ export default function EditPlayerPage() {
       )}
 
       <div className="cms-card mb-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-semibold m-0">Wikipedia archive</h3>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="cms-btn cms-btn--secondary text-xs"
-              onClick={async () => {
-                const res = await fetch(`/api/admin/players/${id}`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ action: "enrich-wikipedia" }),
-                });
-                const data = await res.json();
-                if (res.ok) await load();
-                else alert(data.error ?? "Wikipedia lookup failed");
-              }}
-            >
-              Refresh from Wikipedia
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {profile?.sourceStatus?.wikipediaSyncedAt ? (
+              <span className="text-xs text-zinc-500">
+                Last synced {new Date(profile.sourceStatus.wikipediaSyncedAt).toLocaleString()}
+              </span>
+            ) : null}
             <Link
               href={`/admin/wikipedia/import?link=${id}`}
               className="cms-btn cms-btn--secondary text-xs"
@@ -647,8 +721,60 @@ export default function EditPlayerPage() {
             </Link>
           </div>
         </div>
-        {archive?.wikipediaUrl ? (
-          <div className="text-sm space-y-2">
+        <p className="text-sm text-zinc-500 mt-0 mb-3">
+          Paste the Wikipedia player article URL to import archive data and confirm identity (cross-check
+          with RugbyPass). Example:{" "}
+          <span className="text-zinc-400 font-mono text-xs">
+            https://en.wikipedia.org/wiki/Antoine_Dupont
+          </span>
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="cms-input flex-1"
+            type="url"
+            placeholder="https://en.wikipedia.org/wiki/Player_Name"
+            value={wikipediaUrl}
+            onChange={(e) => setWikipediaUrl(e.target.value)}
+          />
+          <button
+            type="button"
+            className="cms-btn cms-btn--secondary shrink-0"
+            disabled={wikipediaImporting}
+            onClick={() => void importFromWikipedia()}
+          >
+            {wikipediaImporting ? "Refreshing…" : "Refresh from Wikipedia"}
+          </button>
+        </div>
+        {(wikipediaUrl.trim() || rugbypassUrl.trim()) && (
+          <p className="text-xs text-zinc-500 mt-2 mb-0 flex flex-wrap gap-x-3 gap-y-1">
+            {wikipediaUrl.trim() ? (
+              <a
+                href={wikipediaUrl.trim()}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:underline"
+              >
+                Open Wikipedia
+              </a>
+            ) : null}
+            {rugbypassUrl.trim() ? (
+              <a
+                href={rugbypassUrl.trim()}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:underline"
+              >
+                Cross-ref RugbyPass
+              </a>
+            ) : null}
+          </p>
+        )}
+        {wikipediaImportError ? (
+          <p className="text-amber-400 text-sm mt-2 m-0">{wikipediaImportError}</p>
+        ) : null}
+        {archive &&
+        (archive.archiveSyncedAt || archive.fullName || archive.birthDate || careerStints.length > 0) ? (
+          <div className="text-sm space-y-2 mt-4 pt-3 border-t border-zinc-800">
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 m-0">
               {archive.fullName ? (
                 <>
@@ -685,19 +811,20 @@ export default function EditPlayerPage() {
               ) : null}
             </dl>
             {careerStints.length > 0 ? <WikipediaCareerTables rows={careerStints} /> : null}
-            <a href={archive.wikipediaUrl} target="_blank" rel="noreferrer" className="text-emerald-400 text-xs">
-              Wikipedia source
-            </a>
           </div>
         ) : (
-          <p className="text-sm text-zinc-500 m-0">
-            No archive data yet. Import from Wikipedia to add biography, physical stats and career tables.
+          <p className="text-sm text-zinc-500 mt-3 mb-0">
+            No archive data yet. Paste a Wikipedia URL and refresh to add biography, physical stats and
+            career tables — or use this field to mark players with missing wiki pages.
           </p>
         )}
       </div>
 
       <PlayerPlanetRugbyImagesPanel
         playerId={id}
+        playerName={values.name || values.fullName || "Player"}
+        playerRating={null}
+        playerPosition={values.positionName || null}
         currentImageUrl={values.imageUrl || null}
         onPrimaryChanged={(imageUrl) =>
           setValues((v) => ({ ...v, imageUrl: imageUrl ?? "" }))
@@ -1211,6 +1338,11 @@ export default function EditPlayerPage() {
         </div>
       )}
 
+      <PlayerMatchRatingsPanel
+        playerId={id}
+        playerSlug={values.slug || null}
+        playerName={values.name || null}
+      />
       <PlayerDevelopmentChartCmsPanel playerId={id} playerSlug={values.slug || null} />
       <PlayerRadarCmsPanel playerId={id} playerSlug={values.slug || null} />
 
@@ -1229,7 +1361,8 @@ export default function EditPlayerPage() {
         <div className="cms-card mb-4 overflow-x-auto">
           <h3 className="font-semibold m-0">Fixtures & squads</h3>
           <p className="text-sm text-zinc-500 mt-1 mb-4">
-            Match appearances with per-fixture scoring, grouped by competition season.
+            Match appearances with per-fixture scoring and match ratings (1–10), grouped by
+            competition season. Unused / zero-minute selections show as DNP.
           </p>
           <div className="space-y-6">
             {squadGroups.map((group) => (
@@ -1255,6 +1388,7 @@ export default function EditPlayerPage() {
                       <th className="py-2 pr-2 text-center">C</th>
                       <th className="py-2 pr-2 text-center">P</th>
                       <th className="py-2 pr-2 text-center">Pts</th>
+                      <th className="py-2 pr-2 text-center">Rating</th>
                       <th className="py-2 pr-3">Result</th>
                       <th className="py-2" />
                     </tr>
@@ -1284,6 +1418,23 @@ export default function EditPlayerPage() {
                         <td className="py-2 pr-2 text-center font-mono">{stat(s.conversions)}</td>
                         <td className="py-2 pr-2 text-center font-mono">{stat(s.penalties)}</td>
                         <td className="py-2 pr-2 text-center font-mono">{s.points > 0 ? s.points : "—"}</td>
+                        <td
+                          className={`py-2 pr-2 text-center font-mono ${
+                            s.matchRating != null ? "text-emerald-400" : "text-zinc-500"
+                          }`}
+                          title={
+                            s.matchRating != null
+                              ? `Match rating ${s.matchRating.toFixed(1)}`
+                              : "Did not play / unrated"
+                          }
+                        >
+                          {s.matchRating != null
+                            ? s.matchRating.toFixed(1)
+                            : s.matchMinutes === 0 ||
+                                (s.squadRole ?? "").toLowerCase().includes("bench")
+                              ? "DNP"
+                              : "—"}
+                        </td>
                         <td className="py-2 pr-3 font-mono text-zinc-400">
                           {s.scoreline}
                           <span className="block text-xs text-zinc-600 font-sans">

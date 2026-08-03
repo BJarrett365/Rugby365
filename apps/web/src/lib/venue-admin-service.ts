@@ -146,7 +146,10 @@ export async function createVenue(input: {
   slug?: string;
   city?: string;
   countryName?: string;
+  countryCode?: string;
   capacity?: number;
+  latitude?: number | null;
+  longitude?: number | null;
   teamId?: string;
 }) {
   const name = input.name.trim();
@@ -163,7 +166,10 @@ export async function createVenue(input: {
       slug,
       city: input.city?.trim() || null,
       countryName: input.countryName?.trim() || null,
+      countryCode: input.countryCode?.trim().toUpperCase() || null,
       capacity: input.capacity ?? null,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
       teamId: input.teamId || null,
     })
     .returning();
@@ -203,7 +209,10 @@ export async function updateVenue(
     slug: string;
     city: string;
     countryName: string;
+    countryCode: string | null;
     capacity: number | null;
+    latitude: number | null;
+    longitude: number | null;
     teamId: string | null;
   }>,
 ) {
@@ -217,6 +226,9 @@ export async function updateVenue(
     if (slugErr) throw new Error(slugErr);
   }
 
+  const coordsTouched =
+    input.latitude !== undefined || input.longitude !== undefined;
+
   const [row] = await db
     .update(venues)
     .set({
@@ -224,7 +236,19 @@ export async function updateVenue(
       ...(input.slug !== undefined ? { slug } : {}),
       ...(input.city !== undefined ? { city: input.city.trim() || null } : {}),
       ...(input.countryName !== undefined ? { countryName: input.countryName.trim() || null } : {}),
+      ...(input.countryCode !== undefined
+        ? { countryCode: input.countryCode?.trim().toUpperCase() || null }
+        : {}),
       ...(input.capacity !== undefined ? { capacity: input.capacity } : {}),
+      ...(input.latitude !== undefined ? { latitude: input.latitude } : {}),
+      ...(input.longitude !== undefined ? { longitude: input.longitude } : {}),
+      ...(coordsTouched
+        ? {
+            geocodedAt: new Date(),
+            geocodeSource: "manual",
+            geocodeQuery: existing.geocodeQuery,
+          }
+        : {}),
       ...(input.teamId !== undefined ? { teamId: input.teamId || null } : {}),
     })
     .where(eq(venues.id, id))

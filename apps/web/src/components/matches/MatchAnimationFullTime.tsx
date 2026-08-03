@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { TeamCrest } from "./TeamCrest";
+import { MediaImage } from "@/components/media/MediaImage";
 import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
 import {
   fullTimeAnnouncement,
@@ -45,7 +46,11 @@ export function MatchAnimationFullTime({
   const metaBits = [
     payload.venueName,
     payload.competitionName,
-    payload.round ? `Round ${payload.round}` : null,
+    payload.round
+      ? /^round\b/i.test(payload.round.trim())
+        ? payload.round.trim()
+        : `Round ${payload.round.trim()}`
+      : null,
     payload.matchDateLabel,
     payload.attendance != null ? `Attendance ${payload.attendance.toLocaleString("en-GB")}` : null,
   ].filter(Boolean);
@@ -93,7 +98,20 @@ export function MatchAnimationFullTime({
       {metaBits.length > 0 ? <p className="pr-ma-ft__meta">{metaBits.join(" · ")}</p> : null}
 
       {payload.playerOfTheMatch ? (
-        <p className="pr-ma-ft__potm">Player of the Match: {payload.playerOfTheMatch}</p>
+        <div className="pr-ma-ft__potm">
+          {payload.playerOfTheMatchImageUrl ? (
+            <MediaImage
+              src={payload.playerOfTheMatchImageUrl}
+              alt=""
+              width={56}
+              height={56}
+              className="pr-ma-ft__potm-photo"
+            />
+          ) : null}
+          <p>
+            Man of the Match: <strong>{payload.playerOfTheMatch}</strong>
+          </p>
+        </div>
       ) : null}
 
       {payload.refereeName ? <p className="pr-ma-ft__ref">Referee: {payload.refereeName}</p> : null}

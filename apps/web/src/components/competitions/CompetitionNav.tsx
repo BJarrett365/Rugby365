@@ -8,6 +8,10 @@ const TABS = [
   { suffix: "/results", label: "Results" },
   { suffix: "/table", label: "Table" },
   { suffix: "/stats", label: "Player stats" },
+  { suffix: "/team-stats", label: "Team stats" },
+  { suffix: "/compare", label: "Compare players" },
+  { suffix: "/compare-teams", label: "Compare teams" },
+  { suffix: "/rankings", label: "Rankings" },
 ] as const;
 
 export function CompetitionNav({ slug }: { slug: string }) {
@@ -15,10 +19,7 @@ export function CompetitionNav({ slug }: { slug: string }) {
   const base = `/competitions/${slug}`;
 
   return (
-    <nav
-      className="flex flex-wrap gap-1 border-b border-zinc-800 mb-6"
-      aria-label="Competition sections"
-    >
+    <nav className="competition-nav" aria-label="Competition sections">
       {TABS.map((tab) => {
         const href = `${base}${tab.suffix}`;
         const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -26,11 +27,8 @@ export function CompetitionNav({ slug }: { slug: string }) {
           <Link
             key={tab.suffix}
             href={href}
-            className={`px-4 py-2 text-sm border-b-2 -mb-px touch-target ${
-              active
-                ? "border-emerald-500 text-emerald-400 font-medium"
-                : "border-transparent text-zinc-500 hover:text-zinc-300"
-            }`}
+            className={`competition-nav__link${active ? " is-active" : ""}`}
+            aria-current={active ? "page" : undefined}
           >
             {tab.label}
           </Link>

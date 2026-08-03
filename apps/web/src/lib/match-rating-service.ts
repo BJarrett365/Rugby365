@@ -9,6 +9,8 @@ import {
   playerMatchPerformanceStats,
   playerMatchRatings,
   playerRatings,
+  playerSelectionTrends,
+  playerTeamMemberships,
   players,
   teams,
 } from "@rugby365/db";
@@ -303,6 +305,8 @@ export type SquadPlayerRankings = {
   formRating: number | null;
   formLabel: string;
   latestMatchRating: number | null;
+  /** Current-season match-v1 average (1–10), null if none rated. */
+  seasonMatchAverage: number | null;
 };
 
 const EMPTY_SQUAD_RANKINGS: SquadPlayerRankings = {
@@ -310,6 +314,7 @@ const EMPTY_SQUAD_RANKINGS: SquadPlayerRankings = {
   formRating: null,
   formLabel: "—",
   latestMatchRating: null,
+  seasonMatchAverage: null,
 };
 
 /** Batch career + form (+ optional latest fixture match) for squad tables. */
@@ -318,15 +323,18 @@ export async function listSquadRankingsForPlayerIds(
   options?: {
     latestFixtureId?: string | null;
     latestFixturePublished?: boolean;
+    /** Season id used for season match average (defaults to latest fixture season). */
+    seasonId?: string | null;
   },
 ): Promise<Map<string, SquadPlayerRankings>> {
   const unique = [...new Set(playerIds.filter(Boolean))];
   const result = new Map<string, SquadPlayerRankings>();
   if (!unique.length) return result;
 
-  const [careerMap, recentMap] = await Promise.all([
+  const [careerMap, recentMap, seasonAvgMap] = await Promise.all([
     loadCareerRatingsByPlayerId(unique),
     loadRecentMatchRatingsByPlayerId(unique, null, 10),
+    loadSeasonMatchAveragesByPlayerId(unique, options?.seasonId ?? null),
   ]);
 
   const latestMatchByPlayer = new Map<string, number>();
@@ -346,9 +354,66 @@ export async function listSquadRankingsForPlayerIds(
       formRating: form.formRating,
       formLabel: formTrendLabel(form.formTrend, form.formRating),
       latestMatchRating: latestMatchByPlayer.get(playerId) ?? null,
+      seasonMatchAverage: seasonAvgMap.get(playerId) ?? null,
     });
   }
   return result;
+}
+
+async function loadSeasonMatchAveragesByPlayerId(
+  playerIds: string[],
+  seasonId: string | null,
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!playerIds.length) return map;
+  const db = getDb();
+
+  let resolvedSeasonId = seasonId;
+  if (!resolvedSeasonId) {
+    const [latest] = await db
+      .select({ seasonId: fixtures.seasonId })
+      .from(playerMatchRatings)
+      .innerJoin(fixtures, eq(playerMatchRatings.fixtureId, fixtures.id))
+      .where(
+        and(
+          inArray(playerMatchRatings.playerId, playerIds),
+          sql`${playerMatchRatings.rating} is not null`,
+          sql`${fixtures.seasonId} is not null`,
+        ),
+      )
+      .orderBy(desc(fixtures.kickoffAt))
+      .limit(1);
+    resolvedSeasonId = latest?.seasonId ?? null;
+  }
+  if (!resolvedSeasonId) return map;
+
+  const rows = await db
+    .select({
+      playerId: playerMatchRatings.playerId,
+      rating: playerMatchRatings.rating,
+    })
+    .from(playerMatchRatings)
+    .innerJoin(fixtures, eq(playerMatchRatings.fixtureId, fixtures.id))
+    .where(
+      and(
+        inArray(playerMatchRatings.playerId, playerIds),
+        eq(fixtures.seasonId, resolvedSeasonId),
+        sql`${playerMatchRatings.rating} is not null`,
+      ),
+    );
+
+  const sums = new Map<string, { total: number; n: number }>();
+  for (const row of rows) {
+    if (row.rating == null) continue;
+    const prev = sums.get(row.playerId) ?? { total: 0, n: 0 };
+    prev.total += row.rating;
+    prev.n += 1;
+    sums.set(row.playerId, prev);
+  }
+  for (const [playerId, agg] of sums) {
+    if (agg.n > 0) map.set(playerId, Math.round((agg.total / agg.n) * 10) / 10);
+  }
+  return map;
 }
 
 export function emptySquadRankings(): SquadPlayerRankings {
@@ -723,7 +788,183 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
     // Staff ratings are best-effort alongside player ratings.
   }
 
+  // Record DNPs: unused bench + season members not selected for this fixture.
+  try {
+    await persistFixtureDidNotPlayRecords({
+      fixtureId,
+      fixture,
+      squadRows,
+      ratedPlayerIds: new Set(perfRows.map((p) => p.playerId)),
+    });
+  } catch {
+    // DNP ledger is best-effort; never block match ratings.
+  }
+
   return { calculated, potmPlayerId, coachesCalculated, refereeCalculated };
+}
+
+/**
+ * Persist selection-trend rows for players who did not receive a match rating:
+ * - Matchday squad with 0 minutes / no performance row → unused_bench
+ * - Active season members for either team not in the matchday 23 → not_selected
+ */
+async function persistFixtureDidNotPlayRecords(input: {
+  fixtureId: string;
+  fixture: typeof fixtures.$inferSelect;
+  squadRows: Array<typeof fixturePlayers.$inferSelect>;
+  ratedPlayerIds: Set<string>;
+}): Promise<{ unusedBench: number; notSelected: number }> {
+  const { fixtureId, fixture, squadRows, ratedPlayerIds } = input;
+  const db = getDb();
+  let unusedBench = 0;
+  let notSelected = 0;
+
+  const squadPlayerIds = new Set(squadRows.map((s) => s.playerId));
+
+  // Unused bench / zero-minute squad entries
+  for (const squad of squadRows) {
+    if (ratedPlayerIds.has(squad.playerId)) continue;
+    const role = normalizeSquadRole(squad.squadRole ?? null, squad.jerseyNumber ?? null);
+    const previousRole = await loadPreviousSquadRole(squad.playerId, fixtureId, fixture.competitionId);
+    const selection = computeSelectionMovement(previousRole, role);
+    await upsertSelectionTrend({
+      playerId: squad.playerId,
+      teamId: squad.teamId,
+      competitionId: fixture.competitionId,
+      fixtureId,
+      previousFixtureId: null,
+      currentRole: role,
+      previousRole,
+      selectionTrend: selection.trend,
+      selectionBadge: selection.badge,
+      reason: "unused_bench",
+      minutesCurrent: 0,
+    });
+    unusedBench += 1;
+  }
+
+  // Season members not in matchday squad
+  if (fixture.seasonId) {
+    const teamIds = [fixture.homeTeamId, fixture.awayTeamId].filter(Boolean) as string[];
+    for (const teamId of teamIds) {
+      const members = await db
+        .select({
+          playerId: playerTeamMemberships.playerId,
+          status: playerTeamMemberships.status,
+        })
+        .from(playerTeamMemberships)
+        .where(
+          and(
+            eq(playerTeamMemberships.teamId, teamId),
+            eq(playerTeamMemberships.seasonId, fixture.seasonId),
+            inArray(playerTeamMemberships.status, ["active", "incoming", "loan_in"]),
+          ),
+        );
+
+      for (const member of members) {
+        if (squadPlayerIds.has(member.playerId) || ratedPlayerIds.has(member.playerId)) continue;
+        const previousRole = await loadPreviousSquadRole(
+          member.playerId,
+          fixtureId,
+          fixture.competitionId,
+        );
+        const selection = computeSelectionMovement(previousRole, "not_selected");
+        await upsertSelectionTrend({
+          playerId: member.playerId,
+          teamId,
+          competitionId: fixture.competitionId,
+          fixtureId,
+          previousFixtureId: null,
+          currentRole: "not_selected",
+          previousRole,
+          selectionTrend: selection.trend,
+          selectionBadge: selection.badge,
+          reason: "not_selected",
+          minutesCurrent: 0,
+        });
+        notSelected += 1;
+      }
+    }
+  }
+
+  return { unusedBench, notSelected };
+}
+
+async function loadPreviousSquadRole(
+  playerId: string,
+  fixtureId: string,
+  competitionId: string | null,
+): Promise<SquadRole | null> {
+  const db = getDb();
+  const conditions = [
+    eq(playerMatchRatings.playerId, playerId),
+    ne(playerMatchRatings.fixtureId, fixtureId),
+    sql`${playerMatchRatings.rating} is not null`,
+  ];
+  if (competitionId) conditions.push(eq(playerMatchRatings.competitionId, competitionId));
+
+  const [previous] = await db
+    .select({ squadRole: playerMatchRatings.squadRole })
+    .from(playerMatchRatings)
+    .innerJoin(fixtures, eq(playerMatchRatings.fixtureId, fixtures.id))
+    .where(and(...conditions))
+    .orderBy(desc(fixtures.kickoffAt))
+    .limit(1);
+
+  return (previous?.squadRole as SquadRole | null) ?? null;
+}
+
+async function upsertSelectionTrend(input: {
+  playerId: string;
+  teamId: string | null;
+  competitionId: string | null;
+  fixtureId: string;
+  previousFixtureId: string | null;
+  currentRole: SquadRole;
+  previousRole: SquadRole | null;
+  selectionTrend: SelectionTrend;
+  selectionBadge: string;
+  reason: string;
+  minutesCurrent: number | null;
+}) {
+  const db = getDb();
+  const [existing] = await db
+    .select({ id: playerSelectionTrends.id })
+    .from(playerSelectionTrends)
+    .where(
+      and(
+        eq(playerSelectionTrends.fixtureId, input.fixtureId),
+        eq(playerSelectionTrends.playerId, input.playerId),
+      ),
+    )
+    .limit(1);
+
+  const payload = {
+    teamId: input.teamId,
+    competitionId: input.competitionId,
+    previousFixtureId: input.previousFixtureId,
+    currentRole: input.currentRole,
+    previousRole: input.previousRole,
+    selectionTrend: input.selectionTrend,
+    selectionBadge: input.selectionBadge,
+    reason: input.reason,
+    minutesCurrent: input.minutesCurrent,
+    updatedAt: new Date(),
+  };
+
+  if (existing) {
+    await db
+      .update(playerSelectionTrends)
+      .set(payload)
+      .where(eq(playerSelectionTrends.id, existing.id));
+    return;
+  }
+
+  await db.insert(playerSelectionTrends).values({
+    playerId: input.playerId,
+    fixtureId: input.fixtureId,
+    ...payload,
+  });
 }
 
 export async function listRatingLabRows(limit = 100) {

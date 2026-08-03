@@ -48,6 +48,22 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     ],
   },
   {
+    id: "odds",
+    label: "Odds & betting",
+    value: "Odds",
+    description: "BMbets Rugby Union odds import, market snapshots and Betting Intelligence value bets.",
+    href: "/admin/odds",
+    matchPrefixes: ["/admin/odds"],
+  },
+  {
+    id: "scout",
+    label: "Recruitment Index",
+    value: "RRI",
+    description: "Enhances player Scouting with RRI scores, notes and recruitment targets.",
+    href: "/admin/scout",
+    matchPrefixes: ["/admin/scout"],
+  },
+  {
     id: "sandbox",
     label: "Operator sandbox",
     value: "Sandbox",
@@ -86,6 +102,22 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     description: "Supabase project URL, anon key and service role for Auth, DB and Storage.",
     href: "/admin/keys/supabase",
     matchPrefixes: ["/admin/keys/supabase"],
+  },
+  {
+    id: "open-meteo",
+    label: "Open-Meteo weather",
+    value: "Weather",
+    description: "Open-Meteo forecast and geocoding for match venue weather and wind (no API key).",
+    href: "/admin/keys/open-meteo",
+    matchPrefixes: ["/admin/keys/open-meteo"],
+  },
+  {
+    id: "tv-schedule",
+    label: "TV Schedule",
+    value: "TV",
+    description: "Gracenote / PA Media EPG keys for rugby where-to-watch (CMS manual until synced).",
+    href: "/admin/keys/tv-schedule",
+    matchPrefixes: ["/admin/keys/tv-schedule"],
   },
   {
     id: "wiki",
@@ -143,7 +175,56 @@ export const ADMIN_OPTA_STATS_LINKS: AdminHubLink[] = [
   },
 ];
 
+export const ADMIN_ODDS_LINKS: AdminHubLink[] = [
+  {
+    title: "BMbets import",
+    href: "/admin/odds/bmbets",
+    description:
+      "Primary odds importer — multi-bookmaker consensus from bmbets.com. Rugby Union only, League contaminants rejected, CMS fixtures only.",
+    status: "Live",
+  },
+  {
+    title: "Match Centre Betting Intel",
+    href: "/matches",
+    description:
+      "Public Match Centre Betting Intelligence tab — prediction, value bets and odds when a snapshot is linked.",
+    status: "Live",
+  },
+  {
+    title: "BMbets parse API",
+    href: "/api/admin/data-sources/bmbets/parse?url=https://www.bmbets.com/rugby-union/south-africa/currie-cup-1st-division/",
+    description:
+      "JSON preview for BMbets rugby-union listings or match URLs (League rows filtered; match odds resolved from parent listing).",
+    status: "API",
+  },
+];
+
+export const ADMIN_SCOUT_LINKS: AdminHubLink[] = [
+  {
+    title: "Recruitment targets",
+    href: "/admin/scout/targets",
+    description: "Players ranked by RRI — an enhancement layer on top of existing Scouting profiles.",
+    status: "Live",
+  },
+  {
+    title: "Players CMS",
+    href: "/admin/players",
+    description:
+      "Per-player RRI + scout notes. Scouting bios stay in Bio automation; this panel only adds recruitment scoring.",
+    status: "Admin",
+  },
+  {
+    title: "Public Scouting view",
+    href: "/players",
+    description:
+      "Existing /scouting profiles — editorial report first, Recruitment Index scorecard added below.",
+    status: "Live",
+  },
+];
+
 export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
+  odds: ADMIN_ODDS_LINKS,
+  scout: ADMIN_SCOUT_LINKS,
   imports: [
     {
       title: "Planet Rugby leagues",
@@ -264,6 +345,18 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       description: "Configure Supabase project URL, anon key and service role.",
       status: "Admin",
     },
+    {
+      title: "Open-Meteo weather",
+      href: "/admin/keys/open-meteo",
+      description: "Venue weather and wind via Open-Meteo (no API key; needs venue coordinates).",
+      status: "Admin",
+    },
+    {
+      title: "TV Schedule",
+      href: "/admin/keys/tv-schedule",
+      description: "Gracenote / PA Media keys for rugby TV listings (CMS broadcasters work without keys).",
+      status: "Admin",
+    },
   ],
   wiki: [
     {
@@ -302,6 +395,18 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       description: "Supabase project credentials for Auth, Database and Storage.",
       status: "Admin",
     },
+    {
+      title: "Open-Meteo weather",
+      href: "/admin/keys/open-meteo",
+      description: "Open-Meteo weather and geocoding for match venue conditions.",
+      status: "Admin",
+    },
+    {
+      title: "TV Schedule",
+      href: "/admin/keys/tv-schedule",
+      description: "EPG provider credentials for automated where-to-watch sync.",
+      status: "Admin",
+    },
   ],
 };
 
@@ -319,6 +424,10 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/teams", label: "Teams", short: "Teams" },
       { href: "/admin/competitions", label: "Competitions", short: "Comps" },
       { href: "/admin/players", label: "Players", short: "Players" },
+      { href: "/legends", label: "Legends", short: "Legends" },
+      { href: "/admin/legends", label: "Legends admin", short: "LegAdm" },
+      { href: "/players/compare", label: "Compare players", short: "Compare" },
+      { href: "/teams/compare", label: "Compare teams", short: "TeamsCmp" },
       { href: "/admin/coaches", label: "Coaches", short: "Coaches" },
       { href: "/admin/transfers", label: "Transfers", short: "Xfer" },
       { href: "/admin/squad-audit", label: "Squad audit", short: "SqAud" },
@@ -331,6 +440,22 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/opta-stats", label: "Opta Stats", short: "Stats" },
       { href: "/admin/tables", label: "Tables", short: "Tables" },
       { href: "/admin/rating-lab", label: "Rating Lab", short: "Ratings" },
+    ],
+  },
+  {
+    id: "odds",
+    label: "Odds",
+    items: [
+      { href: "/admin/odds", label: "Odds hub", short: "Odds" },
+      { href: "/admin/odds/bmbets", label: "BMbets import", short: "BMbets" },
+    ],
+  },
+  {
+    id: "scout",
+    label: "RRI",
+    items: [
+      { href: "/admin/scout", label: "RRI hub", short: "RRI" },
+      { href: "/admin/scout/targets", label: "RRI targets", short: "Targets" },
     ],
   },
   {
@@ -381,9 +506,14 @@ export function hubKeyActive(pathname: string, key: AdminHubKey): boolean {
 }
 
 export function isNavItemActive(pathname: string, item: AdminNavItem, sectionId?: string): boolean {
+  // Keys hub chips use prefix match (Odds highlights under /admin/odds/*)
   if (sectionId === "keys") {
     const key = ADMIN_HUB_KEYS.find((k) => k.href === item.href);
     if (key) return hubKeyActive(pathname, key);
+  }
+  // Odds / Scout hubs: exact so child routes do not light both items
+  if (item.href === "/admin/odds" || item.href === "/admin/scout") {
+    return pathname === item.href;
   }
   return navItemActive(pathname, item.href);
 }

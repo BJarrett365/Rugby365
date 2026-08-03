@@ -285,6 +285,44 @@ export function resolveAnimationPlayerStatChips(input: {
   return chips;
 }
 
+/**
+ * Football365-style scoring overlay: up to 2 Attack + 2 Defence chips
+ * (metres / breaks / tackles / missed) for TRY / CONVERSION cards.
+ */
+export function resolveAttackDefenceOverlayChips(input: {
+  bundle: MatchAnimationPlayerStats | null | undefined;
+  playerId?: string | null;
+  playerName?: string | null;
+  attackLimit?: number;
+  defenceLimit?: number;
+}): AnimationStatChip[] {
+  const profile = findAnimationPlayerStats(input.bundle, input.playerId, input.playerName);
+  if (!profile) return [];
+
+  const attackLimit = input.attackLimit ?? 2;
+  const defenceLimit = input.defenceLimit ?? 2;
+  const attack = (profile.chipsByCategory.attack ?? []).slice(0, attackLimit);
+  const defence = (profile.chipsByCategory.defend ?? []).slice(0, defenceLimit);
+  return [...attack, ...defence];
+}
+
+/** Dominant phase for goal-view pitch colouring. */
+export function resolveOverlayPitchPhase(
+  eventType: string | null | undefined,
+  chips: AnimationStatChip[],
+): "attack" | "defence" | "neutral" {
+  const preferred = animationStatCategoryForEvent(eventType);
+  if (preferred === "defend") return "defence";
+  if (preferred === "attack" || preferred === "carries") return "attack";
+  if (preferred === "kicking") {
+    const attackCount = chips.filter((c) => c.category === "attack").length;
+    const defenceCount = chips.filter((c) => c.category === "defend").length;
+    if (defenceCount > attackCount) return "defence";
+    return "attack";
+  }
+  return chips.some((c) => c.category === "attack") ? "attack" : "neutral";
+}
+
 export function animationCategoryLabel(category: AnimationPlayerStatCategory): string {
   return CATEGORY_LABEL[category];
 }

@@ -28,8 +28,16 @@ import {
   signalHoldMs,
   type AnimationSignal,
 } from "@/lib/match-animation-signals";
+import {
+  attackDirectionForSide,
+  resolvePitchIntensity,
+} from "@/lib/match-animation-insight";
 import { formatTimelinePlayerLine } from "@/lib/match-animation-player-enrich";
-import { resolveAnimationPlayerStatChips } from "@/lib/match-animation-player-stats";
+import {
+  resolveAnimationPlayerStatChips,
+  resolveAttackDefenceOverlayChips,
+  resolveOverlayPitchPhase,
+} from "@/lib/match-animation-player-stats";
 import {
   playMatchAnimationCue,
   readMatchAnimationSoundEnabled,
@@ -42,6 +50,7 @@ import {
   MatchAnimationPlayerStatChips,
   MatchAnimationPlayerStatsLeaders,
 } from "./MatchAnimationPlayerStats";
+import { MatchAnimationInsightCarousel } from "./MatchAnimationInsightCarousel";
 
 const SPEEDS = [1, 2, 5, 10] as const;
 const INTRO_SEEN_KEY = "r365-ma-intro-seen";
@@ -111,6 +120,8 @@ export function MatchAnimationPanel({
   const [conversionFlight, setConversionFlight] = useState<
     "idle" | "kicking" | "success" | "miss" | null
   >(null);
+  /** Brief red try-zone on the pitch before switching to the TRY goal camera. */
+  const [tryPreamble, setTryPreamble] = useState(false);
   const playTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const ftHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const signalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,6 +310,7 @@ export function MatchAnimationPanel({
       setSignalVisible(false);
       setActiveSignal(null);
       setConversionFlight(null);
+      setTryPreamble(false);
       return;
     }
     const ev = events[eventIndex];
@@ -330,15 +342,33 @@ export function MatchAnimationPanel({
     if (conversionTimer.current) clearTimeout(conversionTimer.current);
 
     if (signal.frontGoalView === "try") {
+      // Red try-zone on the pitch first, then cut to TRY + player on the posts camera.
       setConversionFlight("idle");
-      setSignalVisible(true);
-      playMatchAnimationCue("try", soundEnabledRef.current);
-      signalTimer.current = setTimeout(
-        () => setSignalVisible(false),
-        signalHoldMs(speed, reducedMotion),
-      );
+      setSignalVisible(false);
+      const preambleMs = reducedMotion ? 0 : Math.max(450, 900 / speed);
+      if (preambleMs <= 0) {
+        setTryPreamble(false);
+        setSignalVisible(true);
+        playMatchAnimationCue("try", soundEnabledRef.current);
+        signalTimer.current = setTimeout(
+          () => setSignalVisible(false),
+          signalHoldMs(speed, reducedMotion),
+        );
+      } else {
+        setTryPreamble(true);
+        conversionTimer.current = setTimeout(() => {
+          setTryPreamble(false);
+          setSignalVisible(true);
+          playMatchAnimationCue("try", soundEnabledRef.current);
+          signalTimer.current = setTimeout(
+            () => setSignalVisible(false),
+            signalHoldMs(speed, reducedMotion),
+          );
+        }, preambleMs);
+      }
     } else if (signal.simulateConversion || signal.frontGoalView === "conversion" || signal.frontGoalView === "miss") {
       const isMiss = signal.kind === "conversion_missed" || signal.frontGoalView === "miss";
+      setTryPreamble(false);
       setConversionFlight(reducedMotion ? (isMiss ? "miss" : "success") : "kicking");
       setSignalVisible(false);
       const kickMsLocal = reducedMotion ? 0 : Math.max(500, 1300 / speed);
@@ -352,6 +382,7 @@ export function MatchAnimationPanel({
         );
       }, kickMsLocal);
     } else if (signal.kind !== "generic") {
+      setTryPreamble(false);
       setConversionFlight(null);
       setSignalVisible(true);
       const cue = soundCueForSignalKind(signal.kind);
@@ -361,6 +392,7 @@ export function MatchAnimationPanel({
         signalHoldMs(speed, reducedMotion),
       );
     } else {
+      setTryPreamble(false);
       setConversionFlight(null);
       setSignalVisible(false);
     }
@@ -414,14 +446,56 @@ export function MatchAnimationPanel({
     eventType: current?.eventType ?? activeSignal?.kind,
     limit: 4,
   });
+  const goalOverlayChips = resolveAttackDefenceOverlayChips({
+    bundle: livePayload.playerStats,
+    playerId: current?.playerId,
+    playerName: current?.playerName ?? activeSignal?.playerName,
+  });
+  const goalPitchPhase = resolveOverlayPitchPhase(
+    current?.eventType ?? activeSignal?.kind,
+    goalOverlayChips,
+  );
   const playerStatsLeaders = livePayload.playerStats?.leaders ?? [];
   const fieldZone =
     view === "full_time" || view === "countdown" || view === "empty"
       ? null
-      : fieldZoneFromBallX(ballX, possession);
+      : tryPreamble
+        ? "ingoal"
+        : fieldZoneFromBallX(ballX, possession);
   const showLineoutArrow = Boolean(activeSignal?.showLineoutArrow && signalVisible);
+  const showKickPath = Boolean(activeSignal?.showKickPath && signalVisible);
+  const pitchIntensity =
+    view === "live" || view === "replay"
+      ? tryPreamble
+        ? "dangerous"
+        : resolvePitchIntensity({ fieldZone })
+      : null;
+  const pitchPhaseLabel =
+    tryPreamble
+      ? "Try threat"
+      : pitchIntensity === "dangerous"
+        ? "Attack"
+        : pitchIntensity === "attack"
+          ? "Attack"
+          : pitchIntensity === "possession"
+            ? fieldZone === "own_22"
+              ? "Defence"
+              : "In Possession"
+            : null;
+  const homeAttackDirection =
+    view === "countdown" || view === "empty"
+      ? null
+      : attackDirectionForSide("home", livePayload.period);
+  const awayAttackDirection =
+    view === "countdown" || view === "empty"
+      ? null
+      : attackDirectionForSide("away", livePayload.period);
+  const showHalfTimeInsight =
+    view === "live" && availability.phase === "half_time";
   const showFrontGoal =
     (view === "replay" || view === "live") &&
+    !showHalfTimeInsight &&
+    !tryPreamble &&
     Boolean(activeSignal?.frontGoalView) &&
     (signalVisible ||
       conversionFlight === "kicking" ||
@@ -434,7 +508,15 @@ export function MatchAnimationPanel({
       ? "miss"
       : activeSignal?.frontGoalView === "try"
         ? "try"
-        : "conversion";
+        : activeSignal?.frontGoalView === "drop_goal"
+          ? "conversion"
+          : activeSignal?.frontGoalView === "penalty_goal"
+            ? "conversion"
+            : "conversion";
+  const currentEvent = events[eventIndex];
+  const assistLabel = currentEvent?.assistPlayerName
+    ? `Assist · ${currentEvent.assistPlayerName}`
+    : null;
 
   // During replay show running score from events when present; live/FT uses CMS.
   const displayHomeScore =
@@ -559,22 +641,34 @@ export function MatchAnimationPanel({
           homeScore={displayHomeScore}
           awayScore={displayAwayScore}
           clockLabel={clockLabel}
-          statusHint={view === "live" ? "LIVE" : view === "full_time" ? "FULL-TIME" : null}
+          statusHint={
+            view === "live"
+              ? showHalfTimeInsight
+                ? "HALF-TIME"
+                : "LIVE"
+              : view === "full_time"
+                ? "FULL-TIME"
+                : null
+          }
           progressPercent={progressPercent}
+          homeAttackDirection={homeAttackDirection}
+          awayAttackDirection={awayAttackDirection}
         />
       ) : null}
 
       {view === "full_time" ? (
         <div className="pr-ma-stage pr-ma-stage--ft">
-          <MatchAnimationPitch
-            homeColour={home.colour}
-            awayColour={away.colour}
-            ballX={ballX}
-            ballY={ballY}
-            possession={possession}
-            darkened
-            reducedMotion={reducedMotion}
-          />
+          <div className="pr-ma-stage__pitch-wrap">
+            <MatchAnimationPitch
+              homeColour={home.colour}
+              awayColour={away.colour}
+              ballX={ballX}
+              ballY={ballY}
+              possession={possession}
+              darkened
+              reducedMotion={reducedMotion}
+            />
+          </div>
           <MatchAnimationFullTime
             payload={livePayload}
             detailsHref={detailsHref}
@@ -584,6 +678,11 @@ export function MatchAnimationPanel({
             onSpeed={(s) => setSpeed(s)}
             onReplayMatch={() => startReplay({ fromKickOff: true })}
             onKeyMoments={() => startReplay({ highlights: true })}
+          />
+          <MatchAnimationInsightCarousel
+            payload={livePayload}
+            mode="full_time"
+            reducedMotion={reducedMotion}
           />
         </div>
       ) : null}
@@ -671,35 +770,39 @@ export function MatchAnimationPanel({
                     : (conversionFlight ?? (goalMode === "miss" ? "miss" : "success"))
                 }
                 reducedMotion={reducedMotion}
+                teamLabel={goalTeam.name}
                 playerLabel={
                   activeSignal?.playerName
-                    ? [
-                        goalTeam.shortName || goalTeam.name,
-                        activeSignal.jerseyNumber != null
-                          ? `#${activeSignal.jerseyNumber} ${activeSignal.playerName}`
-                          : activeSignal.playerName,
-                      ].join(" · ")
+                    ? activeSignal.jerseyNumber != null
+                      ? `#${activeSignal.jerseyNumber} ${activeSignal.playerName}`
+                      : activeSignal.playerName
                     : null
                 }
                 headline={activeSignal?.title ?? null}
+                assistLabel={goalMode === "try" ? assistLabel : null}
+                pitchPhase={goalPitchPhase}
               />
             ) : (
               <MatchAnimationPitch
                 homeColour={home.colour}
                 awayColour={away.colour}
-                ballX={ballX}
+                ballX={tryPreamble ? (possession === "away" ? 4 : 96) : ballX}
                 ballY={ballY}
                 possession={possession}
-                possessionLabel={possessionLabel}
-                possessionTeamLabel={possessionTeamLabel}
-                fieldZone={fieldZone}
-                showLineoutArrow={showLineoutArrow}
+                possessionLabel={showHalfTimeInsight ? null : possessionLabel}
+                possessionTeamLabel={showHalfTimeInsight ? null : possessionTeamLabel}
+                fieldZone={showHalfTimeInsight ? null : fieldZone}
+                showLineoutArrow={showHalfTimeInsight || tryPreamble ? false : showLineoutArrow}
+                showKickPath={showHalfTimeInsight || tryPreamble ? false : showKickPath}
+                intensity={showHalfTimeInsight ? null : pitchIntensity}
+                phaseLabel={showHalfTimeInsight ? null : pitchPhaseLabel}
                 conversionFlight={null}
-                lit={view === "live"}
+                lit={view === "live" && !showHalfTimeInsight}
+                darkened={showHalfTimeInsight}
                 reducedMotion={reducedMotion}
               />
             )}
-            {activeSignal ? (
+            {activeSignal && !showHalfTimeInsight && !showFrontGoal ? (
               <MatchAnimationSignal
                 signal={activeSignal}
                 home={home}
@@ -709,6 +812,14 @@ export function MatchAnimationPanel({
               />
             ) : null}
           </div>
+
+          {showHalfTimeInsight ? (
+            <MatchAnimationInsightCarousel
+              payload={livePayload}
+              mode="half_time"
+              reducedMotion={reducedMotion}
+            />
+          ) : null}
 
           <div className="pr-ma-now" aria-live="polite">
             {view === "live" ? (
@@ -725,7 +836,7 @@ export function MatchAnimationPanel({
                   Connection: {localPaused ? "Live feed active · local pause" : "Live"}
                   {possessionStatusLine ? ` · ${possessionStatusLine}` : ""}
                 </p>
-                {playerStatChips.length > 0 ? (
+                {playerStatChips.length > 0 && !showFrontGoal ? (
                   <MatchAnimationPlayerStatChips
                     chips={playerStatChips}
                     title="Active player stats"
@@ -750,7 +861,7 @@ export function MatchAnimationPanel({
                         .join(" · ")
                     : (current?.label ?? "Select an event to replay")}
                 </p>
-                {playerStatChips.length > 0 ? (
+                {playerStatChips.length > 0 && !showFrontGoal ? (
                   <MatchAnimationPlayerStatChips
                     chips={playerStatChips}
                     title="Active player stats"

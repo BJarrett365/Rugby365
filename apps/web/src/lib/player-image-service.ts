@@ -21,6 +21,7 @@ export type PlayerImageRole =
   | "career"
   | "legend"
   | "gallery"
+  | "badge"
   | "none";
 
 export type PlayerImageStatus =
@@ -37,7 +38,8 @@ export type PlayerImageType =
   | "club"
   | "historic"
   | "hero"
-  | "gallery";
+  | "gallery"
+  | "badge_cutout";
 
 function now() {
   return new Date();

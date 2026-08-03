@@ -2,6 +2,13 @@
  * Pure helpers for Player Development Timeline (no DB / server-only).
  */
 
+/** How the player featured in this fixture relative to ratings. */
+export type AppearanceStatus =
+  | "played"
+  | "unused_bench"
+  | "not_selected"
+  | "unrated";
+
 export type DevelopmentTimelinePoint = {
   fixtureId: string;
   fixtureSlug: string | null;
@@ -30,6 +37,8 @@ export type DevelopmentTimelinePoint = {
   isInternational: boolean;
   isPotm: boolean;
   modelVersion: string | null;
+  /** Explicit DNP / unused / not selected when no match rating applies. */
+  appearanceStatus?: AppearanceStatus;
   annotations: DevelopmentAnnotation[];
 };
 
@@ -42,7 +51,8 @@ export type DevelopmentAnnotation =
   | "intl"
   | "debut"
   | "transfer_debut"
-  | "milestone";
+  | "milestone"
+  | "dnp";
 
 export const ANNOTATION_LABELS: Record<DevelopmentAnnotation, string> = {
   try: "Try scored",
@@ -54,7 +64,34 @@ export const ANNOTATION_LABELS: Record<DevelopmentAnnotation, string> = {
   debut: "Debut",
   transfer_debut: "First match after transfer",
   milestone: "Career milestone",
+  dnp: "Did not play",
 };
+
+/** Infer played / DNP status for timeline display (null ratings are not zero). */
+export function resolveAppearanceStatus(input: {
+  rating: number | null | undefined;
+  minutes: number | null | undefined;
+  started: boolean | null | undefined;
+  forcedStatus?: AppearanceStatus | null;
+}): AppearanceStatus {
+  if (input.forcedStatus) return input.forcedStatus;
+  if (input.rating != null && Number.isFinite(input.rating)) return "played";
+  if (input.minutes != null && input.minutes > 0) return "unrated";
+  if (input.started === false) return "unused_bench";
+  if (input.started === true && (input.minutes == null || input.minutes <= 0)) {
+    return "unused_bench";
+  }
+  return "not_selected";
+}
+
+export function ratingDisplayLabel(
+  rating: number | null | undefined,
+  status?: AppearanceStatus | null,
+): string {
+  if (rating != null && Number.isFinite(rating)) return rating.toFixed(1);
+  if (status === "unused_bench" || status === "not_selected") return "DNP";
+  return "Unrated";
+}
 
 export type DevelopmentTimelineFilters = {
   season: string;
@@ -178,7 +215,10 @@ export type SeasonDevelopmentRow = {
   seasonLabel: string;
   teamName: string;
   competitions: string[];
+  /** Total ledger rows including DNPs. */
+  appearances: number;
   ratedAppearances: number;
+  dnpCount: number;
   average: number | null;
   highest: number | null;
   lowest: number | null;
@@ -204,12 +244,24 @@ export function buildSeasonDevelopmentRows(
       const competitions = [
         ...new Set(list.map((p) => p.competitionName).filter(Boolean) as string[]),
       ];
+      const dnpCount = list.filter((p) => {
+        const status =
+          p.appearanceStatus ??
+          resolveAppearanceStatus({
+            rating: p.rating,
+            minutes: p.minutes,
+            started: p.started,
+          });
+        return status === "unused_bench" || status === "not_selected";
+      }).length;
       return {
         seasonSlug: slug,
         seasonLabel: list[0]?.seasonLabel ?? slug,
         teamName: teams.join(" / "),
         competitions,
+        appearances: list.length,
         ratedAppearances: summary.ratedAppearances,
+        dnpCount,
         average: summary.average,
         highest: summary.highest,
         lowest: summary.lowest,
@@ -287,6 +339,7 @@ export function buildGappedLinePath(
 
 export function annotationMarker(annotations: DevelopmentAnnotation[]): string {
   if (annotations.includes("potm")) return "★";
+  if (annotations.includes("dnp")) return "○";
   if (annotations.includes("multi_try")) return "T×";
   if (annotations.includes("try")) return "T";
   if (annotations.includes("red")) return "R";

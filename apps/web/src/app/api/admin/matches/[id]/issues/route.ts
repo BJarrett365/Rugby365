@@ -57,7 +57,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (result.keeperId !== id) {
         return NextResponse.json({
           ...result,
-          redirectedTo: `/admin/matches/${result.keeperId}/edit#issues`,
+          redirectedTo: `/admin/matches/${result.keeperId}/edit`,
         });
       }
       const report = await getMatchIssuesReport(id);

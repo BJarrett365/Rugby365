@@ -1,20 +1,27 @@
 import Link from "next/link";
 import type { PublicPlayerProfile } from "@/lib/public-player-profile-service";
 import { formatStatValue } from "@/lib/public-player-intro";
-import { TeamCrest } from "@/components/matches/TeamCrest";
-import { PlayerPortrait } from "@/components/media/PlayerPortrait";
 import { MediaGallery } from "@/components/media/MediaGallery";
 import { RugbyPositionPitch } from "@/components/media/RugbyPositionPitch";
 import { PlayerDevelopmentTimeline } from "@/components/players/PlayerDevelopmentTimeline";
 import { PlayerPerformanceRadar } from "@/components/players/PlayerPerformanceRadar";
+import { PlayerValuePanel } from "@/components/players/PlayerValuePanel";
+import { PlayerProfileHeader } from "@/components/players/PlayerProfileHeader";
+import { PlayerValueCard } from "@/components/players/PlayerValueCard";
+import { PlayerRankingCard } from "@/components/players/PlayerRankingCard";
+import { ValueTimelineChart } from "@/components/players/ValueTimelineChart";
+import { ValueBreakdown } from "@/components/players/ValueBreakdown";
+import { PlayerBadge } from "@/components/players/PlayerBadge";
+import { ScoutIntelligencePanel } from "@/components/players/ScoutIntelligencePanel";
+import { ScoutRriCard } from "@/components/players/ScoutRriCard";
 import { movementTypeLabel } from "@/lib/transfer-types";
-import { defaultAltText } from "@/lib/media-tokens";
 import { buildPublicPlayerPath, PUBLIC_PLAYER_TABS } from "@/lib/public-player-filters";
 import type { PublicPlayerView } from "@/lib/public-player-filters";
 
 const TAB_LABELS: Record<(typeof PUBLIC_PLAYER_TABS)[number], string> = {
   overview: "Overview",
   stats: "Stats",
+  value: "Value",
   matches: "Matches",
   events: "Events",
   transfers: "Transfers",
@@ -80,6 +87,10 @@ export function PublicPlayerProfileView({
     : "overview";
   const season = profile.seasonSnapshot;
   const totalPages = Math.max(1, Math.ceil(profile.matches.total / profile.matches.pageSize));
+  const comparePeer = profile.rankings?.peers.find((p) => !p.isCurrent);
+  const compareHref = comparePeer
+    ? `/players/${profile.slug}/compare/${comparePeer.slug}${profile.preview ? "?preview=1" : ""}`
+    : null;
 
   const positionSummary = profile.positionName
     ? `${profile.name} has played mainly as ${profile.positionName}${
@@ -117,83 +128,26 @@ export function PublicPlayerProfileView({
         <span aria-current="page">{profile.name}</span>
       </nav>
 
-      <header className="pr-player-header">
-        <PlayerPortrait
-          name={profile.name}
-          imageUrl={profile.imageUrl}
-          alt={profile.primaryImage?.altText || defaultAltText(profile.name, "headshot")}
-          variant="portrait"
-          priority
-          clubName={profile.club?.name}
-          clubImageUrl={profile.club?.imageUrl}
-          nationName={profile.nationName}
-          nationImageUrl={profile.internationalTeam?.imageUrl}
-          squadNumber={profile.squadNumber}
-          statusLabel={profile.statusLabel}
-          credit={profile.primaryImage?.credit}
-          lastUpdated={formatDate(profile.sources.profileUpdatedAt)}
-          focalX={profile.primaryImage?.focalX}
-          focalY={profile.primaryImage?.focalY}
-        />
-        <div className="pr-player-header__main">
-          <p className="pr-mc-pr-badge">Player profile</p>
-          <h1 className="pr-player-header__name">
-            {profile.squadNumber != null ? (
-              <span className="pr-player-header__number">#{profile.squadNumber}</span>
-            ) : null}
-            {profile.name}
-          </h1>
-          {profile.fullName && profile.fullName !== profile.name ? (
-            <p className="pr-player-header__aka">{profile.fullName}</p>
-          ) : null}
-          <ul className="pr-player-header__meta">
-            {profile.positionName ? <li>{profile.positionName}</li> : null}
-            {profile.club ? (
-              <li className="pr-player-header__club">
-                <TeamCrest name={profile.club.name} imageUrl={profile.club.imageUrl} size="sm" />
-                <span>{profile.club.name}</span>
-              </li>
-            ) : null}
-            {profile.competitionName ? <li>{profile.competitionName}</li> : null}
-            {profile.nationName ? <li>{profile.nationName}</li> : null}
-            <li>
-              <span className={`pr-player-status pr-player-status--${profile.status}`}>
-                {profile.statusLabel}
-              </span>
-            </li>
-          </ul>
-          {profile.latestRecordedSeason &&
-          profile.club &&
-          profile.latestRecordedSeason.teamName !== profile.club.name ? (
-            <p className="pr-player-latest-season">
-              Latest recorded season: {profile.latestRecordedSeason.teamName},{" "}
-              {profile.latestRecordedSeason.seasonLabel}
-            </p>
-          ) : null}
+      <PlayerProfileHeader
+        profile={profile}
+        compareHref={compareHref}
+        valueHref={profile.playerValue ? pathFor(profile, { tab: "value" }) : null}
+      />
 
-          <nav className="pr-player-view-switcher" aria-label="Profile type">
-            {VIEWS.map((v) => (
-              <Link
-                key={v.id}
-                href={pathFor(profile, { view: v.id, tab: "overview" })}
-                className={`pr-player-view-switcher__item${
-                  profile.view === v.id ? " is-active" : ""
-                }`}
-                aria-current={profile.view === v.id ? "page" : undefined}
-              >
-                {v.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        <div className="pr-player-header__rating" aria-label="Rugby365 rating">
-          <p className="pr-player-header__rating-value">
-            {formatStatValue(profile.rating.current)}
-          </p>
-          <p className="pr-player-header__rating-label">Rugby365 rating</p>
-          <p className="pr-player-header__rating-trend">{profile.rating.trendLabel}</p>
-        </div>
-      </header>
+      <nav className="pr-player-view-switcher" aria-label="Profile type">
+        {VIEWS.map((v) => (
+          <Link
+            key={v.id}
+            href={pathFor(profile, { view: v.id, tab: "overview" })}
+            className={`pr-player-view-switcher__item${
+              profile.view === v.id ? " is-active" : ""
+            }`}
+            aria-current={profile.view === v.id ? "page" : undefined}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </nav>
 
       <dl className="pr-player-quick-facts">
         <Fact
@@ -264,14 +218,123 @@ export function PublicPlayerProfileView({
 
       {tab === "overview" ? (
         <section className="pr-player-section" aria-labelledby="overview-heading">
-          <h2 id="overview-heading">Overview</h2>
+          <h2 id="overview-heading">
+            {profile.view === "scouting" ? "Scouting report" : "Overview"}
+          </h2>
           {profile.intro ? <p className="pr-player-intro">{profile.intro}</p> : null}
-          {profile.biography?.fullBio || profile.biography?.scoutingSummary ? (
+          {profile.view === "scouting" ? (
+            <>
+              {profile.biography?.scoutingSummary ||
+              profile.biography?.fullBio ||
+              profile.biography?.internationalSummary ? (
+                <p className="pr-player-bio">
+                  {profile.biography.scoutingSummary ||
+                    profile.biography.fullBio ||
+                    profile.biography.internationalSummary}
+                </p>
+              ) : null}
+              {profile.biography &&
+              (profile.biography.strengths ||
+                profile.biography.areasToImprove ||
+                profile.biography.playingStyle) ? (
+                <div className="pr-player-grid">
+                  {profile.biography.playingStyle ? (
+                    <div className="pr-player-card">
+                      <h3>Playing style</h3>
+                      <p className="pr-player-bio pr-player-bio--compact">
+                        {profile.biography.playingStyle}
+                      </p>
+                    </div>
+                  ) : null}
+                  {profile.biography.strengths ? (
+                    <div className="pr-player-card">
+                      <h3>Strengths</h3>
+                      <p className="pr-player-bio pr-player-bio--compact">
+                        {profile.biography.strengths}
+                      </p>
+                    </div>
+                  ) : null}
+                  {profile.biography.areasToImprove ? (
+                    <div className="pr-player-card">
+                      <h3>Areas to improve</h3>
+                      <p className="pr-player-bio pr-player-bio--compact">
+                        {profile.biography.areasToImprove}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </>
+          ) : profile.biography?.fullBio || profile.biography?.scoutingSummary ? (
             <p className="pr-player-bio">
               {profile.biography.fullBio ||
                 profile.biography.scoutingSummary ||
                 profile.biography.internationalSummary}
             </p>
+          ) : null}
+
+          <div className="pr-player-analytics-row">
+            {profile.rankings ? <PlayerRankingCard rankings={profile.rankings} /> : null}
+            {profile.playerValue ? <PlayerValueCard value={profile.playerValue} /> : null}
+            {profile.view === "scouting" && profile.scoutIntelligence ? (
+              <ScoutRriCard scout={profile.scoutIntelligence} />
+            ) : null}
+          </div>
+
+          {profile.playerValue ? (
+            <div className="pr-player-grid pr-player-grid--value">
+              <div className="pr-player-card">
+                <h3>Value timeline</h3>
+                <ValueTimelineChart
+                  timeline={profile.playerValue.timeline}
+                  currentValueGbp={profile.playerValue.marketValueGbp}
+                  peakValueGbp={profile.playerValue.peakCareerValueGbp}
+                />
+              </div>
+              <div className="pr-player-card">
+                <h3>Value breakdown</h3>
+                <ValueBreakdown factors={profile.playerValue.factors} />
+              </div>
+            </div>
+          ) : null}
+
+          {profile.rankings && profile.rankings.peers.length > 1 ? (
+            <div className="pr-player-card pr-player-card--wide">
+              <div className="pr-player-compare-teaser__head">
+                <h3>Player comparison</h3>
+                {compareHref ? (
+                  <Link href={compareHref} className="pr-player-profile-header__compare">
+                    Open full compare
+                  </Link>
+                ) : null}
+              </div>
+              <div className="pr-player-badge-row">
+                <PlayerBadge
+                  name={profile.name}
+                  imageUrl={profile.badgeImageUrl ?? profile.imageUrl}
+                  cutout={Boolean(profile.badgeImageUrl)}
+                  rating={profile.rating.current}
+                  positionName={profile.positionName}
+                  nationName={profile.nationName}
+                  clubName={profile.club?.name}
+                  age={profile.age}
+                  marketValueLabel={profile.playerValue?.marketValueLabel}
+                  worldRank={profile.rankings.overallRank}
+                  size="sm"
+                />
+                {comparePeer ? (
+                  <PlayerBadge
+                    name={comparePeer.name}
+                    imageUrl={comparePeer.imageUrl}
+                    rating={comparePeer.rating}
+                    marketValueLabel={null}
+                    worldRank={comparePeer.rank}
+                    slug={comparePeer.slug}
+                    size="sm"
+                  />
+                ) : null}
+              </div>
+            </div>
           ) : null}
 
           {profile.view === "scouting" ? (
@@ -297,6 +360,31 @@ export function PublicPlayerProfileView({
                 <Fact label="Date of birth" value={formatDate(profile.birthDate)} />
                 <Fact label="Place of birth" value={profile.birthPlace} />
                 <Fact label="Nationality" value={profile.nationName} />
+                <Fact label="Preferred foot" value={profile.preferredFoot} />
+                <Fact label="Playing style" value={profile.playingStyle} />
+                <Fact
+                  label="Club debut"
+                  value={profile.clubDebutOn ? formatDate(profile.clubDebutOn) : null}
+                />
+                <Fact
+                  label="Agent"
+                  value={
+                    profile.agent
+                      ? [profile.agent.name, profile.agent.agency].filter(Boolean).join(" · ")
+                      : null
+                  }
+                />
+                <Fact label="Contract expires" value={profile.contract.expiresLabel} />
+                <Fact
+                  label="Salary"
+                  value={
+                    profile.contract.reportedSalaryLabel
+                      ? `${profile.contract.reportedSalaryLabel}/yr (reported)`
+                      : profile.playerValue?.contractValueLabel
+                        ? `${profile.playerValue.contractValueLabel}/yr (estimate)`
+                        : null
+                  }
+                />
                 <Fact label="Main position" value={profile.positionName} />
                 <Fact
                   label="Other positions"
@@ -472,6 +560,16 @@ export function PublicPlayerProfileView({
             </div>
           ) : null}
 
+          {profile.view === "scouting" && profile.scoutIntelligence ? (
+            <section className="pr-player-section pr-scout-enhance" aria-labelledby="rri-section-heading">
+              <ScoutIntelligencePanel
+                scout={profile.scoutIntelligence}
+                playerName={profile.name}
+                compareHref={compareHref}
+              />
+            </section>
+          ) : null}
+
           <div className="pr-player-card pr-player-card--wide">
             <h3>Sources</h3>
             <p>{profile.sources.labels.join(" · ")}</p>
@@ -574,6 +672,19 @@ export function PublicPlayerProfileView({
             initialSeason={profile.filters.season}
           />
         </section>
+      ) : null}
+
+      {tab === "value" ? (
+        profile.playerValue ? (
+          <PlayerValuePanel value={profile.playerValue} />
+        ) : (
+          <section className="pr-player-section" aria-labelledby="value-heading">
+            <h2 id="value-heading">Player Value</h2>
+            <p className="pr-mc-transfers-muted">
+              Value appears once Rugby365 has a career or match rating for this player.
+            </p>
+          </section>
+        )
       ) : null}
 
       {tab === "matches" ? (

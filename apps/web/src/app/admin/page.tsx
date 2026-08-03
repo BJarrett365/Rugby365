@@ -40,6 +40,12 @@ export default function AdminDashboardPage() {
           <Link href="/admin/competitions" className="cms-btn cms-btn--secondary text-sm">
             Competitions
           </Link>
+          <Link href="/admin/odds" className="cms-btn cms-btn--secondary text-sm">
+            Odds
+          </Link>
+          <Link href="/admin/scout" className="cms-btn cms-btn--secondary text-sm">
+            RRI
+          </Link>
         </div>
       </section>
     </>

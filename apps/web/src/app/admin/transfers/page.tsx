@@ -13,6 +13,7 @@ import type { TransferAuditStatus } from "@/lib/transfer-audit-utils";
 import type { ClubTransferAuditReport } from "@/lib/transfer-club-audit-service";
 import type { TransferSourceConfidence } from "@/lib/transfer-source-utils";
 import { movementTypeLabel } from "@/lib/transfer-types";
+import type { TeamPickerGroup } from "@/lib/team-picker-groups";
 
 type TransferRow = {
   id: string;

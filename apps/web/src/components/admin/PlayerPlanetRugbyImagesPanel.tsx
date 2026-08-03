@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { PlayerImageMetadataEditor } from "@/components/admin/PlayerImageMetadataEditor";
+import { PlayerBadgeCutoutEditor } from "@/components/admin/PlayerBadgeCutoutEditor";
 
 type PlayerImageRow = {
   id: string;
@@ -50,19 +51,29 @@ function confidenceClass(level: string) {
 
 export function PlayerPlanetRugbyImagesPanel({
   playerId,
+  playerName,
+  playerRating,
+  playerPosition,
   currentImageUrl,
   onPrimaryChanged,
+  onBadgeChanged,
 }: {
   playerId: string;
+  playerName?: string;
+  playerRating?: number | null;
+  playerPosition?: string | null;
   currentImageUrl?: string | null;
   onPrimaryChanged?: (imageUrl: string | null) => void;
+  onBadgeChanged?: (badgeImageUrl: string | null) => void;
 }) {
   const [images, setImages] = useState<PlayerImageRow[]>([]);
+  const [badgeImageUrl, setBadgeImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [cutoutSourceId, setCutoutSourceId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,6 +83,7 @@ export function PlayerPlanetRugbyImagesPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load images");
       setImages(data.images ?? []);
+      setBadgeImageUrl(data.player?.badgeImageUrl ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load images");
     } finally {
@@ -110,11 +122,7 @@ export function PlayerPlanetRugbyImagesPanel({
     }
   }
 
-  async function runAction(
-    imageId: string,
-    action: string,
-    role?: string,
-  ) {
+  async function runAction(imageId: string, action: string, role?: string) {
     setError(null);
     setMessage(null);
     try {
@@ -141,6 +149,26 @@ export function PlayerPlanetRugbyImagesPanel({
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed");
+    }
+  }
+
+  async function clearBadge() {
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/players/${playerId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clear_badge_cutout" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to clear badge cutout");
+      setImages(data.images ?? []);
+      setBadgeImageUrl(null);
+      onBadgeChanged?.(null);
+      setMessage("Badge cutout cleared.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to clear badge cutout");
     }
   }
 
@@ -190,6 +218,29 @@ export function PlayerPlanetRugbyImagesPanel({
           </div>
         </div>
       ) : null}
+
+      {badgeImageUrl ? (
+        <div className="flex flex-wrap items-center gap-3 mb-4 p-3 rounded border border-amber-500/30 bg-amber-500/5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={badgeImageUrl}
+            alt="Badge cutout"
+            className="h-20 w-16 object-contain rounded bg-zinc-900"
+          />
+          <div className="text-sm text-zinc-300 flex-1 min-w-[12rem]">
+            <div className="font-medium text-zinc-100">Player badge cutout</div>
+            <div className="text-zinc-500">Used on the FUT-style Player Badge (transparent PNG).</div>
+          </div>
+          <button type="button" className="cms-btn cms-btn--secondary text-xs" onClick={() => void clearBadge()}>
+            Clear cutout
+          </button>
+        </div>
+      ) : (
+        <p className="text-sm text-zinc-500 mb-4">
+          No badge cutout yet. On any candidate below, use <strong>Edit badge cutout</strong> to
+          remove the background and save a FUT-style player image.
+        </p>
+      )}
 
       {loading ? <p className="text-sm text-zinc-500">Loading image history…</p> : null}
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
@@ -259,6 +310,13 @@ export function PlayerPlanetRugbyImagesPanel({
                 </button>
                 <button
                   type="button"
+                  className="cms-btn cms-btn--primary text-xs px-2 py-1"
+                  onClick={() => setCutoutSourceId(img.id)}
+                >
+                  Edit badge cutout
+                </button>
+                <button
+                  type="button"
                   className="cms-btn cms-btn--secondary text-xs px-2 py-1"
                   onClick={() => void runAction(img.id, "add_gallery")}
                 >
@@ -313,17 +371,38 @@ export function PlayerPlanetRugbyImagesPanel({
                 >
                   Incorrect player
                 </button>
+                <PlayerImageMetadataEditor
+                  playerId={playerId}
+                  imageId={img.id}
+                  initial={img}
+                  onSaved={(next) => {
+                    setImages(next as PlayerImageRow[]);
+                    setMessage("Metadata saved.");
+                  }}
+                />
               </div>
-              <PlayerImageMetadataEditor
-                playerId={playerId}
-                imageId={img.id}
-                initial={img}
-                onSaved={(next) => setImages(next as PlayerImageRow[])}
-              />
             </div>
           </article>
         ))}
       </div>
+
+      {cutoutSourceId ? (
+        <PlayerBadgeCutoutEditor
+          playerId={playerId}
+          sourceImageId={cutoutSourceId}
+          playerName={playerName?.trim() || "Player"}
+          rating={playerRating}
+          positionName={playerPosition}
+          onClose={() => setCutoutSourceId(null)}
+          onSaved={(url) => {
+            setBadgeImageUrl(url);
+            onBadgeChanged?.(url);
+            setCutoutSourceId(null);
+            setMessage("Badge cutout saved.");
+            void load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

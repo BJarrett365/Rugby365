@@ -1,6 +1,7 @@
 "use client";
 
 import { MediaImage } from "@/components/media/MediaImage";
+import { SilhouetteAvatar } from "@/components/media/SilhouetteAvatar";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { defaultAltText } from "@/lib/media-tokens";
 
@@ -54,14 +55,6 @@ export function PlayerPortrait({
         ? { width: 240, height: 240 }
         : { width: 480, height: 640 };
 
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-
   const resolvedAlt = alt?.trim() || defaultAltText(name, "headshot");
 
   return (
@@ -85,9 +78,11 @@ export function PlayerPortrait({
           focalY={focalY ?? 28}
           className="pr-player-portrait__img"
           fallback={
-            <span className="pr-player-portrait__fallback" aria-hidden>
-              {initials || "?"}
-            </span>
+            <SilhouetteAvatar
+              name={name}
+              aspect={variant === "square" ? "square" : "portrait"}
+              className="pr-player-portrait__silhouette"
+            />
           }
         />
 

@@ -37,6 +37,10 @@ export type MatchFormValues = {
   planetRugbyUrl: string;
   venueId: string;
   attendance: string;
+  halfTimeHome: string;
+  halfTimeAway: string;
+  additionalInfo: string;
+  weatherNote: string;
   refereeId: string;
   homeCoachId: string;
   awayCoachId: string;
@@ -87,11 +91,42 @@ export function MatchForm({
     planetRugbyUrl: initial?.planetRugbyUrl ?? "",
     venueId: initial?.venueId ?? "",
     attendance: initial?.attendance ?? "",
+    halfTimeHome: initial?.halfTimeHome ?? "",
+    halfTimeAway: initial?.halfTimeAway ?? "",
+    additionalInfo: initial?.additionalInfo ?? "",
+    weatherNote: initial?.weatherNote ?? "",
     refereeId: initial?.refereeId ?? "",
     homeCoachId: initial?.homeCoachId ?? "",
     awayCoachId: initial?.awayCoachId ?? "",
     round: initial?.round ?? "",
   });
+
+  useEffect(() => {
+    if (!initial) return;
+    setValues((current) => ({
+      ...current,
+      slug: initial.slug ?? current.slug,
+      homeTeamId: initial.homeTeamId ?? current.homeTeamId,
+      awayTeamId: initial.awayTeamId ?? current.awayTeamId,
+      competitionId: initial.competitionId ?? current.competitionId,
+      competitionName: initial.competitionName ?? current.competitionName,
+      seasonId: initial.seasonId ?? current.seasonId,
+      kickoffAt: initial.kickoffAt ?? current.kickoffAt,
+      status: initial.status ?? current.status,
+      sport365Url: initial.sport365Url ?? current.sport365Url,
+      planetRugbyUrl: initial.planetRugbyUrl ?? current.planetRugbyUrl,
+      venueId: initial.venueId ?? current.venueId,
+      attendance: initial.attendance ?? current.attendance,
+      halfTimeHome: initial.halfTimeHome ?? current.halfTimeHome,
+      halfTimeAway: initial.halfTimeAway ?? current.halfTimeAway,
+      additionalInfo: initial.additionalInfo ?? current.additionalInfo,
+      weatherNote: initial.weatherNote ?? current.weatherNote,
+      refereeId: initial.refereeId ?? current.refereeId,
+      homeCoachId: initial.homeCoachId ?? current.homeCoachId,
+      awayCoachId: initial.awayCoachId ?? current.awayCoachId,
+      round: initial.round ?? current.round,
+    }));
+  }, [initial]);
 
   useEffect(() => {
     Promise.all([
@@ -372,6 +407,10 @@ export function MatchForm({
       planetRugbyUrl: values.planetRugbyUrl || null,
       venueId: values.venueId || null,
       attendance: values.attendance ? Number(values.attendance) : null,
+      halfTimeHome: values.halfTimeHome !== "" ? Number(values.halfTimeHome) : null,
+      halfTimeAway: values.halfTimeAway !== "" ? Number(values.halfTimeAway) : null,
+      additionalInfo: values.additionalInfo.trim() || null,
+      weatherNote: values.weatherNote.trim() || null,
       refereeId: values.refereeId || null,
       homeCoachId: values.homeCoachId || null,
       awayCoachId: values.awayCoachId || null,
@@ -548,6 +587,58 @@ export function MatchForm({
             />
           </label>
         </div>
+
+        <div className="cms-grid-2">
+          <label>
+            Half-time home
+            <input
+              type="number"
+              min={0}
+              value={values.halfTimeHome}
+              onChange={(e) => setField("halfTimeHome", e.target.value)}
+              placeholder="e.g. 14"
+              className="cms-input"
+            />
+          </label>
+          <label>
+            Half-time away
+            <input
+              type="number"
+              min={0}
+              value={values.halfTimeAway}
+              onChange={(e) => setField("halfTimeAway", e.target.value)}
+              placeholder="e.g. 7"
+              className="cms-input"
+            />
+          </label>
+        </div>
+
+        <label>
+          Additional information
+          <textarea
+            value={values.additionalInfo}
+            onChange={(e) => setField("additionalInfo", e.target.value)}
+            placeholder="e.g. Neutral venue · First leg 12–8 · Kick-off delayed"
+            className="cms-input min-h-[4.5rem]"
+            rows={3}
+          />
+          <span className="text-xs text-zinc-600 mt-1 block">
+            Shown on the public fixtures board as additional match info.
+          </span>
+        </label>
+
+        <label>
+          Weather note (optional override)
+          <input
+            value={values.weatherNote}
+            onChange={(e) => setField("weatherNote", e.target.value)}
+            placeholder="e.g. 18°C · wind 22 km/h SW"
+            className="cms-input"
+          />
+          <span className="text-xs text-zinc-600 mt-1 block">
+            Used on the public board when Open-Meteo GEO weather is unavailable.
+          </span>
+        </label>
 
         {selectedVenue ? (
           <div className="text-sm text-zinc-500 space-y-1">

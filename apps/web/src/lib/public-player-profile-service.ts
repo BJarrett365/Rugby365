@@ -23,6 +23,10 @@ import { getDb } from "./db";
 import { calculatePlayerAge, normalizeSocialAccounts } from "./player-profile-utils";
 import { buildPublicPlayerIntro } from "./public-player-intro";
 import { getPlayerCareerStats } from "./player-stats";
+import { getPlayerValueForPublic } from "./player-value-service";
+import { getPublicPlayerRankings } from "./public-player-rankings-service";
+import { listPublicPlayerTitles, sumTitleCounts } from "./player-titles-service";
+import { formatGbpCompact } from "./player-value-math";
 import { wikipediaCareerTotals } from "./player-career-stint-utils";
 import { careerStatusLabel } from "./player-career-status";
 import {
@@ -51,6 +55,7 @@ import type {
   DevelopmentAnnotation,
   DevelopmentTimelinePoint,
 } from "./player-development-timeline-utils";
+import { resolveAppearanceStatus } from "./player-development-timeline-utils";
 import { MATCH_RATING_MODEL } from "./match-rating-math";
 import { getPublicPlayerRadar } from "./player-radar-service";
 
@@ -77,6 +82,14 @@ export type PublicPlayerProfile = {
   name: string;
   fullName: string | null;
   imageUrl: string | null;
+  /** Transparent FUT-style badge cutout when editors have created one. */
+  badgeImageUrl: string | null;
+  /** Planet Rugby Legend Score when player is in the Legends database. */
+  legendScore: {
+    overallScore: number;
+    allTimeRank: number | null;
+    hallOfFameStatus: string;
+  } | null;
   squadNumber: number | null;
   positionName: string | null;
   otherPositions: string[];
@@ -111,6 +124,12 @@ export type PublicPlayerProfile = {
     lastFive: number[];
     updatedAt: string | null;
   };
+  /** Rugby365 Player Value — profile-only market worth model. */
+  playerValue: import("./player-value-service").PublicPlayerValue | null;
+  /** Rugby365 Scout Intelligence / Recruitment Index (RRI). */
+  scoutIntelligence: import("./player-scout-intelligence-service").PublicScoutIntelligence | null;
+  /** Approximate overall / position / country / competition ranks from career ratings. */
+  rankings: import("./public-player-rankings-service").PublicPlayerRankings | null;
   seasonSnapshot: {
     seasonLabel: string;
     appearances: number | null;
@@ -220,6 +239,33 @@ export type PublicPlayerProfile = {
     title: string;
     detail: string | null;
   }>;
+  /** Structured CMS titles for milestone icons. */
+  titles: Array<{
+    titleType: string;
+    title: string;
+    year: number | null;
+    seasonLabel: string | null;
+    count: number;
+  }>;
+  titleCounts: {
+    worldCup: number;
+    top14: number;
+    premiership: number;
+    sixNations: number;
+    other: number;
+  };
+  playingStyle: string | null;
+  clubDebutOn: string | null;
+  agent: { name: string | null; agency: string | null } | null;
+  contract: {
+    expiresOn: string | null;
+    expiresLabel: string | null;
+    reportedSalaryGbp: number | null;
+    reportedSalaryLabel: string | null;
+    salaryAsOf: string | null;
+    /** True when salary comes from CMS reported figure (not model estimate). */
+    salaryIsReported: boolean;
+  };
   positionsPlayed: Array<{ position: string; appearances: number }>;
   ratingSeries: Array<{
     date: string | null;
@@ -358,7 +404,7 @@ function statusLabel(status: PublicPlayerStatus): string {
     case "legend":
       return "Legend";
     default:
-      return "Active";
+      return "FIT";
   }
 }
 
@@ -714,6 +760,11 @@ export async function getPublicPlayerProfile(
 
   const developmentTimeline: DevelopmentTimelinePoint[] = timelineSource.map((r, index, arr) => {
     const extra = ratingExtraByFixture.get(r.fixtureId);
+    const appearanceStatus = resolveAppearanceStatus({
+      rating: r.rating,
+      minutes: r.minutes,
+      started: r.started,
+    });
     const annotations: DevelopmentAnnotation[] = [];
     if ((r.tries ?? 0) >= 2) annotations.push("multi_try");
     else if ((r.tries ?? 0) >= 1) annotations.push("try");
@@ -723,6 +774,9 @@ export async function getPublicPlayerProfile(
     if (index === 24 || index === 49 || index === 99) annotations.push("milestone");
     if (index > 0 && arr[index - 1] && arr[index - 1]!.teamName !== r.teamName) {
       annotations.push("transfer_debut");
+    }
+    if (appearanceStatus === "unused_bench" || appearanceStatus === "not_selected") {
+      annotations.push("dnp");
     }
     const scoreLine =
       r.homeScore != null && r.awayScore != null ? `${r.homeScore}–${r.awayScore}` : null;
@@ -754,6 +808,7 @@ export async function getPublicPlayerProfile(
       isInternational: r.isInternational,
       isPotm: Boolean(extra?.isRugby365Potm),
       modelVersion: extra?.modelVersion ?? (r.rating != null ? MATCH_RATING_MODEL : null),
+      appearanceStatus,
       annotations,
     };
   });
@@ -865,6 +920,43 @@ export async function getPublicPlayerProfile(
     }
   }
 
+  const structuredTitles = await listPublicPlayerTitles(player.id);
+  for (const t of structuredTitles) {
+    achievements.push({
+      title: t.title,
+      detail: [t.titleType.replace(/_/g, " "), t.year, t.seasonLabel].filter(Boolean).join(" · "),
+    });
+  }
+
+  const titleCounts = {
+    worldCup: sumTitleCounts(structuredTitles, "world_cup"),
+    top14: sumTitleCounts(structuredTitles, "top_14"),
+    premiership: sumTitleCounts(structuredTitles, "premiership"),
+    sixNations: sumTitleCounts(structuredTitles, "six_nations"),
+    other: structuredTitles
+      .filter((t) => !["world_cup", "top_14", "premiership", "six_nations"].includes(t.titleType))
+      .reduce((sum, t) => sum + (t.count || 1), 0),
+  };
+
+  const clubDebutOn = player.clubDebutOn
+    ? String(player.clubDebutOn).slice(0, 10)
+    : null;
+
+  const contractExpiresOn = player.contractExpiresOn
+    ? String(player.contractExpiresOn).slice(0, 10)
+    : null;
+  let expiresLabel: string | null = null;
+  if (contractExpiresOn) {
+    const d = new Date(contractExpiresOn);
+    if (!Number.isNaN(d.getTime())) {
+      expiresLabel = d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+    }
+  }
+  const reportedSalary =
+    player.reportedSalaryGbp != null && Number.isFinite(Number(player.reportedSalaryGbp))
+      ? Number(player.reportedSalaryGbp)
+      : null;
+
   // Factual milestones (not awards)
   if (allAppearances.length > 0) {
     const debut = [...allAppearances].reverse()[0];
@@ -917,6 +1009,7 @@ export async function getPublicPlayerProfile(
   const nationName = intlRow?.name ?? player.countryName;
   const bioVariants = bioRow ? readBioVariants(bioRow) : null;
   const biography = bioVariants ? pickBioSectionsForView(bioVariants, view) : null;
+  const playingStyle = biography?.playingStyle?.trim() || null;
 
   const introOverride =
     player.publicIntroOverride?.trim() ||
@@ -1004,11 +1097,76 @@ export async function getPublicPlayerProfile(
 
   const canonicalPath = buildPublicPlayerPath({ slug: player.slug, view });
 
+  let playerValue = null;
+  try {
+    playerValue = await getPlayerValueForPublic(player.id, {
+      calculateIfMissing: Boolean(
+        currentRating != null || (ratingRow?.seasonRating != null) || lastFive.length > 0,
+      ),
+    });
+  } catch (error) {
+    console.warn(
+      `[public-player] value calc failed for ${player.slug}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
+  let rankings = null;
+  try {
+    rankings = await getPublicPlayerRankings({
+      playerId: player.id,
+      slug: player.slug,
+      name: player.name,
+      imageUrl: player.imageUrl,
+      rating:
+        currentRating != null && Number.isFinite(currentRating) ? Math.round(currentRating) : null,
+      positionName: player.positionName,
+      nationName,
+      competitionName: currentCompetitionName,
+    });
+  } catch (error) {
+    console.warn(
+      `[public-player] rankings failed for ${player.slug}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
+  let legendScore: PublicPlayerProfile["legendScore"] = null;
+  try {
+    const { getPlayerLegendScore } = await import("./legend-score-service");
+    const score = await getPlayerLegendScore(player.id);
+    if (score) {
+      legendScore = {
+        overallScore: score.overallScore,
+        allTimeRank: score.allTimeRank,
+        hallOfFameStatus: score.hallOfFameStatus,
+      };
+    }
+  } catch {
+    legendScore = null;
+  }
+
+  let scoutIntelligence = null;
+  try {
+    const { getPlayerScoutProfile } = await import("./player-scout-intelligence-service");
+    scoutIntelligence = await getPlayerScoutProfile(player.id, {
+      calculateIfMissing: view === "scouting",
+    });
+  } catch (error) {
+    console.warn(
+      `[public-player] scout intelligence failed for ${player.slug}:`,
+      error instanceof Error ? error.message : error,
+    );
+    scoutIntelligence = null;
+  }
+
   return {
     slug: player.slug,
     name: player.name,
     fullName: player.fullName,
     imageUrl: player.imageUrl,
+    badgeImageUrl: player.badgeImageUrl ?? null,
+    legendScore,
     squadNumber: player.squadNumber,
     positionName: player.positionName,
     otherPositions,
@@ -1044,6 +1202,9 @@ export async function getPublicPlayerProfile(
       lastFive,
       updatedAt: ratingRow?.updatedAt?.toISOString() ?? null,
     },
+    playerValue,
+    scoutIntelligence,
+    rankings,
     seasonSnapshot: filtered.length
       ? {
           seasonLabel: summary.seasonLabel,
@@ -1119,6 +1280,28 @@ export async function getPublicPlayerProfile(
     transfers,
     absences,
     achievements,
+    titles: structuredTitles.map((t) => ({
+      titleType: t.titleType,
+      title: t.title,
+      year: t.year,
+      seasonLabel: t.seasonLabel,
+      count: t.count,
+    })),
+    titleCounts,
+    playingStyle,
+    clubDebutOn,
+    agent:
+      player.agentName || player.agentAgency
+        ? { name: player.agentName ?? null, agency: player.agentAgency ?? null }
+        : null,
+    contract: {
+      expiresOn: contractExpiresOn,
+      expiresLabel,
+      reportedSalaryGbp: reportedSalary,
+      reportedSalaryLabel: reportedSalary != null ? formatGbpCompact(reportedSalary) : null,
+      salaryAsOf: player.salaryAsOf ? String(player.salaryAsOf).slice(0, 10) : null,
+      salaryIsReported: reportedSalary != null,
+    },
     positionsPlayed,
     ratingSeries,
     developmentTimeline,

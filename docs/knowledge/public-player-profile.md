@@ -60,7 +60,13 @@ CMS “Preview public profile” opens `/players/{slug}?preview=1`.
 
 ## Sections
 
-Overview, Stats, Matches, Events, Transfers, Injuries and Absences, International, News (stub until article links exist), Achievements, Career — with season/competition filters and profile-type switcher.
+Overview, Stats, Value, Matches, Events, Transfers, Injuries and Absences, International, News (stub until article links exist), Achievements, Career — with season/competition filters and profile-type switcher.
+
+## Player Value
+
+Rugby365 market-worth model on the **Value** tab (and header shortcut). Full calculation notes (Match Ratings, Career Ratings, Market Value): Knowledge → **Ratings & Market Value** (`player-value.md`). Estimates only — not transfer fees.
+
+CMS editors fill public profile production data on **Edit player → Public profile data**: contract expiry, reported salary, agent, club debut, status override (FIT), structured titles (World Cup / Top 14 / …), and **Recalculate market value**. Reported salary overrides the model contract band when set.
 
 ## Phases
 

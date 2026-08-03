@@ -2,7 +2,7 @@
  * Coach / Referee Match Ratings (1–10) after full time.
  * Separate from player match-v1 and career intelligence scores.
  */
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   coachMatchRatings,
   coaches,
@@ -16,6 +16,7 @@ import {
 } from "@rugby365/db";
 import { getDb } from "./db";
 import { normalizeCoachingRole } from "./coach-types";
+import { resolveReferee } from "./entity-admin-service";
 import {
   formatMatchRatingDisplay,
   isFixtureRatingsPublished,
@@ -235,7 +236,7 @@ async function resolveCurrentTeamCoachId(teamId: string | null): Promise<string 
   return ranked[0]?.coachId ?? null;
 }
 
-/** Fill missing fixture coach FKs from current team staff (for match header + Rating Lab). */
+/** Fill missing fixture coach/referee FKs from team staff + referee name (for ratings + Ranking Lab). */
 export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof fixtures.$inferSelect | null> {
   const db = getDb();
   const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
@@ -244,6 +245,7 @@ export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof
   const patch: {
     homeCoachId?: string;
     awayCoachId?: string;
+    refereeId?: string;
   } = {};
 
   if (!fixture.homeCoachId) {
@@ -253,6 +255,13 @@ export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof
   if (!fixture.awayCoachId) {
     const id = await resolveCurrentTeamCoachId(fixture.awayTeamId);
     if (id) patch.awayCoachId = id;
+  }
+  if (!fixture.refereeId && fixture.refereeName?.trim()) {
+    const resolved = await resolveReferee({
+      name: fixture.refereeName,
+      createIfMissing: true,
+    });
+    if (resolved?.id) patch.refereeId = resolved.id;
   }
 
   if (Object.keys(patch).length === 0) return fixture;
@@ -403,6 +412,90 @@ export async function calculateAndPersistFixtureStaffMatchRatings(fixtureId: str
   }
 
   return { coachesCalculated, refereeCalculated };
+}
+
+const FINISHED_FIXTURE_STATUSES = [
+  "full_time",
+  "finished",
+  "result",
+  "completed",
+  "ft",
+] as const;
+
+/**
+ * Ensure finished fixtures in a competition season have coach/referee match ratings.
+ * Links missing head coaches from current team staff, then calculates any missing ratings.
+ */
+export async function backfillStaffMatchRatingsForCompetitionSeason(
+  competitionId: string,
+  seasonId: string,
+): Promise<{
+  fixturesProcessed: number;
+  coachesCalculated: number;
+  refereeCalculated: number;
+}> {
+  const db = getDb();
+  const finished = await db
+    .select({
+      id: fixtures.id,
+      refereeId: fixtures.refereeId,
+      homeCoachId: fixtures.homeCoachId,
+      awayCoachId: fixtures.awayCoachId,
+      status: fixtures.status,
+    })
+    .from(fixtures)
+    .where(
+      and(
+        eq(fixtures.competitionId, competitionId),
+        eq(fixtures.seasonId, seasonId),
+        inArray(fixtures.status, [...FINISHED_FIXTURE_STATUSES]),
+      ),
+    );
+
+  if (finished.length === 0) {
+    return { fixturesProcessed: 0, coachesCalculated: 0, refereeCalculated: 0 };
+  }
+
+  const fixtureIds = finished.map((f) => f.id);
+  const existingRefRows = await db
+    .select({ fixtureId: refereeMatchRatings.fixtureId })
+    .from(refereeMatchRatings)
+    .where(inArray(refereeMatchRatings.fixtureId, fixtureIds));
+  const existingCoachRows = await db
+    .select({ fixtureId: coachMatchRatings.fixtureId })
+    .from(coachMatchRatings)
+    .where(inArray(coachMatchRatings.fixtureId, fixtureIds));
+
+  const ratedRefFixtures = new Set(existingRefRows.map((r) => r.fixtureId));
+  const coachCountByFixture = new Map<string, number>();
+  for (const row of existingCoachRows) {
+    coachCountByFixture.set(row.fixtureId, (coachCountByFixture.get(row.fixtureId) ?? 0) + 1);
+  }
+
+  let fixturesProcessed = 0;
+  let coachesCalculated = 0;
+  let refereeCalculated = 0;
+
+  for (const fixture of finished) {
+    if (!isFixtureRatingsPublished(fixture.status)) continue;
+
+    const missingRefereeRating = Boolean(fixture.refereeId) && !ratedRefFixtures.has(fixture.id);
+    const coachRows = coachCountByFixture.get(fixture.id) ?? 0;
+    const expectedCoachSlots =
+      (fixture.homeCoachId ? 1 : 0) + (fixture.awayCoachId ? 1 : 0);
+    // Always try when coaches are missing on the fixture — ensureFixtureStaffLinks may fill them.
+    const missingCoachLinks = !fixture.homeCoachId || !fixture.awayCoachId;
+    const missingCoachRatings = missingCoachLinks || coachRows < Math.max(expectedCoachSlots, 1);
+
+    if (!missingRefereeRating && !missingCoachRatings) continue;
+
+    const result = await calculateAndPersistFixtureStaffMatchRatings(fixture.id);
+    fixturesProcessed += 1;
+    coachesCalculated += result.coachesCalculated;
+    refereeCalculated += result.refereeCalculated;
+  }
+
+  return { fixturesProcessed, coachesCalculated, refereeCalculated };
 }
 
 export async function listStaffMatchRatingsForFixture(

@@ -13,25 +13,43 @@ import {
 
 describe("resolveAnimationSignal", () => {
   it("maps scrum, lineout, penalty, try, conversion with front goal view", () => {
-    expect(resolveAnimationSignal({ eventType: "scrum", teamSide: "home" }).title).toBe(
-      "SCRUM AWARDED",
-    );
+    expect(resolveAnimationSignal({ eventType: "scrum", teamSide: "home" }).title).toBe("SCRUM");
     expect(resolveAnimationSignal({ eventType: "lineout", teamSide: "away" }).showLineoutArrow).toBe(
       true,
     );
-    expect(resolveAnimationSignal({ eventType: "penalty", teamSide: "home" }).title).toBe(
-      "PENALTY AWARDED",
-    );
+    expect(resolveAnimationSignal({ eventType: "penalty", teamSide: "home" }).title).toBe("PENALTY");
     const trySig = resolveAnimationSignal({ eventType: "Try", teamSide: "home" });
-    expect(trySig.title).toBe("TRY AWARDED");
+    expect(trySig.title).toBe("TRY");
     expect(trySig.frontGoalView).toBe("try");
     const conv = resolveAnimationSignal({ eventType: "conversion", teamSide: "away" });
-    expect(conv.title).toBe("CONVERSION AWARDED");
+    expect(conv.title).toBe("CONVERSION");
     expect(conv.simulateConversion).toBe(true);
     expect(conv.frontGoalView).toBe("conversion");
     const miss = resolveAnimationSignal({ eventType: "missed_conversion", teamSide: "home" });
     expect(miss.frontGoalView).toBe("miss");
     expect(miss.title).toBe("CONVERSION MISSED");
+  });
+
+  it("maps dropout, free kick, injury, drop goal and penalty goal", () => {
+    expect(resolveAnimationSignal({ eventType: "22_dropout", teamSide: "home" }).kind).toBe(
+      "dropout",
+    );
+    expect(resolveAnimationSignal({ eventType: "free_kick", teamSide: "away" }).kind).toBe(
+      "free_kick",
+    );
+    expect(resolveAnimationSignal({ eventType: "injury", teamSide: "home" }).title).toBe("INJURY");
+    const dg = resolveAnimationSignal({ eventType: "drop_goal", teamSide: "away" });
+    expect(dg.kind).toBe("drop_goal");
+    expect(dg.frontGoalView).toBe("drop_goal");
+    const pg = resolveAnimationSignal({ eventType: "penalty_goal", teamSide: "home" });
+    expect(pg.kind).toBe("penalty_goal");
+    expect(pg.frontGoalView).toBe("penalty_goal");
+    const pen = resolveAnimationSignal({
+      eventType: "penalty",
+      teamSide: "home",
+      label: "Penalty — Not releasing. Option: Kick to touch",
+    });
+    expect(pen.detail?.toLowerCase()).toMatch(/not releasing|kick to touch/);
   });
 
   it("maps TMO review, decision, and overturned", () => {

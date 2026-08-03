@@ -112,6 +112,14 @@ export const KNOWLEDGE_PAGES: KnowledgePageMeta[] = [
     group: "ops",
   },
   {
+    slug: "player-value",
+    title: "Ratings & Market Value",
+    description:
+      "How Match Ratings, Player (Career) Ratings and Market Values are calculated.",
+    file: "player-value.md",
+    group: "ops",
+  },
+  {
     slug: "player-image-enrichment",
     title: "Planet Rugby Player Image Enrichment",
     description: "Search, confidence scoring and CMS workflow for Planet Rugby–owned player images.",

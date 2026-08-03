@@ -5,6 +5,7 @@ import {
   buildSeasonDevelopmentRows,
   detectMixedModelVersions,
   filterTimelinePoints,
+  ratingDisplayLabel,
   rollingAverage,
   summarizeRatedPoints,
   type DevelopmentTimelinePoint,
@@ -121,13 +122,36 @@ describe("player-development-timeline-utils", () => {
     ).toHaveLength(0);
   });
 
-  it("builds season rows with previous-season change", () => {
+  it("builds season rows with previous-season change and DNP counts", () => {
     const rows = buildSeasonDevelopmentRows([
       point({ fixtureId: "1", teamName: "A", seasonSlug: "2023-24", rating: 6 }),
-      point({ fixtureId: "2", teamName: "A", seasonSlug: "2024-25", rating: 8 }),
+      point({
+        fixtureId: "2",
+        teamName: "A",
+        seasonSlug: "2024-25",
+        rating: 8,
+      }),
+      point({
+        fixtureId: "3",
+        teamName: "A",
+        seasonSlug: "2024-25",
+        rating: null,
+        minutes: 0,
+        started: false,
+        appearanceStatus: "unused_bench",
+      }),
     ]);
     expect(rows[0]!.seasonSlug).toBe("2024-25");
     expect(rows[0]!.changeFromPrevious).toBe(2);
+    expect(rows[0]!.dnpCount).toBe(1);
+    expect(rows[0]!.appearances).toBe(2);
+  });
+
+  it("labels DNP distinctly from unrated", () => {
+    expect(ratingDisplayLabel(null, "unused_bench")).toBe("DNP");
+    expect(ratingDisplayLabel(null, "not_selected")).toBe("DNP");
+    expect(ratingDisplayLabel(null, "unrated")).toBe("Unrated");
+    expect(ratingDisplayLabel(7.4, "played")).toBe("7.4");
   });
 
   it("detects mixed model versions and builds factual summary", () => {

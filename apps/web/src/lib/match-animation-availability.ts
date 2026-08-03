@@ -360,4 +360,5 @@ export const PUBLIC_MATCH_TAB_ORDER = [
   "lineups",
   "tables",
   "head-to-head",
+  "betting",
 ] as const;

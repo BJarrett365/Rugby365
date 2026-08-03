@@ -1,6 +1,15 @@
 import "server-only";
 import { asc, eq, inArray } from "drizzle-orm";
-import { fixturePlayers, fixtures, fixtureTrackerSettings, matchEvents, players } from "@rugby365/db";
+import {
+  coaches,
+  fixturePlayers,
+  fixtures,
+  fixtureTrackerSettings,
+  matchEvents,
+  players,
+  teamMatchStats,
+  venues,
+} from "@rugby365/db";
 import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { getDb } from "./db";
 import {
@@ -18,6 +27,11 @@ import {
   officialFinalScore,
   resolveMatchResultKind,
 } from "./match-animation-fulltime";
+import { normalizeTeamStatSide } from "./match-animation-insight";
+import {
+  geocodeVenueById,
+  resolveWeatherForVenueCoords,
+} from "./venue-geocode-service";
 import { resolveHalfTimeScore } from "./match-header-utils";
 import { lookupPlayerLink } from "./match-entity-context";
 import { teamAccentColor } from "./team-accent-color";
@@ -338,6 +352,137 @@ export async function buildMatchAnimationPublicPayload(
     hasFullTimeEvent: hasPublishedFullTimeEvent(events),
   });
 
+  let venueDetails: MatchAnimationPublicPayload["venue"] = venueName
+    ? {
+        name: venueName,
+        city: null,
+        country: null,
+        capacity: null,
+        latitude: null,
+        longitude: null,
+      }
+    : null;
+  let weather: MatchAnimationPublicPayload["weather"] = null;
+  let homeCoachName = data.homeCoach?.name ?? null;
+  let awayCoachName = data.awayCoach?.name ?? null;
+  let teamStats: MatchAnimationPublicPayload["teamStats"] = { home: null, away: null };
+  let potmImageUrl: string | null = null;
+  let potmTeamSide: "home" | "away" | null = null;
+
+  if (cmsFixture?.id) {
+    try {
+      const db = getDb();
+      const [fx] = await db
+        .select({
+          venueId: fixtures.venueId,
+          homeCoachId: fixtures.homeCoachId,
+          awayCoachId: fixtures.awayCoachId,
+          homeTeamId: fixtures.homeTeamId,
+          awayTeamId: fixtures.awayTeamId,
+        })
+        .from(fixtures)
+        .where(eq(fixtures.id, cmsFixture.id))
+        .limit(1);
+
+      if (fx?.venueId) {
+        let [v] = await db
+          .select({
+            id: venues.id,
+            name: venues.name,
+            city: venues.city,
+            countryName: venues.countryName,
+            capacity: venues.capacity,
+            latitude: venues.latitude,
+            longitude: venues.longitude,
+          })
+          .from(venues)
+          .where(eq(venues.id, fx.venueId))
+          .limit(1);
+        if (v && (v.latitude == null || v.longitude == null)) {
+          await geocodeVenueById(fx.venueId);
+          [v] = await db
+            .select({
+              id: venues.id,
+              name: venues.name,
+              city: venues.city,
+              countryName: venues.countryName,
+              capacity: venues.capacity,
+              latitude: venues.latitude,
+              longitude: venues.longitude,
+            })
+            .from(venues)
+            .where(eq(venues.id, fx.venueId))
+            .limit(1);
+        }
+        if (v) {
+          venueDetails = {
+            name: v.name,
+            city: v.city,
+            country: v.countryName,
+            capacity: v.capacity,
+            latitude: v.latitude,
+            longitude: v.longitude,
+          };
+          if (v.latitude != null && v.longitude != null) {
+            weather = await resolveWeatherForVenueCoords({
+              venueId: v.id,
+              latitude: v.latitude,
+              longitude: v.longitude,
+              kickoffAt: kickoffAt || null,
+            });
+          }
+        }
+      }
+
+      const coachIds = [fx?.homeCoachId, fx?.awayCoachId].filter(Boolean) as string[];
+      if (coachIds.length && (!homeCoachName || !awayCoachName)) {
+        const coachRows = await db
+          .select({ id: coaches.id, name: coaches.name })
+          .from(coaches)
+          .where(inArray(coaches.id, coachIds));
+        const byId = new Map(coachRows.map((c) => [c.id, c.name]));
+        if (!homeCoachName && fx?.homeCoachId) homeCoachName = byId.get(fx.homeCoachId) ?? null;
+        if (!awayCoachName && fx?.awayCoachId) awayCoachName = byId.get(fx.awayCoachId) ?? null;
+      }
+
+      const statRows = await db
+        .select()
+        .from(teamMatchStats)
+        .where(eq(teamMatchStats.fixtureId, cmsFixture.id));
+      for (const row of statRows) {
+        const side = normalizeTeamStatSide({
+          tries: row.tries,
+          conversions: row.conversions,
+          penalties: row.penalties,
+          dropGoals: row.dropGoals,
+          carries: row.carries,
+          metres: row.metres,
+          tackles: row.tackles,
+          turnoversWon: row.turnoversWon,
+          sections: row.sections,
+        });
+        if (row.side === "home" || (fx?.homeTeamId && row.teamId === fx.homeTeamId)) {
+          teamStats = { ...teamStats, home: side };
+        } else if (row.side === "away" || (fx?.awayTeamId && row.teamId === fx.awayTeamId)) {
+          teamStats = { ...teamStats, away: side };
+        }
+      }
+    } catch {
+      /* keep defaults */
+    }
+  }
+
+  if (potm) {
+    const potmNorm = potm.trim().toLowerCase();
+    const match = squadLookup.find((p) => p.name.trim().toLowerCase() === potmNorm);
+    if (match) {
+      potmImageUrl = match.imageUrl;
+      if (match.teamId && cmsHomeTeamId) {
+        potmTeamSide = match.teamId === cmsHomeTeamId ? "home" : "away";
+      }
+    }
+  }
+
   return {
     matchId: detail.match_id,
     cmsFixtureId: cmsFixture?.id ?? null,
@@ -357,7 +502,11 @@ export async function buildMatchAnimationPublicPayload(
       imageUrl: awayImageUrl,
       colour: teamAccentColor(awayName, "away"),
     },
-    venueName,
+    venueName: venueDetails?.name ?? venueName,
+    venue: venueDetails,
+    weather,
+    homeCoachName,
+    awayCoachName,
     scheduledKickoffAt: kickoffAt || null,
     statusLabel: fixtureStatus,
     refereeName,
@@ -373,10 +522,13 @@ export async function buildMatchAnimationPublicPayload(
     attendance,
     matchDateLabel,
     playerOfTheMatch: potm,
+    playerOfTheMatchImageUrl: potmImageUrl,
+    playerOfTheMatchTeamSide: potmTeamSide,
     resultKind,
     availability,
     events,
     playerStats: buildMatchAnimationPlayerStats(data.playerStats),
+    teamStats,
     settings: settings
       ? {
           publicAnimationEnabled: settings.publicAnimationEnabled,

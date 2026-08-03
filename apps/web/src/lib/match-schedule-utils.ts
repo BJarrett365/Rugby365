@@ -6,6 +6,16 @@ export type ScheduleTeam = {
   imageUrl?: string | null;
 };
 
+export type ScheduleFixtureWeather = {
+  temperatureC: number | null;
+  windSpeedKmh: number | null;
+  windCompass: string | null;
+  summary: string;
+  /** Sun / cloud / rain glyph key. */
+  icon?: import("./weather-condition").WeatherIconKind | null;
+  conditionLabel?: string | null;
+};
+
 export type ScheduleFixture = {
   id: string;
   slug: string;
@@ -20,8 +30,19 @@ export type ScheduleFixture = {
   round: string | null;
   /** Stadium / ground name when available from SDMS or CMS. */
   venue: string | null;
+  venueId?: string | null;
   homeScore: number;
   awayScore: number;
+  halfTimeHome?: number | null;
+  halfTimeAway?: number | null;
+  attendance?: number | null;
+  refereeName?: string | null;
+  isNeutralVenue?: boolean;
+  /** Compact TV labels for the fixtures list (e.g. TNT Sports · SuperSport). */
+  tvLabels?: string[];
+  weather?: ScheduleFixtureWeather | null;
+  /** Extra tooltip / note line (neutral venue, first-leg style notes, etc.). */
+  additionalInfo?: string | null;
   homeTeam: ScheduleTeam | null;
   awayTeam: ScheduleTeam | null;
   externalMatchId?: string | null;

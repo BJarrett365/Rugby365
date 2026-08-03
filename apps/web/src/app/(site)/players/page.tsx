@@ -34,7 +34,8 @@ export default async function PublicPlayersDirectoryPage({ searchParams }: PageP
         <h1>Players</h1>
         <p className="pr-players-directory__lede">
           {dir.total.toLocaleString("en-GB")} published profiles with club, international and
-          scouting views.
+          scouting views.{" "}
+          <Link href="/legends">Browse Planet Rugby Legends</Link>
         </p>
       </header>
 
