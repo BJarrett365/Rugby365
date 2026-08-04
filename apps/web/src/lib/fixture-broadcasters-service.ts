@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { fixtureBroadcasters, fixtures } from "@rugby365/db";
 import { getDb } from "./db";
 import {
@@ -6,6 +6,10 @@ import {
   type BroadcasterPlatform,
   type BroadcasterSourceProvider,
 } from "./rugby-broadcaster-presets";
+
+function broadcasterDedupeKey(region: string | null | undefined, name: string): string {
+  return `${(region ?? "").trim().toUpperCase()}::${name.trim().toLowerCase()}`;
+}
 
 export type FixtureBroadcasterRow = {
   id: string;
@@ -133,6 +137,127 @@ export async function replaceFixtureBroadcasters(
   }
 
   return listFixtureBroadcasters(fixtureId);
+}
+
+/**
+ * Assign TV schedule rows from one source onto an existing fixture only.
+ * - Never creates fixtures
+ * - Replaces that source’s rows
+ * - Removes same region+name rows from other sources so channels are not duplicated
+ */
+export async function assignFixtureBroadcastersFromSource(
+  fixtureId: string,
+  sourceProvider: string,
+  items: FixtureBroadcasterInput[],
+): Promise<FixtureBroadcasterRow[]> {
+  const db = getDb();
+  const provider = sourceProvider.trim().slice(0, 64);
+  if (!provider) throw new Error("sourceProvider required");
+
+  const [fixture] = await db
+    .select({ id: fixtures.id })
+    .from(fixtures)
+    .where(eq(fixtures.id, fixtureId))
+    .limit(1);
+  if (!fixture) throw new Error("Fixture not found");
+
+  const cleaned: Array<{
+    broadcasterName: string;
+    channelName: string | null;
+    region: string | null;
+    platform: BroadcasterPlatform;
+    startAt: Date | null;
+    endAt: Date | null;
+    url: string | null;
+    sourceProvider: string;
+    externalId: string | null;
+    sortOrder: number;
+  }> = [];
+  const seenKeys = new Set<string>();
+
+  for (const [index, item] of items.entries()) {
+    const name = item.broadcasterName?.trim();
+    if (!name) continue;
+    const region = item.region?.trim() || null;
+    const key = broadcasterDedupeKey(region, name);
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    const platformRaw = (item.platform ?? "tv").trim().toLowerCase();
+    const platform = isBroadcasterPlatform(platformRaw) ? platformRaw : "tv";
+    cleaned.push({
+      broadcasterName: name,
+      channelName: item.channelName?.trim() || null,
+      region,
+      platform,
+      startAt: parseOptionalDate(item.startAt),
+      endAt: parseOptionalDate(item.endAt),
+      url: item.url?.trim() || null,
+      sourceProvider: provider,
+      externalId: item.externalId?.trim() || null,
+      sortOrder: Number.isFinite(item.sortOrder) ? Number(item.sortOrder) : index,
+    });
+  }
+
+  await db
+    .delete(fixtureBroadcasters)
+    .where(
+      and(
+        eq(fixtureBroadcasters.fixtureId, fixtureId),
+        eq(fixtureBroadcasters.sourceProvider, provider),
+      ),
+    );
+
+  // Drop colliding region+name rows from other sources (e.g. manual ITV + kickoff ITV).
+  if (cleaned.length) {
+    const existing = await db
+      .select({
+        id: fixtureBroadcasters.id,
+        broadcasterName: fixtureBroadcasters.broadcasterName,
+        region: fixtureBroadcasters.region,
+        sourceProvider: fixtureBroadcasters.sourceProvider,
+      })
+      .from(fixtureBroadcasters)
+      .where(
+        and(
+          eq(fixtureBroadcasters.fixtureId, fixtureId),
+          ne(fixtureBroadcasters.sourceProvider, provider),
+        ),
+      );
+
+    const collidingIds = existing
+      .filter((row) => seenKeys.has(broadcasterDedupeKey(row.region, row.broadcasterName)))
+      .map((row) => row.id);
+
+    if (collidingIds.length) {
+      await db
+        .delete(fixtureBroadcasters)
+        .where(
+          and(
+            eq(fixtureBroadcasters.fixtureId, fixtureId),
+            inArray(fixtureBroadcasters.id, collidingIds),
+          ),
+        );
+    }
+
+    await db.insert(fixtureBroadcasters).values(
+      cleaned.map((row) => ({
+        fixtureId,
+        ...row,
+        updatedAt: new Date(),
+      })),
+    );
+  }
+
+  return listFixtureBroadcasters(fixtureId);
+}
+
+/** @deprecated Prefer assignFixtureBroadcastersFromSource — same replace-by-source behaviour. */
+export async function replaceFixtureBroadcastersForSource(
+  fixtureId: string,
+  sourceProvider: string,
+  items: FixtureBroadcasterInput[],
+): Promise<FixtureBroadcasterRow[]> {
+  return assignFixtureBroadcastersFromSource(fixtureId, sourceProvider, items);
 }
 
 export async function deleteFixtureBroadcaster(

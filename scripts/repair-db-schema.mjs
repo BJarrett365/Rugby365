@@ -38,9 +38,36 @@ const REPAIRS = [
   },
 ];
 
+/** Newer migrations that are safe to re-apply via IF NOT EXISTS / catch duplicates. */
+const REPLAY_FILES = [
+  "packages/db/drizzle/0057_player_university.sql",
+  "packages/db/drizzle/0063_audio_commentary.sql",
+  "packages/db/drizzle/0064_audio_voice_settings.sql",
+];
+
 async function columnPresent(sql, checkSql) {
   const [row] = await sql.unsafe(checkSql);
   return Boolean(row);
+}
+
+async function applyFile(sql, rel) {
+  const file = path.join(ROOT, rel);
+  if (!fs.existsSync(file)) {
+    console.log(`[db] Skip missing ${path.basename(file)}`);
+    return;
+  }
+  const content = fs.readFileSync(file, "utf8");
+  try {
+    await sql.unsafe(content);
+    console.log(`[db] Applied ${path.basename(file)}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/already exists|duplicate/i.test(message)) {
+      console.log(`[db] OK (already present) ${path.basename(file)}`);
+      return;
+    }
+    throw error;
+  }
 }
 
 async function main() {
@@ -55,18 +82,20 @@ async function main() {
 
       console.log(`[db] Applying schema repair for ${repair.label}…`);
       for (const rel of repair.files) {
-        const file = path.join(ROOT, rel);
-        const content = fs.readFileSync(file, "utf8");
-        await sql.unsafe(content);
-        console.log(`[db] Applied ${path.basename(file)}`);
+        await applyFile(sql, rel);
       }
       applied++;
     }
 
+    console.log("[db] Replaying newer schema repair migrations (IF NOT EXISTS)…");
+    for (const rel of REPLAY_FILES) {
+      await applyFile(sql, rel);
+    }
+
     if (applied === 0) {
-      console.log("[db] Schema repair complete — nothing to apply.");
+      console.log("[db] Schema repair complete — check-based groups nothing to apply.");
     } else {
-      console.log(`[db] Schema repair complete (${applied} repair group(s) applied).`);
+      console.log(`[db] Schema repair complete (${applied} check-based repair group(s) applied).`);
     }
   } finally {
     await sql.end();

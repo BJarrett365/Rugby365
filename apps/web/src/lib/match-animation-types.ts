@@ -3,6 +3,7 @@ import type { AnimationPitchEvent } from "./match-animation-events";
 import type { MatchResultKind } from "./match-animation-fulltime";
 import type { AnimationTeamStatsBundle } from "./match-animation-insight";
 import type { MatchAnimationPlayerStats } from "./match-animation-player-stats";
+import type { MatchAnimationPublicAudio } from "./match-animation-public-audio";
 
 export type MatchAnimationPublicPayload = {
   matchId: string;
@@ -81,4 +82,6 @@ export type MatchAnimationPublicPayload = {
     countdownHeld: boolean;
     fullTimeConfirmed: boolean;
   } | null;
+  /** Public-safe Live Audio UI state (no storage/media URLs). */
+  audio: MatchAnimationPublicAudio;
 };

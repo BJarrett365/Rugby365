@@ -59,25 +59,48 @@ export function CareerRatingBadge({
 }
 
 /**
- * Combined line-up cell: Career | Match (or Form) | Trend
+ * Combined line-up cell: Career | Match | Trend
  * Keep career and match visually separate — never merge scores.
+ * Match (and Career on public lineups) publish after full time only.
  */
 export function DualRatingCell({
   rating,
   mode = "auto",
+  jerseyNumber = null,
 }: {
   rating: MatchRatingDisplay | null | undefined;
-  /** completed = show Match; scheduled = show Form; auto = match if present else form */
+  /** completed = show Match; scheduled = dashes until full time; auto = match if present */
   mode?: "completed" | "scheduled" | "auto";
+  /** When completed and unused bench (no match rating), show DNP instead of —. */
+  jerseyNumber?: number | null;
 }) {
+  if (mode === "scheduled") {
+    return (
+      <div className="dual-rating-cell" aria-label="Ratings publish after full time">
+        <CareerRatingBadge value={null} />
+        <span className="dual-rating-cell__sep" aria-hidden>
+          |
+        </span>
+        <span
+          className="match-rating-badge match-rating-badge--na"
+          title="Match ratings publish after full time"
+        >
+          —
+        </span>
+      </div>
+    );
+  }
+
   const career = rating?.careerRating ?? null;
   const hasMatch =
     rating != null &&
     rating.rating != null &&
     rating.ratingStatus !== "unavailable";
-  const showMatch =
-    mode === "completed" || (mode === "auto" && hasMatch);
-  const showForm = !showMatch && rating?.formRating != null;
+  const showMatch = mode === "completed" || (mode === "auto" && hasMatch);
+  const unusedBench =
+    mode === "completed" &&
+    !hasMatch &&
+    (jerseyNumber != null ? jerseyNumber > 15 : rating?.squadRole === "replacement");
 
   return (
     <div className="dual-rating-cell" aria-label="Career and match ratings">
@@ -87,16 +110,12 @@ export function DualRatingCell({
       </span>
       {showMatch && rating ? (
         <MatchRatingBadge rating={rating} showPrefix />
-      ) : showForm && rating ? (
-        <span
-          className="match-rating-badge match-rating-badge--form"
-          title="Form Rating from recent Match Ratings (not Career)"
-        >
-          {rating.formLabel}
-        </span>
       ) : (
-        <span className="match-rating-badge match-rating-badge--na" title="Match Rating unavailable">
-          —
+        <span
+          className="match-rating-badge match-rating-badge--na"
+          title={unusedBench ? "Did not play" : "Match Rating unavailable"}
+        >
+          {unusedBench ? "DNP" : "—"}
         </span>
       )}
     </div>

@@ -434,10 +434,10 @@ export function PlayerDevelopmentTimeline({
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="pr-dev-timeline__card">
+    <dl className="pr-dev-timeline__card">
       <dt>{label}</dt>
       <dd>{value}</dd>
-    </div>
+    </dl>
   );
 }
 

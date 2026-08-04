@@ -36,6 +36,7 @@ import { syncFixturePlayerStats } from "./player-stats";
 import { resolveVenue, getVenueById } from "./venue-admin-service";
 import { ensureVenueCapacityInDatabase } from "./venue-capacity-sync-service";
 import { mergeProviderSnapshot } from "./head-to-head-service";
+import { sdmsStatusToPeriod } from "./rugby-match-clock";
 
 function mappedLineupsToSport365(lineups: MappedLineups): Sport365Lineups {
   return lineups as Sport365Lineups;
@@ -44,7 +45,7 @@ function mappedLineupsToSport365(lineups: MappedLineups): Sport365Lineups {
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
   if (status === "Fixture") return "scheduled";
-  if (/half\s*time|^ht\b/i.test(status)) return "half_time";
+  if (/half\s*time|halftime|^ht\b/i.test(status)) return "half_time";
   if (/live|first|second|in\s*play/i.test(status)) return "live";
   return "scheduled";
 }
@@ -213,9 +214,19 @@ export async function enrichFixtureFromSdmsMatch(
       )
     : undefined;
 
-  const mainRef = detail.referee?.find((r) => r.role.toLowerCase().includes("referee"));
+  // Prefer exact main referee role — avoid matching "assistant referee" first.
+  const mainRef =
+    detail.referee?.find((r) => /^referee$/i.test(r.role.trim())) ??
+    detail.referee?.find((r) => /^(main\s+)?referee$/i.test(r.role.trim())) ??
+    detail.referee?.find(
+      (r) => /referee/i.test(r.role) && !/assistant|touch|line|tmo|tv/i.test(r.role),
+    );
   const referee = mainRef?.name
-    ? await resolveReferee({ name: mainRef.name.trim(), createIfMissing: true })
+    ? await resolveReferee({
+        name: mainRef.name.trim(),
+        externalProviderId: mainRef.id || undefined,
+        createIfMissing: true,
+      })
     : null;
 
   let venue = detail.venue_name
@@ -243,13 +254,45 @@ export async function enrichFixtureFromSdmsMatch(
       ? (fixture.providerSnapshot as Record<string, unknown>)
       : {};
 
+  // SDMS often returns 0-0 for tier-2 / incomplete feeds. Do not wipe a known CMS score.
+  const sdmsHome = detail.home_team_score;
+  const sdmsAway = detail.away_team_score;
+  const sdmsHasScore =
+    typeof sdmsHome === "number" &&
+    typeof sdmsAway === "number" &&
+    (sdmsHome > 0 || sdmsAway > 0);
+  const existingHasScore = (fixture.homeScore ?? 0) > 0 || (fixture.awayScore ?? 0) > 0;
+  const nextHomeScore = sdmsHasScore
+    ? sdmsHome
+    : existingHasScore
+      ? fixture.homeScore
+      : (sdmsHome ?? fixture.homeScore);
+  const nextAwayScore = sdmsHasScore
+    ? sdmsAway
+    : existingHasScore
+      ? fixture.awayScore
+      : (sdmsAway ?? fixture.awayScore);
+
+  const matchMinute =
+    typeof detail.minutes === "number" && Number.isFinite(detail.minutes)
+      ? Math.max(0, Math.floor(detail.minutes))
+      : fixture.matchMinute;
+  const matchSecond =
+    typeof detail.seconds === "number" && Number.isFinite(detail.seconds)
+      ? Math.max(0, Math.min(59, Math.floor(detail.seconds)))
+      : fixture.matchSecond;
+  const period = sdmsStatusToPeriod(detail.status);
+
   await db
     .update(fixtures)
     .set({
       kickoffAt: new Date(kickoffAt),
       status,
-      homeScore: detail.home_team_score ?? fixture.homeScore,
-      awayScore: detail.away_team_score ?? fixture.awayScore,
+      homeScore: nextHomeScore,
+      awayScore: nextAwayScore,
+      matchMinute,
+      matchSecond,
+      period,
       competitionName: detail.competition_name ?? fixture.competitionName,
       round: detail.round ?? fixture.round,
       venueName: detail.venue_name ?? fixture.venueName,
@@ -393,6 +436,33 @@ export async function repairSdmsFixtureScoringEvents(
   await syncFixturePlayerStats(fixtureId);
   const performanceScoringUpdated = await syncMatchPerformanceScoringFromFixturePlayers(fixtureId);
   return { eventsImported, linked, performanceScoringUpdated };
+}
+
+/**
+ * Append new SDMS key events for a live match without a full squad/stats enrich.
+ * Safe to call on animation refresh polls.
+ */
+export async function syncSdmsLiveEventsFromDetail(
+  fixtureId: string,
+  matchId: string,
+  detail: {
+    home_team_id?: string;
+    away_team_id?: string;
+    key_events?: SdmsKeyEvent[] | null;
+  },
+): Promise<number> {
+  const fixture = await getFixtureById(fixtureId);
+  if (!fixture?.homeTeamId || !fixture.awayTeamId) return 0;
+  return importSdmsKeyEvents(
+    fixtureId,
+    matchId,
+    fixture.homeTeamId,
+    fixture.awayTeamId,
+    detail.home_team_id,
+    detail.away_team_id,
+    false,
+    detail.key_events ?? null,
+  );
 }
 
 export async function importFixtureFromPlanetRugbyMatchUrl(

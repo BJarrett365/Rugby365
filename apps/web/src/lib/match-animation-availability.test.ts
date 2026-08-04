@@ -21,12 +21,14 @@ const baseSettings: AnimationSettingsSnapshot = {
 };
 
 describe("PUBLIC_MATCH_TAB_ORDER", () => {
-  it("places Animation, Watchalong, and Highlights after Match Details", () => {
+  it("places Animation and Audio after Match Details", () => {
     expect(PUBLIC_MATCH_TAB_ORDER[0]).toBe("details");
     expect(PUBLIC_MATCH_TAB_ORDER[1]).toBe("animation");
+    expect(PUBLIC_MATCH_TAB_ORDER[2]).toBe("audio");
     expect(PUBLIC_MATCH_TAB_ORDER).toEqual([
       "details",
       "animation",
+      "audio",
       "watchalong",
       "highlights",
       "stats",
@@ -40,8 +42,9 @@ describe("PUBLIC_MATCH_TAB_ORDER", () => {
 });
 
 describe("parseMatchDetailTab / shareable URL", () => {
-  it("parses animation and media tabs", () => {
+  it("parses animation, audio, and media tabs", () => {
     expect(parseMatchDetailTab("animation")).toBe("animation");
+    expect(parseMatchDetailTab("audio")).toBe("audio");
     expect(parseMatchDetailTab("watchalong")).toBe("watchalong");
     expect(parseMatchDetailTab("highlights")).toBe("highlights");
     expect(parseMatchDetailTab("stats")).toBe("stats");
@@ -49,6 +52,9 @@ describe("parseMatchDetailTab / shareable URL", () => {
   });
 
   it("builds shareable animation href", () => {
+    expect(matchDetailTabHref("/matches/123/comp/1/a-v-b/2026-07-26", "audio")).toBe(
+      "/matches/123/comp/1/a-v-b/2026-07-26?tab=audio",
+    );
     expect(matchDetailTabHref("/matches/123/comp/1/a-v-b/2026-07-26", "animation")).toBe(
       "/matches/123/comp/1/a-v-b/2026-07-26?tab=animation",
     );
@@ -126,7 +132,7 @@ describe("resolveMatchAnimationAvailability", () => {
     expect(resolved.showLiveControls).toBe(true);
   });
 
-  it("blocks live when not activated", () => {
+  it("blocks live when not activated and no events", () => {
     const resolved = resolveMatchAnimationAvailability({
       fixtureStatus: "Live",
       scheduledKickoffAt: "2026-07-26T15:00:00.000Z",
@@ -136,6 +142,49 @@ describe("resolveMatchAnimationAvailability", () => {
     });
     expect(resolved.phase).toBe("not_activated");
     expect(resolved.message).toMatch(/not been activated/i);
+  });
+
+  it("unlocks live animation when SDMS/CMS events exist without CMS activation", () => {
+    const resolved = resolveMatchAnimationAvailability({
+      fixtureStatus: "live",
+      period: "second_half",
+      scheduledKickoffAt: "2026-07-26T15:00:00.000Z",
+      serverNowIso: "2026-07-26T15:50:00.000Z",
+      settings: baseSettings,
+      publishedEventCount: 12,
+    });
+    expect(resolved.phase).toBe("second_half");
+    expect(resolved.tabBadge).toBe("LIVE");
+    expect(resolved.showLiveControls).toBe(true);
+  });
+
+  it("unlocks live animation when detailed player data exists without events", () => {
+    const resolved = resolveMatchAnimationAvailability({
+      fixtureStatus: "live",
+      period: "first_half",
+      scheduledKickoffAt: "2026-07-26T15:00:00.000Z",
+      serverNowIso: "2026-07-26T15:20:00.000Z",
+      settings: baseSettings,
+      publishedEventCount: 0,
+      hasDetailedPlayerData: true,
+    });
+    expect(resolved.phase).toBe("live");
+    expect(resolved.tabBadge).toBe("LIVE");
+    expect(resolved.showLiveControls).toBe(true);
+  });
+
+  it("shows full-time result when finished with detailed player data but no events", () => {
+    const resolved = resolveMatchAnimationAvailability({
+      fixtureStatus: "full_time",
+      scheduledKickoffAt: "2026-07-26T15:00:00.000Z",
+      serverNowIso: "2026-07-26T17:00:00.000Z",
+      settings: baseSettings,
+      publishedEventCount: 0,
+      hasDetailedPlayerData: true,
+    });
+    expect(resolved.phase).toBe("full_time");
+    expect(resolved.showFullTimeResult).toBe(true);
+    expect(resolved.showReplayControls).toBe(false);
   });
 
   it("shows full-time result when fixture is confirmed finished", () => {

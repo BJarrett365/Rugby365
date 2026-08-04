@@ -3,8 +3,21 @@
 export type MatchAnimationSoundCue = "try" | "conversion" | "conversion_miss";
 
 export const MATCH_ANIMATION_SOUND_KEY = "r365-ma-sound";
+export const MATCH_ANIMATION_VOLUME_KEY = "r365-ma-volume";
+/** Cross-tab sync between Match centre Audio and Match Animation Listen. */
+export const MATCH_AUDIO_LISTEN_CHANGE_EVENT = "r365-ma-listen-change";
+
+function dispatchMatchAudioListenChange(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new Event(MATCH_AUDIO_LISTEN_CHANGE_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
 
 let sharedCtx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
 
 function AudioContextCtor(): typeof AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -20,6 +33,40 @@ export function getMatchAnimationAudioContext(): AudioContext | null {
   if (!Ctor) return null;
   if (!sharedCtx) sharedCtx = new Ctor();
   return sharedCtx;
+}
+
+function getMasterGain(ctx: AudioContext): GainNode {
+  if (!masterGain || masterGain.context !== ctx) {
+    masterGain = ctx.createGain();
+    masterGain.gain.value = readMatchAnimationVolume();
+    masterGain.connect(ctx.destination);
+  }
+  return masterGain;
+}
+
+export function readMatchAnimationVolume(): number {
+  if (typeof window === "undefined") return 0.85;
+  try {
+    const raw = window.localStorage.getItem(MATCH_ANIMATION_VOLUME_KEY);
+    if (raw == null) return 0.85;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return 0.85;
+    return Math.min(1, Math.max(0, n));
+  } catch {
+    return 0.85;
+  }
+}
+
+export function writeMatchAnimationVolume(volume: number): void {
+  if (typeof window === "undefined") return;
+  const clamped = Math.min(1, Math.max(0, volume));
+  try {
+    window.localStorage.setItem(MATCH_ANIMATION_VOLUME_KEY, String(clamped));
+  } catch {
+    /* ignore */
+  }
+  if (masterGain) masterGain.gain.value = clamped;
+  dispatchMatchAudioListenChange();
 }
 
 /** Call from a user gesture so the browser allows playback. */
@@ -45,6 +92,7 @@ export function writeMatchAnimationSoundEnabled(enabled: boolean): void {
   } catch {
     /* ignore */
   }
+  dispatchMatchAudioListenChange();
 }
 
 function tone(
@@ -73,7 +121,7 @@ function tone(
     opts.start + opts.duration,
   );
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getMasterGain(ctx));
   osc.start(opts.start);
   osc.stop(opts.start + opts.duration + 0.02);
 }
@@ -96,7 +144,7 @@ function noiseBurst(ctx: AudioContext, start: number, duration: number, gainValu
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
   src.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getMasterGain(ctx));
   src.start(start);
   src.stop(start + duration);
 }

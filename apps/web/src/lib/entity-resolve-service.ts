@@ -32,6 +32,14 @@ function uniqueSlug(base: string, externalProviderId?: string): string {
   return suffix ? `${slug}-${suffix}` : slug;
 }
 
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; message?: string; cause?: { code?: string; message?: string } };
+  if (e.code === "23505" || e.cause?.code === "23505") return true;
+  const msg = `${e.message ?? ""} ${e.cause?.message ?? ""}`;
+  return /duplicate key value violates unique constraint/i.test(msg);
+}
+
 export async function resolveTeam(input: {
   name: string;
   externalProviderId?: string;
@@ -331,6 +339,23 @@ export async function resolvePlayer(input: {
   if (input.createIfMissing === false) return null;
 
   const slug = uniqueSlug(name, input.externalProviderId);
+  const [bySlug] = await db.select().from(players).where(eq(players.slug, slug)).limit(1);
+  if (bySlug) {
+    const profilePatch = {
+      ...buildProfilePatch(bySlug),
+      externalProviderId: input.externalProviderId ?? bySlug.externalProviderId,
+      sourceProvider: input.externalProviderId
+        ? providerForExternalId(input.sourceProvider, input.externalProviderId)
+        : bySlug.sourceProvider,
+    };
+    const [updated] = await db
+      .update(players)
+      .set(profilePatch)
+      .where(eq(players.id, bySlug.id))
+      .returning();
+    return updated;
+  }
+
   const profilePatch = buildProfilePatch({
     clubName: null,
     countryName: null,
@@ -338,28 +363,44 @@ export async function resolvePlayer(input: {
     internationalTeamId: null,
     positionName: null,
   } as PlayerRow);
-  const [row] = await db
-    .insert(players)
-    .values({
-      name,
-      slug,
-      externalProviderId: input.externalProviderId ?? null,
-      sourceProvider: providerForExternalId(input.sourceProvider, input.externalProviderId),
-      positionName: profilePatch.positionName ?? null,
-      clubName: profilePatch.clubName ?? null,
-      countryName: profilePatch.countryName ?? null,
-      clubTeamId: profilePatch.clubTeamId ?? null,
-      internationalTeamId: profilePatch.internationalTeamId ?? null,
-    })
-    .returning();
+  try {
+    const [row] = await db
+      .insert(players)
+      .values({
+        name,
+        slug,
+        externalProviderId: input.externalProviderId ?? null,
+        sourceProvider: providerForExternalId(input.sourceProvider, input.externalProviderId),
+        positionName: profilePatch.positionName ?? null,
+        clubName: profilePatch.clubName ?? null,
+        countryName: profilePatch.countryName ?? null,
+        clubTeamId: profilePatch.clubTeamId ?? null,
+        internationalTeamId: profilePatch.internationalTeamId ?? null,
+      })
+      .returning();
 
-  if (!input.skipArchiveEnrich) {
-    void import("./player-wikipedia-enrich").then(({ schedulePlayerWikipediaEnrich }) => {
-      schedulePlayerWikipediaEnrich(row.id, row.name);
-    });
+    if (!input.skipArchiveEnrich) {
+      void import("./player-wikipedia-enrich").then(({ schedulePlayerWikipediaEnrich }) => {
+        schedulePlayerWikipediaEnrich(row.id, row.name);
+      });
+    }
+
+    return row;
+  } catch (error) {
+    // Concurrent match-page loads can race on the same SDMS player insert.
+    if (!isUniqueViolation(error)) throw error;
+    if (input.externalProviderId) {
+      const [byExternal] = await db
+        .select()
+        .from(players)
+        .where(eq(players.externalProviderId, input.externalProviderId))
+        .limit(1);
+      if (byExternal) return byExternal;
+    }
+    const [existing] = await db.select().from(players).where(eq(players.slug, slug)).limit(1);
+    if (existing) return existing;
+    throw error;
   }
-
-  return row;
 }
 
 export async function syncFixtureSquad(

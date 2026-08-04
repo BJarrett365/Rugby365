@@ -107,6 +107,9 @@ export default function CompetitionsAdminPage() {
             >
               {importingAll ? "Importing…" : "Import all from Planet Rugby"}
             </button>
+            <Link href="/admin/competitions/catalog" className="cms-btn cms-btn--secondary touch-target">
+              Competition catalog
+            </Link>
             <Link href="/admin/competitions/import" className="cms-btn cms-btn--primary touch-target">
               Import Planet Rugby
             </Link>

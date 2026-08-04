@@ -55,8 +55,16 @@ export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   { teamSlug: "scotland", coachName: "Gregor Townsend", role: "head_coach" },
   { teamSlug: "france-go9p0p68", coachName: "Fabien Galthié", role: "head_coach" },
   { teamSlug: "south-africa", coachName: "Rassie Erasmus", role: "head_coach" },
-  { teamSlug: "new-zealand", coachName: "Dave Rennie", role: "head_coach" },
-  { teamSlug: "australia", coachName: "Les Kiss", role: "head_coach" },
+  { teamSlug: "new-zealand", coachName: "Scott Robertson", role: "head_coach" },
+  { teamSlug: "australia", coachName: "Joe Schmidt", role: "head_coach" },
+  { teamSlug: "italy-n0620o98", coachName: "Gonzalo Quesada", role: "head_coach" },
+  { teamSlug: "japan", coachName: "Eddie Jones", role: "head_coach" },
+  { teamSlug: "united-states-216mky9n", teamName: "United States", coachName: "Scott Lawrence", role: "head_coach" },
+  { teamSlug: "samoa-016oqwj5", teamName: "Samoa", coachName: "Mahonri Schwalger", role: "head_coach" },
+  { teamSlug: "georgia-zd935n6v", teamName: "Georgia", coachName: "Pierre-Henry Broncan", role: "head_coach" },
+  { teamSlug: "canada-k76k4rjy", teamName: "Canada", coachName: "Kingsley Jones", role: "head_coach" },
+  { teamSlug: "uruguay-og9n31jl", teamName: "Uruguay", coachName: "Esteban Meneses", role: "head_coach" },
+  { teamSlug: "chile-pm6wdmj4", teamName: "Chile", coachName: "Pablo Lemoine", role: "head_coach" },
   { teamSlug: "argentina", coachName: "Felipe Contepomi", role: "head_coach" },
   { teamSlug: "fiji", teamName: "Fiji", coachName: "Senirusi Seruvakula", role: "head_coach", startDate: "2026-01-01" },
 
@@ -77,6 +85,58 @@ export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   { teamSlug: "fijian-drua", teamName: "Fijian Drua", coachName: "Glen Jackson", role: "head_coach" },
   { teamSlug: "moana-pasifika-dp9z1868", coachName: "Tana Umaga", role: "head_coach" },
   { teamSlug: "waratahs-016o2oj5", coachName: "Dan McKellar", role: "head_coach" },
+
+  // Bunnings NPC — 2026 provincial head coaches
+  { teamSlug: "canterbury", coachName: "Alex Robertson", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "auckland", coachName: "Steven Bates", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "otago", coachName: "Mark Brown", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "waikato", coachName: "Leon Holden", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "taranaki", coachName: "Jarrad Hoeata", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "counties-manukau", coachName: "Reon Graham", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "hawke-s-bay", coachName: "Brock James", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "wellington", coachName: "Trent Renata", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "bay-of-plenty", coachName: "Richard Watt", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "southland", coachName: "Scott Eade", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "northland", coachName: "Ryan Martin", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "manawatu", coachName: "Wesley Clarke", role: "head_coach", startDate: "2025-06-01" },
+  { teamSlug: "tasman", coachName: "Jono Phillips", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "north-harbour", coachName: "Jimmy Maher", role: "head_coach", startDate: "2025-01-01" },
+
+  // Currie Cup / URC SA sides (already used in match defaults)
+  { teamSlug: "boland-cavaliers", coachName: "Kloppie Botha", role: "head_coach" },
+  { teamSlug: "bulls-52944z98", coachName: "Phiwe Nomlomo", role: "head_coach" },
+  { teamSlug: "cheetahs", coachName: "Frans Steyn", role: "head_coach" },
+  { teamSlug: "lions-k76kd1jy", coachName: "Ivan van Rooyen", role: "head_coach" },
+  { teamSlug: "sharks-1m98z29x", coachName: "John Plumtree", role: "head_coach" },
+  { teamSlug: "stormers-g56el397", coachName: "John Dobson", role: "head_coach" },
+
+  // URC
+  { teamSlug: "leinster-pd9rxo98", coachName: "Leo Cullen", role: "head_coach" },
+  { teamSlug: "munster-m46vomjz", coachName: "Clayton McMillan", role: "head_coach" },
+  { teamSlug: "ulster-vx917e9w", coachName: "Richie Murphy", role: "head_coach" },
+  { teamSlug: "connacht-rugby", coachName: "Pete Wilkins", role: "head_coach" },
+  { teamSlug: "glasgow-warriors", coachName: "Franco Smith", role: "head_coach" },
+  { teamSlug: "edinburgh", coachName: "Sean Everitt", role: "head_coach" },
+  { teamSlug: "cardiff", coachName: "Matt Sherratt", role: "head_coach" },
+  { teamSlug: "ospreys-n0628z68", coachName: "Mark Jones", role: "head_coach" },
+  { teamSlug: "scarlets-qo6gdo63", coachName: "Dwayne Peel", role: "head_coach" },
+  { teamSlug: "dragons-go9p5qj8", coachName: "Filo Paulo", role: "head_coach" },
+  { teamSlug: "benetton-dp9zn98l", coachName: "Marco Bortolami", role: "head_coach" },
+  { teamSlug: "zebre-zd93w56v", coachName: "Massimo Brunello", role: "head_coach" },
+
+  // Top 14 / Champions Cup French sides
+  { teamSlug: "stade-toulousain-016odw95", coachName: "Ugo Mola", role: "head_coach" },
+  { teamSlug: "la-rochelle-4wjx1n6p", coachName: "Ronan O'Gara", role: "head_coach" },
+  { teamSlug: "racing-92", coachName: "Patrice Collazo", role: "head_coach" },
+  { teamSlug: "bordeaux-begles-do6l3o6y", coachName: "Yannick Bru", role: "head_coach" },
+  { teamSlug: "section-paloise-zv90536e", coachName: "Sébastien Piqueronies", role: "head_coach" },
+  { teamSlug: "montpellier-g56ey3j7", coachName: "Joan Caudullo", role: "head_coach" },
+
+  // Autumn Nations Cup / Tier 2 (World Rugby Nations Cup 2026 guides)
+  { teamSlug: "portugal-vx91y29w", teamName: "Portugal", coachName: "Simon Mannix", role: "head_coach" },
+  { teamSlug: "spain-og9np16l", teamName: "Spain", coachName: "Pablo Bouza", role: "head_coach" },
+  { teamSlug: "tonga-do6ly09y", teamName: "Tonga", coachName: "Tevita Tu'ifua", role: "head_coach" },
+  { teamSlug: "hong-kong-qo6gqk93", teamName: "Hong Kong", coachName: "Logan Asplin", role: "head_coach" },
 ];
 
 export type AssignCurrentCoachesResult = {

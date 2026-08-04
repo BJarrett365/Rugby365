@@ -171,6 +171,202 @@ export type CmsMatchEventRow = {
   payload: Record<string, unknown> | null;
 };
 
+function parseScorePair(payload: Record<string, unknown>): {
+  home_score: number | null;
+  away_score: number | null;
+} {
+  if (typeof payload.home_score === "number" || typeof payload.away_score === "number") {
+    return {
+      home_score: typeof payload.home_score === "number" ? payload.home_score : null,
+      away_score: typeof payload.away_score === "number" ? payload.away_score : null,
+    };
+  }
+  const raw = typeof payload.score === "string" ? payload.score.trim() : "";
+  const m = /^(\d+)\s*[-–:]\s*(\d+)$/.exec(raw);
+  if (!m) return { home_score: null, away_score: null };
+  return { home_score: Number(m[1]), away_score: Number(m[2]) };
+}
+
+function normalizeScoringType(type: string): string | null {
+  const t = type.toLowerCase().replace(/[_-]+/g, " ").trim();
+  if (/\btry\b/.test(t) && !/penalty\s*try/.test(t) && !/conversion/.test(t)) return "try";
+  if (/penalty\s*try/.test(t)) return "penalty_try";
+  if (/conversion/.test(t)) return "conversion";
+  if (/penalty/.test(t) && !/try/.test(t)) return "penalty";
+  if (/drop/.test(t)) return "drop_goal";
+  return null;
+}
+
+function keyEventRichness(e: PublicKeyEvent): number {
+  let score = 0;
+  if (e.player_name?.trim()) score += 4;
+  if (e.player_on?.trim()) score += 3;
+  if (e.player_off?.trim()) score += 3;
+  if (e.player_id) score += 2;
+  if (e.home_score != null && e.away_score != null) score += 1;
+  // Prefer SDMS-style provider team ids over CMS UUIDs for home/away alignment.
+  if (e.team_id && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(e.team_id)) score += 2;
+  return score;
+}
+
+function hasScorePair(e: PublicKeyEvent): boolean {
+  return e.home_score != null && e.away_score != null;
+}
+
+function preferProviderTeamId(a?: string, b?: string): string | undefined {
+  if (a && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(a)) return a;
+  if (b && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(b)) return b;
+  return a || b;
+}
+
+function mergeKeyEventPair(existing: PublicKeyEvent, incoming: PublicKeyEvent): PublicKeyEvent {
+  const preferIncoming = keyEventRichness(incoming) > keyEventRichness(existing);
+  const primary = preferIncoming ? incoming : existing;
+  const secondary = preferIncoming ? existing : incoming;
+  return {
+    ...secondary,
+    ...primary,
+    player_name: primary.player_name?.trim() || secondary.player_name,
+    player_on: primary.player_on?.trim() || secondary.player_on,
+    player_off: primary.player_off?.trim() || secondary.player_off,
+    player_id: primary.player_id || secondary.player_id,
+    team_id: preferProviderTeamId(primary.team_id, secondary.team_id),
+    home_score: primary.home_score ?? secondary.home_score,
+    away_score: primary.away_score ?? secondary.away_score,
+  };
+}
+
+function playerNameTokens(name: string | null | undefined): Set<string> {
+  return new Set(
+    (name ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s']/g, " ")
+      .split(/\s+/)
+      .filter((t) => t.length > 1),
+  );
+}
+
+function playerNamesOverlap(a: PublicKeyEvent, b: PublicKeyEvent): boolean {
+  const ta = playerNameTokens(a.player_name);
+  const tb = playerNameTokens(b.player_name);
+  if (ta.size === 0 || tb.size === 0) return false;
+  for (const t of ta) if (tb.has(t)) return true;
+  return false;
+}
+
+function sameTeamLoose(a?: string, b?: string): boolean {
+  if (!a || !b) return false;
+  return a === b;
+}
+
+/**
+ * Collapse duplicate scoring rows from dual imports (e.g. rugby_data + SDMS).
+ * Merges same-minute/type rows even when only one side carries a scoreline.
+ * Prefers the richer row (named player + provider team id).
+ */
+export function dedupePublicKeyEvents(events: PublicKeyEvent[]): PublicKeyEvent[] {
+  const scoringGroups = new Map<string, PublicKeyEvent[]>();
+  const nonScoring: PublicKeyEvent[] = [];
+  const scoringOrder: string[] = [];
+
+  for (const e of events) {
+    const minute = Math.floor(Number(e.minute) || 0);
+    const scoring = normalizeScoringType(e.type);
+    if (scoring) {
+      const key = `${scoring}:${minute}`;
+      if (!scoringGroups.has(key)) {
+        scoringGroups.set(key, []);
+        scoringOrder.push(key);
+      }
+      scoringGroups.get(key)!.push(e);
+      continue;
+    }
+    nonScoring.push(e);
+  }
+
+  const collapsedScoring: PublicKeyEvent[] = [];
+  for (const key of scoringOrder) {
+    const group = scoringGroups.get(key) ?? [];
+    const byScore = new Map<string, PublicKeyEvent>();
+    const open: PublicKeyEvent[] = [];
+
+    for (const e of group) {
+      if (!hasScorePair(e)) {
+        open.push(e);
+        continue;
+      }
+      const scoreKey = `${e.home_score}-${e.away_score}`;
+      const existing = byScore.get(scoreKey);
+      byScore.set(scoreKey, existing ? mergeKeyEventPair(existing, e) : e);
+    }
+
+    if (byScore.size === 0) {
+      collapsedScoring.push(open.reduce((acc, cur) => mergeKeyEventPair(acc, cur)));
+      continue;
+    }
+
+    if (byScore.size === 1) {
+      let merged = [...byScore.values()][0]!;
+      for (const e of open) merged = mergeKeyEventPair(merged, e);
+      collapsedScoring.push(merged);
+      continue;
+    }
+
+    // Distinct scorelines in the same minute (e.g. two tries) — keep one per score.
+    const buckets = [...byScore.entries()];
+    const unusedOpen = [...open];
+    for (const [, bucket] of buckets) {
+      let merged = bucket;
+      for (let i = unusedOpen.length - 1; i >= 0; i--) {
+        const candidate = unusedOpen[i]!;
+        if (
+          sameTeamLoose(merged.team_id, candidate.team_id) ||
+          playerNamesOverlap(merged, candidate) ||
+          (!candidate.player_name?.trim() && unusedOpen.length === 1)
+        ) {
+          merged = mergeKeyEventPair(merged, candidate);
+          unusedOpen.splice(i, 1);
+        }
+      }
+      collapsedScoring.push(merged);
+    }
+    // Orphan open rows with no score twin: keep the richest named one only if unique.
+    if (unusedOpen.length > 0) {
+      collapsedScoring.push(unusedOpen.reduce((acc, cur) => mergeKeyEventPair(acc, cur)));
+    }
+  }
+
+  const buckets = new Map<string, PublicKeyEvent>();
+  const order: string[] = [];
+
+  for (const e of nonScoring) {
+    const minute = Math.floor(Number(e.minute) || 0);
+    let key: string;
+    if (isSubstitutionEventType(e.type) || e.player_on || e.player_off) {
+      key = `sub:${minute}:${e.player_on ?? ""}:${e.player_off ?? ""}:${e.team_id ?? ""}`;
+    } else {
+      key = `other:${minute}:${e.type}:${e.team_id ?? ""}:${e.player_name ?? ""}`;
+    }
+
+    const existing = buckets.get(key);
+    if (!existing) {
+      buckets.set(key, e);
+      order.push(key);
+      continue;
+    }
+    buckets.set(key, mergeKeyEventPair(existing, e));
+  }
+
+  // Preserve chronological order: scoring by first-seen minute groups, interleave with non-scoring by minute.
+  const scored = collapsedScoring;
+  const others = order.map((k) => buckets.get(k)!);
+  return [...scored, ...others].sort((a, b) => {
+    const am = Math.floor(Number(a.minute) || 0) - Math.floor(Number(b.minute) || 0);
+    if (am !== 0) return am;
+    return (Number(a.second) || 0) - (Number(b.second) || 0);
+  });
+}
+
 /** Map CMS match_events (including Sub On/Off payload.type) into public key events. */
 export function mapCmsEventsToPublicKeyEvents(rows: CmsMatchEventRow[]): PublicKeyEvent[] {
   const mapped: PublicKeyEvent[] = rows.map((row) => {
@@ -179,6 +375,7 @@ export function mapCmsEventsToPublicKeyEvents(rows: CmsMatchEventRow[]): PublicK
     const player =
       (typeof payload.player === "string" && payload.player) ||
       (typeof payload.playerName === "string" && payload.playerName) ||
+      (typeof payload.player_name === "string" && payload.player_name) ||
       (typeof payload.playerInName === "string" && payload.playerInName) ||
       (typeof payload.playerOutName === "string" && payload.playerOutName) ||
       null;
@@ -189,6 +386,7 @@ export function mapCmsEventsToPublicKeyEvents(rows: CmsMatchEventRow[]): PublicK
       (typeof payload.playerOutName === "string" && payload.playerOutName) ||
       (typeof payload.player_out === "string" && payload.player_out) ||
       (isSubOffType(payloadType) ? player : null);
+    const scores = parseScorePair(payload);
 
     return {
       type: payloadType || row.eventType,
@@ -208,12 +406,12 @@ export function mapCmsEventsToPublicKeyEvents(rows: CmsMatchEventRow[]): PublicK
       player_name: player,
       player_on: playerOn,
       player_off: playerOff,
-      home_score: typeof payload.home_score === "number" ? payload.home_score : null,
-      away_score: typeof payload.away_score === "number" ? payload.away_score : null,
+      home_score: scores.home_score,
+      away_score: scores.away_score,
     };
   });
 
-  return pairSubstitutionKeyEvents(mapped);
+  return dedupePublicKeyEvents(pairSubstitutionKeyEvents(mapped));
 }
 
 export function mapSdmsEventsToPublicKeyEvents(
@@ -229,19 +427,21 @@ export function mapSdmsEventsToPublicKeyEvents(
     away_score?: number | null;
   }>,
 ): PublicKeyEvent[] {
-  return pairSubstitutionKeyEvents(
-    events.map((e) => ({
-      type: e.type,
-      minute: e.minute,
-      second: e.second,
-      period: e.period,
-      team_id: e.team_id,
-      player_id: e.player_id,
-      player_name: e.player_name ?? null,
-      player_on: isSubOnType(e.type) ? e.player_name ?? null : null,
-      player_off: isSubOffType(e.type) ? e.player_name ?? null : null,
-      home_score: e.home_score,
-      away_score: e.away_score,
-    })),
+  return dedupePublicKeyEvents(
+    pairSubstitutionKeyEvents(
+      events.map((e) => ({
+        type: e.type,
+        minute: e.minute,
+        second: e.second,
+        period: e.period,
+        team_id: e.team_id,
+        player_id: e.player_id,
+        player_name: e.player_name ?? null,
+        player_on: isSubOnType(e.type) ? e.player_name ?? null : null,
+        player_off: isSubOffType(e.type) ? e.player_name ?? null : null,
+        home_score: e.home_score,
+        away_score: e.away_score,
+      })),
+    ),
   );
 }

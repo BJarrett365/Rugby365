@@ -2,6 +2,7 @@ import {
   findWikipediaVenueArticleTitles,
   parseWikipediaArchive,
 } from "@rugby365/import-sdk";
+import { resolveWikipediaRequestOptions } from "./mediawiki-settings";
 
 export type VenueWikiEnrichResult = {
   enriched: boolean;
@@ -52,7 +53,10 @@ export async function enrichVenueFromWikipedia(venueId: string): Promise<VenueWi
     return { enriched: false, venueId, reason: "name_too_short" };
   }
 
-  const candidates = await findWikipediaVenueArticleTitles(name);
+  const candidates = await findWikipediaVenueArticleTitles(
+    name,
+    await resolveWikipediaRequestOptions(),
+  );
 
   for (const title of candidates) {
     try {

@@ -9,6 +9,7 @@ const TABS = [
   { suffix: "/table", label: "Table" },
   { suffix: "/stats", label: "Player stats" },
   { suffix: "/team-stats", label: "Team stats" },
+  { suffix: "/team-of-the-week", label: "Team of the Week" },
   { suffix: "/compare", label: "Compare players" },
   { suffix: "/compare-teams", label: "Compare teams" },
   { suffix: "/rankings", label: "Rankings" },

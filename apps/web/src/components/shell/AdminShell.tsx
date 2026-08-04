@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ADMIN_BOTTOM_NAV,
   ADMIN_HUB_KEYS,
@@ -69,6 +69,9 @@ function NavSection({
 }
 
 function bottomNavActive(pathname: string, href: string): boolean {
+  if (href === "/matches") {
+    return pathname === "/matches" || pathname.startsWith("/matches/");
+  }
   if (href === "/admin") return pathname === "/admin";
   const hubKey = ADMIN_HUB_KEYS.find((k) => k.href === href);
   if (hubKey) return hubKeyActive(pathname, hubKey);
@@ -78,14 +81,22 @@ function bottomNavActive(pathname: string, href: string): boolean {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Active nav classes only after mount — keeps SSR markup identical to the first client paint.
+  const [navReady, setNavReady] = useState(false);
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    setNavReady(true);
+  }, []);
+
+  const activePath = navReady ? pathname : "";
 
   return (
     <div className="admin-shell" data-cms-theme="planet-rugby">
       <header className="admin-shell__header no-print">
         <div className="admin-shell__header-row">
-          <Link href="/admin" className="admin-shell__brand">
-            Rugby365 CMS
+          <Link href="/matches" className="admin-shell__brand">
+            Rugby365
           </Link>
           <button
             type="button"
@@ -106,7 +117,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <NavSection
               key={section.id}
               section={section}
-              pathname={pathname}
+              pathname={activePath}
               linkClassName="admin-shell__nav-link"
               onNavigate={closeMenu}
             />
@@ -119,7 +130,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <NavSection
               key={section.id}
               section={section}
-              pathname={pathname}
+              pathname={activePath}
               linkClassName="admin-shell__sidebar-link"
             />
           ))}
@@ -131,7 +142,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`admin-shell__bottom-link touch-target${bottomNavActive(pathname, item.href) ? " admin-shell__bottom-link--active" : ""}`}
+            className={`admin-shell__bottom-link touch-target${
+              navReady && bottomNavActive(pathname, item.href) ? " admin-shell__bottom-link--active" : ""
+            }`}
           >
             {item.short}
           </Link>

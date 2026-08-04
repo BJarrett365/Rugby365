@@ -126,12 +126,31 @@ async function applyScoreAndStatus(
 
   const lockedFields = await listFieldLocks({ entityType: "match", entityId: fixtureId });
 
-  const status = rugbyDataStatusToFixtureStatus(match.st ?? match.cp);
+  let status = rugbyDataStatusToFixtureStatus(match.st ?? match.cp);
   // Live feeds often leave `ft` empty and put the running score in `cfs`.
   const score =
     status === "live" || status === "half_time"
       ? parseRugbyDataScore(match.cfs) ?? parseRugbyDataScore(match.ft)
       : parseRugbyDataScore(match.ft) ?? parseRugbyDataScore(match.cfs);
+
+  // P1 sometimes returns scores with status labels like "Result only" that used to
+  // fall through to scheduled — promote when a score is present after kickoff.
+  if (status === "scheduled" && score && existing.kickoffAt) {
+    const kickoffMs = new Date(existing.kickoffAt).getTime();
+    if (Number.isFinite(kickoffMs) && Date.now() - kickoffMs > 90 * 60 * 1000) {
+      status = "full_time";
+    }
+  }
+
+  // Never let a weak "scheduled" mapping overwrite a live/finished CMS status.
+  if (
+    status === "scheduled" &&
+    (existing.status === "live" ||
+      existing.status === "half_time" ||
+      existing.status === "full_time")
+  ) {
+    status = existing.status;
+  }
 
   const patch: Partial<{ homeScore: number; awayScore: number; status: string; providerSnapshot: unknown }> =
     {};

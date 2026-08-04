@@ -6,6 +6,8 @@ import type { MatchEntityContext } from "@/lib/match-entity-context";
 import type { MatchRatingDisplay } from "@/lib/match-rating-service";
 import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
 import { teamAccentColor } from "@/lib/team-accent-color";
+import type { MatchLineupKit } from "@/lib/match-detail-service";
+import { RugbyShirtSvg } from "@/components/shirts/RugbyShirtSvg";
 import { PlayerProfileLink } from "./EntityProfileLinks";
 import { PlayerMatchPerformancePanel } from "./PlayerMatchPerformancePanel";
 import { LineupPitchField } from "./LineupPitchField";
@@ -65,19 +67,23 @@ function ratingForPlayer(
   return ratingsByName.get(player.name.trim().toLowerCase()) ?? null;
 }
 
-function formatCareer(rating: MatchRatingDisplay | null): string {
+function formatCareer(rating: MatchRatingDisplay | null, ratingsPublished: boolean): string {
+  if (!ratingsPublished) return "—";
   return rating?.careerRating != null ? String(rating.careerRating) : "—";
 }
 
 function formatMatch(
   rating: MatchRatingDisplay | null,
   ratingsPublished: boolean,
+  jerseyNumber?: number | null,
 ): string {
-  if (!ratingsPublished) {
-    return rating?.formRating != null ? String(rating.formRating) : "—";
-  }
+  if (!ratingsPublished) return "—";
   if (rating?.rating != null && rating.ratingStatus !== "unavailable") {
     return rating.ratingLabel;
+  }
+  // Unused bench: no performance stats / match rating after full time.
+  if (jerseyNumber != null && jerseyNumber > 15 && rating?.rating == null) {
+    return "DNP";
   }
   return "—";
 }
@@ -111,12 +117,13 @@ function LineupListSide({
         <span className="pr-lineup-list__num">#</span>
         <span className="pr-lineup-list__career">Career</span>
         <span className="pr-lineup-list__name">Player</span>
-        <span className="pr-lineup-list__match">{ratingsPublished ? "Match" : "Form"}</span>
+        <span className="pr-lineup-list__match">Match</span>
       </div>
       <ol className="pr-lineup-list__players">
         {players.map((p) => {
           const rating = ratingForPlayer(p, ratingsByExternalId, ratingsByName);
-          const active = rating != null && selectedId === rating.playerId;
+          const active =
+            ratingsPublished && rating != null && selectedId === rating.playerId;
           return (
             <li
               key={`${title}-${p.providerId || p.jerseyNumber}-${p.name}`}
@@ -124,21 +131,27 @@ function LineupListSide({
             >
               <div
                 className="pr-lineup-list__row"
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelect(rating)}
+                role={ratingsPublished ? "button" : undefined}
+                tabIndex={ratingsPublished ? 0 : undefined}
+                onClick={() => {
+                  if (!ratingsPublished) return;
+                  onSelect(rating);
+                }}
                 onKeyDown={(e) => {
+                  if (!ratingsPublished) return;
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     onSelect(rating);
                   }
                 }}
-                aria-pressed={active}
-                aria-label={`${p.name} ratings`}
+                aria-pressed={ratingsPublished ? active : undefined}
+                aria-label={
+                  ratingsPublished ? `${p.name} ratings` : `${p.name}`
+                }
               >
                 <span className="pr-lineup-list__num">{p.jerseyNumber}</span>
                 <span className="pr-lineup-list__career" title="Career rating (35–99)">
-                  {formatCareer(rating)}
+                  {formatCareer(rating, ratingsPublished)}
                 </span>
                 <span className="pr-lineup-list__name" onClick={(e) => e.stopPropagation()}>
                   <PlayerProfileLink name={p.name} externalId={p.providerId} context={entities} />
@@ -148,11 +161,8 @@ function LineupListSide({
                     </span>
                   ) : null}
                 </span>
-                <span
-                  className="pr-lineup-list__match"
-                  title={ratingsPublished ? "Match rating (1–10)" : "Form rating"}
-                >
-                  {formatMatch(rating, ratingsPublished)}
+                <span className="pr-lineup-list__match" title="Match rating (1–10)">
+                  {formatMatch(rating, ratingsPublished, p.jerseyNumber)}
                 </span>
               </div>
             </li>
@@ -168,15 +178,23 @@ export function LineupsPitchView({
   entities,
   ratings = [],
   rugby365PotmName = null,
+  rugby365PotmSlug = null,
   officialPotmName = null,
+  officialPotmSlug = null,
   matchStatus,
+  homeKit = null,
+  awayKit = null,
 }: {
   lineups: MappedLineups;
   entities: MatchEntityContext;
   ratings?: MatchRatingDisplay[];
   rugby365PotmName?: string | null;
+  rugby365PotmSlug?: string | null;
   officialPotmName?: string | null;
+  officialPotmSlug?: string | null;
   matchStatus?: string;
+  homeKit?: MatchLineupKit | null;
+  awayKit?: MatchLineupKit | null;
 }) {
   const [pitchSide, setPitchSide] = useState<"home" | "away">("home");
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -203,10 +221,13 @@ export function LineupsPitchView({
   }, [ratings]);
 
   const pitchTeam = pitchSide === "home" ? lineups.home : lineups.away;
+  const pitchKit = pitchSide === "home" ? homeKit : awayKit;
   const selected = ratings.find((r) => r.playerId === selectedId) ?? null;
   const homeAccent = teamAccentColor(lineups.home.teamName, "home");
   const awayAccent = teamAccentColor(lineups.away.teamName, "away");
-  const pitchAccent = pitchSide === "home" ? homeAccent : awayAccent;
+  const pitchAccent =
+    pitchKit?.svgConfig.bodyColour ??
+    (pitchSide === "home" ? homeAccent : awayAccent);
   const gradId = useId().replace(/:/g, "");
 
   const listProps = {
@@ -226,7 +247,7 @@ export function LineupsPitchView({
             <strong>Career</strong> (35–99) · <strong>Match</strong> (1–10)
           </>
         ) : (
-          <>Career and Form numbers show before kick-off. Match ratings publish after full time.</>
+          <>Player ratings (Career and Match) publish after full time.</>
         )}
       </p>
 
@@ -234,12 +255,24 @@ export function LineupsPitchView({
         <div className="match-potm-banner pr-mc-card">
           {rugby365PotmName && (
             <p>
-              <strong>Rugby365 Player of the Match:</strong> {rugby365PotmName}
+              <strong>Rugby365 Player of the Match:</strong>{" "}
+              <PlayerProfileLink
+                name={rugby365PotmName}
+                slug={rugby365PotmSlug}
+                externalId={ratings.find((r) => r.isRugby365Potm)?.externalPlayerId}
+                context={entities}
+              />
             </p>
           )}
           {officialPotmName && (
             <p>
-              <strong>Official Player of the Match:</strong> {officialPotmName}
+              <strong>Official Player of the Match:</strong>{" "}
+              <PlayerProfileLink
+                name={officialPotmName}
+                slug={officialPotmSlug}
+                externalId={ratings.find((r) => r.isOfficialPotm)?.externalPlayerId}
+                context={entities}
+              />
             </p>
           )}
         </div>
@@ -281,32 +314,45 @@ export function LineupsPitchView({
             const slot = slotForPlayer(p, index);
             const rating = ratingForPlayer(p, ratingsByExternalId, ratingsByName);
             const matchLabel =
-              ratingsPublished && rating?.rating != null && rating.ratingStatus !== "unavailable"
+              ratingsPublished &&
+              rating?.rating != null &&
+              rating.ratingStatus !== "unavailable"
                 ? rating.ratingLabel
-                : rating?.careerRating != null
-                  ? String(rating.careerRating)
-                  : null;
-            const active = rating != null && selectedId === rating.playerId;
+                : null;
+            const active =
+              ratingsPublished && rating != null && selectedId === rating.playerId;
             return (
               <button
                 type="button"
                 key={p.providerId || `${p.jerseyNumber}-${p.name}`}
-                className={`pr-lineup-pitch__player${rating?.isRugby365Potm ? " pr-lineup-pitch__player--potm" : ""}${active ? " is-active" : ""}`}
+                className={`pr-lineup-pitch__player${rating?.isRugby365Potm && ratingsPublished ? " pr-lineup-pitch__player--potm" : ""}${active ? " is-active" : ""}`}
                 style={{ top: slot.top, left: slot.left }}
-                onClick={() => setSelectedId(rating?.playerId ?? null)}
+                onClick={() => {
+                  if (!ratingsPublished) return;
+                  setSelectedId(rating?.playerId ?? null);
+                }}
                 aria-label={`${p.jerseyNumber} ${p.name}`}
               >
-                <LineupPitchJersey
-                  number={p.jerseyNumber}
-                  accent={pitchAccent}
-                  variant={pitchSide}
-                />
+                {pitchKit ? (
+                  <RugbyShirtSvg
+                    {...pitchKit.svgConfig}
+                    number={p.jerseyNumber}
+                    size={48}
+                    className="pr-lineup-pitch__jersey-svg"
+                    kitType={pitchKit.kitType}
+                    showCrest={Boolean(pitchKit.crestUrl) && pitchKit.svgConfig.crestEnabled}
+                    crestUrl={pitchKit.crestUrl}
+                  />
+                ) : (
+                  <LineupPitchJersey
+                    number={p.jerseyNumber}
+                    accent={pitchAccent}
+                    variant={pitchSide}
+                  />
+                )}
                 <span className="pr-lineup-pitch__surname">{pitchSurname(p.name)}</span>
                 {matchLabel ? (
-                  <span
-                    className="pr-lineup-pitch__rating"
-                    title={ratingsPublished ? "Match rating" : "Career rating"}
-                  >
+                  <span className="pr-lineup-pitch__rating" title="Match rating">
                     {matchLabel}
                   </span>
                 ) : null}
@@ -316,7 +362,7 @@ export function LineupsPitchView({
         </div>
       </section>
 
-      {selected && (
+      {selected && ratingsPublished && (
         <PlayerMatchPerformancePanel rating={selected} onClose={() => setSelectedId(null)} />
       )}
 

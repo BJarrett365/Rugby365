@@ -5,30 +5,32 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import type { MatchDetailTab } from "@/lib/match-detail-tabs";
 import { matchDetailTabHref } from "@/lib/match-detail-tabs";
-import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability";
 import { PUBLIC_MATCH_TAB_ORDER } from "@/lib/match-animation-availability";
 
 const TAB_LABELS: Record<(typeof PUBLIC_MATCH_TAB_ORDER)[number], string> = {
-  details: "Match Details",
-  animation: "Animation",
+  details: "Details",
+  animation: "Animations",
+  audio: "Audio",
   watchalong: "Watchalong",
   highlights: "Highlights",
-  stats: "Team Stats",
-  "player-stats": "Player Stats",
-  lineups: "Line-ups",
+  stats: "Team",
+  "player-stats": "Player",
+  lineups: "Line Up",
   tables: "Tables",
-  "head-to-head": "Head-to-Head",
-  betting: "Betting Intel",
+  "head-to-head": "H2H",
+  betting: "Betting",
 };
 
 export function MatchDetailTabs({
   activeTab,
-  animationBadge = null,
   hasWatchalong = false,
   hasHighlights = false,
 }: {
   activeTab: MatchDetailTab;
-  animationBadge?: MatchAnimationTabBadge;
+  /** @deprecated Unused — badges removed from tab bar. Kept optional for call-site compat. */
+  animationBadge?: unknown;
+  /** @deprecated Unused — Live badge removed from Audio tab. */
+  animationAudioReady?: boolean;
   hasWatchalong?: boolean;
   hasHighlights?: boolean;
 }) {
@@ -50,8 +52,6 @@ export function MatchDetailTabs({
       }).map((tabId) => {
         const href = matchDetailTabHref(pathname, tabId);
         const isActive = activeTab === tabId;
-        const badge = tabId === "animation" ? animationBadge : null;
-        const badgeClass = badge ? badge.toLowerCase() : "";
         return (
           <Link
             key={tabId}
@@ -61,11 +61,6 @@ export function MatchDetailTabs({
             aria-current={isActive ? "page" : undefined}
           >
             <span className="match-detail-tabs__label">{TAB_LABELS[tabId]}</span>
-            {badge ? (
-              <span className={`match-detail-tabs__badge match-detail-tabs__badge--${badgeClass}`}>
-                {badge}
-              </span>
-            ) : null}
           </Link>
         );
       })}

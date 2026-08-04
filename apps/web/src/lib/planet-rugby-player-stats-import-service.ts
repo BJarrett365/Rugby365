@@ -1,12 +1,19 @@
 import {
+  emptyParsedPlayerMatchPerformance,
   fetchSdmsMatchDetail,
   fetchSdmsMatchPlayerStats,
   fetchSdmsMatchStats,
   parseMatchPlayerPerformance,
   parseSdmsMatchTeamStats,
 } from "@rugby365/import-sdk";
-import { eq } from "drizzle-orm";
-import { competitionSeasons, fixturePlayers, players } from "@rugby365/db";
+import { and, eq, inArray } from "drizzle-orm";
+import {
+  competitionSeasons,
+  fixturePlayers,
+  matchEvents,
+  playerMatchPerformanceStats,
+  players,
+} from "@rugby365/db";
 import { getDb } from "./db";
 import { resolvePlayer, SDMS_PROVIDER } from "./entity-resolve-service";
 import { upsertSeason } from "./competition-admin-service";
@@ -17,6 +24,7 @@ import {
   upsertMatchPerformanceStat,
 } from "./player-season-stats-service";
 import { upsertTeamMatchStat } from "./team-match-stats-service";
+import { inferGapFillMinutes, isStarterSquadRole } from "./match-stats-gap-fill";
 
 export type MatchStatsImportResult = {
   matchId: string;
@@ -26,8 +34,127 @@ export type MatchStatsImportResult = {
   playersProcessed: number;
   playerStatsCreated: number;
   playerStatsUpdated: number;
+  /** Starters/used subs omitted by SDMS, filled from lineup + substitution minutes. */
+  playerStatsGapFilled: number;
   seasonLabel: string | null;
 };
+
+/**
+ * SDMS sometimes omits starters (and used replacements) from player-stats feeds.
+ * Create zero-stat performance rows with minutes inferred from substitution events
+ * so match ratings can still be calculated. Unused bench players are left alone (DNP).
+ */
+export async function gapFillMissingSquadPerformanceStats(input: {
+  fixtureId: string;
+  matchId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  seasonId: string | null;
+  competitionId: string | null;
+}): Promise<{ gapFilled: number }> {
+  const db = getDb();
+  const [squadRows, existingPerf, subEvents] = await Promise.all([
+    db
+      .select({
+        playerId: fixturePlayers.playerId,
+        teamId: fixturePlayers.teamId,
+        jerseyNumber: fixturePlayers.jerseyNumber,
+        squadRole: fixturePlayers.squadRole,
+        tries: fixturePlayers.tries,
+        points: fixturePlayers.points,
+        playerName: players.name,
+        externalPlayerId: players.externalProviderId,
+      })
+      .from(fixturePlayers)
+      .innerJoin(players, eq(fixturePlayers.playerId, players.id))
+      .where(eq(fixturePlayers.fixtureId, input.fixtureId)),
+    db
+      .select({ playerId: playerMatchPerformanceStats.playerId })
+      .from(playerMatchPerformanceStats)
+      .where(eq(playerMatchPerformanceStats.fixtureId, input.fixtureId)),
+    db
+      .select({
+        minute: matchEvents.minute,
+        playerId: matchEvents.playerId,
+        payload: matchEvents.payload,
+      })
+      .from(matchEvents)
+      .where(
+        and(
+          eq(matchEvents.fixtureId, input.fixtureId),
+          inArray(matchEvents.eventType, ["substitution", "sub_on", "sub_off", "replacement"]),
+        ),
+      ),
+  ]);
+
+  const hasPerf = new Set(existingPerf.map((r) => r.playerId));
+  const offMinuteByPlayer = new Map<string, number>();
+  const onMinuteByPlayer = new Map<string, number>();
+
+  for (const ev of subEvents) {
+    if (ev.playerId == null || ev.minute == null) continue;
+    const payload = (ev.payload ?? {}) as Record<string, unknown>;
+    const type = String(payload.type ?? "").toLowerCase();
+    if (type.includes("off") || type === "sub off") {
+      const prev = offMinuteByPlayer.get(ev.playerId);
+      if (prev == null || ev.minute < prev) offMinuteByPlayer.set(ev.playerId, ev.minute);
+    } else if (type.includes("on") || type === "sub on") {
+      const prev = onMinuteByPlayer.get(ev.playerId);
+      if (prev == null || ev.minute < prev) onMinuteByPlayer.set(ev.playerId, ev.minute);
+    }
+  }
+
+  let gapFilled = 0;
+  for (const squad of squadRows) {
+    if (hasPerf.has(squad.playerId)) continue;
+    if (!squad.externalPlayerId) continue;
+
+    const starter = isStarterSquadRole(squad.squadRole, squad.jerseyNumber);
+    const minutesPlayed = inferGapFillMinutes({
+      starter,
+      subOnMinute: onMinuteByPlayer.get(squad.playerId) ?? null,
+      subOffMinute: offMinuteByPlayer.get(squad.playerId) ?? null,
+    });
+
+    // Unused bench / no evidence of minutes → leave as DNP (no performance row).
+    if (minutesPlayed == null || minutesPlayed <= 0) continue;
+
+    const side: "home" | "away" =
+      squad.teamId === input.homeTeamId
+        ? "home"
+        : squad.teamId === input.awayTeamId
+          ? "away"
+          : "home";
+
+    const stats = emptyParsedPlayerMatchPerformance(
+      squad.externalPlayerId,
+      squad.playerName,
+      side,
+    );
+    stats.minutesPlayed = minutesPlayed;
+
+    const result = await upsertMatchPerformanceStat({
+      fixtureId: input.fixtureId,
+      playerId: squad.playerId,
+      teamId: squad.teamId,
+      seasonId: input.seasonId,
+      competitionId: input.competitionId,
+      externalMatchId: input.matchId,
+      externalPlayerId: squad.externalPlayerId,
+      sourceProvider: "sdms_gap_fill",
+      stats: {
+        ...stats,
+        tries: squad.tries ?? 0,
+        points: squad.points ?? 0,
+        gapFilled: true,
+      },
+    });
+    if (result.created || result.row) gapFilled += 1;
+    hasPerf.add(squad.playerId);
+  }
+
+  return { gapFilled };
+}
 
 async function ensureSeasonRecord(competitionId: string, kickoffAt: Date) {
   const db = getDb();
@@ -154,6 +281,15 @@ export async function importMatchPerformanceStats(
     else playerStatsUpdated += 1;
   }
 
+  const { gapFilled: playerStatsGapFilled } = await gapFillMissingSquadPerformanceStats({
+    fixtureId,
+    matchId,
+    homeTeamId: fixture.homeTeamId!,
+    awayTeamId: fixture.awayTeamId!,
+    seasonId,
+    competitionId: fixture.competitionId,
+  });
+
   const seasonLabel = resolveFixtureSeasonLabel({
     kickoffAt,
     competitionId: fixture.competitionId,
@@ -175,6 +311,7 @@ export async function importMatchPerformanceStats(
     playersProcessed: parsedPlayers.length,
     playerStatsCreated,
     playerStatsUpdated,
+    playerStatsGapFilled,
     seasonLabel,
   };
 }

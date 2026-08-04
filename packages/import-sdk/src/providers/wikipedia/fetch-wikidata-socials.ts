@@ -6,6 +6,12 @@
  * P2002 Twitter/X · P2003 Instagram · P2013 Facebook · P856 website
  */
 
+import {
+  buildMediaWikiHeaders,
+  resolveMediaWikiUserAgent,
+  type MediaWikiRequestOptions,
+} from "./mediawiki-request";
+
 export type WikidataPlayerProfile = {
   birthDate?: string;
   birthPlace?: string;
@@ -16,6 +22,8 @@ export type WikidataPlayerProfile = {
   facebook?: string;
   website?: string;
 };
+
+const DEFAULT_WD_UA = "Rugby365CMS/1.0 (player-profile-gap-fill; contact=local-dev)";
 
 function claimSnaks(entity: unknown, property: string): Array<{ datavalue?: { value?: unknown; type?: string } }> {
   const claims = (entity as { claims?: Record<string, Array<{ mainsnak?: { datavalue?: { value?: unknown; type?: string } } }>> })
@@ -101,14 +109,17 @@ export function normalizeWikidataId(id: string | null | undefined): string | nul
   return null;
 }
 
-async function fetchEntityLabel(qid: string, signal: AbortSignal): Promise<string | undefined> {
+async function fetchEntityLabel(
+  qid: string,
+  signal: AbortSignal,
+  options?: MediaWikiRequestOptions,
+): Promise<string | undefined> {
   try {
+    const userAgent = resolveMediaWikiUserAgent(options, "WIKIDATA_USER_AGENT", DEFAULT_WD_UA);
+    const accessToken = options?.accessToken ?? process.env.WIKIDATA_ACCESS_TOKEN ?? null;
     const url = `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(qid)}.json`;
     const res = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Rugby365CMS/1.0 (player-profile-gap-fill; contact=local-dev)",
-      },
+      headers: buildMediaWikiHeaders(userAgent, accessToken, { Accept: "application/json" }),
       signal,
     });
     if (!res.ok) return undefined;
@@ -127,7 +138,7 @@ async function fetchEntityLabel(qid: string, signal: AbortSignal): Promise<strin
  */
 export async function fetchWikidataPlayerProfile(
   wikidataId: string,
-  options?: { timeoutMs?: number },
+  options?: MediaWikiRequestOptions & { timeoutMs?: number },
 ): Promise<WikidataPlayerProfile> {
   const id = normalizeWikidataId(wikidataId);
   if (!id) return {};
@@ -135,14 +146,13 @@ export async function fetchWikidataPlayerProfile(
   const timeoutMs = options?.timeoutMs ?? 15_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const userAgent = resolveMediaWikiUserAgent(options, "WIKIDATA_USER_AGENT", DEFAULT_WD_UA);
+  const accessToken = options?.accessToken ?? process.env.WIKIDATA_ACCESS_TOKEN ?? null;
 
   try {
     const url = `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(id)}.json`;
     const res = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Rugby365CMS/1.0 (player-profile-gap-fill; contact=local-dev)",
-      },
+      headers: buildMediaWikiHeaders(userAgent, accessToken, { Accept: "application/json" }),
       signal: controller.signal,
     });
     if (!res.ok) return {};
@@ -156,7 +166,7 @@ export async function fetchWikidataPlayerProfile(
 
     const placeId = claimStringValue(entity, "P19");
     if (placeId && /^Q\d+$/i.test(placeId)) {
-      const label = await fetchEntityLabel(placeId.toUpperCase(), controller.signal);
+      const label = await fetchEntityLabel(placeId.toUpperCase(), controller.signal, options);
       if (label) out.birthPlace = label;
     }
 
@@ -184,7 +194,7 @@ export async function fetchWikidataPlayerProfile(
 /** @deprecated Prefer fetchWikidataPlayerProfile */
 export async function fetchWikidataSocialAccounts(
   wikidataId: string,
-  options?: { timeoutMs?: number },
+  options?: MediaWikiRequestOptions & { timeoutMs?: number },
 ): Promise<Pick<WikidataPlayerProfile, "twitter" | "instagram" | "facebook" | "website">> {
   const profile = await fetchWikidataPlayerProfile(wikidataId, options);
   return {

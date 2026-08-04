@@ -483,7 +483,13 @@ export async function upsertMatchPerformanceStat(input: {
   competitionId?: string | null;
   externalMatchId: string;
   externalPlayerId: string;
-  stats: ParsedPlayerMatchPerformance & { tries?: number; points?: number };
+  stats: ParsedPlayerMatchPerformance & {
+    tries?: number;
+    points?: number;
+    /** True when minutes/stats were inferred because SDMS omitted the player. */
+    gapFilled?: boolean;
+  };
+  sourceProvider?: string;
 }) {
   const db = getDb();
   const importKey = buildMatchPerformanceImportKey(input.externalMatchId, input.externalPlayerId);
@@ -527,8 +533,9 @@ export async function upsertMatchPerformanceStat(input: {
       carriesMetres: input.stats.carriesMetres,
       carriesCrossedGainLine: input.stats.carriesCrossedGainLine,
       carriesNotMadeGainLine: input.stats.carriesNotMadeGainLine,
+      ...(input.stats.gapFilled ? { gapFilled: true, statsEstimated: true } : {}),
     },
-    sourceProvider: "sdms",
+    sourceProvider: input.sourceProvider ?? "sdms",
     importKey,
     syncedAt: new Date(),
   };

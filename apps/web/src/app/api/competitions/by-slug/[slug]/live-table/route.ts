@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { fetchSdmsMatchDetail } from "@rugby365/import-sdk";
 import { apiErrorResponse } from "@/lib/api-errors";
 import { getCompetitionBySlug, listSeasonsForPicker } from "@/lib/competition-admin-service";
 import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "@/lib/season-label-utils";
 import { syncDomesticSeasonCatalog } from "@/lib/competition-admin-service";
+import { findFixtureBySdmsMatchId } from "@/lib/fixture-admin-service";
+import { syncFixtureLiveStateFromSdms } from "@/lib/fixture-live-score-sync";
 import { calculateRugbyTable } from "@/lib/table-lab/table-calculation-service";
 import { enrichNationsChampionshipResult } from "@/lib/table-lab/table-hemisphere-service";
 import type { RugbyTableView } from "@/lib/table-lab/table-types";
@@ -29,6 +32,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     const { slug } = await params;
     const { searchParams } = new URL(req.url);
     const seasonLabel = searchParams.get("season");
+    const syncMatchId = searchParams.get("syncMatchId")?.trim() || null;
     const viewParam = searchParams.get("view") ?? "overall";
     const tableView: RugbyTableView =
       viewParam === "home" ? "home" : viewParam === "away" ? "away" : "all";
@@ -38,6 +42,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
     if (usesDomesticSeasonCatalog(competition.competitionType)) {
       await syncDomesticSeasonCatalog(competition.id);
+    }
+
+    // Keep the viewed live match scoreline in CMS before standings calc.
+    if (syncMatchId) {
+      try {
+        const [detail, fixture] = await Promise.all([
+          fetchSdmsMatchDetail(syncMatchId),
+          findFixtureBySdmsMatchId(syncMatchId),
+        ]);
+        if (detail && fixture) {
+          await syncFixtureLiveStateFromSdms(fixture.id, detail);
+        }
+      } catch (error) {
+        console.warn(
+          `[live-table] score sync failed for ${syncMatchId}:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
     }
 
     const seasons = await listSeasonsForPicker(competition.id);

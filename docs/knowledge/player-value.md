@@ -1,15 +1,22 @@
 # Ratings & Market Value
 
-How Rugby365 calculates **Match Ratings**, **Player (Career) Ratings**, and **Market Values**. These are separate signals — do not merge them into one score.
+How Rugby365 calculates **Match Ratings**, **Player / Coach / Referee profile ratings**, and **Player Market Values**. These are separate signals — do not merge them into one score.
 
-| Signal | Model | Scale | Answers |
-|--------|-------|-------|---------|
-| Match Rating | `match-v1` | 1.0–10.0 | How well did they play in this match? |
-| Form | from Match Ratings | 1.0–10.0 | How well are they playing right now? |
-| Player / Career Rating | `career-v1` | 35–99 | How good is this player overall? |
-| Market Value | `player-value-v1` | GBP estimate | What is their model market worth today? |
+| Signal | Applies to | Model | Scale | Answers |
+|--------|------------|-------|-------|---------|
+| Match Rating | Players | `match-v1` | 1.0–10.0 | How well did they play in this match? |
+| Coach Match Rating | Coaches | `coach-match-v1` | 1.0–10.0 | How well did the coach’s side perform this match? |
+| Referee Match Rating | Referees | `referee-match-v1` | 1.0–10.0 | How well was this contest controlled? |
+| Form | Players | from Match Ratings | 1.0–10.0 | How well are they playing right now? |
+| Player / Career Rating | Players | `career-v1` | 35–99 | How good is this player overall? |
+| Coach Rating | Coaches | `coach-rating-v1` | 35–99 | How good is this coach overall? |
+| Referee Profile Score | Referees | `referee-profile-v1` | 35–99 | How strong is this referee’s appointment profile? |
+| Market Value | Players only | `player-value-v1` | GBP estimate | What is their model market worth today? |
 
-**Code:** `match-rating-math.ts`, `match-rating-service.ts`, `player-rating-service.ts`, `player-value-math.ts`, `player-value-service.ts`.
+**Code (players):** `match-rating-math.ts`, `match-rating-service.ts`, `player-rating-service.ts`, `player-value-math.ts`, `player-value-service.ts`.  
+**Code (staff):** `staff-match-rating-math.ts`, `staff-match-rating-service.ts`, `coach-intelligence-service.ts`, `referee-intelligence-service.ts`.
+
+**Rule:** Player Match Rating ≠ Coach Match Rating ≠ Referee Match Rating. Career / profile scores (35–99) are never forced toward a single match (1.0–10.0).
 
 ---
 
@@ -153,8 +160,112 @@ Informational for clubs — not direct player inputs. See `player-value-salary-c
 
 ---
 
+## 4. Coach Match Ratings (`coach-match-v1`)
+
+Published for completed fixtures when home / away head coaches are linked on the fixture. Stored in `coach_match_ratings`. Shown on the public Match Centre (coach chips) and staff Rating Lab surfaces.
+
+### Inputs
+
+From fixture scoreline + team match stats + card events for that coach’s side:
+
+- Result (win / draw / loss) and margin  
+- Try difference  
+- Metre-gain share vs opponent  
+- Tackle workload and turnovers won  
+- Yellow / red cards for the team  
+
+### Formula (summary)
+
+1. Start near **5.8**  
+2. **Win** +1.1 (+ margin uplift, capped); **draw** +0.25; **loss** −0.85 (− margin penalty, capped)  
+3. Adjust for try difference, metres share, tackles (≥120), turnovers (≥6)  
+4. Discipline: yellow × −0.2, red × −0.55  
+5. Clamp to **1.0–10.0** (same performance bands as player Match Ratings)
+
+### Trends
+
+Compared to the coach’s previous match rating in the same competition (▲ / ▼ / → / NEW). Independent of player performance trends.
+
+### Linking coaches
+
+If `fixtures.home_coach_id` / `away_coach_id` are empty, staff rating calc can fill from current team head-coach assignments (`team_coaching_staff` / resolve defaults). Without a linked coach, no coach match rating is stored.
+
+---
+
+## 5. Coach Rating (`coach-rating-v1`)
+
+Overall coach quality for coach profiles and intelligence packets. Scale **35–99**. Manual CMS override wins when set. Stored via person intelligence score history (`formulaVersion = coach-rating-v1`).
+
+### Building blocks
+
+| Component | Role |
+|-----------|------|
+| Current performance | Win rate + competition level + trophies / finals signals |
+| Recent form | Points from latest team fixtures (W=3, D=1) |
+| Team improvement | Win-rate change since earlier stretch of the sample |
+| Player development | Years / assignment experience proxy |
+| Experience | Years + international coaching flag |
+| Reputation | Trophies / finals / international experience |
+
+### Display blend
+
+`display ≈ currentPerformance×0.25 + recentForm×0.2 + teamImprovement×0.2 + playerDevelopment×0.1 + experience×0.15 + reputation×0.1`
+
+**Rule:** Do not equate Coach Rating (35–99) with Coach Match Rating (1–10). Match ratings feed narrative and form; profile rating is the standing score.
+
+---
+
+## 6. Referee Match Ratings (`referee-match-v1`)
+
+Published for completed fixtures when `fixtures.referee_id` is set. Stored in `referee_match_ratings`. Shown on Match Centre referee chip and Ranking / Rating Lab.
+
+### Inputs
+
+- Final scoreline (margin + total points)  
+- Yellow / red card counts (match-wide)  
+- Penalty-related event count  
+
+### Formula (summary)
+
+1. Start near **6.4**  
+2. Reward competitive contests (margin ≤ 7 and total points ≥ 30)  
+3. Sensible yellow volume (1–4) or a clean game; penalise very high yellow counts (≥ 7)  
+4. One red can reflect decisive foul management; multiple reds deduct  
+5. Mid-range penalty volume rewarded; very high penalty counts deduct  
+6. Clamp to **1.0–10.0**
+
+### Trends
+
+Compared to the referee’s previous match rating in the same competition.
+
+---
+
+## 7. Referee Profile Score (`referee-profile-v1`)
+
+Overall appointment / experience profile for referee pages. Scale **35–99**. Built from verified Rugby365 appointments (synced from fixtures into `referee_appointments`). Manual override wins when set.
+
+### Building blocks
+
+| Component | Role |
+|-----------|------|
+| Experience | Matches refereed |
+| Appointment level | Highest competition tier (test / international / Europe / top domestic / domestic) |
+| Current status | Recent appointment volume |
+| Consistency profile | Volume-based stability proxy |
+| Discipline profile | Neutral baseline in v1 (no invented foul stats) |
+
+### Display blend
+
+`display ≈ experience×0.3 + appointmentLevel×0.25 + currentStatus×0.2 + consistency×0.15 + discipline×0.1`
+
+**Rule:** Referee Profile Score ≠ Referee Match Rating. Match rating is contest control for one fixture; profile score is career appointment strength.
+
+---
+
 ## Related admin tools
 
 - **Rating Lab** — `/admin/rating-lab`  
+- **Coaches** — `/admin/coaches`  
+- **Referees** — `/admin/referees`  
 - **Knowledge Base** index — `/admin/knowledge`  
 - Dual-system R&D notes — `docs/rd/player-ratings/DUAL_RATING_SYSTEM.md`

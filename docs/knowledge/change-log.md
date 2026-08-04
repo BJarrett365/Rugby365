@@ -2,6 +2,10 @@
 
 Part of the Rugby365 Knowledge Base. See the [Rule Book](./rule-book.md) for permanent standards.
 
+## 2026-08-01
+
+- Betting Intelligence R&D lab: frozen `betting-intel-v1` baseline + improvement roadmap (player level, tour fatigue, travel, climate fit, altitude) in Knowledge Base `betting-intelligence-rd`; admin menu Odds → **Betting R&D** (`/admin/odds/betting-rd`).
+
 ## 2026-07-14
 
 - Learn from rejected images: pending `player_image_learning_rules` proposals from editor rejections (approve before scoring uses them); builtin promo/banner negative filters; CMS panel on player edit; reject action queues proposals.

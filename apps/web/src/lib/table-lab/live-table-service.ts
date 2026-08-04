@@ -22,6 +22,7 @@ const LIVE_STATUSES = new Set([
   "second_half",
   "ht",
   "half_time",
+  "halftime",
 ]);
 const SCHEDULED_STATUSES = new Set(["scheduled", "not_started", "fixture", "upcoming"]);
 const IGNORED_STATUSES = new Set(["postponed", "cancelled", "suspended"]);
@@ -31,9 +32,11 @@ export function isCompletedFixtureStatus(status: string): boolean {
 }
 
 export function isLiveFixtureStatus(status: string): boolean {
-  const normalized = status.toLowerCase();
+  const normalized = status.toLowerCase().replace(/[\s-]+/g, "_");
   if (COMPLETED_STATUSES.has(normalized) || IGNORED_STATUSES.has(normalized)) return false;
-  return LIVE_STATUSES.has(normalized) || normalized === "live";
+  if (LIVE_STATUSES.has(normalized) || normalized === "live") return true;
+  // SDMS phrases e.g. "First Half", "Second Half", "In Play"
+  return /\b(first_half|second_half|half_time|in_play|live)\b/.test(normalized);
 }
 
 export function isScheduledFixtureStatus(status: string): boolean {
@@ -41,8 +44,11 @@ export function isScheduledFixtureStatus(status: string): boolean {
 }
 
 export function formatMatchClock(minute: number, period: string): string {
-  const normalized = period.toLowerCase();
+  const normalized = period.toLowerCase().replace(/[\s-]+/g, "_");
   if (normalized === "ht" || normalized === "half_time") return "HT";
+  if (normalized === "ft" || normalized === "full_time") return "FT";
+  if (normalized === "first_half" && minute > 40) return `40+${minute - 40}'`;
+  if (normalized === "second_half" && minute > 80) return `80+${minute - 80}'`;
   if (minute > 0) return `${minute}'`;
   return "Live";
 }

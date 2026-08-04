@@ -1982,3 +1982,113 @@
     left: 14rem;
   }
 }
+
+/* Betting Intelligence model accuracy */
+.bi-acc-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.bi-acc-summary__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pr-muted, #6b7280);
+  margin-bottom: 0.25rem;
+}
+
+.bi-acc-summary strong {
+  display: block;
+  font-size: 1.65rem;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.bi-acc-summary em {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  color: var(--pr-muted, #6b7280);
+}
+
+.bi-acc-summary__ok {
+  color: #1f8a54;
+}
+
+.bi-acc-summary__bad {
+  color: #c23b3b;
+}
+
+.bi-acc-chart {
+  margin: 0;
+}
+
+.bi-acc-chart__svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background: rgba(15, 42, 49, 0.03);
+  border-radius: 0.5rem;
+}
+
+.bi-acc-chart__axis {
+  font-size: 10px;
+  fill: #6b7280;
+}
+
+.bi-acc-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--pr-muted, #6b7280);
+}
+
+.bi-acc-chart__swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 0.15rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.1rem;
+}
+
+.bi-acc-chart__swatch--ok {
+  background: #6ee7a8;
+}
+
+.bi-acc-chart__swatch--bad {
+  background: #f07171;
+}
+
+.bi-acc-chart__swatch--line {
+  background: #e7bc63;
+  border-radius: 999px;
+}
+
+.bi-acc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.bi-acc-pill--ok {
+  background: rgba(110, 231, 168, 0.22);
+  color: #146b3e;
+}
+
+.bi-acc-pill--bad {
+  background: rgba(240, 113, 113, 0.2);
+  color: #9b1c1c;
+}

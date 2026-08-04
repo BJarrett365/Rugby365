@@ -7,6 +7,10 @@ import {
   testTvScheduleConnection,
   type TvScheduleProvider,
 } from "@/lib/integration-settings-service";
+import {
+  previewRugbyKickoffUkTvSchedule,
+  syncRugbyKickoffUkTvSchedule,
+} from "@/lib/rugbykickoff-tv-import-service";
 
 export async function GET() {
   try {
@@ -16,13 +20,14 @@ export async function GET() {
       docs: {
         gracenote: "https://developer.tmsapi.com/docs/data_v1_1/sports/Sports_events_airings",
         paMedia: "https://pa.media/pa-tv-metadata/epg-widget/",
+        rugbyKickoff: "https://www.rugbykickoff.com/",
       },
       envOverride: {
         gracenote: Boolean(process.env.GRACENOTE_API_KEY?.trim()),
         paMedia: Boolean(process.env.PA_MEDIA_TV_API_KEY?.trim()),
       },
       note:
-        "No rugby TV schedule is in Planet Rugby / SDMS feeds. Use CMS broadcasters now, or store Gracenote / PA Media keys here for automated sync later.",
+        "UK international TV listings sync from Rugby Kick Off (no API key). Gracenote / PA Media keys are optional for broader EPG later. Manual CMS broadcasters still work.",
     });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load TV schedule settings");
@@ -44,6 +49,21 @@ export async function PATCH(req: Request) {
     if (body.action === "test") {
       const result = await testTvScheduleConnection();
       return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+    }
+
+    if (body.action === "preview_rugbykickoff" || body.action === "sync_rugbykickoff") {
+      const internationalOnly = body.internationalOnly !== false;
+      const result =
+        body.action === "preview_rugbykickoff"
+          ? await previewRugbyKickoffUkTvSchedule({ internationalOnly })
+          : await syncRugbyKickoffUkTvSchedule({ internationalOnly });
+      return NextResponse.json({
+        ...result,
+        message:
+          body.action === "preview_rugbykickoff"
+            ? `Preview: ${result.listingsParsed} listings → ${result.fixturesUpdated} existing fixtures (${result.unmatched} skipped, no new fixtures).`
+            : `Assigned UK TV onto ${result.fixturesUpdated} existing fixtures (${result.broadcastersUpserted} channels). ${result.unmatched} listings skipped — no matching fixture.`,
+      });
     }
 
     const provider =

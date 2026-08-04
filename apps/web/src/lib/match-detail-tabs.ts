@@ -1,6 +1,7 @@
 export type MatchDetailTab =
   | "details"
   | "animation"
+  | "audio"
   | "watchalong"
   | "highlights"
   | "stats"
@@ -14,6 +15,7 @@ export type MatchDetailTab =
 export function parseMatchDetailTab(value: string | undefined): MatchDetailTab {
   if (
     value === "animation" ||
+    value === "audio" ||
     value === "watchalong" ||
     value === "highlights" ||
     value === "stats" ||

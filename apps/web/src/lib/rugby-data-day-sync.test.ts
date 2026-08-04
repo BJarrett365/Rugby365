@@ -44,6 +44,8 @@ describe("rugby-data-day-sync helpers", () => {
     expect(parseRugbyDataScore("43-21")).toEqual({ homeScore: 43, awayScore: 21 });
     expect(parseRugbyDataScore("")).toBeNull();
     expect(rugbyDataStatusToFixtureStatus("Finished")).toBe("full_time");
+    expect(rugbyDataStatusToFixtureStatus("Result only")).toBe("full_time");
+    expect(rugbyDataStatusToFixtureStatus("result")).toBe("full_time");
     expect(rugbyDataStatusToFixtureStatus("inprogress")).toBe("live");
     expect(rugbyDataEventTypeToMatchEvent("Try")).toBe("try");
     expect(rugbyDataEventTypeToMatchEvent("Missed conversion")).toBe("conversion_missed");

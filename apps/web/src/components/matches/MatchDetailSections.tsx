@@ -420,10 +420,21 @@ export function KeyEventsPanel({
         return;
       }
       if (
-        /half\s*start|full\s*time|kick\s*off/i.test(e.type) &&
+        /half\s*start|half\s*end|full\s*time|kick\s*off|period|second\s*half\s*end|first\s*half\s*end/i.test(
+          e.type,
+        ) &&
         !e.player_name &&
         !e.player_on &&
         !e.player_off
+      ) {
+        return;
+      }
+      // Skip blank scoring shells left after dual-provider imports.
+      if (
+        !e.player_name?.trim() &&
+        !e.player_on?.trim() &&
+        !e.player_off?.trim() &&
+        /try|conversion|penalty|drop/i.test(e.type)
       ) {
         return;
       }
@@ -436,7 +447,7 @@ export function KeyEventsPanel({
     return out;
   }, [events]);
 
-  if (events.length === 0) {
+  if (rows.length === 0) {
     return <p className="match-detail-empty">Key events will appear once the match is under way.</p>;
   }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildTeamPickerGroups, type TeamCompetitionLink } from "./team-picker-groups";
+import { nationsChampionshipHemisphereForTeam } from "./nations-championship-hemisphere";
 import {
   canonicalTeamDisplayName,
   canonicalTeamIdentityKey,
@@ -103,6 +104,31 @@ describe("expected current Premiership squad shape", () => {
     expect(names).toEqual([...CURRENT_PREMIERSHIP_TEAMS].sort());
     expect(names).not.toContain("London Irish");
     expect(names).not.toContain("Wasps");
+  });
+});
+
+describe("Nations Championship pool filter", () => {
+  it("excludes Canada and other non-pool nations from the official 12", () => {
+    const names = [
+      "England",
+      "France",
+      "Ireland",
+      "Italy",
+      "Scotland",
+      "Wales",
+      "Argentina",
+      "Australia",
+      "Fiji",
+      "Japan",
+      "New Zealand",
+      "South Africa",
+      "Canada",
+      "Georgia",
+    ];
+    const filtered = names.filter((name) => Boolean(nationsChampionshipHemisphereForTeam(name)));
+    expect(filtered).toHaveLength(12);
+    expect(filtered).not.toContain("Canada");
+    expect(filtered).not.toContain("Georgia");
   });
 });
 

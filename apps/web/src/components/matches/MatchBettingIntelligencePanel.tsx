@@ -6,6 +6,7 @@ import { TeamCrest } from "@/components/matches/TeamCrest";
 import type {
   MatchBettingIntelligence,
   PlayerPropRow,
+  TeamNarrativeInsight,
   TeamTrendsBlock,
 } from "@/lib/match-betting-intelligence-types";
 
@@ -18,7 +19,7 @@ type SubId =
   | "builder"
   | "referee"
   | "venue"
-  | "coming";
+  | "value";
 
 const SUBS: Array<{ id: SubId; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -29,7 +30,7 @@ const SUBS: Array<{ id: SubId; label: string }> = [
   { id: "builder", label: "Bet Builder" },
   { id: "referee", label: "Referee" },
   { id: "venue", label: "Venue" },
-  { id: "coming", label: "Odds & Value" },
+  { id: "value", label: "Value Bets" },
 ];
 
 function ProbBar({
@@ -88,7 +89,7 @@ function TrendsTable({ block }: { block: TeamTrendsBlock }) {
             <th scope="col">Win%</th>
             <th scope="col">PF</th>
             <th scope="col">PA</th>
-            <th scope="col">Tries</th>
+            <th scope="col">TF</th>
           </tr>
         </thead>
         <tbody>
@@ -107,6 +108,45 @@ function TrendsTable({ block }: { block: TeamTrendsBlock }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function NarrativeInsightsColumn({
+  teamName,
+  side,
+  items,
+}: {
+  teamName: string;
+  side: "home" | "away";
+  items: TeamNarrativeInsight[];
+}) {
+  if (!items.length) {
+    return (
+      <div className={`pr-bi-insight-col pr-bi-insight-col--${side}`}>
+        <h4 className="pr-bi-insight-col__title">{teamName}</h4>
+        <p className="pr-bi__muted">
+          Not enough finished matches or event data yet for {teamName} narratives.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className={`pr-bi-insight-col pr-bi-insight-col--${side}`}>
+      <h4 className="pr-bi-insight-col__title">{teamName}</h4>
+      <ol className="pr-bi-insight-list">
+        {items.map((item, index) => (
+          <li key={item.key} className="pr-bi-insight">
+            <div className="pr-bi-insight__top">
+              <span className="pr-bi-insight__num" aria-hidden>
+                {index + 1}
+              </span>
+              <strong>{item.label}</strong>
+            </div>
+            <p>{item.body}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -198,7 +238,7 @@ export function MatchBettingIntelligencePanel({
   return (
     <section className="pr-bi" aria-label="Betting Intelligence">
       <header className="pr-bi__header">
-        <p className="pr-mc-pr-badge">Planet Rugby Betting Intelligence</p>
+        <p className="pr-bi__eyebrow">Planet Rugby · Betting Intelligence</p>
         <h2>Betting Intelligence</h2>
         <p className="pr-bi__lede">
           Explainable rugby signals for why a selection may have value — built from Rugby365 data,
@@ -292,7 +332,7 @@ export function MatchBettingIntelligencePanel({
         </div>
       )}
 
-      {(sub === "overview" || sub === "insights") && (
+      {sub === "overview" && (
         <div className="pr-bi-card">
           <div className="pr-bi-card__head">
             <h3>{intel.whyTitle}</h3>
@@ -353,6 +393,56 @@ export function MatchBettingIntelligencePanel({
         </div>
       )}
 
+      {sub === "insights" && (
+        <>
+          <div className="pr-bi-card">
+            <div className="pr-bi-card__head">
+              <h3>Market Angles</h3>
+            </div>
+            <p className="pr-bi__muted">
+              Planet Rugby coverage of the main rugby markets — win/draw/win, handicap, totals,
+              team totals, winning margin, points range and first-half angles (Betway-style board).
+              Modelled from Rugby365 data, not bookmaker prices.
+            </p>
+            <ul className="pr-bi-market-list">
+              {(intel.marketInsights ?? []).map((item) => (
+                <li key={item.key} className="pr-bi-market">
+                  <div className="pr-bi-market__top">
+                    <strong>{item.label}</strong>
+                    {item.modelValue ? (
+                      <span className="pr-bi-market__value">{item.modelValue}</span>
+                    ) : null}
+                  </div>
+                  <p>{item.body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="pr-bi-card">
+            <div className="pr-bi-card__head">
+              <h3>Team Insights</h3>
+            </div>
+            <p className="pr-bi__muted">
+              Up to ten Rugby365-owned narratives per side — mix varies by match (form, scorers,
+              metres, first score, late tries, comebacks and margins where data exists).
+            </p>
+            <div className="pr-bi-split pr-bi-split--stack">
+              <NarrativeInsightsColumn
+                teamName={intel.homeName}
+                side="home"
+                items={intel.insights.home}
+              />
+              <NarrativeInsightsColumn
+                teamName={intel.awayName}
+                side="away"
+                items={intel.insights.away}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       {sub === "trends" && (
         <div className="pr-bi-card">
           <div className="pr-bi-card__head">
@@ -366,7 +456,7 @@ export function MatchBettingIntelligencePanel({
               : ""}
             . Win% and scoring from finished CMS fixtures.
           </p>
-          <div className="pr-bi-split">
+          <div className="pr-bi-split pr-bi-split--stack">
             <TrendsTable block={intel.trends.home} />
             <TrendsTable block={intel.trends.away} />
           </div>
@@ -382,7 +472,7 @@ export function MatchBettingIntelligencePanel({
             Modelled probabilities from career rating, form, recent performance samples and team
             expected tries — not bookmaker markets.
           </p>
-          <div className="pr-bi-split">
+          <div className="pr-bi-split pr-bi-split--stack">
             <PropsSide title={intel.homeName} rows={homeProps} />
             <PropsSide title={intel.awayName} rows={awayProps} />
           </div>
@@ -531,15 +621,60 @@ export function MatchBettingIntelligencePanel({
         </div>
       )}
 
-      {sub === "coming" && (
+      {sub === "value" && (
         <div className="pr-bi-card">
-          <h3>Odds &amp; Value Bets</h3>
+          <div className="pr-bi-card__head">
+            <h3>Value Bets</h3>
+          </div>
+          <p className="pr-bi__muted">
+            Best Planet Rugby selections most likely to land — ranked by modelled likelihood
+            {intel.odds ? ", with market edge when bookmaker prices are linked" : ""}. Not tipster
+            advice; explainable Rugby365 intelligence.
+          </p>
+          {intel.valueBets.length > 0 ? (
+            <ol className="pr-bi-value-picks">
+              {intel.valueBets.map((v, i) => (
+                <li key={v.id} className="pr-bi-value-pick">
+                  <div className="pr-bi-value-pick__top">
+                    <span className="pr-bi-value-pick__rank" aria-hidden>
+                      {i + 1}
+                    </span>
+                    <div className="pr-bi-value-pick__main">
+                      <span className="pr-bi-value-pick__market">{v.market}</span>
+                      <strong>{v.selection}</strong>
+                    </div>
+                    <span className="pr-bi-value-pick__pct">{v.likelihoodPct}%</span>
+                    <span
+                      className={`pr-bi-value-tag pr-bi-value-tag--${v.label.toLowerCase()}`}
+                    >
+                      {v.label}
+                    </span>
+                  </div>
+                  <p className="pr-bi-value-pick__reason">{v.reason}</p>
+                  {v.edgePct != null && v.marketPct != null ? (
+                    <p className="pr-bi-value-pick__edge">
+                      Ours {v.likelihoodPct}% · Market {v.marketPct}% · Edge{" "}
+                      {v.edgePct > 0 ? "+" : ""}
+                      {v.edgePct}%
+                      {v.bestDecimal != null ? ` · Best ${v.bestDecimal}` : ""}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="pr-bi__muted">No clear value selections for this fixture yet.</p>
+          )}
+
           {intel.odds ? (
-            <>
-              <p>
+            <div className="pr-bi-value-odds">
+              <h4>Linked odds</h4>
+              <p className="pr-bi__muted">
                 Best prices from {intel.odds.provider} · {intel.odds.bookmakerCount} bookmakers
                 {intel.odds.scrapedAt
-                  ? ` · scraped ${new Date(intel.odds.scrapedAt).toLocaleString()}`
+                  ? ` · scraped ${new Date(intel.odds.scrapedAt).toLocaleString("en-GB", {
+                      hour12: false,
+                    })}`
                   : ""}
                 {" · "}
                 <a href={intel.odds.sourceUrl} target="_blank" rel="noreferrer">
@@ -569,68 +704,19 @@ export function MatchBettingIntelligencePanel({
                         ? String(intel.odds.bestAwayDecimal)
                         : "—",
                   },
-                  {
-                    label: "Market home %",
-                    value:
-                      intel.odds.impliedHomePct != null
-                        ? `${intel.odds.impliedHomePct}%`
-                        : "—",
-                  },
-                  {
-                    label: "Market draw %",
-                    value:
-                      intel.odds.impliedDrawPct != null
-                        ? `${intel.odds.impliedDrawPct}%`
-                        : "—",
-                  },
-                  {
-                    label: "Market away %",
-                    value:
-                      intel.odds.impliedAwayPct != null
-                        ? `${intel.odds.impliedAwayPct}%`
-                        : "—",
-                  },
                 ]}
               />
-              {intel.valueBets.length > 0 ? (
-                <div className="pr-bi-absences">
-                  <h4>Value vs Planet Rugby</h4>
-                  <ul className="pr-bi-value-list">
-                    {intel.valueBets.map((v) => (
-                      <li key={v.selection}>
-                        <strong>{v.selection}</strong>
-                        <span>
-                          Ours {v.ourPct}% · Market {v.marketPct}% · Edge{" "}
-                          {v.edgePct > 0 ? "+" : ""}
-                          {v.edgePct}%
-                        </span>
-                        <span className={`pr-bi-value-tag pr-bi-value-tag--${v.label.toLowerCase()}`}>
-                          {v.label}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <p className="pr-bi__muted">
-                No odds snapshot linked to this fixture yet. Import from{" "}
-                <a href="/admin/odds/bmbets">/admin/odds/bmbets</a> (competition or match URL).
-              </p>
-              {intel.comingSoon.length > 0 ? (
-                <ul className="pr-bi-coming">
-                  {intel.comingSoon.map((c) => (
-                    <li key={c.id}>
-                      <strong>{c.title}</strong>
-                      <span>{c.blurb}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </>
-          )}
+            </div>
+          ) : intel.comingSoon.length > 0 ? (
+            <ul className="pr-bi-coming">
+              {intel.comingSoon.map((c) => (
+                <li key={c.id}>
+                  <strong>{c.title}</strong>
+                  <span>{c.blurb}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       )}
     </section>

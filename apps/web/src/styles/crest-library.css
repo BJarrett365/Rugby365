@@ -1,0 +1,194 @@
+.crest-lib {
+  --cl-border: color-mix(in srgb, var(--pr-grey, #9aa) 35%, transparent);
+}
+
+.crest-lib__finder {
+  display: grid;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+.crest-lib__finder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+  padding-bottom: 1px;
+}
+
+.crest-lib__empty {
+  padding: 1.25rem 0.25rem;
+  color: var(--pr-grey, #9aa);
+  font-size: 0.875rem;
+}
+
+.crest-lib__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-top: 1rem;
+}
+
+.crest-lib__card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.9rem;
+  border: 1px solid var(--cl-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, #111 92%, #fff 8%);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.crest-lib__card:hover {
+  border-color: color-mix(in srgb, var(--pr-red, #c8102e) 55%, transparent);
+}
+
+.crest-lib__card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.crest-lib__badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--cl-border);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #0d0d0d;
+  flex-shrink: 0;
+}
+
+.crest-lib__badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.crest-lib__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.crest-lib__swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, #fff 25%, transparent);
+}
+
+.crest-lib__meta {
+  font-size: 0.75rem;
+  color: var(--pr-grey, #9aa);
+}
+
+.crest-lib__status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid var(--cl-border);
+}
+
+.crest-lib__status-pill--APPROVED {
+  color: #7dcea0;
+  border-color: #7dcea0;
+}
+.crest-lib__status-pill--AWAITING_REVIEW {
+  color: #f4d03f;
+  border-color: #f4d03f;
+}
+.crest-lib__status-pill--DRAFT {
+  color: #aab;
+}
+.crest-lib__status-pill--CHANGES_REQUIRED,
+.crest-lib__status-pill--REJECTED {
+  color: #f1948a;
+  border-color: #f1948a;
+}
+.crest-lib__status-pill--NOT_STARTED {
+  color: #888;
+}
+
+.crest-lib__preview-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.crest-lib__preview {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 1rem;
+  border: 1px solid var(--cl-border);
+  border-radius: 10px;
+}
+
+.crest-lib__preview img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.crest-lib__preview-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pr-grey, #9aa);
+}
+
+.crest-lib__form {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 48rem;
+}
+
+.crest-lib__form label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.crest-lib__form input,
+.crest-lib__form textarea {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--cl-border);
+  background: #0d0d0d;
+  color: inherit;
+}
+
+.crest-lib__form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.crest-lib__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .crest-lib__finder {
+    grid-template-columns: 1fr;
+  }
+
+  .crest-lib__preview-row {
+    grid-template-columns: 1fr;
+  }
+}

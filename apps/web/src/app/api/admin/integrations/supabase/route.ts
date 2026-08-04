@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import {
   clearSupabaseCredentials,
   getSupabasePublicConfig,
+  revealSupabaseSecretFromCms,
   saveSupabaseCredentials,
   testSupabaseConnection,
+  type SupabaseRevealField,
 } from "@/lib/integration-settings-service";
 import {
   bootstrapSupabaseIntegration,
@@ -16,9 +18,10 @@ import { apiErrorResponse } from "@/lib/api-errors";
 export async function GET() {
   try {
     const config = await getSupabasePublicConfig();
-    const status = config.configured
-      ? await getSupabaseIntegrationStatus().catch(() => null)
-      : null;
+    const status =
+      config.configured || config.anonConfigured
+        ? await getSupabaseIntegrationStatus().catch(() => null)
+        : null;
     return NextResponse.json({
       ...config,
       docsUrl: "https://supabase.com/dashboard/project/_/settings/api-keys",
@@ -42,17 +45,47 @@ export async function PATCH(req: Request) {
 
     if (body.action === "clear") {
       const config = await clearSupabaseCredentials({
+        clearProjectUrl: body.clearProjectUrl === true,
         clearAnonKey: body.clearAnonKey !== false,
         clearServiceRoleKey: body.clearServiceRoleKey !== false,
       });
       return NextResponse.json({ ok: true, cleared: true, ...config });
     }
 
+    if (body.action === "reveal") {
+      const fieldRaw = typeof body.field === "string" ? body.field : "serviceRoleKey";
+      const field: SupabaseRevealField =
+        fieldRaw === "anonKey" ? "anonKey" : "serviceRoleKey";
+      const revealed = await revealSupabaseSecretFromCms(field);
+      if (revealed.status === "ok") {
+        return NextResponse.json({ ok: true, secret: revealed.secret, field });
+      }
+      return NextResponse.json(
+        {
+          ok: false,
+          envOnly: revealed.status === "env_only",
+          message: revealed.message,
+          field,
+        },
+        { status: revealed.status === "env_only" ? 403 : 404 },
+      );
+    }
+
     if (body.action === "test") {
-      const result = await testSupabaseConnection();
+      const result = await testSupabaseConnection({
+        projectUrl: typeof body.projectUrl === "string" ? body.projectUrl : undefined,
+        serviceRoleKey:
+          typeof body.serviceRoleKey === "string" ? body.serviceRoleKey : undefined,
+        anonKey: typeof body.anonKey === "string" ? body.anonKey : undefined,
+      });
       if (!result.ok) {
         return NextResponse.json(
-          { ok: false, message: result.message, projectUrl: result.projectUrl },
+          {
+            ok: false,
+            message: result.message,
+            projectUrl: result.projectUrl,
+            host: result.host,
+          },
           { status: 400 },
         );
       }
@@ -60,6 +93,7 @@ export async function PATCH(req: Request) {
         ok: true,
         message: `${result.message} (${result.responseTimeMs}ms)`,
         projectUrl: result.projectUrl,
+        host: result.host,
       });
     }
 

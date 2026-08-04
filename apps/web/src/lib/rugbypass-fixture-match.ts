@@ -101,6 +101,8 @@ export type FixtureMatchCandidate = {
   competitionName?: string | null;
   homeName: string | null;
   awayName: string | null;
+  /** CMS round label e.g. "Round 3" — used by YouTube highlights matching. */
+  round?: string | null;
 };
 
 export type RugbyPassMatchLinkInput = {
@@ -110,6 +112,24 @@ export type RugbyPassMatchLinkInput = {
   competitionName?: string | null;
   matchTitle?: string | null;
 };
+
+export type YoutubeHighlightLinkInput = {
+  kickoffAt: Date;
+  homeName: string;
+  awayName: string;
+  competitionName?: string | null;
+  roundNumber?: number | null;
+  /** Max days between video publish and fixture kickoff (default 3). */
+  maxDayGap?: number;
+};
+
+function parseRoundNumber(round: string | null | undefined): number | null {
+  if (!round?.trim()) return null;
+  const m = round.match(/\b(?:rd|round)\s*(\d+)\b/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
 
 function sameUtcDay(a: Date, b: Date): boolean {
   return (
@@ -190,6 +210,56 @@ export function pickStoredFixtureForRugbyPassMatch(
     if (slugOk) score += 25;
     if (sameUtcDay(kickoff, input.kickoffAt)) score += 20;
     else score += 5;
+    if (
+      input.competitionName &&
+      row.competitionName &&
+      competitionCompatible(row.competitionName, input.competitionName)
+    ) {
+      score += 5;
+    }
+
+    if (!best || score > best.score) best = { id: row.id, score };
+  }
+
+  return best && best.score >= 50 ? best.id : null;
+}
+
+/**
+ * Match a YouTube highlight package to an existing fixture.
+ * Fuzzy team names (sponsors / XXIII / Kavaliers) — does not rename CMS teams.
+ * Prefers same round + close kickoff/publish date.
+ */
+export function pickStoredFixtureForYoutubeHighlight(
+  candidates: FixtureMatchCandidate[],
+  input: YoutubeHighlightLinkInput,
+): string | null {
+  const maxGap = input.maxDayGap ?? 3;
+  let best: { id: string; score: number } | null = null;
+
+  for (const row of candidates) {
+    if (!row.homeName || !row.awayName || !row.kickoffAt) continue;
+    const kickoff = new Date(row.kickoffAt);
+    if (Number.isNaN(kickoff.getTime())) continue;
+
+    const dayGap = daysApartUtc(kickoff, input.kickoffAt);
+    if (dayGap > maxGap) continue;
+
+    const teamsOk = sidesMatch(row.homeName, row.awayName, input.homeName, input.awayName);
+    if (!teamsOk) continue;
+    if (!competitionCompatible(row.competitionName, input.competitionName)) continue;
+
+    const fixtureRound = parseRoundNumber(row.round);
+    const roundOk =
+      input.roundNumber != null && fixtureRound != null && input.roundNumber === fixtureRound;
+
+    // When both sides declare a round, require they agree (avoids wrong weekend).
+    if (input.roundNumber != null && fixtureRound != null && !roundOk) continue;
+
+    let score = 50;
+    if (roundOk) score += 30;
+    if (sameUtcDay(kickoff, input.kickoffAt)) score += 20;
+    else if (dayGap === 1) score += 12;
+    else score += Math.max(0, 8 - dayGap);
     if (
       input.competitionName &&
       row.competitionName &&

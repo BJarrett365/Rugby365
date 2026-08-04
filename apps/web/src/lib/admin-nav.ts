@@ -80,12 +80,13 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     matchPrefixes: ["/admin/api", "/api/admin/data-sources"],
   },
   {
-    id: "openai",
-    label: "AI providers",
-    value: "OpenAI",
-    description: "OpenAI API key and default model for bios, enrichment and commentary.",
-    href: "/admin/keys/openai",
-    matchPrefixes: ["/admin/keys/openai"],
+    id: "providers",
+    label: "API keys hub",
+    value: "Keys",
+    description:
+      "Plexa-style hub: Supabase, ElevenLabs, OpenAI, Wikipedia and Wikidata — write-only secrets, test, remove.",
+    href: "/admin/keys",
+    matchPrefixes: ["/admin/keys"],
   },
   {
     id: "rugby-data",
@@ -97,9 +98,9 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
   },
   {
     id: "supabase",
-    label: "Supabase",
-    value: "Supabase",
-    description: "Supabase project URL, anon key and service role for Auth, DB and Storage.",
+    label: "Supabase advanced",
+    value: "Supabase+",
+    description: "Anon key, bootstrap buckets, fixture mirror and full CMS sync tools.",
     href: "/admin/keys/supabase",
     matchPrefixes: ["/admin/keys/supabase"],
   },
@@ -118,6 +119,22 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     description: "Gracenote / PA Media EPG keys for rugby where-to-watch (CMS manual until synced).",
     href: "/admin/keys/tv-schedule",
     matchPrefixes: ["/admin/keys/tv-schedule"],
+  },
+  {
+    id: "wikipedia",
+    label: "Wikipedia API",
+    value: "Wikipedia",
+    description: "MediaWiki User-Agent and API base URL (no paid key; Wikimedia UA policy).",
+    href: "/admin/keys/wikipedia",
+    matchPrefixes: ["/admin/keys/wikipedia"],
+  },
+  {
+    id: "wikidata",
+    label: "Wikidata API",
+    value: "Wikidata",
+    description: "Wikidata MediaWiki User-Agent and API base URL for entity lookups.",
+    href: "/admin/keys/wikidata",
+    matchPrefixes: ["/admin/keys/wikidata"],
   },
   {
     id: "wiki",
@@ -148,6 +165,18 @@ export const ADMIN_OPTA_STATS_LINKS: AdminHubLink[] = [
     href: "/admin/matches",
     description: "Fixture-level team and player stats after Planet Rugby match import.",
     status: "Live",
+  },
+  {
+    title: "Pre-game check",
+    href: "/admin/matches/pregame",
+    description: "Stadium, weather, referee and coaches assigned before kickoff.",
+    status: "Admin",
+  },
+  {
+    title: "Match highlights",
+    href: "/admin/matches/highlights",
+    description: "Scrape league YouTube channels and assign highlights onto fixtures (NPC first).",
+    status: "Admin",
   },
   {
     title: "Import match stats",
@@ -181,6 +210,20 @@ export const ADMIN_ODDS_LINKS: AdminHubLink[] = [
     href: "/admin/odds/bmbets",
     description:
       "Primary odds importer — multi-bookmaker consensus from bmbets.com. Rugby Union only, League contaminants rejected, CMS fixtures only.",
+    status: "Live",
+  },
+  {
+    title: "Betting R&D",
+    href: "/admin/odds/betting-rd",
+    description:
+      "Research lab — betting-intel-v1.1 production, frozen v1 baseline, improvement log, Phase B/C roadmap.",
+    status: "Admin",
+  },
+  {
+    title: "Model pick accuracy",
+    href: "/admin/odds/model-accuracy",
+    description:
+      "Graph of Betting Intelligence win-probability leans vs finished results — cumulative correct / wrong %.",
     status: "Live",
   },
   {
@@ -328,9 +371,9 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "API",
     },
     {
-      title: "OpenAI keys",
-      href: "/admin/keys/openai",
-      description: "Configure OpenAI API key and default model for AI-assisted CMS features.",
+      title: "API keys hub",
+      href: "/admin/keys",
+      description: "Supabase, ElevenLabs, OpenAI, Wikipedia and Wikidata in one Plexa-style admin panel.",
       status: "Admin",
     },
     {
@@ -340,9 +383,9 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "Admin",
     },
     {
-      title: "Supabase keys",
+      title: "Supabase advanced",
       href: "/admin/keys/supabase",
-      description: "Configure Supabase project URL, anon key and service role.",
+      description: "Anon key, bootstrap buckets, fixture mirror and full CMS sync.",
       status: "Admin",
     },
     {
@@ -355,6 +398,72 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       title: "TV Schedule",
       href: "/admin/keys/tv-schedule",
       description: "Gracenote / PA Media keys for rugby TV listings (CMS broadcasters work without keys).",
+      status: "Admin",
+    },
+    {
+      title: "Wikipedia API",
+      href: "/admin/keys#wikipedia",
+      description: "MediaWiki User-Agent and API base URL (no paid key).",
+      status: "Admin",
+    },
+    {
+      title: "Wikidata API",
+      href: "/admin/keys#wikidata",
+      description: "Wikidata MediaWiki User-Agent and API base for entity lookups.",
+      status: "Admin",
+    },
+  ],
+  openai: [
+    {
+      title: "API keys hub",
+      href: "/admin/keys#openai",
+      description: "OpenAI card on the combined keys hub (test connection + rugby caption generation).",
+      status: "Admin",
+    },
+    {
+      title: "ElevenLabs on hub",
+      href: "/admin/keys#elevenlabs",
+      description: "Preferred TTS provider for Live Audio Commentary Lead/Analyst.",
+      status: "Admin",
+    },
+  ],
+  elevenlabs: [
+    {
+      title: "API keys hub",
+      href: "/admin/keys#elevenlabs",
+      description: "ElevenLabs card on the combined keys hub for Live Audio Commentary TTS.",
+      status: "Admin",
+    },
+    {
+      title: "OpenAI on hub",
+      href: "/admin/keys#openai",
+      description: "Fallback TTS and AI enrichment when ElevenLabs is unset.",
+      status: "Admin",
+    },
+  ],
+  providers: [
+    {
+      title: "API keys hub",
+      href: "/admin/keys",
+      description: "Supabase, ElevenLabs, OpenAI, Wikipedia and Wikidata credentials (Plexa-style).",
+      status: "Admin",
+    },
+    {
+      title: "Supabase advanced",
+      href: "/admin/keys/supabase",
+      description: "Bootstrap buckets, mirror fixtures and map CMS data.",
+      status: "Admin",
+    },
+    {
+      title: "Wikipedia API",
+      href: "/admin/keys#wikipedia",
+      description: "MediaWiki User-Agent and API base URL for public Wikipedia access.",
+      status: "Admin",
+    },
+    {
+      title: "Wikidata API",
+      href: "/admin/keys#wikidata",
+      description: "Wikidata MediaWiki settings for entity / social gap-fill.",
       status: "Admin",
     },
   ],
@@ -372,15 +481,27 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "Live",
     },
     {
+      title: "Wikipedia API keys",
+      href: "/admin/keys#wikipedia",
+      description: "Configure Wikipedia MediaWiki User-Agent and API base URL (no paid key).",
+      status: "Admin",
+    },
+    {
+      title: "Wikidata API keys",
+      href: "/admin/keys#wikidata",
+      description: "Configure Wikidata MediaWiki User-Agent and optional access token.",
+      status: "Admin",
+    },
+    {
       title: "Wikimedia integration",
       href: "/admin/integrations/wikimedia",
       description: "Configure Wikimedia Enterprise API credentials for authenticated Wikipedia access.",
       status: "Admin",
     },
     {
-      title: "OpenAI keys",
-      href: "/admin/keys/openai",
-      description: "Same Plexa-style provider key template for OpenAI API access and model defaults.",
+      title: "API keys hub",
+      href: "/admin/keys",
+      description: "Supabase, ElevenLabs, OpenAI, Wikipedia and Wikidata (Plexa-style hub).",
       status: "Admin",
     },
     {
@@ -390,9 +511,9 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "Admin",
     },
     {
-      title: "Supabase keys",
+      title: "Supabase advanced",
       href: "/admin/keys/supabase",
-      description: "Supabase project credentials for Auth, Database and Storage.",
+      description: "Supabase anon key, bootstrap, mirror and full sync tools.",
       status: "Admin",
     },
     {
@@ -410,26 +531,59 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
   ],
 };
 
+/** Public-facing Match Centre and site surfaces — shown first in the shell nav. */
+export const PUBLIC_VIEW_NAV_ITEMS: AdminNavItem[] = [
+  { href: "/matches", label: "Live Centre", short: "Live" },
+  { href: "/tables", label: "Tables", short: "Tables" },
+  { href: "/transfers", label: "Transfers", short: "Xfer" },
+  { href: "/players", label: "Players", short: "Players" },
+  { href: "/rankings", label: "Rankings", short: "Rank" },
+  { href: "/shirt-library", label: "Shirt Library", short: "Shirts" },
+  { href: "/legends", label: "Legends", short: "Legends" },
+  { href: "/players/compare", label: "Compare players", short: "Compare" },
+  { href: "/teams/compare", label: "Compare teams", short: "TeamsCmp" },
+];
+
 export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
+    id: "public",
+    label: "Public View",
+    items: PUBLIC_VIEW_NAV_ITEMS,
+  },
+  {
     id: "home",
-    label: "",
-    items: [{ href: "/admin", label: "Dashboard", short: "Home" }],
+    label: "CMS",
+    items: [{ href: "/admin", label: "Dashboard", short: "CMS" }],
   },
   {
     id: "content",
     label: "Content",
     items: [
       { href: "/admin/matches", label: "Matches", short: "Matches" },
+      { href: "/admin/matches/pregame", label: "Pre-game check", short: "PreGame" },
+      { href: "/admin/matches/highlights", label: "Match highlights", short: "Highlights" },
+      {
+        href: "/admin/knowledge/commentary-rules",
+        label: "Commentary Rules",
+        short: "CommRules",
+      },
+      {
+        href: "/admin/knowledge/audio-commentary-rules",
+        label: "Audio Commentary Rules",
+        short: "Audio",
+      },
+      {
+        href: "/admin/audio-commentary",
+        label: "Audio Commentary",
+        short: "Voices",
+      },
       { href: "/admin/teams", label: "Teams", short: "Teams" },
       { href: "/admin/competitions", label: "Competitions", short: "Comps" },
+      { href: "/admin/competitions/catalog", label: "Competition catalog", short: "Catalog" },
       { href: "/admin/players", label: "Players", short: "Players" },
-      { href: "/legends", label: "Legends", short: "Legends" },
       { href: "/admin/legends", label: "Legends admin", short: "LegAdm" },
-      { href: "/players/compare", label: "Compare players", short: "Compare" },
-      { href: "/teams/compare", label: "Compare teams", short: "TeamsCmp" },
       { href: "/admin/coaches", label: "Coaches", short: "Coaches" },
-      { href: "/admin/transfers", label: "Transfers", short: "Xfer" },
+      { href: "/admin/transfers", label: "Transfers CMS", short: "XferAdm" },
       { href: "/admin/squad-audit", label: "Squad audit", short: "SqAud" },
       { href: "/admin/venues", label: "Venues", short: "Venues" },
       { href: "/admin/referees", label: "Referees", short: "Refs" },
@@ -440,6 +594,9 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/opta-stats", label: "Opta Stats", short: "Stats" },
       { href: "/admin/tables", label: "Tables", short: "Tables" },
       { href: "/admin/rating-lab", label: "Rating Lab", short: "Ratings" },
+      { href: "/admin/team-of-the-week", label: "Team of the Week", short: "TotW" },
+      { href: "/admin/shirt-library", label: "Shirt Library CMS", short: "ShirtsAdm" },
+      { href: "/admin/crest-library", label: "Crest Library CMS", short: "CrestsAdm" },
     ],
   },
   {
@@ -448,6 +605,8 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { href: "/admin/odds", label: "Odds hub", short: "Odds" },
       { href: "/admin/odds/bmbets", label: "BMbets import", short: "BMbets" },
+      { href: "/admin/odds/betting-rd", label: "Betting R&D", short: "BetRD" },
+      { href: "/admin/odds/model-accuracy", label: "Model accuracy", short: "Accuracy" },
     ],
   },
   {
@@ -470,9 +629,10 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     id: "keys",
     label: "Keys",
     items: [
+      { href: "/admin/keys", label: "API keys", short: "Keys" },
       { href: "/admin/knowledge", label: "Knowledge Base", short: "KB" },
       ...KNOWLEDGE_NAV_ITEMS,
-      ...ADMIN_HUB_KEYS.map((key) => ({
+      ...ADMIN_HUB_KEYS.filter((key) => key.id !== "providers").map((key) => ({
         href: key.href,
         label: key.value,
         short: key.value.slice(0, 4),
@@ -481,12 +641,13 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   },
 ];
 
-/** Flat list for mobile bottom nav */
+/** Flat list for mobile bottom nav — Live Centre first. */
 export const ADMIN_BOTTOM_NAV: AdminNavItem[] = [
-  { href: "/admin", label: "Dashboard", short: "Home" },
+  { href: "/matches", label: "Live Centre", short: "Live" },
+  { href: "/admin", label: "Dashboard", short: "CMS" },
   { href: "/admin/matches", label: "Matches", short: "Matches" },
-  { href: "/admin/players", label: "Players", short: "Players" },
-  ...ADMIN_HUB_KEYS.map((key) => ({
+  { href: "/players", label: "Players", short: "Players" },
+  ...ADMIN_HUB_KEYS.slice(0, 2).map((key) => ({
     href: key.href,
     label: key.value,
     short: key.value.slice(0, 4),
@@ -495,14 +656,19 @@ export const ADMIN_BOTTOM_NAV: AdminNavItem[] = [
 
 export function navItemActive(pathname: string, href: string): boolean {
   if (href === "/admin") return pathname === "/admin";
+  if (href === "/matches") {
+    return pathname === "/matches" || pathname.startsWith("/matches/");
+  }
   if (href.startsWith("/api")) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function hubKeyActive(pathname: string, key: AdminHubKey): boolean {
-  return key.matchPrefixes.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+  return key.matchPrefixes.some((prefix) => {
+    // Exact-only for the combined keys hub so /admin/keys/rugby-data etc. stay distinct.
+    if (prefix === "/admin/keys") return pathname === "/admin/keys";
+    return pathname === prefix || pathname.startsWith(`${prefix}/`);
+  });
 }
 
 export function isNavItemActive(pathname: string, item: AdminNavItem, sectionId?: string): boolean {

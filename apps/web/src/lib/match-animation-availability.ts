@@ -44,6 +44,11 @@ export type ResolveAnimationInput = {
   settings: AnimationSettingsSnapshot | null;
   /** Published key events available for public replay (no drafts). */
   publishedEventCount: number;
+  /**
+   * Squads / player stats / events detailed enough to power Match Animation.
+   * When true, live + finished matches unlock without manual CMS activation.
+   */
+  hasDetailedPlayerData?: boolean;
   hasFullTimeEvent?: boolean;
 };
 
@@ -219,27 +224,39 @@ export function resolveMatchAnimationAvailability(
     hasFullTimeEvent: input.hasFullTimeEvent,
   });
 
+  const detailed =
+    Boolean(input.hasDetailedPlayerData) || input.publishedEventCount > 0;
+
   if (ftConfirmed || isFinishedStatus(status)) {
     const canReplay = input.publishedEventCount > 0;
+    const canShow =
+      canReplay ||
+      detailed ||
+      settings.publicAnimationEnabled ||
+      settings.publicReplayEnabled;
     return baseFlags({
       phase: "full_time",
-      tabBadge: canReplay ? "REPLAY" : "Unavailable",
+      tabBadge: canShow ? (canReplay ? "REPLAY" : null) : "Unavailable",
       effectiveKickoffAt,
-      message: canReplay
+      message: canShow
         ? null
-        : settings.publicAnimationEnabled || settings.publicReplayEnabled
-          ? "No tracker data is available for this fixture."
-          : null,
+        : "No detailed player data is available for this fixture.",
       showIntroCountdown: false,
       showLiveControls: false,
       showReplayControls: canReplay,
-      showFullTimeResult: true,
+      showFullTimeResult: canShow,
       fullTimeConfirmed: true,
     });
   }
 
   if (isLiveStatus(status, input.period)) {
-    if (!settings.publicAnimationEnabled && !settings.matchStartedAt) {
+    // Manual CMS activation OR detailed player/event data unlocks live animation.
+    // SDMS matches often have squads/stats/events before an operator hits "Start match".
+    const liveUnlocked =
+      settings.publicAnimationEnabled ||
+      Boolean(settings.matchStartedAt) ||
+      detailed;
+    if (!liveUnlocked) {
       return baseFlags({
         phase: "not_activated",
         tabBadge: "Unavailable",
@@ -353,6 +370,7 @@ export function resolveMatchAnimationAvailability(
 export const PUBLIC_MATCH_TAB_ORDER = [
   "details",
   "animation",
+  "audio",
   "watchalong",
   "highlights",
   "stats",

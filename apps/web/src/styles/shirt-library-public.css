@@ -1,0 +1,400 @@
+.slp {
+  --slp-bg: #0b1220;
+  --slp-panel: #121a2b;
+  --slp-border: rgba(255, 255, 255, 0.1);
+  --slp-text: #f4f6f8;
+  --slp-muted: #9aa6b2;
+  --slp-accent: var(--slp-accent-dynamic, #c8102e);
+  --slp-gold: #e7bc63;
+  color: var(--slp-text);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--slp-accent) 28%, transparent), transparent),
+    linear-gradient(180deg, #0e1628 0%, var(--slp-bg) 40%, #080d16 100%);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 2rem;
+  margin: 0 0 2rem;
+}
+
+.slp a {
+  color: inherit;
+}
+
+.slp__breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--slp-muted);
+  margin-bottom: 1rem;
+}
+
+.slp__breadcrumbs a {
+  color: var(--slp-gold);
+  text-decoration: none;
+}
+
+.slp__header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--slp-border);
+}
+
+.slp__header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.slp__brand {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--slp-gold);
+  font-weight: 700;
+}
+
+.slp__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.slp__subtitle {
+  margin: 0.4rem 0 0;
+  color: var(--slp-muted);
+  font-size: 1rem;
+}
+
+.slp__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  color: var(--slp-muted);
+  font-size: 0.85rem;
+}
+
+.slp__season-select {
+  min-width: 160px;
+  background: var(--slp-panel);
+  color: var(--slp-text);
+  border: 1px solid var(--slp-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.slp__section {
+  margin: 1.5rem 0;
+}
+
+.slp__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slp-gold);
+}
+
+.slp__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.slp__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--slp-border);
+  border-radius: 999px;
+  background: var(--slp-panel);
+  font-size: 0.82rem;
+}
+
+.slp__flag img {
+  width: 20px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.slp__map {
+  border: 1px solid var(--slp-border);
+  border-radius: 10px;
+  background: var(--slp-panel);
+  padding: 1rem;
+  min-height: 180px;
+}
+
+.slp__map-empty {
+  color: var(--slp-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.slp__map-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.slp__map-pin {
+  fill: var(--slp-accent);
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.slp__map-label {
+  fill: var(--slp-text);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.slp__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.slp__card {
+  border: 1px solid var(--slp-border);
+  border-radius: 12px;
+  background: var(--slp-panel);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.slp__card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.slp__card-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.slp__card-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.slp__card-country {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--slp-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.slp__shirts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.slp__shirt-slot {
+  text-align: center;
+}
+
+.slp__shirt-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--slp-muted);
+  margin-bottom: 0.35rem;
+}
+
+.slp__awaiting {
+  width: 88px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--slp-border);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--slp-muted);
+  padding: 0.35rem;
+  text-align: center;
+}
+
+.slp__card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slp__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--slp-border);
+  font-size: 0.78rem;
+  text-decoration: none;
+  background: transparent;
+}
+
+.slp__btn--primary {
+  background: color-mix(in srgb, var(--slp-accent) 85%, #000);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+.slp__panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.slp__panel {
+  border: 1px solid var(--slp-border);
+  border-radius: 12px;
+  background: var(--slp-panel);
+  padding: 1rem;
+}
+
+.slp__panel p {
+  margin: 0;
+  color: var(--slp-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.slp__facts {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.slp__facts dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slp-gold);
+}
+
+.slp__facts dd {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+}
+
+.slp__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slp__swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--slp-muted);
+}
+
+.slp__swatch i {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: inline-block;
+}
+
+.slp__readiness {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.slp__readiness strong {
+  display: block;
+  font-size: 1.35rem;
+  color: var(--slp-text);
+}
+
+.slp__season-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slp__landing-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.slp__landing-card {
+  border: 1px solid var(--slp-border);
+  border-radius: 12px;
+  background: var(--slp-panel);
+  padding: 1.1rem;
+  text-decoration: none;
+  display: grid;
+  gap: 0.45rem;
+  transition: border-color 0.15s ease;
+}
+
+.slp__landing-card:hover {
+  border-color: color-mix(in srgb, var(--slp-accent) 60%, #fff);
+}
+
+.slp__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.slp__filter {
+  border: 1px solid var(--slp-border);
+  background: var(--slp-panel);
+  color: var(--slp-muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.slp__filter--active {
+  color: #fff;
+  border-color: var(--slp-accent);
+  background: color-mix(in srgb, var(--slp-accent) 35%, #000);
+}
+
+.slp__empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--slp-muted);
+}
+
+@media (max-width: 640px) {
+  .slp {
+    padding: 1rem;
+    border-radius: 0;
+  }
+  .slp__season-select {
+    width: 100%;
+  }
+  .slp__grid {
+    grid-template-columns: 1fr;
+  }
+}

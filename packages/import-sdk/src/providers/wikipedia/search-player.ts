@@ -1,5 +1,12 @@
-const WIKI_API = "https://en.wikipedia.org/w/api.php";
-const USER_AGENT = "Rugby365ArchiveImport/1.0 (read-only; local dev)";
+import {
+  buildMediaWikiHeaders,
+  resolveMediaWikiApiBaseUrl,
+  resolveMediaWikiUserAgent,
+  type MediaWikiRequestOptions,
+} from "./mediawiki-request";
+
+const DEFAULT_WIKI_API = "https://en.wikipedia.org/w/api.php";
+const DEFAULT_USER_AGENT = "Rugby365ArchiveImport/1.0 (read-only; local dev)";
 
 type WikiSearchHit = { title: string };
 
@@ -37,7 +44,20 @@ export function prioritizePlayerArticleTitles(candidates: string[], playerName: 
   return [...unique].sort((a, b) => score(b) - score(a) || a.localeCompare(b));
 }
 
-async function wikiSearch(query: string, limit = 5): Promise<string[]> {
+function wikiConfig(options?: MediaWikiRequestOptions) {
+  return {
+    apiBaseUrl: resolveMediaWikiApiBaseUrl(options, "WIKIPEDIA_API_BASE_URL", DEFAULT_WIKI_API),
+    userAgent: resolveMediaWikiUserAgent(options, "WIKIPEDIA_USER_AGENT", DEFAULT_USER_AGENT),
+    accessToken: options?.accessToken ?? process.env.WIKIPEDIA_ACCESS_TOKEN ?? null,
+  };
+}
+
+async function wikiSearch(
+  query: string,
+  limit = 5,
+  options?: MediaWikiRequestOptions,
+): Promise<string[]> {
+  const { apiBaseUrl, userAgent, accessToken } = wikiConfig(options);
   const params = new URLSearchParams({
     action: "query",
     list: "search",
@@ -47,8 +67,8 @@ async function wikiSearch(query: string, limit = 5): Promise<string[]> {
     origin: "*",
   });
 
-  const res = await fetch(`${WIKI_API}?${params}`, {
-    headers: { "User-Agent": USER_AGENT },
+  const res = await fetch(`${apiBaseUrl}?${params}`, {
+    headers: buildMediaWikiHeaders(userAgent, accessToken),
   });
   if (!res.ok) return [];
 
@@ -56,38 +76,42 @@ async function wikiSearch(query: string, limit = 5): Promise<string[]> {
   return (data.query?.search ?? []).map((hit) => hit.title);
 }
 
-async function articleExists(title: string): Promise<boolean> {
+async function articleExists(title: string, options?: MediaWikiRequestOptions): Promise<boolean> {
+  const { userAgent, accessToken } = wikiConfig(options);
   const slug = title.trim().replace(/ /g, "_");
   const res = await fetch(
     `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(slug)}`,
     {
-      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      headers: buildMediaWikiHeaders(userAgent, accessToken, { Accept: "application/json" }),
     },
   );
   return res.ok;
 }
 
 /** Candidate Wikipedia article titles for a rugby player name (rugby union page first). */
-export async function findWikipediaPlayerArticleTitles(playerName: string): Promise<string[]> {
+export async function findWikipediaPlayerArticleTitles(
+  playerName: string,
+  options?: MediaWikiRequestOptions,
+): Promise<string[]> {
   const name = playerName.trim();
   if (!name) return [];
 
   const candidates: string[] = [];
   const rugbyTitle = rugbyUnionPlayerTitle(name);
 
-  if (await articleExists(rugbyTitle)) {
+  if (await articleExists(rugbyTitle, options)) {
     candidates.push(rugbyTitle);
   }
 
-  if (name !== rugbyTitle && (await articleExists(name))) {
+  if (name !== rugbyTitle && (await articleExists(name, options))) {
     candidates.push(name);
   }
 
   try {
     const searches = await Promise.all([
-      wikiSearch(`"${name}" "rugby union"`, 5),
-      wikiSearch(`${name} rugby union`, 5),
-      wikiSearch(`${name} rugby`, 5),
+      wikiSearch(`"${name}" "rugby union"`, 5, options),
+      wikiSearch(`${name} rugby union`, 5, options),
+      wikiSearch(`${name} rugby`, 5, options),
     ]);
 
     for (const titles of searches) {

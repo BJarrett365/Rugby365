@@ -1,11 +1,12 @@
 import "server-only";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 import {
   coaches,
   fixturePlayers,
   fixtures,
   fixtureTrackerSettings,
   matchEvents,
+  playerMatchPerformanceStats,
   players,
   teamMatchStats,
   venues,
@@ -38,6 +39,12 @@ import { teamAccentColor } from "./team-accent-color";
 import type { MatchDetailPageData } from "./match-detail-service";
 import type { MatchAnimationPublicPayload } from "./match-animation-types";
 import { buildMatchAnimationPlayerStats } from "./match-animation-player-stats";
+import { hasDetailedMatchPlayerData } from "./match-animation-detail-gate";
+import { EMPTY_MATCH_ANIMATION_AUDIO } from "./match-animation-public-audio";
+import { buildMatchAnimationPublicAudio } from "./match-animation-public-audio-server";
+import { syncFixtureLiveStateFromSdms } from "./fixture-live-score-sync";
+import { syncSdmsLiveEventsFromDetail } from "./planet-rugby-match-import-service";
+import { sdmsStatusToPeriod } from "./rugby-match-clock";
 
 export type { MatchAnimationPublicPayload } from "./match-animation-types";
 
@@ -87,13 +94,131 @@ async function loadSettings(fixtureId: string | null): Promise<AnimationSettings
   }
 }
 
+/**
+ * Persist public animation activation for matches with detailed player data —
+ * without resetting CMS scores (unlike CMS "Start match").
+ */
+async function ensureDetailedMatchAnimationActivated(
+  fixtureId: string,
+  settings: AnimationSettingsSnapshot | null,
+  kickoffAt: string | null,
+  options?: { enableReplay?: boolean },
+): Promise<AnimationSettingsSnapshot> {
+  const wantReplay = Boolean(options?.enableReplay);
+  if (
+    settings?.publicAnimationEnabled &&
+    settings.matchStartedAt &&
+    (!wantReplay || settings.publicReplayEnabled)
+  ) {
+    return settings;
+  }
+
+  const now = new Date();
+  const startedAt = settings?.matchStartedAt
+    ? new Date(settings.matchStartedAt)
+    : kickoffAt
+      ? new Date(kickoffAt)
+      : now;
+
+  try {
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(fixtureTrackerSettings)
+      .where(eq(fixtureTrackerSettings.fixtureId, fixtureId))
+      .limit(1);
+
+    if (existing) {
+      const [row] = await db
+        .update(fixtureTrackerSettings)
+        .set({
+          trackerActivated: true,
+          publicAnimationEnabled: true,
+          publicReplayEnabled: wantReplay || existing.publicReplayEnabled,
+          matchStartedAt: existing.matchStartedAt ?? startedAt,
+          matchStartedBy: existing.matchStartedBy ?? "sdms_auto",
+          kickOffConfirmedAt: existing.kickOffConfirmedAt ?? startedAt,
+          updatedAt: now,
+        })
+        .where(eq(fixtureTrackerSettings.fixtureId, fixtureId))
+        .returning();
+      return {
+        trackerActivated: row.trackerActivated,
+        publicAnimationEnabled: row.publicAnimationEnabled,
+        publicReplayEnabled: row.publicReplayEnabled,
+        countdownHeld: row.countdownHeld,
+        countdownCancelled: row.countdownCancelled,
+        kickOffDelayed: row.kickOffDelayed,
+        revisedKickoffAt: row.revisedKickoffAt?.toISOString() ?? null,
+        kickOffConfirmedAt: row.kickOffConfirmedAt?.toISOString() ?? null,
+        matchStartedAt: row.matchStartedAt?.toISOString() ?? null,
+        fullTimeConfirmedAt: row.fullTimeConfirmedAt?.toISOString() ?? null,
+      };
+    }
+
+    const [row] = await db
+      .insert(fixtureTrackerSettings)
+      .values({
+        fixtureId,
+        trackerActivated: true,
+        publicAnimationEnabled: true,
+        publicReplayEnabled: wantReplay,
+        mode: "auto",
+        matchStartedAt: startedAt,
+        matchStartedBy: "sdms_auto",
+        kickOffConfirmedAt: startedAt,
+        updatedAt: now,
+      })
+      .returning();
+
+    return {
+      trackerActivated: row.trackerActivated,
+      publicAnimationEnabled: row.publicAnimationEnabled,
+      publicReplayEnabled: row.publicReplayEnabled,
+      countdownHeld: row.countdownHeld,
+      countdownCancelled: row.countdownCancelled,
+      kickOffDelayed: row.kickOffDelayed,
+      revisedKickoffAt: row.revisedKickoffAt?.toISOString() ?? null,
+      kickOffConfirmedAt: row.kickOffConfirmedAt?.toISOString() ?? null,
+      matchStartedAt: row.matchStartedAt?.toISOString() ?? null,
+      fullTimeConfirmedAt: row.fullTimeConfirmedAt?.toISOString() ?? null,
+    };
+  } catch {
+    return (
+      settings ?? {
+        trackerActivated: true,
+        publicAnimationEnabled: true,
+        publicReplayEnabled: wantReplay,
+        countdownHeld: false,
+        countdownCancelled: false,
+        kickOffDelayed: false,
+        revisedKickoffAt: null,
+        kickOffConfirmedAt: startedAt.toISOString(),
+        matchStartedAt: startedAt.toISOString(),
+        fullTimeConfirmedAt: null,
+      }
+    );
+  }
+}
+
+function maxEventMinute(
+  rows: Array<{ minute?: number | null }>,
+): number {
+  let max = 0;
+  for (const row of rows) {
+    const m = Number(row.minute ?? 0);
+    if (Number.isFinite(m) && m > max) max = m;
+  }
+  return max;
+}
+
 export async function buildMatchAnimationPublicPayload(
   data: MatchDetailPageData,
 ): Promise<MatchAnimationPublicPayload> {
   const { detail, kickoffAt, cmsFixture, entities, venue, referee, lineups } = data;
   const settings = await loadSettings(cmsFixture?.id ?? null);
   const keyEvents = detail.key_events ?? [];
-  let events = mapKeyEventsToAnimation(
+  const sdmsEvents = mapKeyEventsToAnimation(
     keyEvents.map((e) => ({
       id: (e as { match_event_id?: string | number }).match_event_id ?? undefined,
       minute: e.minute,
@@ -106,6 +231,7 @@ export async function buildMatchAnimationPublicPayload(
     })),
     detail.home_team_id ?? null,
   );
+  let events = sdmsEvents;
   const serverNow = new Date().toISOString();
 
   let cmsHome: number | null = null;
@@ -118,6 +244,24 @@ export async function buildMatchAnimationPublicPayload(
   let attendance: number | null = null;
   let cmsHomeTeamId: string | null = null;
   let squadLookup: AnimationPlayerLookup[] = [];
+
+  // Keep CMS clock/events current before animation reads them (fixes stuck HT clocks).
+  if (cmsFixture?.id) {
+    const liveFeed =
+      /live|first|second|half\s*time|halftime/i.test(detail.status) ||
+      /live|first|second|half/i.test(String(cmsStatus ?? ""));
+    if (liveFeed) {
+      try {
+        await syncFixtureLiveStateFromSdms(cmsFixture.id, detail);
+        await syncSdmsLiveEventsFromDetail(cmsFixture.id, detail.match_id, detail);
+      } catch (error) {
+        console.warn(
+          `[match-animation] live feed sync failed for ${detail.match_id}:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+  }
 
   if (cmsFixture?.id) {
     try {
@@ -162,13 +306,16 @@ export async function buildMatchAnimationPublicPayload(
         .innerJoin(players, eq(fixturePlayers.playerId, players.id))
         .where(eq(fixturePlayers.fixtureId, cmsFixture.id));
 
-      // Prefer published CMS match events when present (includes TMO / missed conversion).
+      // Prefer CMS events when they are at least as fresh as SDMS (TMO / missed kicks).
+      // If CMS lags (e.g. stuck at HT 39'), fall back to the live SDMS timeline.
       const cmsRows = await db
         .select()
         .from(matchEvents)
         .where(eq(matchEvents.fixtureId, cmsFixture.id))
         .orderBy(asc(matchEvents.sequenceNo), asc(matchEvents.minute));
-      if (cmsRows.length > 0) {
+      const cmsMaxMinute = maxEventMinute(cmsRows);
+      const sdmsMaxMinute = maxEventMinute(keyEvents);
+      if (cmsRows.length > 0 && cmsMaxMinute >= sdmsMaxMinute) {
         const { mapCmsEventsToPublicKeyEvents } = await import("./match-key-events");
         const paired = mapCmsEventsToPublicKeyEvents(
           cmsRows.map((e) => ({
@@ -219,9 +366,12 @@ export async function buildMatchAnimationPublicPayload(
           }),
           cmsHomeTeamId,
         );
+      } else {
+        events = sdmsEvents;
       }
     } catch {
       /* fall back to detail scores / SDMS events */
+      events = sdmsEvents;
     }
   }
 
@@ -296,21 +446,106 @@ export async function buildMatchAnimationPublicPayload(
     events = enrichAnimationEventPlayers(events, squadLookup);
   }
 
-  const fixtureStatus = cmsStatus ?? detail.status;
-  const score = officialFinalScore({
-    cmsHomeScore: cmsHome,
-    cmsAwayScore: cmsAway,
-    fallbackHomeScore: Number(detail.home_team_score ?? 0),
-    fallbackAwayScore: Number(detail.away_team_score ?? 0),
+  const sdmsPeriod = sdmsStatusToPeriod(detail.status);
+  const liveFeed =
+    /live|first|second|half\s*time|halftime/i.test(detail.status) ||
+    /live|first_half|second_half|half_time/i.test(String(cmsStatus ?? cmsPeriod ?? ""));
+  const fixtureStatus = liveFeed
+    ? /live|first|second|half/i.test(detail.status)
+      ? detail.status
+      : (cmsStatus ?? detail.status)
+    : (cmsStatus ?? detail.status);
+  const period =
+    liveFeed && sdmsPeriod !== "not_started" && sdmsPeriod !== "unknown"
+      ? sdmsPeriod
+      : cmsPeriod && cmsPeriod !== "not_started"
+        ? cmsPeriod
+        : detail.status;
+  // Live animation always prefers the freshest SDMS scoreline over a lagging CMS row.
+  const score = liveFeed
+    ? {
+        home: Number(detail.home_team_score ?? cmsHome ?? 0),
+        away: Number(detail.away_team_score ?? cmsAway ?? 0),
+        source: "fallback" as const,
+      }
+    : officialFinalScore({
+        cmsHomeScore: cmsHome,
+        cmsAwayScore: cmsAway,
+        fallbackHomeScore: Number(detail.home_team_score ?? 0),
+        fallbackAwayScore: Number(detail.away_team_score ?? 0),
+      });
+  const sdmsMinute =
+    typeof detail.minutes === "number" && Number.isFinite(detail.minutes)
+      ? Math.max(0, Math.floor(detail.minutes))
+      : 0;
+  const sdmsSecond =
+    typeof detail.seconds === "number" && Number.isFinite(detail.seconds)
+      ? Math.max(0, Math.min(59, Math.floor(detail.seconds)))
+      : 0;
+  const eventMinute = maxEventMinute(events);
+  const matchMinute = liveFeed
+    ? Math.max(cmsMatchMinute, sdmsMinute, eventMinute, sdmsPeriod === "half_time" ? 40 : 0)
+    : cmsMatchMinute;
+  const matchSecond =
+    liveFeed && (sdmsMinute > cmsMatchMinute || (sdmsMinute === cmsMatchMinute && sdmsSecond > 0))
+      ? sdmsSecond
+      : cmsMatchSecond;
+
+  let squadCount = squadLookup.length;
+  let performanceStatCount = 0;
+  if (cmsFixture?.id) {
+    try {
+      const db = getDb();
+      if (squadCount === 0) {
+        const [squadRow] = await db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(fixturePlayers)
+          .where(eq(fixturePlayers.fixtureId, cmsFixture.id));
+        squadCount = Number(squadRow?.n ?? 0);
+      }
+      const [perfRow] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(playerMatchPerformanceStats)
+        .where(eq(playerMatchPerformanceStats.fixtureId, cmsFixture.id));
+      performanceStatCount = Number(perfRow?.n ?? 0);
+    } catch {
+      /* keep zero counts */
+    }
+  }
+
+  const detailedPlayerData = hasDetailedMatchPlayerData({
+    eventCount: events.length,
+    squadCount,
+    performanceStatCount,
+    lineups,
+    playerStats: data.playerStats,
   });
+
+  const finishedLike =
+    /result|finished|complete|full_time|full-time|\bft\b/i.test(fixtureStatus) ||
+    /full_time|\bft\b/i.test(period ?? "");
+  const liveLike =
+    /live|first|second|half\s*time|halftime/i.test(fixtureStatus) ||
+    /first_half|second_half|half_time|live/i.test(period ?? "");
+
+  let resolvedSettings = settings;
+  if (cmsFixture?.id && detailedPlayerData && (liveLike || finishedLike)) {
+    resolvedSettings = await ensureDetailedMatchAnimationActivated(
+      cmsFixture.id,
+      settings,
+      kickoffAt || null,
+      { enableReplay: finishedLike || events.length > 0 },
+    );
+  }
 
   const availability = resolveMatchAnimationAvailability({
     fixtureStatus,
-    period: cmsPeriod,
+    period,
     scheduledKickoffAt: kickoffAt || null,
     serverNowIso: serverNow,
-    settings,
+    settings: resolvedSettings,
     publishedEventCount: events.length,
+    hasDetailedPlayerData: detailedPlayerData,
     hasFullTimeEvent: hasPublishedFullTimeEvent(events),
   });
 
@@ -348,7 +583,7 @@ export async function buildMatchAnimationPublicPayload(
   const potm = data.rugby365PotmName || data.officialPotmName || null;
   const ftConfirmed = isFullTimeConfirmed({
     fixtureStatus,
-    fullTimeConfirmedAt: settings?.fullTimeConfirmedAt,
+    fullTimeConfirmedAt: resolvedSettings?.fullTimeConfirmedAt,
     hasFullTimeEvent: hasPublishedFullTimeEvent(events),
   });
 
@@ -483,6 +718,10 @@ export async function buildMatchAnimationPublicPayload(
     }
   }
 
+  const audio = cmsFixture?.id
+    ? await buildMatchAnimationPublicAudio(cmsFixture.id)
+    : EMPTY_MATCH_ANIMATION_AUDIO;
+
   return {
     matchId: detail.match_id,
     cmsFixtureId: cmsFixture?.id ?? null,
@@ -513,9 +752,9 @@ export async function buildMatchAnimationPublicPayload(
     homeScore: score.home,
     awayScore: score.away,
     scoreSource: score.source,
-    matchMinute: cmsMatchMinute,
-    matchSecond: cmsMatchSecond,
-    period: cmsPeriod,
+    matchMinute,
+    matchSecond,
+    period: typeof period === "string" ? period : cmsPeriod,
     halfTimeHome: ht?.home ?? null,
     halfTimeAway: ht?.away ?? null,
     round,
@@ -529,15 +768,16 @@ export async function buildMatchAnimationPublicPayload(
     events,
     playerStats: buildMatchAnimationPlayerStats(data.playerStats),
     teamStats,
-    settings: settings
+    settings: resolvedSettings
       ? {
-          publicAnimationEnabled: settings.publicAnimationEnabled,
-          publicReplayEnabled: settings.publicReplayEnabled,
-          kickOffDelayed: settings.kickOffDelayed,
-          countdownHeld: settings.countdownHeld,
+          publicAnimationEnabled: resolvedSettings.publicAnimationEnabled,
+          publicReplayEnabled: resolvedSettings.publicReplayEnabled,
+          kickOffDelayed: resolvedSettings.kickOffDelayed,
+          countdownHeld: resolvedSettings.countdownHeld,
           fullTimeConfirmed: ftConfirmed,
         }
       : null,
+    audio,
   };
 }
 

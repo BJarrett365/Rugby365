@@ -1,9 +1,19 @@
 import type { PublicPlayerValue } from "@/lib/player-value-service";
+import type { PlayerRadarBundle } from "@/lib/player-radar-build";
 import { ValueBreakdown } from "@/components/players/ValueBreakdown";
 import { ValueTimelineChart } from "@/components/players/ValueTimelineChart";
 import { PlayerValueCard } from "@/components/players/PlayerValueCard";
+import { PlayerPerformanceRadar } from "@/components/players/PlayerPerformanceRadar";
 
-export function PlayerValuePanel({ value }: { value: PublicPlayerValue }) {
+export function PlayerValuePanel({
+  value,
+  radar,
+  playerName,
+}: {
+  value: PublicPlayerValue;
+  radar?: PlayerRadarBundle | null;
+  playerName?: string;
+}) {
   return (
     <section className="pr-player-value" aria-labelledby="player-value-heading">
       <header className="pr-player-value__header">
@@ -52,19 +62,27 @@ export function PlayerValuePanel({ value }: { value: PublicPlayerValue }) {
         </dl>
       </div>
 
-      <div className="pr-player-value__grid">
-        <div className="pr-player-value__card">
-          <h3>Value breakdown</h3>
-          <ValueBreakdown factors={value.factors} />
+      <div className="pr-player-value__grid pr-player-grid--value">
+        <div className="pr-player-value__card pr-player-card--value-stack">
+          <div>
+            <h3>Value timeline</h3>
+            <ValueTimelineChart
+              timeline={value.timeline}
+              currentValueGbp={value.marketValueGbp}
+              peakValueGbp={value.peakCareerValueGbp}
+            />
+          </div>
+          {radar && playerName ? (
+            <div className="pr-player-value-stack__radar">
+              <h3>Performance radar</h3>
+              <PlayerPerformanceRadar radar={radar} playerName={playerName} compact />
+            </div>
+          ) : null}
         </div>
 
         <div className="pr-player-value__card">
-          <h3>Value timeline</h3>
-          <ValueTimelineChart
-            timeline={value.timeline}
-            currentValueGbp={value.marketValueGbp}
-            peakValueGbp={value.peakCareerValueGbp}
-          />
+          <h3>Value breakdown</h3>
+          <ValueBreakdown factors={value.factors} />
         </div>
       </div>
 

@@ -90,6 +90,7 @@ export const BROADCASTER_SOURCE_PROVIDERS = [
   "manual",
   "gracenote",
   "pa_media",
+  "rugby_kickoff",
 ] as const;
 export type BroadcasterSourceProvider = (typeof BROADCASTER_SOURCE_PROVIDERS)[number];
 

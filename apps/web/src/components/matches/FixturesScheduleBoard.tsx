@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MatchDatePicker } from "./MatchDatePicker";
+import { MatchMediaIcon, type MatchMediaIconVariant } from "./MatchMediaIcons";
 import { TeamCrest } from "./TeamCrest";
 import { WeatherIcon } from "./WeatherIcon";
 import {
@@ -20,6 +21,9 @@ import {
   type ScheduleCompetition,
   type ScheduleFixture,
 } from "./match-schedule-utils";
+import { gradeModelPick } from "@/lib/match-betting-pick-grade";
+import type { MatchDetailTab } from "@/lib/match-detail-tabs";
+import { matchDetailTabHref } from "@/lib/match-detail-tabs";
 import { resolveWeatherCondition } from "@/lib/weather-condition";
 
 function CompactMatchRow({
@@ -164,6 +168,119 @@ function CompactMatchRow({
   );
 }
 
+function modelPickOutcome(fixture: ScheduleFixture): {
+  favored: "home" | "away" | null;
+  correct: boolean | null;
+} {
+  const wp = fixture.winProbability;
+  if (!wp) return { favored: null, correct: null };
+  const finished =
+    fixture.status === "full_time" || /result|finished|ft/i.test(fixture.status);
+  if (!finished) {
+    const favored =
+      wp.homeWinPct > wp.awayWinPct ? "home" : wp.awayWinPct > wp.homeWinPct ? "away" : null;
+    return { favored, correct: null };
+  }
+  const grade = gradeModelPick({
+    homeWinPct: wp.homeWinPct,
+    awayWinPct: wp.awayWinPct,
+    homeScore: fixture.homeScore,
+    awayScore: fixture.awayScore,
+  });
+  return grade
+    ? { favored: grade.favored, correct: grade.correct }
+    : { favored: null, correct: null };
+}
+
+type ScheduleMediaAction = {
+  tab: MatchDetailTab;
+  title: string;
+  variant: MatchMediaIconVariant;
+  label: string;
+};
+
+function scheduleMediaActions(fixture: ScheduleFixture): ScheduleMediaAction[] {
+  const actions: ScheduleMediaAction[] = [];
+  if (fixture.hasAudio) {
+    actions.push({
+      tab: "audio",
+      title: "Live Audio Commentary",
+      variant: "listen",
+      label: "Audio",
+    });
+  }
+  if (fixture.hasAnimation) {
+    actions.push({
+      tab: "animation",
+      title: "Match Animation",
+      variant: "animation",
+      label: "Animation",
+    });
+  }
+  if (fixture.hasWatchalong) {
+    actions.push({
+      tab: "watchalong",
+      title: "Watchalong",
+      variant: "watchalong",
+      label: "Watchalong",
+    });
+  }
+  if (fixture.hasHighlights) {
+    actions.push({
+      tab: "highlights",
+      title: "Match Highlights",
+      variant: "highlights",
+      label: "Highlights",
+    });
+  }
+  return actions;
+}
+
+function TeamMetrics({
+  showScores,
+  score,
+  winPct,
+  teamName,
+  showPick,
+  pickCorrect,
+}: {
+  showScores: boolean;
+  score: number;
+  winPct: number | null;
+  teamName: string;
+  showPick: boolean;
+  pickCorrect: boolean | null;
+}) {
+  return (
+    <>
+      <span className="pr-mc-team__score" aria-hidden={!showScores}>
+        {showScores ? score : "–"}
+      </span>
+      <span
+        className="pr-mc-team__winpct"
+        title={winPct != null ? `${teamName} win probability ${winPct}%` : undefined}
+      >
+        <span className="pr-mc-team__winpct-num">{winPct != null ? `${winPct}%` : "–"}</span>
+        <span className="pr-mc-team__pick-slot">
+          {showPick && pickCorrect != null ? (
+            <span
+              className={
+                pickCorrect
+                  ? "pr-mc-team__pick pr-mc-team__pick--ok"
+                  : "pr-mc-team__pick pr-mc-team__pick--bad"
+              }
+              title={pickCorrect ? "Model lean correct" : "Model lean incorrect"}
+              aria-label={pickCorrect ? "Correct pick" : "Incorrect pick"}
+            >
+              {pickCorrect ? "✓" : "✗"}
+            </span>
+          ) : null}
+        </span>
+      </span>
+    </>
+  );
+}
+
 function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
   const home = fixture.homeTeam?.name ?? "TBC";
   const away = fixture.awayTeam?.name ?? "TBC";
@@ -195,6 +312,9 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
     Boolean(attendanceTitle) ||
     Boolean(tvTitle) ||
     Boolean(infoTitle);
+  const pick = modelPickOutcome(fixture);
+  const wp = fixture.winProbability;
+  const mediaActions = scheduleMediaActions(fixture);
 
   return (
     <article className={`pr-mc-match-row${hasFooter ? " pr-mc-match-row--with-footer" : ""}`}>
@@ -212,15 +332,29 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
       </div>
 
       <div className="pr-mc-match-row__teams">
-        <div className="pr-mc-team">
+        <div className="pr-mc-team pr-mc-team--metrics">
           <TeamCrest name={home} imageUrl={fixture.homeTeam?.imageUrl} size="sm" />
           <span className="pr-mc-team__name">{home}</span>
-          {showScores ? <span className="pr-mc-team__score">{fixture.homeScore}</span> : null}
+          <TeamMetrics
+            showScores={showScores}
+            score={fixture.homeScore}
+            winPct={wp?.homeWinPct ?? null}
+            teamName={home}
+            showPick={pick.favored === "home"}
+            pickCorrect={pick.correct}
+          />
         </div>
-        <div className="pr-mc-team">
+        <div className="pr-mc-team pr-mc-team--metrics">
           <TeamCrest name={away} imageUrl={fixture.awayTeam?.imageUrl} size="sm" />
           <span className="pr-mc-team__name">{away}</span>
-          {showScores ? <span className="pr-mc-team__score">{fixture.awayScore}</span> : null}
+          <TeamMetrics
+            showScores={showScores}
+            score={fixture.awayScore}
+            winPct={wp?.awayWinPct ?? null}
+            teamName={away}
+            showPick={pick.favored === "away"}
+            pickCorrect={pick.correct}
+          />
         </div>
       </div>
 
@@ -232,6 +366,26 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
         ) : (
           <span className="pr-mc-match-info-btn pr-mc-match-info-btn--disabled">Match Info</span>
         )}
+        {detailHref && mediaActions.length > 0 ? (
+          <div className="pr-mc-match-row__media" aria-label="Match media">
+            {mediaActions.map((action) => (
+              <Link
+                key={action.tab}
+                href={matchDetailTabHref(detailHref, action.tab)}
+                className={`pr-mc-match-media pr-mc-match-media--${action.variant}`}
+                title={action.title}
+                aria-label={action.title}
+              >
+                <MatchMediaIcon
+                  variant={action.variant}
+                  size={12}
+                  className="pr-mc-match-media__icon"
+                />
+                <span className="sr-only">{action.label}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {hasFooter ? (
@@ -346,7 +500,8 @@ export function FixturesScheduleBoard({
   initialFixtureId?: string;
 }) {
   const isPublic = variant === "public";
-  const [selectedDateKey, setSelectedDateKey] = useState(() => dateKeyLocal(new Date()));
+  // null until mount so SSR HTML matches the client's first paint (avoids TZ hydration drift).
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [competitionFilter, setCompetitionFilter] = useState("all");
   const [fixtures, setFixtures] = useState<ScheduleFixture[]>([]);
   const [competitions, setCompetitions] = useState<ScheduleCompetition[]>([]);
@@ -354,14 +509,19 @@ export function FixturesScheduleBoard({
   const [loading, setLoading] = useState(true);
   const [liveCount, setLiveCount] = useState(0);
   const [error, setError] = useState("");
+  const [browserTimeZone, setBrowserTimeZone] = useState("Europe/London");
 
-  const browserTimeZone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    [],
+  useEffect(() => {
+    setBrowserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London");
+    setSelectedDateKey(dateKeyLocal(new Date()));
+  }, []);
+
+  const seasonYear =
+    (selectedDateKey ? seasonFromDateKey(selectedDateKey) : null) ?? String(new Date().getFullYear());
+  const seasonChoices = useMemo(
+    () => seasonOptionsAround(selectedDateKey ?? `${seasonYear}-01-01`),
+    [selectedDateKey, seasonYear],
   );
-
-  const seasonYear = seasonFromDateKey(selectedDateKey) ?? String(new Date().getFullYear());
-  const seasonChoices = useMemo(() => seasonOptionsAround(selectedDateKey), [selectedDateKey]);
 
   const mergeFixtureDates = useCallback((dates: string[]) => {
     setDatesWithMatches((prev) => {
@@ -440,6 +600,7 @@ export function FixturesScheduleBoard({
   }, [browserTimeZone, mergeFixtureDates]);
 
   useEffect(() => {
+    if (!selectedDateKey) return;
     void load(selectedDateKey);
   }, [selectedDateKey, load]);
 
@@ -505,6 +666,7 @@ export function FixturesScheduleBoard({
   );
 
   const onSeasonChange = (year: string) => {
+    if (!selectedDateKey) return;
     const rest = selectedDateKey.slice(4);
     const nextKey = `${year}${rest}`;
     const parsed = Number(year);
@@ -518,6 +680,14 @@ export function FixturesScheduleBoard({
   const boardClass = isPublic
     ? "pr-mc-fixtures-board"
     : "cms-card fixtures-schedule";
+
+  if (!selectedDateKey) {
+    return (
+      <div className={boardClass}>
+        <p className="text-zinc-500 text-sm py-8 text-center">Loading fixtures…</p>
+      </div>
+    );
+  }
 
   return (
     <div className={boardClass}>

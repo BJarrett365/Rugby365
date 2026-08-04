@@ -9,6 +9,10 @@ import {
   pickBestGeocodeResult,
   type OpenMeteoWeather,
 } from "./open-meteo-service";
+import {
+  knownVenueCoordsNeedRepair,
+  lookupKnownVenueGeo,
+} from "./venue-geocode-known";
 
 export type VenueGeoInput = {
   id: string;
@@ -42,6 +46,40 @@ export async function geocodeVenueById(
   const db = getDb();
   const [venue] = await db.select().from(venues).where(eq(venues.id, venueId)).limit(1);
   if (!venue) return { ok: false, venueId, reason: "Venue not found" };
+
+  const known = lookupKnownVenueGeo(venue.name);
+  if (
+    known &&
+    (opts?.force ||
+      knownVenueCoordsNeedRepair(known, {
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+        countryCode: venue.countryCode,
+      }))
+  ) {
+    await db
+      .update(venues)
+      .set({
+        latitude: known.latitude,
+        longitude: known.longitude,
+        city: venue.city?.trim() || known.city,
+        countryName: venue.countryName?.trim() || known.countryName,
+        countryCode: known.countryCode,
+        geocodedAt: new Date(),
+        geocodeSource: "known_venue",
+        geocodeQuery: known.placeLabel,
+      })
+      .where(eq(venues.id, venueId));
+    return {
+      ok: true,
+      venueId,
+      reason: "Known venue coordinates",
+      latitude: known.latitude,
+      longitude: known.longitude,
+      countryCode: known.countryCode,
+      query: known.placeLabel,
+    };
+  }
 
   if (!opts?.force && venue.latitude != null && venue.longitude != null) {
     return {
@@ -277,7 +315,8 @@ export async function resolveWeatherForVenueId(input: {
 
   if (!venue) return null;
 
-  if ((venue.latitude == null || venue.longitude == null) && input.geocodeIfMissing !== false) {
+  // Geocode missing coords, and repair known venues that landed in the wrong country.
+  if (input.geocodeIfMissing !== false) {
     await geocodeVenueById(input.venueId);
     [venue] = await db
       .select({

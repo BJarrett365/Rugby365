@@ -1,0 +1,188 @@
+.shirt-lib {
+  --sl-border: color-mix(in srgb, var(--pr-grey, #9aa) 35%, transparent);
+  --sl-card: color-mix(in srgb, #111 92%, #fff 8%);
+}
+
+.shirt-lib__finder {
+  display: grid;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+.shirt-lib__finder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+  padding-bottom: 1px;
+}
+
+.shirt-lib__seed {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  max-width: 36rem;
+}
+
+.shirt-lib__empty {
+  padding: 1.25rem 0.25rem;
+  color: var(--pr-grey, #9aa);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 900px) {
+  .shirt-lib__finder {
+    grid-template-columns: 1fr;
+  }
+
+  .shirt-lib__finder-actions {
+    width: 100%;
+  }
+
+  .shirt-lib__finder-actions .cms-btn {
+    flex: 1;
+  }
+
+  .shirt-lib__seed {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+}
+
+.shirt-lib__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid var(--sl-border);
+}
+
+.shirt-lib__status-pill--APPROVED {
+  color: #7dcea0;
+  border-color: #7dcea0;
+}
+.shirt-lib__status-pill--AWAITING_REVIEW {
+  color: #f4d03f;
+  border-color: #f4d03f;
+}
+.shirt-lib__status-pill--DRAFT {
+  color: #aab;
+}
+.shirt-lib__status-pill--CHANGES_REQUIRED,
+.shirt-lib__status-pill--REJECTED {
+  color: #f1948a;
+  border-color: #f1948a;
+}
+.shirt-lib__status-pill--ARCHIVED,
+.shirt-lib__status-pill--NOT_CREATED {
+  color: #889;
+}
+
+.shirt-lib__progress {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 1rem 0;
+}
+
+.shirt-lib__progress-item {
+  padding: 0.75rem;
+  border: 1px solid var(--sl-border);
+  border-radius: 8px;
+  background: var(--sl-card);
+}
+
+.shirt-lib__progress-item strong {
+  display: block;
+  font-size: 1.35rem;
+}
+
+.shirt-lib__team-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.shirt-lib__team-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.4fr) repeat(3, minmax(90px, 1fr)) minmax(120px, 1.1fr);
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--sl-border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--sl-card);
+}
+
+.shirt-lib__team-row:hover {
+  border-color: var(--pr-gold, #c9a227);
+}
+
+.shirt-lib__shirt-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.shirt-lib__card {
+  border: 1px solid var(--sl-border);
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--sl-card);
+}
+
+.shirt-lib__card-previews {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+
+.shirt-pitch-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 88px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.shirt-lib__editor-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+}
+
+@media (max-width: 800px) {
+  .shirt-lib__team-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .shirt-lib__editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shirt-lib__colour-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.shirt-lib__colour-row input[type="color"] {
+  width: 42px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}

@@ -7,18 +7,24 @@ export function PlayerProfileLink({
   externalId,
   context,
   className,
+  /** Prefer this slug when already resolved (e.g. POTM from CMS player id). */
+  slug,
 }: {
   name: string;
   externalId?: string | null;
   context: MatchEntityContext;
   className?: string;
+  slug?: string | null;
 }) {
-  const link = lookupPlayerLink(context, { externalId, name });
-  if (!link) {
+  const resolvedSlug = slug?.trim() || lookupPlayerLink(context, { externalId, name })?.slug;
+  if (!resolvedSlug) {
     return <span className={className}>{name}</span>;
   }
   return (
-    <Link href={`/players/${link.slug}`} className={`match-entity-link${className ? ` ${className}` : ""}`}>
+    <Link
+      href={`/players/${resolvedSlug}`}
+      className={`match-entity-link${className ? ` ${className}` : ""}`}
+    >
       {name}
     </Link>
   );
