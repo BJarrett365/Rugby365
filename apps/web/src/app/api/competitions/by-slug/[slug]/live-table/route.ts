@@ -8,6 +8,7 @@ import { findFixtureBySdmsMatchId } from "@/lib/fixture-admin-service";
 import { syncFixtureLiveStateFromSdms } from "@/lib/fixture-live-score-sync";
 import { calculateRugbyTable } from "@/lib/table-lab/table-calculation-service";
 import { enrichNationsChampionshipResult } from "@/lib/table-lab/table-hemisphere-service";
+import { enrichWorldCupPoolResult } from "@/lib/table-lab/table-pool-service";
 import type { RugbyTableView } from "@/lib/table-lab/table-types";
 
 function resolveSeasonId(
@@ -82,7 +83,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       includeScheduledMatches: false,
       showMovement: true,
     });
-    const enriched = await enrichNationsChampionshipResult(result, competition.id);
+    const withHemisphere = await enrichNationsChampionshipResult(result, competition.id);
+    const enriched = await enrichWorldCupPoolResult(withHemisphere, {
+      competitionId: competition.id,
+      seasonYear: season?.year,
+      seasonLabel: season?.label,
+    });
 
     return NextResponse.json({
       competition: { id: competition.id, slug: competition.slug, name: competition.name },

@@ -16,6 +16,11 @@ import {
   LEADERBOARD_VALUE_LABELS,
   teamCodeForLeaderboard,
 } from "./competition-player-stat-display";
+import { isJunkPlayerName, normalizePlayerName } from "./entity-normalize";
+import {
+  ESTIMATOR_PROVIDER,
+  RWC_ESTIMATION_SEASON_NOTE,
+} from "./rwc-historical-stat-estimator";
 
 export type LeaderboardMetric =
   | "points"
@@ -75,6 +80,8 @@ export type CompetitionPlayerStatsPayload = {
     playerCount: number;
     rowCount: number;
   };
+  /** Present when advanced boards include AI algorithm estimates for this season. */
+  estimationNote: string | null;
 };
 
 const PRIMARY_BOARDS: Array<{ metric: LeaderboardMetric; label: string }> = [
@@ -118,7 +125,38 @@ type AggregatedPlayer = {
   dominantTackles: number;
   postContactMetres: number;
   hemisphere: "northern" | "southern" | null;
+  /** Internal merge state — stripped before boards are built. */
+  _scoring?: {
+    wikiPoints: number;
+    wikiTries: number;
+    sdmsPoints: number;
+    sdmsTries: number;
+    matchPoints: number;
+    matchTries: number;
+  };
+  _advanced?: {
+    confirmed: Partial<Record<LeaderboardMetric, number>>;
+    estimated: Partial<Record<LeaderboardMetric, number>>;
+  };
 };
+
+const AUTHORITATIVE_PROVIDERS = new Set([
+  "sdms",
+  "opta_published_leaderboard",
+  "wikipedia_statistics",
+]);
+
+const ADVANCED_METRICS = [
+  "tacklesCompleted",
+  "metresCarried",
+  "carries",
+  "tryAssists",
+  "defendersBeaten",
+  "lineBreaks",
+  "turnoversWon",
+  "dominantTackles",
+  "postContactMetres",
+] as const satisfies readonly LeaderboardMetric[];
 
 function emptyAgg(
   base: Omit<
@@ -136,7 +174,10 @@ function emptyAgg(
     | "turnoversWon"
     | "dominantTackles"
     | "postContactMetres"
-  >,
+    | "hemisphere"
+    | "_scoring"
+    | "_advanced"
+  > & { hemisphere: "northern" | "southern" | null },
 ): AggregatedPlayer {
   return {
     ...base,
@@ -153,7 +194,30 @@ function emptyAgg(
     turnoversWon: 0,
     dominantTackles: 0,
     postContactMetres: 0,
+    _scoring: {
+      wikiPoints: 0,
+      wikiTries: 0,
+      sdmsPoints: 0,
+      sdmsTries: 0,
+      matchPoints: 0,
+      matchTries: 0,
+    },
+    _advanced: { confirmed: {}, estimated: {} },
   };
+}
+
+function advancedMetricValue(row: {
+  tacklesCompleted: number | null;
+  metresCarried: number | null;
+  carries: number | null;
+  tryAssists: number | null;
+  defendersBeaten: number | null;
+  lineBreaks: number | null;
+  turnoversWon: number | null;
+  dominantTackles: number | null;
+  postContactMetres: number | null;
+}, metric: (typeof ADVANCED_METRICS)[number]): number {
+  return row[metric] ?? 0;
 }
 
 function metricValue(row: AggregatedPlayer, metric: LeaderboardMetric): number {
@@ -236,10 +300,24 @@ export async function getCompetitionPlayerStatsBySlug(
     await syncDomesticSeasonCatalog(competition.id);
   }
 
-  const { seasons, season } = await resolveSeasonForCompetition(
+  const { seasons, season: resolvedSeason } = await resolveSeasonForCompetition(
     competition.id,
     options.seasonLabel,
   );
+
+  // Future "active" RWC seasons (e.g. 2027) have empty boards and wipe the UI after load.
+  // Prefer a completed tournament unless the caller asked for a specific season.
+  let season = resolvedSeason;
+  if (!options.seasonLabel?.trim() && competition.slug === "rugby-world-cup") {
+    const nowYear = new Date().getFullYear();
+    season =
+      seasons.find((s) => s.year === 1987) ??
+      seasons.find((s) => s.isActive && (s.year ?? 0) <= nowYear) ??
+      [...seasons]
+        .filter((s) => (s.year ?? 0) > 0 && (s.year ?? 0) <= nowYear)
+        .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0] ??
+      resolvedSeason;
+  }
   const supportsHemisphereFilter = isNationsChampionshipSlug(competition.slug);
   const hemisphereFilter: HemisphereFilter =
     supportsHemisphereFilter && options.hemisphere
@@ -269,6 +347,7 @@ export async function getCompetitionPlayerStatsBySlug(
         entries: [],
       })),
       coverage: { playerCount: 0, rowCount: 0 },
+      estimationNote: null,
     };
   }
 
@@ -283,6 +362,7 @@ export async function getCompetitionPlayerStatsBySlug(
     teamSlug: teams.slug,
     teamShortName: teams.shortName,
     teamImageUrl: teams.imageUrl,
+    sourceProvider: playerMatchPerformanceStats.sourceProvider,
     minutesPlayed: playerMatchPerformanceStats.minutesPlayed,
     points: playerMatchPerformanceStats.points,
     tries: playerMatchPerformanceStats.tries,
@@ -322,15 +402,31 @@ export async function getCompetitionPlayerStatsBySlug(
           .where(eq(playerMatchPerformanceStats.competitionId, competition.id));
 
   const sourceRows = rows.length > 0 ? rows : fallbackRows;
+
+  const [estimateHit] = await db
+    .select({ id: playerMatchPerformanceStats.id })
+    .from(playerMatchPerformanceStats)
+    .where(
+      and(
+        eq(playerMatchPerformanceStats.competitionId, competition.id),
+        eq(playerMatchPerformanceStats.seasonId, season.id),
+        eq(playerMatchPerformanceStats.sourceProvider, ESTIMATOR_PROVIDER),
+      ),
+    )
+    .limit(1);
+
   const buckets = new Map<string, AggregatedPlayer>();
 
   for (const row of sourceRows) {
+    if (isJunkPlayerName(row.playerName)) continue;
+    const displayName = normalizePlayerName(row.playerName) || row.playerName;
+
     const key = `${row.playerId}:${row.teamId}`;
     const existing =
       buckets.get(key) ??
       emptyAgg({
         playerId: row.playerId,
-        playerName: row.playerName,
+        playerName: displayName,
         playerSlug: row.playerSlug,
         playerImageUrl: row.playerImageUrl,
         teamId: row.teamId,
@@ -341,23 +437,81 @@ export async function getCompetitionPlayerStatsBySlug(
         hemisphere: nationsChampionshipHemisphereForTeam(row.teamName),
       });
 
-    existing.appearances += 1;
-    existing.minutesPlayed += row.minutesPlayed ?? 0;
-    existing.points += row.points ?? 0;
-    existing.tries += row.tries ?? 0;
-    existing.tacklesCompleted += row.tacklesCompleted ?? 0;
-    existing.metresCarried += row.metresCarried ?? 0;
-    existing.carries += row.carries ?? 0;
-    existing.tryAssists += row.tryAssists ?? 0;
-    existing.defendersBeaten += row.defendersBeaten ?? 0;
-    existing.lineBreaks += row.lineBreaks ?? 0;
-    existing.turnoversWon += row.turnoversWon ?? 0;
-    existing.dominantTackles += row.dominantTackles ?? 0;
-    existing.postContactMetres += row.postContactMetres ?? 0;
+    const provider = row.sourceProvider ?? "";
+    const isWiki = provider === "wikipedia_statistics";
+    const isAuthoritative = AUTHORITATIVE_PROVIDERS.has(provider);
+    const isEstimate = provider === ESTIMATOR_PROVIDER;
+
+    // Appearances / minutes: count match-level rows only (skip seed fixtures providers).
+    if (!isWiki && provider !== "opta_published_leaderboard") {
+      existing.appearances += 1;
+      existing.minutesPlayed += row.minutesPlayed ?? 0;
+    }
+
+    const scoring = existing._scoring!;
+    if (isWiki) {
+      scoring.wikiPoints += row.points ?? 0;
+      scoring.wikiTries += row.tries ?? 0;
+    } else if (provider === "sdms") {
+      // Prefer SDMS scoring alone — never sum with fixture_players twins.
+      scoring.sdmsPoints += row.points ?? 0;
+      scoring.sdmsTries += row.tries ?? 0;
+    } else if (!isAuthoritative) {
+      // Match-level rows (estimates / fixture_players / scoring_events).
+      scoring.matchPoints += row.points ?? 0;
+      scoring.matchTries += row.tries ?? 0;
+    }
+
+    const advanced = existing._advanced!;
+    for (const metric of ADVANCED_METRICS) {
+      const value = advancedMetricValue(row, metric);
+      if (value <= 0) continue;
+      if (isAuthoritative) {
+        // Opta / SDMS / Wikipedia confirmed advanced — prefer over estimates.
+        // Season-seed rows are tournament totals (take max); match SDMS rows sum.
+        if (isWiki || provider === "opta_published_leaderboard") {
+          advanced.confirmed[metric] = Math.max(advanced.confirmed[metric] ?? 0, value);
+        } else {
+          advanced.confirmed[metric] = (advanced.confirmed[metric] ?? 0) + value;
+        }
+      } else if (
+        isEstimate ||
+        provider === "fixture_players" ||
+        provider === "scoring_events"
+      ) {
+        advanced.estimated[metric] = (advanced.estimated[metric] ?? 0) + value;
+      }
+    }
+
     buckets.set(key, existing);
   }
 
-  let aggregated = [...buckets.values()];
+  let aggregated = [...buckets.values()].map((row) => {
+    const scoring = row._scoring!;
+    const advanced = row._advanced!;
+    // Prefer Wikipedia season totals, then SDMS match sums, then other match rows.
+    // Never combine SDMS + fixture_players (duplicate fixtures inflate scores).
+    row.points =
+      scoring.wikiPoints > 0
+        ? scoring.wikiPoints
+        : scoring.sdmsPoints > 0
+          ? scoring.sdmsPoints
+          : scoring.matchPoints;
+    row.tries =
+      scoring.wikiTries > 0
+        ? scoring.wikiTries
+        : scoring.sdmsTries > 0
+          ? scoring.sdmsTries
+          : scoring.matchTries;
+    for (const metric of ADVANCED_METRICS) {
+      const confirmed = advanced.confirmed[metric] ?? 0;
+      const estimated = advanced.estimated[metric] ?? 0;
+      row[metric] = confirmed > 0 ? confirmed : estimated;
+    }
+    delete row._scoring;
+    delete row._advanced;
+    return row;
+  });
   if (supportsHemisphereFilter && hemisphereFilter !== "all") {
     aggregated = aggregated.filter((row) => row.hemisphere === hemisphereFilter);
   }
@@ -387,5 +541,6 @@ export async function getCompetitionPlayerStatsBySlug(
       playerCount: aggregated.length,
       rowCount: sourceRows.length,
     },
+    estimationNote: estimateHit ? RWC_ESTIMATION_SEASON_NOTE : null,
   };
 }

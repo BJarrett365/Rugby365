@@ -1,0 +1,17 @@
+{
+  "competitionId": 361,
+  "competitionName": "Rugby World Cup",
+  "season": 1991,
+  "teamCount": 16,
+  "startDate": "3rd Oct 1991",
+  "endDate": "2nd Nov 1991",
+  "games": 32,
+  "sourceUrls": {
+    "hub": "https://www.rugbydatabase.co.uk/competition/index.php?competitionId=361",
+    "games": "https://www.rugbydatabase.co.uk/recurring-competitions/competition-games.php?competitionGroupId=1&competitionId=361",
+    "conferences": "https://www.rugbydatabase.co.uk/competition/conferences.php?competitionId=361",
+    "draw": "https://www.rugbydatabase.co.uk/competition/draw.php?competitionId=361",
+    "wikipedia": "https://en.wikipedia.org/wiki/1991_Rugby_World_Cup"
+  },
+  "scrapedAt": "2026-08-04T15:22:41.626Z"
+}

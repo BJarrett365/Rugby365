@@ -17,7 +17,6 @@ import { and, asc, eq, inArray, or } from "drizzle-orm";
 import {
   competitions,
   competitionSeasons,
-  fixturePlayers,
   fixtures,
   matchEvents,
   players,
@@ -32,7 +31,6 @@ import { buildMatchEntityContext, type MatchEntityContext } from "./entity-looku
 import { findFixtureBySdmsMatchId, getFixtureById } from "./fixture-admin-service";
 import { resolveReferee } from "./entity-admin-service";
 import {
-  calculateAndPersistFixtureStaffMatchRatings,
   listStaffMatchRatingsForFixture,
   type StaffMatchRatingDisplay,
 } from "./staff-match-rating-service";
@@ -47,13 +45,11 @@ import {
 } from "./fixture-broadcasters-service";
 import {
   listFixtureSquadPlayerIds,
-  syncSdmsMatchEntityLinks,
-  ensureSdmsProvidersRegistered,
+  ensureSdmsTeamsRegistered,
 } from "./match-entity-sync-service";
 import { syncFixtureLiveStateFromSdms } from "./fixture-live-score-sync";
 import { isLiveFixtureStatus } from "./table-lab/live-table-service";
 import {
-  attachCareerAndFormToLineupRatings,
   calculateAndPersistFixtureMatchRatings,
   listMatchRatingsForFixture,
   type FixtureMatchRatingsBundle,
@@ -61,7 +57,6 @@ import {
 } from "./match-rating-service";
 import { autoImportSdmsMatchToCms } from "./sdms-auto-import-service";
 import { isFixtureRatingsPublished } from "./match-rating-math";
-import type { CmsEntityLink } from "./match-entity-context";
 import type { MatchTableContext } from "./match-table-context";
 import { resolveTeamCrestImageUrl } from "./crest-library-service";
 import { resolveApprovedTeamShirt } from "./shirt-library-service";
@@ -312,15 +307,53 @@ async function resolveCompetitionExternalId(
   return code && !/^\d+$/.test(code) ? code : null;
 }
 
-export async function getMatchDetailForPage(matchId: string): Promise<MatchDetailPageData | null> {
-  const [detail, lineupsRaw, matchStats, playerStats, previousMeetings, headToHead] = await Promise.all([
-    fetchSdmsMatchDetail(matchId),
-    fetchSdmsLineups(matchId),
-    fetchSdmsMatchStats(matchId),
-    fetchSdmsMatchPlayerStats(matchId),
-    fetchSdmsPreviousMeetings(matchId),
-    fetchSdmsHeadToHead(matchId),
+export async function getMatchDetailForPage(
+  matchId: string,
+  options: { tab?: string } = {},
+): Promise<MatchDetailPageData | null> {
+  const __t0 = performance.now();
+  const __mark = (label: string) => {
+    if (process.env.MATCH_DETAIL_PROFILE === "1") {
+      console.log(`[match-detail ${matchId}] ${label}: ${(performance.now() - __t0).toFixed(0)}ms`);
+    }
+  };
+  // Soft navigation RSC flights abort around ~10–15s under load. Keep the page
+  // budget under that so Link clicks never surface as "network error".
+  const PAGE_MS = 4_000;
+  const SECONDARY_MS = 2_500;
+  const tab = (options.tab ?? "details").toLowerCase();
+  const needPlayerStats = tab === "player-stats" || tab === "stats";
+  const needMeetings = tab === "head-to-head" || tab === "betting";
+
+  // Player-stat category fan-out (10 SDMS calls) raced with a short budget so it
+  // cannot stall Match Centre / trigger Next.js client "network error".
+  const emptyPlayerStats = {
+    home: { attack: null, defend: null, kicking: null, errors: null, carries: null },
+    away: { attack: null, defend: null, kicking: null, errors: null, carries: null },
+  } as Awaited<ReturnType<typeof fetchSdmsMatchPlayerStats>>;
+
+  const playerStatsPromise = needPlayerStats
+    ? Promise.race([
+        fetchSdmsMatchPlayerStats(matchId, { timeoutMs: SECONDARY_MS }),
+        new Promise<typeof emptyPlayerStats>((resolve) =>
+          setTimeout(() => resolve(emptyPlayerStats), 1_500),
+        ),
+      ])
+    : Promise.resolve(emptyPlayerStats);
+
+  const [detail, lineupsRaw, matchStats, previousMeetings, headToHead, playerStats] = await Promise.all([
+    fetchSdmsMatchDetail(matchId, { timeoutMs: PAGE_MS }),
+    fetchSdmsLineups(matchId, { timeoutMs: SECONDARY_MS }),
+    fetchSdmsMatchStats(matchId, { timeoutMs: SECONDARY_MS }),
+    needMeetings
+      ? fetchSdmsPreviousMeetings(matchId, { timeoutMs: SECONDARY_MS })
+      : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsPreviousMeetings>>),
+    needMeetings
+      ? fetchSdmsHeadToHead(matchId, { timeoutMs: SECONDARY_MS })
+      : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsHeadToHead>>),
+    playerStatsPromise,
   ]);
+  __mark("sdms");
   if (!detail) return null;
 
   if (previousMeetings.length > 0) {
@@ -340,39 +373,50 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       )
     : null;
 
-  try {
-    await ensureSdmsProvidersRegistered(detail, lineups);
-  } catch (error) {
-    // Entity registration must never blank the Match Centre (e.g. concurrent player insert races).
-    console.warn(
-      `[match-detail] ensureSdmsProvidersRegistered failed for ${matchId}:`,
-      error instanceof Error ? error.message : error,
-    );
-  }
-
   let cmsFixtureRow = await findFixtureBySdmsMatchId(matchId);
+  __mark("findFixture");
   let entitySyncRan = false;
   let autoImported = false;
 
+  // Only upsert teams when this match isn't linked yet — avoid ~400ms DB round-trips
+  // on every soft-nav into an already-imported fixture.
+  if (!cmsFixtureRow?.homeTeamId || !cmsFixtureRow?.awayTeamId) {
+    try {
+      await ensureSdmsTeamsRegistered(detail);
+    } catch (error) {
+      console.warn(
+        `[match-detail] ensureSdmsTeamsRegistered failed for ${matchId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
   if (!cmsFixtureRow) {
     try {
-      const imported = await autoImportSdmsMatchToCms(matchId, detail);
-      cmsFixtureRow =
-        (await findFixtureBySdmsMatchId(matchId)) ??
-        (await getFixtureById(imported.fixtureId)) ??
-        null;
-      entitySyncRan = imported.enriched;
-      autoImported = imported.created;
+      // Auto-import can fan out into entity sync — never let it blow the RSC budget.
+      const imported = await Promise.race([
+        autoImportSdmsMatchToCms(matchId, detail),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3_000)),
+      ]);
+      if (imported) {
+        cmsFixtureRow =
+          (await findFixtureBySdmsMatchId(matchId)) ??
+          (await getFixtureById(imported.fixtureId)) ??
+          null;
+        entitySyncRan = imported.enriched;
+        autoImported = imported.created;
+      } else {
+        cmsFixtureRow = await findFixtureBySdmsMatchId(matchId);
+      }
     } catch (error) {
       console.warn(
         `[match-detail] auto-import failed for ${matchId}:`,
         error instanceof Error ? error.message : error,
       );
     }
-  } else {
+  } else if (isLiveFixtureStatus(cmsFixtureRow.status) || isLiveFixtureStatus(detail.status)) {
     try {
-      // Always push live score/clock into CMS so Live Table matches the header.
-      // Full entity sync stays throttled separately.
+      // Live score/clock only — finished matches skip this write on every page hit.
       await syncFixtureLiveStateFromSdms(cmsFixtureRow.id, detail);
     } catch (error) {
       console.warn(
@@ -380,18 +424,138 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
         error instanceof Error ? error.message : error,
       );
     }
-    try {
-      const sync = await syncSdmsMatchEntityLinks(cmsFixtureRow.id, matchId);
-      entitySyncRan = sync.synced;
-    } catch (error) {
-      console.warn(
-        `[match-detail] entity sync failed for ${matchId}:`,
-        error instanceof Error ? error.message : error,
-      );
-    }
+    // Do not re-enrich squads/events on public page render — that waits on Planet SDMS
+    // and was saturating the Next server (client "network error" / 30–60s hangs).
+    // Use Admin enrich / background jobs for deep sync.
   }
 
-  const competitionExternalId = await resolveCompetitionExternalId(detail, cmsFixtureRow);
+  const competitionExternalIdPromise = resolveCompetitionExternalId(detail, cmsFixtureRow);
+  const squadPlayerIdsPromise = cmsFixtureRow
+    ? listFixtureSquadPlayerIds(cmsFixtureRow.id)
+    : Promise.resolve([] as string[]);
+  const ratingsPromise = cmsFixtureRow
+    ? listMatchRatingsForFixture(cmsFixtureRow.id).catch(
+        () =>
+          ({
+            fixtureId: cmsFixtureRow.id,
+            ratings: [],
+            rugby365PotmPlayerId: null,
+            officialPotmPlayerId: null,
+            officialPotmName: null,
+          }) satisfies FixtureMatchRatingsBundle,
+      )
+    : Promise.resolve({
+        fixtureId: "",
+        ratings: [],
+        rugby365PotmPlayerId: null,
+        officialPotmPlayerId: null,
+        officialPotmName: null,
+      } satisfies FixtureMatchRatingsBundle);
+  const coachesPromise =
+    cmsFixtureRow != null
+      ? Promise.race([
+          ensureFixtureMatchCoaches(cmsFixtureRow.id).catch(() => undefined),
+          new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
+        ])
+      : Promise.resolve();
+  const fixturePromise = cmsFixtureRow ? getFixtureById(cmsFixtureRow.id) : Promise.resolve(null);
+  const staffPromise = cmsFixtureRow
+    ? listStaffMatchRatingsForFixture(cmsFixtureRow.id)
+    : Promise.resolve(null);
+  const tableContextPromise = resolveMatchTableContext(detail, cmsFixtureRow);
+  const bonusPromise = cmsFixtureRow
+    ? getFixtureBonusPoints(cmsFixtureRow.id).catch(() => null)
+    : Promise.resolve(null);
+  const eventsPromise = cmsFixtureRow
+    ? Promise.resolve(
+        getDb()
+          .select({
+            id: matchEvents.id,
+            minute: matchEvents.minute,
+            second: matchEvents.second,
+            eventType: matchEvents.eventType,
+            teamId: matchEvents.teamId,
+            playerId: matchEvents.playerId,
+            payload: matchEvents.payload,
+          })
+          .from(matchEvents)
+          .where(eq(matchEvents.fixtureId, cmsFixtureRow.id))
+          .orderBy(asc(matchEvents.sequenceNo), asc(matchEvents.minute), asc(matchEvents.second)),
+      ).catch(
+        () =>
+          [] as Array<{
+            id: string;
+            minute: number | null;
+            second: number | null;
+            eventType: string;
+            teamId: string | null;
+            playerId: string | null;
+            payload: unknown;
+          }>,
+      )
+    : Promise.resolve(
+        [] as Array<{
+          id: string;
+          minute: number | null;
+          second: number | null;
+          eventType: string;
+          teamId: string | null;
+          playerId: string | null;
+          payload: unknown;
+        }>,
+      );
+  const broadcastersPromise = cmsFixtureRow
+    ? listFixtureBroadcasters(cmsFixtureRow.id).catch(() => [])
+    : Promise.resolve([]);
+  const kitsPromise = Promise.race([
+    Promise.all([
+      resolveMatchLineupKit({
+        teamId: cmsFixtureRow?.homeTeamId,
+        teamName: detail.home_team_name,
+        competitionId: cmsFixtureRow?.competitionId,
+        seasonId: cmsFixtureRow?.seasonId,
+        matchId: cmsFixtureRow?.id,
+        kitType: "HOME",
+      }),
+      resolveMatchLineupKit({
+        teamId: cmsFixtureRow?.awayTeamId,
+        teamName: detail.away_team_name,
+        competitionId: cmsFixtureRow?.competitionId,
+        seasonId: cmsFixtureRow?.seasonId,
+        matchId: cmsFixtureRow?.id,
+        kitType: "HOME",
+      }),
+    ]),
+    new Promise<[null, null]>((resolve) => setTimeout(() => resolve([null, null]), 700)),
+  ]);
+
+  const [
+    competitionExternalId,
+    squadPlayerIds,
+    ratingsListed,
+    ,
+    tableContext,
+    fixtureLoaded,
+    staffLoaded,
+    bonusResult,
+    cmsEventRows,
+    broadcasterRows,
+    kitPair,
+  ] = await Promise.all([
+    competitionExternalIdPromise,
+    squadPlayerIdsPromise,
+    ratingsPromise,
+    coachesPromise,
+    tableContextPromise,
+    fixturePromise,
+    staffPromise,
+    bonusPromise,
+    eventsPromise,
+    broadcastersPromise,
+    kitsPromise,
+  ]);
+  __mark("cms-parallel");
+
   const planetRugbyUrl =
     (cmsFixtureRow?.planetRugbyUrl &&
     !/\/matches\/[^/]+\/[^/]+\/\d+\//.test(cmsFixtureRow.planetRugbyUrl)
@@ -409,35 +573,30 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       match_date: detail.date,
     });
 
-  const squadPlayerIds = cmsFixtureRow ? await listFixtureSquadPlayerIds(cmsFixtureRow.id) : [];
-
   const entities = await buildMatchEntityContext({
     detail,
     lineups,
     playerStats,
     squadPlayerIds,
   });
+  __mark("entities");
 
-  let ratingsBundle: FixtureMatchRatingsBundle = {
-    fixtureId: cmsFixtureRow?.id ?? "",
-    ratings: [],
-    rugby365PotmPlayerId: null,
-    officialPotmPlayerId: null,
-    officialPotmName: null,
-  };
-
+  let ratingsBundle: FixtureMatchRatingsBundle = ratingsListed;
   const fixtureStatus = cmsFixtureRow?.status ?? detail.status ?? "";
   const ratingsPublished = isFixtureRatingsPublished(fixtureStatus);
 
-  if (cmsFixtureRow && ratingsPublished) {
+  if (cmsFixtureRow && ratingsPublished && ratingsBundle.ratings.length === 0) {
     try {
-      // Ensure lineup ratings exist from stored match stats (no separate display formula).
-      await calculateAndPersistFixtureMatchRatings(cmsFixtureRow.id);
+      await Promise.race([
+        calculateAndPersistFixtureMatchRatings(cmsFixtureRow.id),
+        new Promise<void>((resolve) => setTimeout(resolve, 2_000)),
+      ]);
+      ratingsBundle = await listMatchRatingsForFixture(cmsFixtureRow.id);
     } catch {
-      // Ratings are best-effort on page load; listing still works if rows exist.
+      /* keep empty */
     }
-    ratingsBundle = await listMatchRatingsForFixture(cmsFixtureRow.id);
   }
+  __mark("ratings");
 
   const rugby365PotmName = ratingsPublished
     ? (ratingsBundle.ratings.find((r) => r.isRugby365Potm)?.playerName ??
@@ -483,89 +642,10 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
     ? (potmSlugById.get(officialPotmPlayerId) ?? null)
     : null;
 
-  let matchRatings: MatchRatingDisplay[] = [];
-  if (ratingsPublished) {
-    const playerLinksById = new Map<string, CmsEntityLink>();
-    for (const link of Object.values(entities.playersByExternalId)) {
-      playerLinksById.set(link.id, link);
-    }
-    for (const link of Object.values(entities.playersByName)) {
-      playerLinksById.set(link.id, link);
-    }
-    const unresolvedSquadIds = squadPlayerIds.filter((id) => !playerLinksById.has(id));
-    if (unresolvedSquadIds.length > 0) {
-      const db = getDb();
-      const rows = await db
-        .select({
-          id: players.id,
-          slug: players.slug,
-          name: players.name,
-          externalProviderId: players.externalProviderId,
-        })
-        .from(players)
-        .where(inArray(players.id, unresolvedSquadIds));
-      for (const row of rows) {
-        playerLinksById.set(row.id, {
-          id: row.id,
-          slug: row.slug,
-          name: row.name,
-          externalProviderId: row.externalProviderId,
-        });
-      }
-    }
-    const squadByPlayerId = new Map<
-      string,
-      {
-        teamId: string;
-        jerseyNumber: number | null;
-        squadRole: string | null;
-        positionName: string | null;
-      }
-    >();
-    if (cmsFixtureRow) {
-      const squadRows = await getDb()
-        .select({
-          playerId: fixturePlayers.playerId,
-          teamId: fixturePlayers.teamId,
-          jerseyNumber: fixturePlayers.jerseyNumber,
-          squadRole: fixturePlayers.squadRole,
-          positionName: fixturePlayers.positionName,
-        })
-        .from(fixturePlayers)
-        .where(eq(fixturePlayers.fixtureId, cmsFixtureRow.id));
-      for (const row of squadRows) {
-        squadByPlayerId.set(row.playerId, {
-          teamId: row.teamId,
-          jerseyNumber: row.jerseyNumber,
-          squadRole: row.squadRole,
-          positionName: row.positionName,
-        });
-      }
-    }
+  const matchRatings: MatchRatingDisplay[] = ratingsPublished ? ratingsBundle.ratings : [];
 
-    matchRatings = await attachCareerAndFormToLineupRatings(
-      ratingsBundle.ratings,
-      [...playerLinksById.values()],
-      squadByPlayerId,
-    );
-  }
-
-  const tableContext = await resolveMatchTableContext(detail, cmsFixtureRow);
-
-  // Ensure coaches are linked (staff rows + curated head-coach defaults) for the header.
-  if (cmsFixtureRow) {
-    try {
-      await ensureFixtureMatchCoaches(cmsFixtureRow.id);
-    } catch {
-      // non-blocking
-    }
-  }
-
-  // Reload after match/staff rating calc so coach/ref FKs + ratings are fresh.
-  let fixtureWithStaff = cmsFixtureRow ? await getFixtureById(cmsFixtureRow.id) : null;
-  let staffBundle = cmsFixtureRow
-    ? await listStaffMatchRatingsForFixture(cmsFixtureRow.id)
-    : null;
+  let fixtureWithStaff = fixtureLoaded;
+  let staffBundle = staffLoaded;
 
   let venue: MatchVenueLink | null = fixtureWithStaff?.venue
     ? {
@@ -621,57 +701,26 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
           ? fixtureWithStaff.kickoffAt
           : null) ??
         sdmsScheduleKickoffIso(detail.date, detail.time);
-      venue = {
-        ...venue,
-        weather: await resolveWeatherForVenueId({
-          venueId: venue.id,
-          kickoffAt: kickoffIso,
-          geocodeIfMissing: true,
-        }),
-      };
+      // Never geocode during Match Centre render — that external call was adding
+      // multi-second hangs and contributed to client "network error" timeouts.
+      const weatherPromise = resolveWeatherForVenueId({
+        venueId: venue.id,
+        kickoffAt: kickoffIso,
+        geocodeIfMissing: false,
+      });
+      const weather = await Promise.race([
+        weatherPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 300)),
+      ]);
+      venue = { ...venue, weather };
     } catch {
       // non-blocking
     }
   }
-
-  if (!fixtureWithStaff?.referee) {
-    const sdmsRef =
-      detail.referee?.find((r) => /referee/i.test(r.role)) ?? detail.referee?.[0] ?? null;
-    if (sdmsRef?.name && cmsFixtureRow) {
-      const resolved = await resolveReferee({
-        name: sdmsRef.name,
-        externalProviderId: sdmsRef.id || undefined,
-        createIfMissing: true,
-      });
-      if (resolved) {
-        try {
-          const db = getDb();
-          await db
-            .update(fixtures)
-            .set({
-              refereeId: resolved.id,
-              refereeName: resolved.name,
-            })
-            .where(eq(fixtures.id, cmsFixtureRow.id));
-          if (ratingsPublished) {
-            await calculateAndPersistFixtureStaffMatchRatings(cmsFixtureRow.id);
-          }
-          fixtureWithStaff = await getFixtureById(cmsFixtureRow.id);
-          staffBundle = await listStaffMatchRatingsForFixture(cmsFixtureRow.id);
-        } catch {
-          // non-blocking
-        }
-      }
-    }
-  }
+  __mark("venue+weather");
 
   const coachRating = (coachId: string | null | undefined) =>
     staffBundle?.coaches.find((c) => c.entityId === coachId) ?? null;
-
-  // Reload after coach ensure so newly linked Stormers / sponsor-alias coaches appear.
-  if (cmsFixtureRow) {
-    fixtureWithStaff = await getFixtureById(cmsFixtureRow.id);
-  }
 
   const homeCoach: MatchStaffLink | null = fixtureWithStaff?.homeCoach
     ? {
@@ -690,12 +739,44 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       }
     : null;
 
-  let bonusPoints: MatchBonusPoints | null = null;
-  if (cmsFixtureRow) {
-    try {
-      bonusPoints = await getFixtureBonusPoints(cmsFixtureRow.id);
-    } catch {
-      bonusPoints = null;
+  const bonusPoints: MatchBonusPoints | null = bonusResult;
+  let keyEvents: PublicKeyEvent[] = mapSdmsEventsToPublicKeyEvents(detail.key_events ?? []);
+  if (cmsEventRows.length > 0) {
+    keyEvents = mapCmsEventsToPublicKeyEvents(
+      cmsEventRows.map((r) => ({
+        ...r,
+        payload: (r.payload ?? {}) as Record<string, unknown>,
+      })),
+    );
+  }
+  const broadcasters: MatchDetailPageData["broadcasters"] = broadcasterRows.map((row) => ({
+    id: row.id,
+    label: formatBroadcasterLabel(row),
+    broadcasterName: row.broadcasterName,
+    channelName: row.channelName,
+    region: row.region,
+    platform: row.platform,
+    url: row.url,
+  }));
+
+  // Missing referee linking is admin/background work — do not block Match Centre.
+  if (!fixtureWithStaff?.referee && cmsFixtureRow) {
+    const sdmsRef =
+      detail.referee?.find((r) => /referee/i.test(r.role)) ?? detail.referee?.[0] ?? null;
+    if (sdmsRef?.name) {
+      void resolveReferee({
+        name: sdmsRef.name,
+        externalProviderId: sdmsRef.id || undefined,
+        createIfMissing: true,
+      })
+        .then(async (resolved) => {
+          if (!resolved || !cmsFixtureRow) return;
+          await getDb()
+            .update(fixtures)
+            .set({ refereeId: resolved.id, refereeName: resolved.name })
+            .where(eq(fixtures.id, cmsFixtureRow.id));
+        })
+        .catch(() => undefined);
     }
   }
 
@@ -708,73 +789,8 @@ export async function getMatchDetailForPage(matchId: string): Promise<MatchDetai
       }
     : null;
 
-  let keyEvents: PublicKeyEvent[] = mapSdmsEventsToPublicKeyEvents(detail.key_events ?? []);
-  if (cmsFixtureRow) {
-    try {
-      const cmsRows = await getDb()
-        .select({
-          id: matchEvents.id,
-          minute: matchEvents.minute,
-          second: matchEvents.second,
-          eventType: matchEvents.eventType,
-          teamId: matchEvents.teamId,
-          playerId: matchEvents.playerId,
-          payload: matchEvents.payload,
-        })
-        .from(matchEvents)
-        .where(eq(matchEvents.fixtureId, cmsFixtureRow.id))
-        .orderBy(asc(matchEvents.sequenceNo), asc(matchEvents.minute), asc(matchEvents.second));
-      if (cmsRows.length > 0) {
-        keyEvents = mapCmsEventsToPublicKeyEvents(
-          cmsRows.map((r) => ({
-            ...r,
-            payload: (r.payload ?? {}) as Record<string, unknown>,
-          })),
-        );
-      }
-    } catch {
-      /* keep SDMS-derived key events */
-    }
-  }
-
-  let broadcasters: MatchDetailPageData["broadcasters"] = [];
-  if (cmsFixtureRow?.id) {
-    try {
-      const rows = await listFixtureBroadcasters(cmsFixtureRow.id);
-      broadcasters = rows.map((row) => ({
-        id: row.id,
-        label: formatBroadcasterLabel(row),
-        broadcasterName: row.broadcasterName,
-        channelName: row.channelName,
-        region: row.region,
-        platform: row.platform,
-        url: row.url,
-      }));
-    } catch {
-      broadcasters = [];
-    }
-  }
-
-  const [homeKit, awayKit] = await Promise.all([
-    resolveMatchLineupKit({
-      teamId: cmsFixtureRow?.homeTeamId,
-      teamName: detail.home_team_name,
-      competitionId: cmsFixtureRow?.competitionId,
-      seasonId: cmsFixtureRow?.seasonId,
-      matchId: cmsFixtureRow?.id,
-      kitType: "HOME",
-    }),
-    // Currie Cup (and most domestic comps): away also defaults to HOME unless
-    // the fixture has an explicit away_team_kit_id (clash override).
-    resolveMatchLineupKit({
-      teamId: cmsFixtureRow?.awayTeamId,
-      teamName: detail.away_team_name,
-      competitionId: cmsFixtureRow?.competitionId,
-      seasonId: cmsFixtureRow?.seasonId,
-      matchId: cmsFixtureRow?.id,
-      kitType: "HOME",
-    }),
-  ]);
+  const [homeKit, awayKit] = kitPair;
+  __mark("done");
 
   return {
     detail,

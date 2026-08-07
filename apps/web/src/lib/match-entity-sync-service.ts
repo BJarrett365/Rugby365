@@ -13,26 +13,7 @@ export async function ensureSdmsProvidersRegistered(
   detail: SdmsMatchDetail,
   lineups: MappedLineups | null,
 ): Promise<void> {
-  await Promise.all([
-    detail.home_team_id
-      ? resolveTeam({
-          name: detail.home_team_name,
-          externalProviderId: detail.home_team_id,
-          createIfMissing: true,
-          sourceProvider: SDMS_PROVIDER,
-          imageUrl: detail.home_team_icon,
-        })
-      : Promise.resolve(null),
-    detail.away_team_id
-      ? resolveTeam({
-          name: detail.away_team_name,
-          externalProviderId: detail.away_team_id,
-          createIfMissing: true,
-          sourceProvider: SDMS_PROVIDER,
-          imageUrl: detail.away_team_icon,
-        })
-      : Promise.resolve(null),
-  ]);
+  await ensureSdmsTeamsRegistered(detail);
 
   if (!lineups) return;
 
@@ -55,6 +36,30 @@ export async function ensureSdmsProvidersRegistered(
       skipArchiveEnrich: true,
     });
   }
+}
+
+/** Fast path for Match Centre SSR — teams only (no sequential player upsert loop). */
+export async function ensureSdmsTeamsRegistered(detail: SdmsMatchDetail): Promise<void> {
+  await Promise.all([
+    detail.home_team_id
+      ? resolveTeam({
+          name: detail.home_team_name,
+          externalProviderId: detail.home_team_id,
+          createIfMissing: true,
+          sourceProvider: SDMS_PROVIDER,
+          imageUrl: detail.home_team_icon,
+        })
+      : Promise.resolve(null),
+    detail.away_team_id
+      ? resolveTeam({
+          name: detail.away_team_name,
+          externalProviderId: detail.away_team_id,
+          createIfMissing: true,
+          sourceProvider: SDMS_PROVIDER,
+          imageUrl: detail.away_team_icon,
+        })
+      : Promise.resolve(null),
+  ]);
 }
 
 /** Idempotent sync: squads, events, and player IDs for a CMS fixture from SDMS. */

@@ -1,0 +1,179 @@
+{
+  "year": 1991,
+  "sourceUrl": "https://en.wikipedia.org/wiki/1991_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-05T09:48:08.688Z",
+  "entries": [
+    {
+      "playerName": "David Campese",
+      "teamName": "Australia",
+      "points": 24,
+      "tries": 6,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jean-Baptiste Lafond",
+      "teamName": "France",
+      "points": 24,
+      "tries": 6,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Brian Robinson",
+      "teamName": "Ireland",
+      "points": 16,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Iwan Tukalo",
+      "teamName": "Scotland",
+      "points": 16,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rory Underwood",
+      "teamName": "England",
+      "points": 16,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tim Horan",
+      "teamName": "Australia",
+      "points": 16,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "John Timu",
+      "teamName": "New Zealand",
+      "points": 12,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Martín Terán",
+      "teamName": "Argentina",
+      "points": 12,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Terry Wright",
+      "teamName": "New Zealand",
+      "points": 12,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tony Stanger",
+      "teamName": "Scotland",
+      "points": 12,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ralph Keyes",
+      "teamName": "Ireland",
+      "points": 68,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 16,
+      "dropGoals": 2
+    },
+    {
+      "playerName": "Michael Lynagh",
+      "teamName": "Australia",
+      "points": 66,
+      "tries": 2,
+      "conversions": 11,
+      "penalties": 12,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gavin Hastings",
+      "teamName": "Scotland",
+      "points": 61,
+      "tries": 1,
+      "conversions": 9,
+      "penalties": 13,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jonathan Webb",
+      "teamName": "England",
+      "points": 56,
+      "tries": 1,
+      "conversions": 5,
+      "penalties": 14,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Grant Fox",
+      "teamName": "New Zealand",
+      "points": 44,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 10,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Didier Camberabero",
+      "teamName": "France",
+      "points": 32,
+      "tries": 1,
+      "conversions": 5,
+      "penalties": 6,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Diego Dominguez",
+      "teamName": "Italy",
+      "points": 29,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 5,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Takahiro Hosokawa",
+      "teamName": "Japan",
+      "points": 29,
+      "tries": 1,
+      "conversions": 8,
+      "penalties": 2,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Mathew Vaea",
+      "teamName": "Samoa",
+      "points": 25,
+      "tries": 0,
+      "conversions": 5,
+      "penalties": 5,
+      "dropGoals": 0
+    }
+  ],
+  "notes": []
+}

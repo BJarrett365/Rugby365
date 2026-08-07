@@ -148,9 +148,12 @@ export default function TeamsAdminPage() {
       <PageHeader
         eyebrow="CMS"
         title="Teams"
-        description="Manage national and club teams. Pick a competition (grouped International / Club / Provincial / Regional) and season."
+        description="Season-scoped team list by competition. For every club A–Z with search, use Clubs."
         actions={
           <div className="flex flex-wrap gap-2">
+            <Link href="/admin/clubs" className="cms-btn cms-btn--secondary touch-target">
+              All clubs A–Z
+            </Link>
             {duplicateRows > 0 ? (
               <button
                 type="button"

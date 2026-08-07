@@ -1,11 +1,11 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   parseWikipediaSeasonPage,
   type WikipediaFixtureRow,
   type WikipediaSeasonPageParse,
   type WikipediaStandingRow,
 } from "@rugby365/import-sdk";
-import { competitionSeasons, fixtures, standingRows, teams } from "@rugby365/db";
+import { commentarySuggestions, competitionSeasons, fixtures, matchEvents, standingRows, teams } from "@rugby365/db";
 import { getCompetitionBySlug, upsertSeason } from "./competition-admin-service";
 import { getDb } from "./db";
 import { resolveReferee } from "./entity-admin-service";
@@ -140,13 +140,15 @@ async function resolveSeasonTeam(
   createIfMissing: boolean,
   competitionSlug: string,
 ) {
-  const cleaned = name
+  const { parseWikiTeamLabel } = await import("@rugby365/import-sdk");
+  const fromWiki = parseWikiTeamLabel(name);
+  const cleaned = (fromWiki || name)
     .replace(/<\/?[^>]+>/g, " ")
     .replace(/\([^)]*\)/g, " ")
     .replace(/\b\d+(?:st|nd|rd|th)\s+title\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!cleaned || isJunkTeamName(cleaned)) return null;
+  if (!cleaned || isJunkTeamName(cleaned) || isJunkTeamName(name)) return null;
   const canonical =
     competitionSlug === "premiership"
       ? canonicalPremiershipTeamName(cleaned)
@@ -206,6 +208,65 @@ function pickBetterString(existing: string | null | undefined, incoming: string 
   return existing;
 }
 
+async function syncWikipediaScoringEvents(input: {
+  fixtureId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  events: NonNullable<WikipediaFixtureRow["scoringEvents"]>;
+  mode: "fill_missing" | "update_existing";
+}) {
+  if (!input.events.length) return;
+
+  const db = getDb();
+  const existingWiki = await db
+    .select({ id: matchEvents.id })
+    .from(matchEvents)
+    .where(
+      and(eq(matchEvents.fixtureId, input.fixtureId), eq(matchEvents.sourceProvider, WIKIPEDIA_SEASON_PROVIDER)),
+    );
+
+  if (existingWiki.length && input.mode === "fill_missing") return;
+
+  if (existingWiki.length) {
+    const ids = existingWiki.map((r) => r.id);
+    await db
+      .update(commentarySuggestions)
+      .set({ triggerEventId: null })
+      .where(inArray(commentarySuggestions.triggerEventId, ids));
+    await db.delete(matchEvents).where(inArray(matchEvents.id, ids));
+  }
+
+  const [last] = await db
+    .select({ sequenceNo: matchEvents.sequenceNo })
+    .from(matchEvents)
+    .where(eq(matchEvents.fixtureId, input.fixtureId))
+    .orderBy(desc(matchEvents.sequenceNo))
+    .limit(1);
+  let sequenceNo = last?.sequenceNo ?? 0;
+
+  const values = input.events.map((event) => {
+    sequenceNo += 1;
+    return {
+      fixtureId: input.fixtureId,
+      eventType: event.eventType,
+      minute: event.minute,
+      second: 0,
+      teamId: event.teamSide === "home" ? input.homeTeamId : input.awayTeamId,
+      playerId: null as string | null,
+      payload: {
+        playerName: event.playerName,
+        teamSide: event.teamSide,
+        ...(event.converted != null ? { converted: event.converted } : {}),
+        source: "wikipedia-rugby-box",
+      },
+      sourceProvider: WIKIPEDIA_SEASON_PROVIDER,
+      sequenceNo,
+    };
+  });
+
+  if (values.length) await db.insert(matchEvents).values(values);
+}
+
 async function upsertFixtureFromWiki(input: {
   row: WikipediaFixtureRow;
   competition: { id: string; name: string; slug: string };
@@ -242,7 +303,7 @@ async function upsertFixtureFromWiki(input: {
     const venue = await resolveVenue({
       name: input.row.venueName,
       teamId: homeTeam.id,
-      createIfMissing: false,
+      createIfMissing: true,
     });
     if (venue) {
       venueId = venue.id;
@@ -288,6 +349,16 @@ async function upsertFixtureFromWiki(input: {
 
   const db = getDb();
   const scoreReady = input.row.homeScore != null && input.row.awayScore != null;
+  const wikiSnapshot = {
+    pageTitle: input.pageTitle,
+    stage: input.row.stage,
+    round: input.row.round,
+    matchweek: input.row.matchweek,
+    source: "wikipedia-season-import",
+    scoringEvents: input.row.scoringEvents ?? [],
+  };
+
+  let fixtureId: string;
 
   if (existing) {
     const attendance =
@@ -312,6 +383,7 @@ async function upsertFixtureFromWiki(input: {
       round: pickBetterString(existing.round, input.row.round, input.mode),
       homeTeamId: homeTeam.id,
       awayTeamId: awayTeam.id,
+      additionalInfo: pickBetterString(existing.additionalInfo, input.row.notes, input.mode),
     });
 
     await db
@@ -333,63 +405,63 @@ async function upsertFixtureFromWiki(input: {
           : {}),
         venueName: existing.venueName ?? input.row.venueName,
         refereeName: existing.refereeName ?? input.row.refereeName,
+        additionalInfo: pickBetterString(existing.additionalInfo, input.row.notes, input.mode),
         providerSnapshot: {
           ...(typeof existing.providerSnapshot === "object" && existing.providerSnapshot
             ? (existing.providerSnapshot as object)
             : {}),
-          wikipedia: {
-            pageTitle: input.pageTitle,
-            stage: input.row.stage,
-            round: input.row.round,
-            matchweek: input.row.matchweek,
-            source: "wikipedia-season-import",
-          },
+          wikipedia: wikiSnapshot,
         },
       })
       .where(eq(fixtures.id, existing.id));
 
     input.counts.updated += 1;
-    return;
+    fixtureId = existing.id;
+  } else {
+    const created = await createFixture({
+      slug,
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+      competitionId: input.competition.id,
+      competitionName: input.competition.name,
+      kickoffAt: input.row.kickoffAt,
+      status: input.row.status,
+      externalMatchId,
+      venueId,
+      attendance: input.importAttendance ? input.row.attendance : null,
+      refereeId,
+      round: input.row.round,
+      additionalInfo: input.row.notes,
+    });
+
+    fixtureId = created!.id;
+
+    await db
+      .update(fixtures)
+      .set({
+        seasonId: input.seasonId,
+        stage: input.row.stage,
+        homeScore: input.row.homeScore ?? 0,
+        awayScore: input.row.awayScore ?? 0,
+        venueName: input.row.venueName,
+        refereeName: input.row.refereeName,
+        providerSnapshot: {
+          wikipedia: wikiSnapshot,
+        },
+      })
+      .where(eq(fixtures.id, fixtureId));
+
+    input.counts.created += 1;
+    if (input.importAttendance && input.row.attendance != null) input.attendanceCounts.created += 1;
   }
 
-  const created = await createFixture({
-    slug,
+  await syncWikipediaScoringEvents({
+    fixtureId,
     homeTeamId: homeTeam.id,
     awayTeamId: awayTeam.id,
-    competitionId: input.competition.id,
-    competitionName: input.competition.name,
-    kickoffAt: input.row.kickoffAt,
-    status: input.row.status,
-    externalMatchId,
-    venueId,
-    attendance: input.importAttendance ? input.row.attendance : null,
-    refereeId,
-    round: input.row.round,
+    events: input.row.scoringEvents ?? [],
+    mode: input.mode,
   });
-
-  await db
-    .update(fixtures)
-    .set({
-      seasonId: input.seasonId,
-      stage: input.row.stage,
-      homeScore: input.row.homeScore ?? 0,
-      awayScore: input.row.awayScore ?? 0,
-      venueName: input.row.venueName,
-      refereeName: input.row.refereeName,
-      providerSnapshot: {
-        wikipedia: {
-          pageTitle: input.pageTitle,
-          stage: input.row.stage,
-          round: input.row.round,
-          matchweek: input.row.matchweek,
-          source: "wikipedia-season-import",
-        },
-      },
-    })
-    .where(eq(fixtures.id, created!.id));
-
-  input.counts.created += 1;
-  if (input.importAttendance && input.row.attendance != null) input.attendanceCounts.created += 1;
 }
 
 /** Clamp wiki-parsed ints into PostgreSQL integer range (bad cells can explode). */
@@ -599,6 +671,12 @@ export async function importWikipediaSeasonPage(
     }
   }
 
+  // Wikipedia standings have no form column — derive W/D/L after fixtures land.
+  if (options.importTable !== false && (options.importFixtures !== false || options.importPlayoffs !== false)) {
+    const { recomputeStandingFormForSeason } = await import("./standing-form-recompute-service");
+    await recomputeStandingFormForSeason(season.id, { force: true });
+  }
+
   let championTeamId: string | null = null;
   const championName = parsed.championName;
   if (options.importWinner !== false && championName) {
@@ -718,6 +796,18 @@ export function rugbyWorldCupWikipediaSeasonUrls(): Array<{ startYear: number; u
   return RUGBY_WORLD_CUP_CHAMPIONS.filter((e) => e.wikipediaUrl).map((e) => ({
     startYear: e.startYear,
     url: e.wikipediaUrl!,
+    winner: e.winner,
+  }));
+}
+
+export function rugbyWorldCupWikipediaStatisticsUrls(): Array<{
+  startYear: number;
+  url: string;
+  winner: string;
+}> {
+  return RUGBY_WORLD_CUP_CHAMPIONS.filter((e) => e.wikipediaStatisticsUrl).map((e) => ({
+    startYear: e.startYear,
+    url: e.wikipediaStatisticsUrl!,
     winner: e.winner,
   }));
 }

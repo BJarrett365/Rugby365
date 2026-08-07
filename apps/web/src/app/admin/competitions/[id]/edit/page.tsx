@@ -134,6 +134,21 @@ export default function EditCompetitionPage() {
     setSyncing(false);
   }
 
+  async function recomputeForm() {
+    setSyncing(true);
+    const res = await fetch(`/api/admin/competitions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "recompute-form", force: true, allSeasons: true }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`Form updated on ${data.rowsUpdated ?? 0} standing row(s).`);
+      await load();
+    } else alert(data.error ?? "Form recompute failed");
+    setSyncing(false);
+  }
+
   async function remove() {
     if (!confirm("Delete this competition and all seasons/standings?")) return;
     const res = await fetch(`/api/admin/competitions/${id}`, { method: "DELETE" });
@@ -218,6 +233,15 @@ export default function EditCompetitionPage() {
             className="cms-btn cms-btn--secondary"
           >
             {syncing ? "Syncing…" : "Sync table"}
+          </button>
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={recomputeForm}
+            className="cms-btn cms-btn--secondary"
+            title="Rebuild Form (W/D/L) from finished fixtures in this competition"
+          >
+            Recompute form
           </button>
           <Link href="/admin/competitions/import" className="cms-btn cms-btn--secondary">
             Import Planet Rugby

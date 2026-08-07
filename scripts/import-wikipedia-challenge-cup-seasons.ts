@@ -56,11 +56,12 @@ async function main() {
         seasonStartYear: season.startYear,
         mode: "update_existing",
         createMissingTeams: true,
-        importFixtures: false,
-        importPlayoffs: false,
+        importFixtures: true,
+        importPlayoffs: true,
+        importTable: true,
       });
       console.log(
-        `  ✓ table ${report.table.created}c/${report.table.updated}u (${report.table.found} teams) champion=${report.championName} (${Math.round((Date.now() - started) / 1000)}s)`,
+        `  ✓ table ${report.table.created}c/${report.table.updated}u fixtures ${report.fixtures.created}c/${report.fixtures.updated}u playoffs ${report.playoffs.created}c/${report.playoffs.updated}u champion=${report.championName} (${Math.round((Date.now() - started) / 1000)}s)`,
       );
       if (report.unmappedTeams.length) {
         console.log(`  unmapped teams: ${report.unmappedTeams.join(", ")}`);

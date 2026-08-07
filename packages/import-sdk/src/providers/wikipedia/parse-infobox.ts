@@ -18,6 +18,7 @@ const TEAM_INFOBOXES = new Set([
   "infobox rugby union club",
   "infobox rugby league club",
   "infobox rugby team",
+  "infobox national rugby team",
   "infobox national rugby union team",
   "infobox rugby union team",
 ]);
@@ -463,14 +464,28 @@ export function parseWikipediaArchiveFromHtml(input: {
   }
 
   if (resolvedType === "team") {
-    const founded = parseIntField(infobox.params.founded ?? infobox.params.established);
+    const founded =
+      parseIntField(infobox.params.founded ?? infobox.params.established) ??
+      parseIntField(infobox.params.union_formed) ??
+      // National team articles often omit founded; use first-international year from bio.
+      (() => {
+        const m = bioSummary?.match(/\b(1[89]\d{2}|20\d{2})\b/);
+        return m ? Number(m[1]) : undefined;
+      })();
     return {
       entityType: "team",
       articleTitle: input.articleTitle,
       wikipediaUrl: input.wikipediaUrl,
       wikidataId: input.wikidataId,
-      name: stripWikiMarkup(infobox.params.clubname ?? infobox.params.teamname ?? name),
-      countryName: stripWikiMarkup(infobox.params.country) || undefined,
+      name: stripWikiMarkup(
+        infobox.params.clubname ??
+          infobox.params.teamname ??
+          infobox.params.Name ??
+          infobox.params.name ??
+          name,
+      ),
+      countryName:
+        stripWikiMarkup(infobox.params.country ?? infobox.params.union) || undefined,
       foundedYear: founded,
       homeGround: stripWikiMarkup(infobox.params.location ?? infobox.params.ground) || undefined,
       imageUrl: input.imageUrl,

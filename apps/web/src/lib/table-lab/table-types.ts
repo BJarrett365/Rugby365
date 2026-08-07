@@ -93,6 +93,14 @@ export type RugbyTableHemisphereGroup = {
   rows: RugbyTableStandingRow[];
 };
 
+export type RugbyTablePoolGroup = {
+  id: string;
+  label: string;
+  rows: RugbyTableStandingRow[];
+  /** Pool-stage form length (3 for 4-team pools, 4 for 5-team pools). */
+  formSlots: number;
+};
+
 export type AllTimeSeasonRangeMode = "all" | "from" | "to" | "custom";
 
 export type AllTimeTeamStatus = "all" | "current" | "former";
@@ -178,6 +186,7 @@ export type RugbyTableResult = {
   dataCoveragePct: number;
   rows: RugbyTableStandingRow[];
   hemisphereGroups?: RugbyTableHemisphereGroup[];
+  poolGroups?: RugbyTablePoolGroup[];
   competition?: { slug: string; name: string };
   warnings: string[];
   fixtureCount: number;
@@ -442,4 +451,7 @@ export type TeamFixturePerspective = {
   countsTowardStandings?: boolean;
   matchClockLabel?: string | null;
   fixtureStatus?: string | null;
+  /** Fixture competition stage (regular / quarter_final / …). */
+  stage?: string | null;
+  round?: string | null;
 };

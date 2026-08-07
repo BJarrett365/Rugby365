@@ -5,6 +5,15 @@ import { useCallback, useEffect, useState } from "react";
 import { CompetitionLiveTable } from "@/components/competitions/CompetitionLiveTable";
 import { LeagueTable } from "@/components/competitions/LeagueTable";
 import { PlayoffFixtures } from "@/components/competitions/PlayoffFixtures";
+import {
+  isRugbyWorldCupSlug,
+  resolveRugbyWorldCupYear,
+  rugbyWorldCupPoolsForYear,
+} from "@/lib/rugby-world-cup-pools";
+import {
+  splitRowsIntoWorldCupPools,
+  standingRowsToTableRows,
+} from "@/lib/table-lab/table-pool-shared";
 import type { RugbyTableResult } from "@/lib/table-lab/table-types";
 
 type View = "overall" | "home" | "away";
@@ -68,7 +77,10 @@ export function CompetitionTableClient({
     const liveRes = await fetch(`/api/competitions/by-slug/${slug}/live-table?${params}`);
     const liveData = await liveRes.json();
 
-    if (liveRes.ok && liveData.result?.rows?.length) {
+    if (
+      liveRes.ok &&
+      (liveData.result?.poolGroups?.length || liveData.result?.rows?.length)
+    ) {
       setCompetitionId(liveData.competition?.id ?? "");
       setCompetitionName(liveData.competition?.name ?? slug);
       setSeasons(liveData.seasons ?? []);
@@ -88,22 +100,56 @@ export function CompetitionTableClient({
       setCompetitionName(data.competition?.name ?? slug);
       setSeasons(data.seasons ?? []);
       if (!seasonLabel && data.season?.label) setSeasonLabel(data.season.label);
+      const nextStandings = (data.standings ?? []).map((r: Record<string, unknown>) => ({
+        rank: r.rank as number,
+        teamName: r.teamName as string,
+        teamSlug: r.teamSlug as string,
+        played: r.played as number,
+        won: r.won as number,
+        draw: r.draw as number,
+        lost: r.lost as number,
+        pointsDiff: r.pointsDiff as number,
+        bonusPoints: r.bonusPoints as number,
+        points: r.points as number,
+        form: (r.form as string | null) ?? null,
+      }));
+
+      // World Cup: always present pool tables even when falling back to synced standings.
+      if (isRugbyWorldCupSlug(slug)) {
+        const year = resolveRugbyWorldCupYear({
+          seasonYear: data.season?.year,
+          seasonLabel: data.season?.label ?? seasonLabel,
+        });
+        const pools = rugbyWorldCupPoolsForYear(year);
+        if (pools.length) {
+          const poolGroups = splitRowsIntoWorldCupPools(
+            standingRowsToTableRows(nextStandings),
+            pools,
+          );
+          setLiveResult({
+            definition: { id: "live_table", name: "Live table", shortName: "Live" } as RugbyTableResult["definition"],
+            available: true,
+            confidence: "medium",
+            dataCoveragePct: 100,
+            rows: standingRowsToTableRows(nextStandings),
+            poolGroups,
+            formMatchCount: poolGroups[0]?.formSlots,
+            warnings: [],
+            fixtureCount: 0,
+            evaluatedFixtureCount: 0,
+            context: {},
+            liveTableCalculationNote: "Pool standings from synced table (pool-stage).",
+            showMovement: false,
+          });
+          setStandings([]);
+          setPlayoffFixtures([]);
+          setLoading(false);
+          return;
+        }
+      }
+
       setLiveResult(null);
-      setStandings(
-        (data.standings ?? []).map((r: Record<string, unknown>) => ({
-          rank: r.rank as number,
-          teamName: r.teamName as string,
-          teamSlug: r.teamSlug as string,
-          played: r.played as number,
-          won: r.won as number,
-          draw: r.draw as number,
-          lost: r.lost as number,
-          pointsDiff: r.pointsDiff as number,
-          bonusPoints: r.bonusPoints as number,
-          points: r.points as number,
-          form: (r.form as string | null) ?? null,
-        })),
-      );
+      setStandings(nextStandings);
       setPlayoffFixtures(
         (data.playoffFixtures ?? []).map((row: Record<string, unknown>) => ({
           id: row.id as string,
@@ -215,9 +261,11 @@ export function CompetitionTableClient({
         <CompetitionLiveTable
           rows={liveResult.rows}
           hemisphereGroups={liveResult.hemisphereGroups}
+          poolGroups={liveResult.poolGroups}
           showMovement={liveResult.showMovement !== false}
           liveMatchCount={liveResult.liveMatchCount}
           note={liveResult.liveTableCalculationNote ?? liveResult.filterSummary}
+          formSlots={liveResult.formMatchCount}
         />
       ) : (
         <>

@@ -1,5 +1,6 @@
 import type {
   WikipediaFixtureRow,
+  WikipediaScoringEvent,
   WikipediaSeasonPageParse,
   WikipediaSeasonStage,
   WikipediaStandingRow,
@@ -176,17 +177,118 @@ function isBracketPlaceholderTeam(name: string): boolean {
   return /^(winner|runner[- ]?up|loser|third place|fourth place)\b/i.test(name.trim());
 }
 
+/** Parse try/conversion/penalty/drop lists from {{rugby box}} scoring params. */
+export function parseRugbyboxScoringEvents(params: Record<string, string>): WikipediaScoringEvent[] {
+  const events: WikipediaScoringEvent[] = [];
+  const fields: Array<{ key: string; eventType: WikipediaScoringEvent["eventType"]; teamSide: "home" | "away" }> = [
+    { key: "try1", eventType: "try", teamSide: "home" },
+    { key: "con1", eventType: "conversion", teamSide: "home" },
+    { key: "pen1", eventType: "penalty", teamSide: "home" },
+    { key: "drop1", eventType: "drop_goal", teamSide: "home" },
+    { key: "try2", eventType: "try", teamSide: "away" },
+    { key: "con2", eventType: "conversion", teamSide: "away" },
+    { key: "pen2", eventType: "penalty", teamSide: "away" },
+    { key: "drop2", eventType: "drop_goal", teamSide: "away" },
+  ];
+
+  for (const field of fields) {
+    const raw = params[field.key];
+    if (!raw?.trim()) continue;
+    const chunks = raw.split(/<br\s*\/?>/i).map((c) => c.trim()).filter(Boolean);
+    for (const chunk of chunks) {
+      const playerMatch =
+        chunk.match(/\[\[([^\]|]+)\|([^\]]+)\]\]/) ?? chunk.match(/\[\[([^\]]+)\]\]/);
+      const playerName = playerMatch
+        ? (playerMatch[2] ?? playerMatch[1] ?? "").trim()
+        : stripWikiMarkup(chunk.replace(/\d+\s*'.*$/s, "")).trim();
+      if (!playerName) continue;
+
+      const minutes = [...chunk.matchAll(/(\d+)\s*'/g)].map((m) => Number.parseInt(m[1]!, 10));
+      const converted =
+        field.eventType === "try"
+          ? /\bc\b/i.test(chunk.replace(/\[\[.*?\]\]/g, ""))
+            ? true
+            : /\bm\b/i.test(chunk.replace(/\[\[.*?\]\]/g, ""))
+              ? false
+              : null
+          : null;
+
+      if (!minutes.length) {
+        events.push({
+          eventType: field.eventType,
+          teamSide: field.teamSide,
+          minute: 0,
+          playerName,
+          ...(converted != null ? { converted } : {}),
+        });
+        continue;
+      }
+      for (const minute of minutes) {
+        events.push({
+          eventType: field.eventType,
+          teamSide: field.teamSide,
+          minute,
+          playerName,
+          ...(converted != null ? { converted } : {}),
+        });
+      }
+    }
+  }
+
+  return events.sort((a, b) => a.minute - b.minute || a.teamSide.localeCompare(b.teamSide));
+}
+
+function formatScoringNotes(events: WikipediaScoringEvent[]): string | null {
+  if (!events.length) return null;
+  const groups: Array<[string, WikipediaScoringEvent["eventType"]]> = [
+    ["Tries", "try"],
+    ["Cons", "conversion"],
+    ["Pens", "penalty"],
+    ["Drops", "drop_goal"],
+  ];
+  const parts: string[] = [];
+  for (const [label, type] of groups) {
+    const rows = events.filter((e) => e.eventType === type);
+    if (!rows.length) continue;
+    const text = rows
+      .map((e) => {
+        const side = e.teamSide === "home" ? "H" : "A";
+        const min = e.minute > 0 ? ` ${e.minute}'` : "";
+        return `${e.playerName}${min} (${side})`;
+      })
+      .join(", ");
+    parts.push(`${label}: ${text}`);
+  }
+  return parts.join(" · ") || null;
+}
+
+function parseStadiumName(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const firstLink = raw.match(/\[\[([^\]]+)\]\]/)?.[0];
+  const label = parseWikiLinkLabel(firstLink ?? raw);
+  return label || null;
+}
+
 export function parseRugbyboxFixtures(
   wikitext: string,
   options: { defaultRound?: string | null; defaultStage?: WikipediaSeasonStage; matchweek?: number | null } = {},
 ): WikipediaFixtureRow[] {
-  const blocks = extractTemplateBlocks(wikitext, "Rugbybox")
-    .concat(extractTemplateBlocks(wikitext, "rugbybox"))
-    .concat(extractTemplateBlocks(wikitext, "#invoke:rugby box"))
-    .concat(extractTemplateBlocks(wikitext, "#invoke:Rugby box"));
+  // Deduplicate: "rugby box" would also match inside "#invoke:rugby box" start needles if
+  // we only used indexOf clumsily; extract by each distinct template form then unique by block text.
+  const blocks = [
+    ...extractTemplateBlocks(wikitext, "Rugbybox"),
+    ...extractTemplateBlocks(wikitext, "rugbybox"),
+    ...extractTemplateBlocks(wikitext, "Rugby box"),
+    ...extractTemplateBlocks(wikitext, "rugby box"),
+    ...extractTemplateBlocks(wikitext, "#invoke:rugby box"),
+    ...extractTemplateBlocks(wikitext, "#invoke:Rugby box"),
+  ];
+  const seen = new Set<string>();
   const fixtures: WikipediaFixtureRow[] = [];
 
   for (const block of blocks) {
+    if (seen.has(block)) continue;
+    seen.add(block);
     const params = parseTemplateParams(block);
     const home = parseWikiTeamLabel(params.home ?? params.team1 ?? "");
     const away = parseWikiTeamLabel(params.away ?? params.team2 ?? "");
@@ -200,6 +302,9 @@ export function parseRugbyboxFixtures(
     const stage = stageFromRoundLabel(round, options.defaultStage ?? "regular");
     const postponed = /postponed/i.test(params.score ?? "") || /postponed/i.test(params.note ?? "");
     const cancelled = /cancelled|canceled|abandoned/i.test(params.score ?? "");
+    const scoringEvents = parseRugbyboxScoringEvents(params);
+    const scoringNotes = formatScoringNotes(scoringEvents);
+    const noteBits = [params.note ? stripWikiMarkup(params.note) : null, scoringNotes].filter(Boolean);
 
     fixtures.push({
       date,
@@ -208,7 +313,7 @@ export function parseRugbyboxFixtures(
       awayTeam: away,
       homeScore: score?.home ?? null,
       awayScore: score?.away ?? null,
-      venueName: params.stadium ? parseWikiLinkLabel(params.stadium) : null,
+      venueName: parseStadiumName(params.stadium),
       attendance: parseAttendance(params.attendance),
       refereeName: params.referee ? parseWikiLinkLabel(params.referee) : null,
       round,
@@ -221,7 +326,86 @@ export function parseRugbyboxFixtures(
           : score
             ? "full_time"
             : "scheduled",
-      notes: params.note ? stripWikiMarkup(params.note) : null,
+      notes: noteBits.length ? noteBits.join(" · ") : null,
+      scoringEvents,
+    });
+  }
+
+  return fixtures;
+}
+
+/** Strip leading wiki table cell attributes (`align=right|…`). */
+function wikiTableCellContent(raw: string): string {
+  let cell = raw.trim();
+  while (/^[a-zA-Z_][\w-]*=/.test(cell)) {
+    const pipe = cell.indexOf("|");
+    if (pipe < 0) break;
+    const before = cell.slice(0, pipe);
+    if (!/^[a-zA-Z_][\w-]*=[^\n|]*$/.test(before)) break;
+    cell = cell.slice(pipe + 1).trim();
+  }
+  return cell;
+}
+
+/**
+ * Parse international result tables like Nations Cup:
+ * `|align=right|4 July 2026||align=right|{{ru-rt|URU}}||align=center|[[…|34–41]]||{{ru|GEO}}||venue`
+ */
+export function parseResultTableFixtures(
+  wikitext: string,
+  options: { defaultRound?: string | null; defaultStage?: WikipediaSeasonStage; matchweek?: number | null } = {},
+): WikipediaFixtureRow[] {
+  const fixtures: WikipediaFixtureRow[] = [];
+  const round = options.defaultRound ?? null;
+  const stage = stageFromRoundLabel(round, options.defaultStage ?? "regular");
+
+  for (const rowMatch of wikitext.matchAll(/^\|(?![-+}])(.+)$/gm)) {
+    const line = rowMatch[1] ?? "";
+    if (/^!/.test(line.trim()) || /width\s*=/i.test(line)) continue;
+
+    const cells = line.split("||").map((part) => wikiTableCellContent(part.replace(/^\|/, "")));
+
+    if (cells.length < 4) continue;
+
+    let dateIdx = -1;
+    for (let i = 0; i < Math.min(cells.length, 3); i++) {
+      if (parseWikiDate(cells[i])) {
+        dateIdx = i;
+        break;
+      }
+    }
+    if (dateIdx < 0 || dateIdx + 3 >= cells.length) continue;
+
+    const date = parseWikiDate(cells[dateIdx]!);
+    const home = parseWikiTeamLabel(cells[dateIdx + 1] ?? "");
+    const scoreCell = cells[dateIdx + 2] ?? "";
+    const away = parseWikiTeamLabel(cells[dateIdx + 3] ?? "");
+    if (!home || !away) continue;
+    if (isBracketPlaceholderTeam(home) || isBracketPlaceholderTeam(away)) continue;
+
+    const score = parseScore(scoreCell);
+    const postponed = /postponed/i.test(scoreCell);
+    const cancelled = /cancelled|canceled|abandoned/i.test(scoreCell);
+    const venueRaw = cells[dateIdx + 4] ?? null;
+    const venueName = venueRaw
+      ? parseWikiLinkLabel(venueRaw).replace(/^TBA\b.*$/i, "").trim() || null
+      : null;
+
+    fixtures.push({
+      date,
+      kickoffAt: combineDateTimeUtc(date, null),
+      homeTeam: home,
+      awayTeam: away,
+      homeScore: score?.home ?? null,
+      awayScore: score?.away ?? null,
+      venueName,
+      attendance: null,
+      refereeName: null,
+      round,
+      matchweek: options.matchweek ?? null,
+      stage,
+      status: cancelled ? "cancelled" : postponed ? "postponed" : score ? "full_time" : "scheduled",
+      notes: null,
     });
   }
 
@@ -734,11 +918,15 @@ export function parsePremiershipSeasonWikitext(input: {
       /quarter|semi|bronze|third.?place|final/i.test(section.round) &&
       !/^Round\s+\d+/i.test(section.round) &&
       !/^Pool\b/i.test(section.round);
-    const parsed = parseRugbyboxFixtures(section.body, {
+    const opts = {
       defaultRound: section.round,
-      defaultStage: isPlayoff ? stageFromRoundLabel(section.round, "playoff") : "regular",
+      defaultStage: isPlayoff ? stageFromRoundLabel(section.round, "playoff") : ("regular" as const),
       matchweek: section.matchweek,
-    });
+    };
+    const parsed = [
+      ...parseRugbyboxFixtures(section.body, opts),
+      ...parseResultTableFixtures(section.body, opts),
+    ];
     if (isPlayoff) playoffRaw.push(...parsed);
     else fixturesRaw.push(...parsed);
   }
@@ -766,7 +954,7 @@ export function parsePremiershipSeasonWikitext(input: {
     ),
   ];
 
-  if (!fixtures.length) warnings.push("No regular-season Rugbybox fixtures found");
+  if (!fixtures.length) warnings.push("No regular-season fixtures found (Rugbybox or result tables)");
   if (!playoffFixtures.length) warnings.push("No playoff fixtures found");
   if (!championName) warnings.push("No champion found in infobox");
 

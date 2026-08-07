@@ -18,7 +18,7 @@ export default async function MatchDetailPage({
 }) {
   const { slug: matchId } = await params;
   const { tab } = await searchParams;
-  const data = await getMatchDetailForPage(matchId);
+  const data = await getMatchDetailForPage(matchId, { tab });
   if (!data) notFound();
 
   return <MatchDetailView data={data} activeTab={parseMatchDetailTab(tab)} />;

@@ -1,0 +1,589 @@
+{
+  "year": 2023,
+  "sourceUrl": "https://en.wikipedia.org/wiki/2023_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-06T09:18:36.511Z",
+  "entries": [
+    {
+      "playerName": "Will Jordan",
+      "tries": 8
+    },
+    {
+      "playerName": "Damian Penaud",
+      "tries": 6
+    },
+    {
+      "playerName": "Henry Arundell",
+      "tries": 5
+    },
+    {
+      "playerName": "Bundee Aki",
+      "tries": 5
+    },
+    {
+      "playerName": "Leicester Fainga'anuku",
+      "tries": 5
+    },
+    {
+      "playerName": "Damian McKenzie",
+      "tries": 5,
+      "conversions": 14
+    },
+    {
+      "playerName": "Darcy Graham",
+      "tries": 5
+    },
+    {
+      "playerName": "Louis Rees-Zammit",
+      "tries": 5
+    },
+    {
+      "playerName": "Louis Bielle-Biarrey",
+      "tries": 4
+    },
+    {
+      "playerName": "Aaron Smith",
+      "tries": 4
+    },
+    {
+      "playerName": "Cobus Reinach",
+      "tries": 4
+    },
+    {
+      "playerName": "Mateo Carreras",
+      "tries": 3
+    },
+    {
+      "playerName": "Theo Dan",
+      "tries": 3
+    },
+    {
+      "playerName": "Peato Mauvaka",
+      "tries": 3
+    },
+    {
+      "playerName": "Tadhg Beirne",
+      "tries": 3
+    },
+    {
+      "playerName": "Hugo Keenan",
+      "tries": 3
+    },
+    {
+      "playerName": "Johnny Sexton",
+      "tries": 3,
+      "conversions": 17,
+      "penalties": 3
+    },
+    {
+      "playerName": "Amato Fakatava",
+      "tries": 3
+    },
+    {
+      "playerName": "Cam Roigard",
+      "tries": 3
+    },
+    {
+      "playerName": "Ardie Savea",
+      "tries": 3
+    },
+    {
+      "playerName": "Mark Tele'a",
+      "tries": 3
+    },
+    {
+      "playerName": "Sama Malolo",
+      "tries": 3
+    },
+    {
+      "playerName": "Makazole Mapimpi",
+      "tries": 3
+    },
+    {
+      "playerName": "Solomone Kata",
+      "tries": 3
+    },
+    {
+      "playerName": "Baltazar Amaya",
+      "tries": 3
+    },
+    {
+      "playerName": "Emiliano Boffelli",
+      "tries": 2,
+      "conversions": 9,
+      "penalties": 13
+    },
+    {
+      "playerName": "Santiago Carreras",
+      "tries": 2,
+      "conversions": 2
+    },
+    {
+      "playerName": "Juan Martín González",
+      "tries": 2
+    },
+    {
+      "playerName": "Nicolás Sánchez",
+      "tries": 2,
+      "conversions": 7,
+      "penalties": 4
+    },
+    {
+      "playerName": "Ben Donaldson",
+      "tries": 2,
+      "conversions": 7,
+      "penalties": 7
+    },
+    {
+      "playerName": "Mark Nawaqanitawase",
+      "tries": 2
+    },
+    {
+      "playerName": "Joe Marchant",
+      "tries": 2
+    },
+    {
+      "playerName": "Marcus Smith",
+      "tries": 2
+    },
+    {
+      "playerName": "Mesake Doge",
+      "tries": 2
+    },
+    {
+      "playerName": "Waisea Nayacalevu",
+      "tries": 2
+    },
+    {
+      "playerName": "Josua Tuisova",
+      "tries": 2
+    },
+    {
+      "playerName": "Cyril Baille",
+      "tries": 2
+    },
+    {
+      "playerName": "Jonathan Danty",
+      "tries": 2
+    },
+    {
+      "playerName": "Melvyn Jaminet",
+      "tries": 2,
+      "conversions": 4,
+      "penalties": 3
+    },
+    {
+      "playerName": "Yoram Moefana",
+      "tries": 2
+    },
+    {
+      "playerName": "Charles Ollivon",
+      "tries": 2
+    },
+    {
+      "playerName": "Jamison Gibson-Park",
+      "tries": 2
+    },
+    {
+      "playerName": "Mack Hansen",
+      "tries": 2
+    },
+    {
+      "playerName": "Rob Herring",
+      "tries": 2
+    },
+    {
+      "playerName": "James Lowe",
+      "tries": 2
+    },
+    {
+      "playerName": "Peter O'Mahony",
+      "tries": 2
+    },
+    {
+      "playerName": "Lorenzo Cannone",
+      "tries": 2
+    },
+    {
+      "playerName": "Ange Capuozzo",
+      "tries": 2
+    },
+    {
+      "playerName": "Monty Ioane",
+      "tries": 2
+    },
+    {
+      "playerName": "Manuel Zuliani",
+      "tries": 2
+    },
+    {
+      "playerName": "Michael Leitch",
+      "tries": 2
+    },
+    {
+      "playerName": "Jone Naikabula",
+      "tries": 2
+    },
+    {
+      "playerName": "Gerswin Mouton",
+      "tries": 2
+    },
+    {
+      "playerName": "Dane Coles",
+      "tries": 2
+    },
+    {
+      "playerName": "Shannon Frizell",
+      "tries": 2
+    },
+    {
+      "playerName": "Anton Lienert-Brown",
+      "tries": 2
+    },
+    {
+      "playerName": "Dalton Papalii",
+      "tries": 2
+    },
+    {
+      "playerName": "Raffaele Storti",
+      "tries": 2
+    },
+    {
+      "playerName": "Nigel Ah Wong",
+      "tries": 2
+    },
+    {
+      "playerName": "Duncan Paia'aua",
+      "tries": 2
+    },
+    {
+      "playerName": "Rory Darge",
+      "tries": 2
+    },
+    {
+      "playerName": "Ali Price",
+      "tries": 2
+    },
+    {
+      "playerName": "Kurt-Lee Arendse",
+      "tries": 2
+    },
+    {
+      "playerName": "Deon Fourie",
+      "tries": 2
+    },
+    {
+      "playerName": "Cheslin Kolbe",
+      "tries": 2
+    },
+    {
+      "playerName": "Willie le Roux",
+      "tries": 2
+    },
+    {
+      "playerName": "Grant Williams",
+      "tries": 2
+    },
+    {
+      "playerName": "Ben Tameifuna",
+      "tries": 2
+    },
+    {
+      "playerName": "Nicolás Freitas",
+      "tries": 2
+    },
+    {
+      "playerName": "Jac Morgan",
+      "tries": 2
+    },
+    {
+      "playerName": "George North",
+      "tries": 2
+    },
+    {
+      "playerName": "Owen Farrell",
+      "teamName": "England",
+      "points": 75,
+      "tries": 0,
+      "conversions": 12,
+      "penalties": 15,
+      "dropGoals": 2
+    },
+    {
+      "playerName": "Thomas Ramos",
+      "teamName": "France",
+      "points": 74,
+      "tries": 1,
+      "conversions": 21,
+      "penalties": 9,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Emiliano Boffelli",
+      "teamName": "Argentina",
+      "points": 67,
+      "tries": 2,
+      "conversions": 9,
+      "penalties": 13,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Johnny Sexton",
+      "teamName": "Ireland",
+      "points": 58,
+      "tries": 3,
+      "conversions": 17,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Richie Mo'unga",
+      "teamName": "New Zealand",
+      "points": 56,
+      "tries": 1,
+      "conversions": 18,
+      "penalties": 5,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Damian McKenzie",
+      "teamName": "New Zealand",
+      "points": 53,
+      "tries": 5,
+      "conversions": 14,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rikiya Matsuda",
+      "teamName": "Japan",
+      "points": 46,
+      "tries": 0,
+      "conversions": 11,
+      "penalties": 8,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ben Donaldson",
+      "teamName": "Australia",
+      "points": 45,
+      "tries": 2,
+      "conversions": 7,
+      "penalties": 7,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George Ford",
+      "teamName": "England",
+      "points": 41,
+      "tries": 0,
+      "conversions": 4,
+      "penalties": 8,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Will Jordan",
+      "teamName": "New Zealand",
+      "points": 40,
+      "tries": 8,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Thomas Ramos",
+      "conversions": 21,
+      "penalties": 9
+    },
+    {
+      "playerName": "Richie Mo'unga",
+      "conversions": 18,
+      "penalties": 5
+    },
+    {
+      "playerName": "Tommaso Allan",
+      "conversions": 14,
+      "penalties": 2
+    },
+    {
+      "playerName": "Owen Farrell",
+      "conversions": 12,
+      "penalties": 15,
+      "dropGoals": 2
+    },
+    {
+      "playerName": "Rikiya Matsuda",
+      "conversions": 11,
+      "penalties": 8
+    },
+    {
+      "playerName": "Ben Healy",
+      "conversions": 11
+    },
+    {
+      "playerName": "William Havili",
+      "conversions": 8,
+      "penalties": 5
+    },
+    {
+      "playerName": "Finn Russell",
+      "conversions": 7,
+      "penalties": 1
+    },
+    {
+      "playerName": "Handré Pollard",
+      "conversions": 6,
+      "penalties": 7
+    },
+    {
+      "playerName": "Sam Costelow",
+      "conversions": 6,
+      "penalties": 1
+    },
+    {
+      "playerName": "Frank Lomani",
+      "conversions": 5,
+      "penalties": 3
+    },
+    {
+      "playerName": "Manie Libbok",
+      "conversions": 5,
+      "penalties": 4
+    },
+    {
+      "playerName": "Damian Willemse",
+      "conversions": 5
+    },
+    {
+      "playerName": "Felipe Etcheverry",
+      "conversions": 5,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "George Ford",
+      "conversions": 4,
+      "penalties": 8,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Ross Byrne",
+      "conversions": 4
+    },
+    {
+      "playerName": "Jack Crowley",
+      "conversions": 4,
+      "penalties": 1
+    },
+    {
+      "playerName": "Christian Leali'ifano",
+      "conversions": 4,
+      "penalties": 5
+    },
+    {
+      "playerName": "Dan Biggar",
+      "conversions": 4,
+      "penalties": 2
+    },
+    {
+      "playerName": "Simione Kuruvoli",
+      "conversions": 3,
+      "penalties": 4
+    },
+    {
+      "playerName": "Samuel Marques",
+      "conversions": 3,
+      "penalties": 3
+    },
+    {
+      "playerName": "Alin Conache",
+      "conversions": 3,
+      "penalties": 1
+    },
+    {
+      "playerName": "Lima Sopoaga",
+      "conversions": 3,
+      "penalties": 1
+    },
+    {
+      "playerName": "Faf de Klerk",
+      "conversions": 3
+    },
+    {
+      "playerName": "Leigh Halfpenny",
+      "conversions": 3
+    },
+    {
+      "playerName": "Santiago Videla",
+      "conversions": 2
+    },
+    {
+      "playerName": "Tedo Abzhandadze",
+      "conversions": 2,
+      "penalties": 2
+    },
+    {
+      "playerName": "Luka Matkava",
+      "conversions": 2,
+      "penalties": 3
+    },
+    {
+      "playerName": "Tiaan Swanepoel",
+      "conversions": 2,
+      "penalties": 6
+    },
+    {
+      "playerName": "Beauden Barrett",
+      "conversions": 2
+    },
+    {
+      "playerName": "Teti Tela",
+      "conversions": 1
+    },
+    {
+      "playerName": "Paolo Garbisi",
+      "conversions": 1,
+      "penalties": 1
+    },
+    {
+      "playerName": "Jordie Barrett",
+      "conversions": 1,
+      "penalties": 2
+    },
+    {
+      "playerName": "D'Angelo Leuila",
+      "conversions": 1,
+      "penalties": 1
+    },
+    {
+      "playerName": "George Horne",
+      "conversions": 1
+    },
+    {
+      "playerName": "Felipe Berchesi",
+      "conversions": 1,
+      "penalties": 1
+    },
+    {
+      "playerName": "Gareth Anscombe",
+      "conversions": 1,
+      "penalties": 6,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Davit Niniashvili",
+      "penalties": 2
+    },
+    {
+      "playerName": "Matías Garafulic",
+      "penalties": 1
+    },
+    {
+      "playerName": "Gabriel Rupanu",
+      "penalties": 1
+    },
+    {
+      "playerName": "Lomano Lemeki",
+      "dropGoals": 1
+    }
+  ],
+  "notes": []
+}

@@ -672,10 +672,37 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
     return { calculated: 0, potmPlayerId: null };
   }
 
-  const perfRows = await db
+  const perfRowsRaw = await db
     .select()
     .from(playerMatchPerformanceStats)
     .where(eq(playerMatchPerformanceStats.fixtureId, fixtureId));
+
+  // Prefer real advanced / estimated match rows over zero-minute leaderboard seeds.
+  const providerRank = (provider: string | null | undefined): number => {
+    switch (provider) {
+      case "sdms":
+        return 100;
+      case "ai_algorithm_estimate":
+        return 80;
+      case "fixture_players":
+        return 40;
+      case "scoring_events":
+        return 30;
+      case "opta_published_leaderboard":
+      case "wikipedia_statistics":
+        return 10;
+      default:
+        return 20;
+    }
+  };
+  const bestPerfByPlayer = new Map<string, (typeof perfRowsRaw)[number]>();
+  for (const row of perfRowsRaw) {
+    const existing = bestPerfByPlayer.get(row.playerId);
+    if (!existing || providerRank(row.sourceProvider) > providerRank(existing.sourceProvider)) {
+      bestPerfByPlayer.set(row.playerId, row);
+    }
+  }
+  const perfRows = [...bestPerfByPlayer.values()];
 
   const squadRows = await db
     .select()

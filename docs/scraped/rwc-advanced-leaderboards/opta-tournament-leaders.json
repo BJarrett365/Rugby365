@@ -1,0 +1,86 @@
+{
+  "description": "Published Opta / tournament-summary advanced leaderboard figures for historical Rugby World Cups. Not full squad-wide per-match stats — only verified published leader values. Source: Planet Rugby Opta feature, News24 2019 official stats, BBC 2015 wrap, NZ Herald 2015. Tries/points already covered by Wikipedia/RDB match ingest.",
+  "sourceUrls": [
+    "https://www.planetrugby.com/news/all-time-rugby-world-cup-player-stats-tries-carries-tackles-and-much-more",
+    "https://www.news24.com/sport/official-2019-rugby-world-cup-stats-who-stood-out-20191104",
+    "https://www.bbc.com/sport/rugby-union/34695223",
+    "https://www.nzherald.co.nz/sport/rugby/rugby-world-cup/rugby-world-cup-2015-ben-smith-tops-running-stats-at-world-cup/VKVTT6OQ5AIC7JUOTZ63J6IXCM/"
+  ],
+  "seasons": {
+    "1987": {
+      "entries": [
+        { "playerName": "David Kirk", "teamName": "New Zealand", "tryAssists": 6 },
+        { "playerName": "John Kirwan", "teamName": "New Zealand", "defendersBeaten": 37 },
+        { "playerName": "Dean Richards", "teamName": "England", "turnoversWon": 12 }
+      ]
+    },
+    "1991": {
+      "entries": [],
+      "note": "No publicly verified Opta tournament tops found for tackles/metres/carries beyond try/points already ingested."
+    },
+    "1995": {
+      "entries": [
+        { "playerName": "Glen Osborne", "teamName": "New Zealand", "metresCarried": 702, "tryAssists": 6 },
+        { "playerName": "Jonah Lomu", "teamName": "New Zealand", "defendersBeaten": 48 }
+      ]
+    },
+    "1999": {
+      "entries": [
+        { "playerName": "Jonah Lomu", "teamName": "New Zealand", "metresCarried": 631, "defendersBeaten": 49 },
+        { "playerName": "Austin Healey", "teamName": "England", "tryAssists": 7 }
+      ]
+    },
+    "2003": {
+      "entries": [
+        { "playerName": "Mat Rogers", "teamName": "Australia", "metresCarried": 717 },
+        { "playerName": "Jason Robinson", "teamName": "England", "metresCarried": 699, "defendersBeaten": 35 },
+        { "playerName": "Mils Muliaina", "teamName": "New Zealand", "metresCarried": 651, "carries": 85 },
+        { "playerName": "Lawrence Dallaglio", "teamName": "England", "carries": 104 },
+        { "playerName": "Richie McCaw", "teamName": "New Zealand", "carries": 84 },
+        { "playerName": "Colin Charvis", "teamName": "Wales", "tacklesCompleted": 80 },
+        { "playerName": "Carlos Spencer", "teamName": "New Zealand", "tryAssists": 10 },
+        { "playerName": "Matt Giteau", "teamName": "Australia", "tryAssists": 8 },
+        { "playerName": "Mike Hercus", "teamName": "United States", "tryAssists": 6 },
+        { "playerName": "Lote Tuqiri", "teamName": "Australia", "defendersBeaten": 36 }
+      ]
+    },
+    "2007": {
+      "entries": [
+        { "playerName": "Aaron Mauger", "teamName": "New Zealand", "tryAssists": 6 }
+      ],
+      "note": "Per-match Opta peaks exist (e.g. Dusautoir 28 tackles) but verified full-tournament tackle/metre/carry tables were not located in free sources."
+    },
+    "2011": {
+      "entries": [
+        { "playerName": "Taulupe Faletau", "teamName": "Wales", "tacklesCompleted": 83 },
+        { "playerName": "Thierry Dusautoir", "teamName": "France", "tacklesCompleted": 79 },
+        { "playerName": "Quade Cooper", "teamName": "Australia", "tryAssists": 9 },
+        { "playerName": "Sam Warburton", "teamName": "Wales", "turnoversWon": 13 },
+        { "playerName": "David Pocock", "teamName": "Australia", "turnoversWon": 12 }
+      ]
+    },
+    "2015": {
+      "entries": [
+        { "playerName": "Nehe Milner-Skudder", "teamName": "New Zealand", "metresCarried": 561, "lineBreaks": 15 },
+        { "playerName": "Ben Smith", "teamName": "New Zealand", "metresCarried": 526 },
+        { "playerName": "Santiago Cordero", "teamName": "Argentina", "metresCarried": 514 },
+        { "playerName": "Julian Savea", "teamName": "New Zealand", "metresCarried": 437 },
+        { "playerName": "Schalk Burger", "teamName": "South Africa", "carries": 96 },
+        { "playerName": "Francois Louw", "teamName": "South Africa", "tacklesCompleted": 77, "turnoversWon": 13 },
+        { "playerName": "Lood de Jager", "teamName": "South Africa", "tacklesCompleted": 77 },
+        { "playerName": "David Pocock", "teamName": "Australia", "turnoversWon": 17 },
+        { "playerName": "Fourie du Preez", "teamName": "South Africa", "tryAssists": 6 }
+      ]
+    },
+    "2019": {
+      "entries": [
+        { "playerName": "Alun Wyn Jones", "teamName": "Wales", "tacklesCompleted": 79 },
+        { "playerName": "Maro Itoje", "teamName": "England", "tacklesCompleted": 71 },
+        { "playerName": "Sam Underhill", "teamName": "England", "tacklesCompleted": 69 },
+        { "playerName": "Kieran Read", "teamName": "New Zealand", "tacklesCompleted": 69 },
+        { "playerName": "Pieter-Steph Labuschagne", "teamName": "Japan", "tacklesCompleted": 68, "aliases": ["Lappies Labuschagne"] },
+        { "playerName": "Beauden Barrett", "teamName": "New Zealand", "carries": 86 }
+      ]
+    }
+  }
+}

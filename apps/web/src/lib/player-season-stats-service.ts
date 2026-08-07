@@ -490,6 +490,8 @@ export async function upsertMatchPerformanceStat(input: {
     gapFilled?: boolean;
   };
   sourceProvider?: string;
+  /** Skip OpenAI bio refresh (bulk historical imports). */
+  skipBioRefresh?: boolean;
 }) {
   const db = getDb();
   const importKey = buildMatchPerformanceImportKey(input.externalMatchId, input.externalPlayerId);
@@ -540,6 +542,34 @@ export async function upsertMatchPerformanceStat(input: {
     syncedAt: new Date(),
   };
 
+  const [byFixturePlayer] = await db
+    .select({ id: playerMatchPerformanceStats.id })
+    .from(playerMatchPerformanceStats)
+    .where(
+      and(
+        eq(playerMatchPerformanceStats.fixtureId, input.fixtureId),
+        eq(playerMatchPerformanceStats.playerId, input.playerId),
+      ),
+    )
+    .limit(1);
+
+  if (byFixturePlayer) {
+    // Keep existing import_key when another row already owns this key (duplicate fixtures).
+    const [keyOwner] = await db
+      .select({ id: playerMatchPerformanceStats.id })
+      .from(playerMatchPerformanceStats)
+      .where(eq(playerMatchPerformanceStats.importKey, importKey))
+      .limit(1);
+    const { importKey: _nextKey, ...withoutKey } = values;
+    const patch = keyOwner && keyOwner.id !== byFixturePlayer.id ? withoutKey : values;
+    const [updated] = await db
+      .update(playerMatchPerformanceStats)
+      .set(patch)
+      .where(eq(playerMatchPerformanceStats.id, byFixturePlayer.id))
+      .returning();
+    return { row: updated!, created: false };
+  }
+
   const [existing] = await db
     .select({ id: playerMatchPerformanceStats.id })
     .from(playerMatchPerformanceStats)
@@ -555,16 +585,62 @@ export async function upsertMatchPerformanceStat(input: {
     return { row: updated!, created: false };
   }
 
-  const [created] = await db.insert(playerMatchPerformanceStats).values(values).returning();
-  const result = { row: created!, created: true };
+  try {
+    const [created] = await db.insert(playerMatchPerformanceStats).values(values).returning();
+    const result = { row: created!, created: true };
 
-  const { triggerPlayerBioRefresh } = await import("./player-bio-trigger");
-  void triggerPlayerBioRefresh({
-    playerId: input.playerId,
-    trigger: "match_stats_imported",
-  });
+    if (!input.skipBioRefresh) {
+      const { triggerPlayerBioRefresh } = await import("./player-bio-trigger");
+      void triggerPlayerBioRefresh({
+        playerId: input.playerId,
+        trigger: "match_stats_imported",
+      });
+    }
 
-  return result;
+    return result;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "cause" in error
+        ? (error as { cause?: { code?: string } }).cause?.code
+        : undefined;
+    const fallbackCode =
+      error && typeof error === "object" && "code" in error
+        ? (error as { code?: string }).code
+        : undefined;
+    if (code !== "23505" && fallbackCode !== "23505") throw error;
+
+    const [retry] = await db
+      .select({ id: playerMatchPerformanceStats.id })
+      .from(playerMatchPerformanceStats)
+      .where(
+        and(
+          eq(playerMatchPerformanceStats.fixtureId, input.fixtureId),
+          eq(playerMatchPerformanceStats.playerId, input.playerId),
+        ),
+      )
+      .limit(1);
+    if (retry) {
+      const { importKey: _nextKey, ...withoutKey } = values;
+      const [updated] = await db
+        .update(playerMatchPerformanceStats)
+        .set(withoutKey)
+        .where(eq(playerMatchPerformanceStats.id, retry.id))
+        .returning();
+      return { row: updated!, created: false };
+    }
+    const [byKey] = await db
+      .select({ id: playerMatchPerformanceStats.id })
+      .from(playerMatchPerformanceStats)
+      .where(eq(playerMatchPerformanceStats.importKey, importKey))
+      .limit(1);
+    if (!byKey) throw error;
+    const [updated] = await db
+      .update(playerMatchPerformanceStats)
+      .set(values)
+      .where(eq(playerMatchPerformanceStats.id, byKey.id))
+      .returning();
+    return { row: updated!, created: false };
+  }
 }
 
 export async function aggregatePlayerSeasonStats(input: {

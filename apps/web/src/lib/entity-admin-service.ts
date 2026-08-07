@@ -142,7 +142,9 @@ export async function getTeamDetail(id: string) {
   const venueRows = await db.select().from(venues);
   const venueById = Object.fromEntries(venueRows.map((v) => [v.id, v]));
 
-  const fixtureList: TeamFixtureRow[] = fixtureRows.map((f) => {
+  const fixtureList: TeamFixtureRow[] = fixtureRows
+    .filter((f) => f.status !== "cancelled")
+    .map((f) => {
     const isHome = f.homeTeamId === id;
     const opponentId = isHome ? f.awayTeamId : f.homeTeamId;
     const opponent = opponentId ? teamById[opponentId] : null;

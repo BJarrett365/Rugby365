@@ -1,0 +1,244 @@
+{
+  "year": 1987,
+  "sourceUrl": "https://en.wikipedia.org/wiki/1987_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-04T17:03:41.593Z",
+  "entries": [
+    {
+      "playerName": "Grant Fox",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 0,
+      "dropGoals": 30
+    },
+    {
+      "playerName": "Michael Lynagh",
+      "teamName": "Australia",
+      "points": 0,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 0,
+      "dropGoals": 20
+    },
+    {
+      "playerName": "Gavin Hastings",
+      "teamName": "Scotland",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 4,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Didier Camberabero",
+      "teamName": "France",
+      "points": 0,
+      "tries": 0,
+      "conversions": 5,
+      "penalties": 4,
+      "dropGoals": 14
+    },
+    {
+      "playerName": "Jonathan Webb",
+      "teamName": "England",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 4,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Guy Laporte",
+      "teamName": "France",
+      "points": 0,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 2,
+      "dropGoals": 11
+    },
+    {
+      "playerName": "Paul Thorburn",
+      "teamName": "Wales",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 6,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mike Kiernan",
+      "teamName": "Ireland",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 3,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Severo Koroduadua",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 4,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Hugo Porta",
+      "teamName": "Argentina",
+      "points": 0,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 0,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Craig Green",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 5,
+      "dropGoals": 6
+    },
+    {
+      "playerName": "John Kirwan",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 6,
+      "dropGoals": 6
+    },
+    {
+      "playerName": "Alan Whetton",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 6,
+      "dropGoals": 5
+    },
+    {
+      "playerName": "David Kirk",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 5,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "John Gallagher",
+      "teamName": "New Zealand",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 5,
+      "dropGoals": 5
+    },
+    {
+      "playerName": "Matthew Burke",
+      "teamName": "Australia",
+      "points": 1964,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 5,
+      "dropGoals": 5
+    },
+    {
+      "playerName": "Mike Harrison",
+      "teamName": "England",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 4,
+      "dropGoals": 5
+    },
+    {
+      "playerName": "Alan Tait",
+      "teamName": "Scotland",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 4,
+      "dropGoals": 4
+    },
+    {
+      "playerName": "David Campese",
+      "teamName": "Australia",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 6,
+      "dropGoals": 4
+    },
+    {
+      "playerName": "Denis Charvet",
+      "teamName": "France",
+      "points": 0,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 6,
+      "dropGoals": 4
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "Fiji",
+      "points": 2,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 198737413
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "Wales",
+      "points": 8,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 198722916
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "England",
+      "points": 4,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 19871607
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 198745528
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "France",
+      "points": 7,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 198747012
+    },
+    {
+      "playerName": "Pool",
+      "teamName": "Ireland",
+      "points": 9,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1987,
+      "dropGoals": 19872329
+    }
+  ],
+  "notes": [
+    "no Try scorers section",
+    "no Point scorers section — scanned full page tables"
+  ]
+}

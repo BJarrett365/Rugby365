@@ -13,6 +13,18 @@ export function normalizePlayerName(name: string): string {
     .trim();
 }
 
+/** Roster / feed placeholders that must never appear on leaderboards. */
+export function isJunkPlayerName(name: string | null | undefined): boolean {
+  const trimmed = normalizePlayerName(name ?? "");
+  if (!trimmed) return true;
+  if (/^[-–—._]+$/.test(trimmed)) return true;
+  if (/^(n\/?a|none|unknown|tbc|tba|tb[da]|null|undefined)$/i.test(trimmed)) return true;
+  if (/to\s*be\s*announced/i.test(trimmed)) return true;
+  if (/^(player|name)\s*(tbd|tba|unknown)?$/i.test(trimmed)) return true;
+  if (/^(replacement|reserve)\s*\d*$/i.test(trimmed)) return true;
+  return false;
+}
+
 /** Common club sponsors that should not create duplicate team identities. */
 const TEAM_SPONSOR_PREFIX =
   /^(dhl|vodacom|suzuki|toyota|hyundai|emirates|cell\s*c|mtn|sasol|investec|hollywood|fidelity|hollywood\s*card)\s+/i;
@@ -24,6 +36,9 @@ export function normalizeTeamName(name: string): string {
   return name
     .replace(/^→+\s*/u, "")
     .replace(/^bt\s+/i, "")
+    // Wikipedia image-size crumbs: "23px British & Irish Lions" / "... Lions 23px"
+    .replace(/^\d+px\b[\s-]*/i, "")
+    .replace(/[\s-]*\b\d+px\b$/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -96,13 +111,26 @@ export function isJunkTeamSlug(slug: string): boolean {
   );
 }
 
-/** Pure numbers / table ranks that Wikipedia parsers sometimes treat as team names. */
+/** Pure numbers / table ranks / wiki debris that parsers sometimes treat as team names. */
 export function isJunkTeamName(name: string): boolean {
   const trimmed = name.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   if (!trimmed) return true;
   if (/^\d+$/.test(trimmed)) return true;
   if (/^#?\d{1,3}$/.test(trimmed)) return true;
   if (/^(seed|rank|pool|pos(?:ition)?|p|w|d|l|pf|pa|pd|bp|pts?)$/i.test(trimmed)) return true;
+  if (/^\{\{/.test(trimmed) || /\}\}/.test(trimmed)) return true;
+  if (/football kit/i.test(trimmed)) return true;
+  if (/smalldiv/i.test(trimmed)) return true;
+  if (/^ru\s+sf\b/i.test(trimmed)) return true;
+  if (/\bcolspan\s*=/i.test(trimmed) || /\bcellpadding\s*=/i.test(trimmed) || /\bborder\s*:\s*0px\b/i.test(trimmed)) {
+    return true;
+  }
+  if (/^\d+px\b/i.test(trimmed) && trimmed.replace(/^\d+px\b[\s-]*/i, "").trim().length < 2) return true;
+  if (/^short[-\s]?term( deal| loan)?$/i.test(trimmed)) return true;
+  if (/^["']?short[-\s]?term/i.test(trimmed) && trimmed.length < 40) return true;
+  if (/\(short[-\s]?term( deal)?\)/i.test(trimmed) && trimmed.replace(/\(short[-\s]?term( deal)?\)/gi, "").trim().length < 2) {
+    return true;
+  }
   return false;
 }
 
@@ -117,6 +145,22 @@ export function clubNameFromJunkSlug(slug: string): string | null {
 const TEAM_DEDUP_BASE_ALIASES: Record<string, string> = {
   "mpumalanga pumas": "pumas",
   "t=mpumalanga pumas": "mpumalanga pumas",
+  // SA franchise ↔ Currie Cup union / historic names (same senior club identity)
+  "blue bulls": "bulls",
+  "northern bulls": "bulls",
+  "golden lions": "lions",
+  "gauteng lions": "lions",
+  "natal sharks": "sharks",
+  "coastal sharks": "sharks",
+  "free state cheetahs": "cheetahs",
+  "western stormers": "stormers",
+  "clermont auvergne": "clermont",
+  "asm clermont": "clermont",
+  "asm clermont auvergne": "clermont",
+  // British & Irish Lions historic / wiki variants
+  "british lions": "british irish lions",
+  "british and irish lions": "british irish lions",
+  "british & irish lions": "british irish lions",
 };
 
 /** Base club/country label with age/gender tier markers removed for duplicate matching. */
@@ -124,6 +168,7 @@ export function teamDedupBaseName(name: string): string {
   let normalized = stripTeamSponsorAndSeasonLabels(name);
   normalized = normalized.replace(/^t=/i, "").trim();
   normalized = normalized
+    .replace(/\s*\[\d+\]\s*$/g, "") // Wikipedia cite leftovers: "Clermont [2]"
     .replace(/\s*\(asst\.\)/gi, "")
     .replace(/\s*\(loan\)/gi, "")
     .replace(/\s*\(forwards\)/gi, "")
@@ -183,34 +228,71 @@ export const PLAYER_DISPLAY_NAME_FIXES: Record<string, string> = {
   "tom carr smith": "Tom Carr-Smith",
   "louie hennessey-booth": "Louie Hennessey",
   "francois van wyk": "Francois van Wyk",
+  "james butch": "Butch James",
+  "butch james": "Butch James",
+  "jager de lood": "Lood de Jager",
+  "lood de jager": "Lood de Jager",
 };
 
 const LIKELY_FIRST_NAMES = new Set([
+  "adriaan",
+  "andre",
   "austin",
   "ben",
+  "bongi",
+  "butch",
   "chris",
+  "cobus",
+  "damian",
   "dan",
+  "eben",
   "ewan",
+  "franco",
+  "francois",
   "finn",
   "guy",
+  "handre",
+  "herschel",
   "jack",
+  "jaco",
+  "jacques",
   "james",
+  "jan",
+  "jannie",
   "jasper",
+  "jesse",
   "joe",
+  "johan",
   "john",
   "josh",
+  "kwagga",
+  "lood",
   "louie",
+  "malcolm",
+  "manie",
+  "marco",
   "max",
   "miles",
   "neil",
   "ollie",
+  "ox",
+  "pieter",
+  "rassie",
+  "rg",
+  "ruan",
+  "sacha",
   "sam",
+  "schalk",
   "scott",
+  "siya",
+  "steven",
   "ted",
   "tom",
   "tyler",
   "will",
+  "wilco",
   "winters",
+  "zane",
 ]);
 
 function titleCaseWord(word: string): string {

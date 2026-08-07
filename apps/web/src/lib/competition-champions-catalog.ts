@@ -7,6 +7,8 @@ export type SeasonChampionEntry = {
   label: string;
   winner: string;
   wikipediaUrl?: string;
+  /** Optional Wikipedia tournament statistics page (player scoring boards, etc.). */
+  wikipediaStatisticsUrl?: string;
   flashscoreTableUrl?: string;
   flashscorePlayoffUrl?: string;
 };
@@ -609,6 +611,10 @@ export function rugbyWorldCupWikipediaSeasonUrl(year: number): string {
   return wikipediaArticleUrl(`${year} Rugby World Cup`);
 }
 
+export function rugbyWorldCupWikipediaStatisticsUrl(year: number): string {
+  return wikipediaArticleUrl(`${year} Rugby World Cup statistics`);
+}
+
 export const RUGBY_WORLD_CUP_CHAMPIONS: SeasonChampionEntry[] = [
   1987, 1991, 1995, 1999, 2003, 2007, 2011, 2015, 2019, 2023, 2027,
 ].map((startYear) => ({
@@ -616,6 +622,8 @@ export const RUGBY_WORLD_CUP_CHAMPIONS: SeasonChampionEntry[] = [
   label: String(startYear),
   winner: RUGBY_WORLD_CUP_WINNERS[startYear] ?? "TBD",
   wikipediaUrl: rugbyWorldCupWikipediaSeasonUrl(startYear),
+  wikipediaStatisticsUrl:
+    startYear <= 2023 ? rugbyWorldCupWikipediaStatisticsUrl(startYear) : undefined,
 }));
 
 export function rugbyEuropeChampionshipWikipediaSeasonUrl(year: number): string {

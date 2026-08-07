@@ -15,24 +15,34 @@ const EMPTY: StandingFormMeta = {
   losingBonusPoints: null,
 };
 
-const MAX_FORM_LENGTH = 10;
+/** Persist / display at most five genuine results (oldest → newest). */
+export const FORM_DISPLAY_SLOTS = 5;
+const MAX_FORM_LENGTH = FORM_DISPLAY_SLOTS;
 
 /**
- * Normalize a feed form sequence.
- * Feeds often pad with "-" for unplayed slots (`--W`, `LLL--`); we keep interior
- * placeholders but strip leading/trailing padding so the UI shows real results.
+ * Normalize a feed form sequence to W/D/L only.
+ * Feeds often pad with "-" (`--W`, `L-LL`, `LLL--`); dashes are never results.
  */
 export function normalizeFormSequence(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const stripped = value.toUpperCase().replace(/[\s,_/|]/g, "");
-  if (!stripped || !/^[WDL-]+$/.test(stripped) || !/[WDL]/.test(stripped)) return null;
-  const trimmed = stripped.replace(/^-+/, "").replace(/-+$/, "");
-  if (!trimmed || !/[WDL]/.test(trimmed)) return null;
-  return trimmed.slice(-MAX_FORM_LENGTH);
+  const upper = value.toUpperCase();
+  // Must be only result letters + separators / padding — reject free text.
+  if (!/^[WDL\s,_\-/|.]+$/.test(upper) || !/[WDL]/.test(upper)) return null;
+  const letters = upper.replace(/[^WDL]/g, "");
+  if (!letters) return null;
+  return letters.slice(-MAX_FORM_LENGTH);
+}
+
+/** Left-pad with "-" so the UI always renders a fixed number of form slots. */
+export function padFormForDisplay(form: string | null | undefined, slots = FORM_DISPLAY_SLOTS): string {
+  const letters = normalizeFormSequence(form) ?? "";
+  if (slots <= 0) return letters;
+  if (letters.length >= slots) return letters.slice(-slots);
+  return `${"-".repeat(slots - letters.length)}${letters}`;
 }
 
 function toCount(value: unknown): number | null {
-  const parsed = typeof value === "string" ? Number(value) : value;
+  const parsed = typeof value !== "string" ? value : Number(value);
   return typeof parsed === "number" && Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -69,7 +79,7 @@ export type FixtureResultInput = {
 export function computeFormSequenceFromFixtures(
   teamId: string,
   fixtures: FixtureResultInput[],
-  limit = 5,
+  limit = FORM_DISPLAY_SLOTS,
 ): string | null {
   const results: string[] = [];
   const ordered = [...fixtures].sort((a, b) => {
@@ -96,14 +106,13 @@ export function computeFormSequenceFromFixtures(
   return results.slice(-limit).join("");
 }
 
-/** True when stored form is missing or only dash padding (should recompute). */
+/** True when stored form is missing, dash-padded, or contains non-result placeholders. */
 export function standingFormNeedsRecompute(form: string | null | undefined): boolean {
   const trimmed = form?.trim();
   if (!trimmed) return true;
   if (/^-+$/.test(trimmed)) return true;
+  if (/-/.test(trimmed) && !trimmed.startsWith("{")) return true;
   const parsed = parseStandingForm(trimmed).lastFive;
   if (!parsed) return true;
-  // Mostly padding with a single letter (`--W`) is almost always a bad feed value.
-  const letters = parsed.replace(/-/g, "");
-  return letters.length > 0 && letters.length < 2 && /^-/.test(trimmed);
+  return false;
 }

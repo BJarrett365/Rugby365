@@ -1,6 +1,11 @@
 "use client";
 
-import type { RugbyTableHemisphereGroup, RugbyTableStandingRow } from "@/lib/table-lab/table-types";
+import { FormDots } from "@/components/competitions/FormDots";
+import type {
+  RugbyTableHemisphereGroup,
+  RugbyTablePoolGroup,
+  RugbyTableStandingRow,
+} from "@/lib/table-lab/table-types";
 
 function movementArrow(movement: RugbyTableStandingRow["movement"]): string {
   if (movement === "up") return "▲";
@@ -34,10 +39,12 @@ function StandingsTable({
   title,
   rows,
   showMovement,
+  formSlots,
 }: {
   title?: string;
   rows: RugbyTableStandingRow[];
   showMovement: boolean;
+  formSlots?: number;
 }) {
   if (!rows.length) {
     return <p className="text-sm text-zinc-500 m-0">No standings rows yet.</p>;
@@ -53,6 +60,7 @@ function StandingsTable({
               <th scope="col">#</th>
               {showMovement ? <th scope="col" aria-label="Movement" /> : null}
               <th scope="col">Team</th>
+              <th scope="col">Form</th>
               <th scope="col">P</th>
               <th scope="col">W</th>
               <th scope="col">D</th>
@@ -87,6 +95,9 @@ function StandingsTable({
                       <span className="live-table__clock">{row.liveMatchClock}</span>
                     ) : null}
                   </td>
+                  <td>
+                    <FormDots sequence={row.formSequence ?? []} slots={formSlots} />
+                  </td>
                   <td>{row.played}</td>
                   <td>{row.won}</td>
                   <td>{row.drawn}</td>
@@ -109,15 +120,19 @@ function StandingsTable({
 export function CompetitionLiveTable({
   rows,
   hemisphereGroups,
+  poolGroups,
   showMovement = true,
   liveMatchCount,
   note,
+  formSlots,
 }: {
   rows: RugbyTableStandingRow[];
   hemisphereGroups?: RugbyTableHemisphereGroup[];
+  poolGroups?: RugbyTablePoolGroup[];
   showMovement?: boolean;
   liveMatchCount?: number | null;
   note?: string | null;
+  formSlots?: number;
 }) {
   const liveRows = rows.filter(isLiveRow);
   const liveMatchCards = (() => {
@@ -166,9 +181,26 @@ export function CompetitionLiveTable({
         </p>
       ) : null}
 
-      {hemisphereGroups && hemisphereGroups.length > 0 ? (
+      {poolGroups && poolGroups.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {poolGroups.map((group) => (
+            <StandingsTable
+              key={group.id}
+              title={group.label}
+              rows={group.rows}
+              showMovement={false}
+              formSlots={group.formSlots}
+            />
+          ))}
+        </div>
+      ) : hemisphereGroups && hemisphereGroups.length > 0 ? (
         <div className="space-y-4">
-          <StandingsTable title="Full table" rows={rows} showMovement={showMovement} />
+          <StandingsTable
+            title="Full table"
+            rows={rows}
+            showMovement={showMovement}
+            formSlots={formSlots}
+          />
           <div className="grid gap-4 lg:grid-cols-2">
             {hemisphereGroups.map((group) => (
               <StandingsTable
@@ -176,12 +208,13 @@ export function CompetitionLiveTable({
                 title={group.label}
                 rows={group.rows}
                 showMovement={showMovement}
+                formSlots={formSlots}
               />
             ))}
           </div>
         </div>
       ) : (
-        <StandingsTable rows={rows} showMovement={showMovement} />
+        <StandingsTable rows={rows} showMovement={showMovement} formSlots={formSlots} />
       )}
     </div>
   );

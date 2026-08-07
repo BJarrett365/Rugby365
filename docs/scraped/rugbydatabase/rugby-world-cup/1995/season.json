@@ -1,0 +1,17 @@
+{
+  "competitionId": 344,
+  "competitionName": "Rugby World Cup",
+  "season": 1995,
+  "teamCount": 16,
+  "startDate": "25th May 1995",
+  "endDate": "24th Jun 1995",
+  "games": 32,
+  "sourceUrls": {
+    "hub": "https://www.rugbydatabase.co.uk/competition/index.php?competitionId=344",
+    "games": "https://www.rugbydatabase.co.uk/recurring-competitions/competition-games.php?competitionGroupId=1&competitionId=344",
+    "conferences": "https://www.rugbydatabase.co.uk/competition/conferences.php?competitionId=344",
+    "draw": "https://www.rugbydatabase.co.uk/competition/draw.php?competitionId=344",
+    "wikipedia": "https://en.wikipedia.org/wiki/1995_Rugby_World_Cup"
+  },
+  "scrapedAt": "2026-08-04T15:23:02.567Z"
+}

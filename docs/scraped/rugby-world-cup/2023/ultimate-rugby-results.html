@@ -1,0 +1,1842 @@
+<!DOCTYPE html><html lang="en" timestamp="1783208129">
+    <head>
+        <script type="text/javascript">
+    ;window.NREUM||(NREUM={});NREUM.init={privacy:{cookies_enabled:true}};
+    window.NREUM||(NREUM={}),__nr_require=function(t,e,n){function r(n){if(!e[n]){var i=e[n]={exports:{}};t[n][0].call(i.exports,function(e){var i=t[n][1][e];return r(i||e)},i,i.exports)}return e[n].exports}if("function"==typeof __nr_require)return __nr_require;for(var i=0;i<n.length;i++)r(n[i]);return r}({1:[function(t,e,n){function r(t){try{c.console&&console.log(t)}catch(e){}}var i,o=t("ee"),a=t(23),c={};try{i=localStorage.getItem("__nr_flags").split(","),console&&"function"==typeof console.log&&(c.console=!0,i.indexOf("dev")!==-1&&(c.dev=!0),i.indexOf("nr_dev")!==-1&&(c.nrDev=!0))}catch(s){}c.nrDev&&o.on("internal-error",function(t){r(t.stack)}),c.dev&&o.on("fn-err",function(t,e,n){r(n.stack)}),c.dev&&(r("NR AGENT IN DEVELOPMENT MODE"),r("flags: "+a(c,function(t,e){return t}).join(", ")))},{}],2:[function(t,e,n){function r(t,e,n,r,c){try{p?p-=1:i(c||new UncaughtException(t,e,n),!0)}catch(f){try{o("ierr",[f,s.now(),!0])}catch(d){}}return"function"==typeof u&&u.apply(this,a(arguments))}function UncaughtException(t,e,n){this.message=t||"Uncaught error with no additional information",this.sourceURL=e,this.line=n}function i(t,e){var n=e?null:s.now();o("err",[t,n])}var o=t("handle"),a=t(24),c=t("ee"),s=t("loader"),f=t("gos"),u=window.onerror,d=!1,l="nr@seenError",p=0;s.features.err=!0,t(1),window.onerror=r;try{throw new Error}catch(h){"stack"in h&&(t(9),t(8),"addEventListener"in window&&t(5),s.xhrWrappable&&t(10),d=!0)}c.on("fn-start",function(t,e,n){d&&(p+=1)}),c.on("fn-err",function(t,e,n){d&&!n[l]&&(f(n,l,function(){return!0}),this.thrown=!0,i(n))}),c.on("fn-end",function(){d&&!this.thrown&&p>0&&(p-=1)}),c.on("internal-error",function(t){o("ierr",[t,s.now(),!0])})},{}],3:[function(t,e,n){t("loader").features.ins=!0},{}],4:[function(t,e,n){function r(t){}if(window.performance&&window.performance.timing&&window.performance.getEntriesByType){var i=t("ee"),o=t("handle"),a=t(9),c=t(8),s="learResourceTimings",f="addEventListener",u="resourcetimingbufferfull",d="bstResource",l="resource",p="-start",h="-end",m="fn"+p,w="fn"+h,v="bstTimer",g="pushState",y=t("loader");y.features.stn=!0,t(7),"addEventListener"in window&&t(5);var x=NREUM.o.EV;i.on(m,function(t,e){var n=t[0];n instanceof x&&(this.bstStart=y.now())}),i.on(w,function(t,e){var n=t[0];n instanceof x&&o("bst",[n,e,this.bstStart,y.now()])}),a.on(m,function(t,e,n){this.bstStart=y.now(),this.bstType=n}),a.on(w,function(t,e){o(v,[e,this.bstStart,y.now(),this.bstType])}),c.on(m,function(){this.bstStart=y.now()}),c.on(w,function(t,e){o(v,[e,this.bstStart,y.now(),"requestAnimationFrame"])}),i.on(g+p,function(t){this.time=y.now(),this.startPath=location.pathname+location.hash}),i.on(g+h,function(t){o("bstHist",[location.pathname+location.hash,this.startPath,this.time])}),f in window.performance&&(window.performance["c"+s]?window.performance[f](u,function(t){o(d,[window.performance.getEntriesByType(l)]),window.performance["c"+s]()},!1):window.performance[f]("webkit"+u,function(t){o(d,[window.performance.getEntriesByType(l)]),window.performance["webkitC"+s]()},!1)),document[f]("scroll",r,{passive:!0}),document[f]("keypress",r,!1),document[f]("click",r,!1)}},{}],5:[function(t,e,n){function r(t){for(var e=t;e&&!e.hasOwnProperty(u);)e=Object.getPrototypeOf(e);e&&i(e)}function i(t){c.inPlace(t,[u,d],"-",o)}function o(t,e){return t[1]}var a=t("ee").get("events"),c=t("wrap-function")(a,!0),s=t("gos"),f=XMLHttpRequest,u="addEventListener",d="removeEventListener";e.exports=a,"getPrototypeOf"in Object?(r(document),r(window),r(f.prototype)):f.prototype.hasOwnProperty(u)&&(i(window),i(f.prototype)),a.on(u+"-start",function(t,e){var n=t[1],r=s(n,"nr@wrapped",function(){function t(){if("function"==typeof n.handleEvent)return n.handleEvent.apply(n,arguments)}var e={object:t,"function":n}[typeof n];return e?c(e,"fn-",null,e.name||"anonymous"):n});this.wrapped=t[1]=r}),a.on(d+"-start",function(t){t[1]=this.wrapped||t[1]})},{}],6:[function(t,e,n){function r(t,e,n){var r=t[e];"function"==typeof r&&(t[e]=function(){var t=o(arguments),e={};i.emit(n+"before-start",[t],e);var a;e[m]&&e[m].dt&&(a=e[m].dt);var c=r.apply(this,t);return i.emit(n+"start",[t,a],c),c.then(function(t){return i.emit(n+"end",[null,t],c),t},function(t){throw i.emit(n+"end",[t],c),t})})}var i=t("ee").get("fetch"),o=t(24),a=t(23);e.exports=i;var c=window,s="fetch-",f=s+"body-",u=["arrayBuffer","blob","json","text","formData"],d=c.Request,l=c.Response,p=c.fetch,h="prototype",m="nr@context";d&&l&&p&&(a(u,function(t,e){r(d[h],e,f),r(l[h],e,f)}),r(c,"fetch",s),i.on(s+"end",function(t,e){var n=this;if(e){var r=e.headers.get("content-length");null!==r&&(n.rxSize=r),i.emit(s+"done",[null,e],n)}else i.emit(s+"done",[t],n)}))},{}],7:[function(t,e,n){var r=t("ee").get("history"),i=t("wrap-function")(r);e.exports=r;var o=window.history&&window.history.constructor&&window.history.constructor.prototype,a=window.history;o&&o.pushState&&o.replaceState&&(a=o),i.inPlace(a,["pushState","replaceState"],"-")},{}],8:[function(t,e,n){var r=t("ee").get("raf"),i=t("wrap-function")(r),o="equestAnimationFrame";e.exports=r,i.inPlace(window,["r"+o,"mozR"+o,"webkitR"+o,"msR"+o],"raf-"),r.on("raf-start",function(t){t[0]=i(t[0],"fn-")})},{}],9:[function(t,e,n){function r(t,e,n){t[0]=a(t[0],"fn-",null,n)}function i(t,e,n){this.method=n,this.timerDuration=isNaN(t[1])?0:+t[1],t[0]=a(t[0],"fn-",this,n)}var o=t("ee").get("timer"),a=t("wrap-function")(o),c="setTimeout",s="setInterval",f="clearTimeout",u="-start",d="-";e.exports=o,a.inPlace(window,[c,"setImmediate"],c+d),a.inPlace(window,[s],s+d),a.inPlace(window,[f,"clearImmediate"],f+d),o.on(s+u,r),o.on(c+u,i)},{}],10:[function(t,e,n){function r(t,e){d.inPlace(e,["onreadystatechange"],"fn-",c)}function i(){var t=this,e=u.context(t);t.readyState>3&&!e.resolved&&(e.resolved=!0,u.emit("xhr-resolved",[],t)),d.inPlace(t,g,"fn-",c)}function o(t){y.push(t),h&&(b?b.then(a):w?w(a):(E=-E,R.data=E))}function a(){for(var t=0;t<y.length;t++)r([],y[t]);y.length&&(y=[])}function c(t,e){return e}function s(t,e){for(var n in t)e[n]=t[n];return e}t(5);var f=t("ee"),u=f.get("xhr"),d=t("wrap-function")(u),l=NREUM.o,p=l.XHR,h=l.MO,m=l.PR,w=l.SI,v="readystatechange",g=["onload","onerror","onabort","onloadstart","onloadend","onprogress","ontimeout"],y=[];e.exports=u;var x=window.XMLHttpRequest=function(t){var e=new p(t);try{u.emit("new-xhr",[e],e),e.addEventListener(v,i,!1)}catch(n){try{u.emit("internal-error",[n])}catch(r){}}return e};if(s(p,x),x.prototype=p.prototype,d.inPlace(x.prototype,["open","send"],"-xhr-",c),u.on("send-xhr-start",function(t,e){r(t,e),o(e)}),u.on("open-xhr-start",r),h){var b=m&&m.resolve();if(!w&&!m){var E=1,R=document.createTextNode(E);new h(a).observe(R,{characterData:!0})}}else f.on("fn-end",function(t){t[0]&&t[0].type===v||a()})},{}],11:[function(t,e,n){function r(t){if(!c(t))return null;var e=window.NREUM;if(!e.loader_config)return null;var n=(e.loader_config.accountID||"").toString()||null,r=(e.loader_config.agentID||"").toString()||null,f=(e.loader_config.trustKey||"").toString()||null;if(!n||!r)return null;var h=p.generateSpanId(),m=p.generateTraceId(),w=Date.now(),v={spanId:h,traceId:m,timestamp:w};return(t.sameOrigin||s(t)&&l())&&(v.traceContextParentHeader=i(h,m),v.traceContextStateHeader=o(h,w,n,r,f)),(t.sameOrigin&&!u()||!t.sameOrigin&&s(t)&&d())&&(v.newrelicHeader=a(h,m,w,n,r,f)),v}function i(t,e){return"00-"+e+"-"+t+"-01"}function o(t,e,n,r,i){var o=0,a="",c=1,s="",f="";return i+"@nr="+o+"-"+c+"-"+n+"-"+r+"-"+t+"-"+a+"-"+s+"-"+f+"-"+e}function a(t,e,n,r,i,o){var a="btoa"in window&&"function"==typeof window.btoa;if(!a)return null;var c={v:[0,1],d:{ty:"Browser",ac:r,ap:i,id:t,tr:e,ti:n}};return o&&r!==o&&(c.d.tk=o),btoa(JSON.stringify(c))}function c(t){return f()&&s(t)}function s(t){var e=!1,n={};if("init"in NREUM&&"distributed_tracing"in NREUM.init&&(n=NREUM.init.distributed_tracing),t.sameOrigin)e=!0;else if(n.allowed_origins instanceof Array)for(var r=0;r<n.allowed_origins.length;r++){var i=h(n.allowed_origins[r]);if(t.hostname===i.hostname&&t.protocol===i.protocol&&t.port===i.port){e=!0;break}}return e}function f(){return"init"in NREUM&&"distributed_tracing"in NREUM.init&&!!NREUM.init.distributed_tracing.enabled}function u(){return"init"in NREUM&&"distributed_tracing"in NREUM.init&&!!NREUM.init.distributed_tracing.exclude_newrelic_header}function d(){return"init"in NREUM&&"distributed_tracing"in NREUM.init&&NREUM.init.distributed_tracing.cors_use_newrelic_header!==!1}function l(){return"init"in NREUM&&"distributed_tracing"in NREUM.init&&!!NREUM.init.distributed_tracing.cors_use_tracecontext_headers}var p=t(20),h=t(13);e.exports={generateTracePayload:r,shouldGenerateTrace:c}},{}],12:[function(t,e,n){function r(t){var e=this.params,n=this.metrics;if(!this.ended){this.ended=!0;for(var r=0;r<l;r++)t.removeEventListener(d[r],this.listener,!1);e.aborted||(n.duration=a.now()-this.startTime,this.loadCaptureCalled||4!==t.readyState?null==e.status&&(e.status=0):o(this,t),n.cbTime=this.cbTime,u.emit("xhr-done",[t],t),c("xhr",[e,n,this.startTime]))}}function i(t,e){var n=s(e),r=t.params;r.host=n.hostname+":"+n.port,r.pathname=n.pathname,t.parsedOrigin=s(e),t.sameOrigin=t.parsedOrigin.sameOrigin}function o(t,e){t.params.status=e.status;var n=w(e,t.lastSize);if(n&&(t.metrics.rxSize=n),t.sameOrigin){var r=e.getResponseHeader("X-NewRelic-App-Data");r&&(t.params.cat=r.split(", ").pop())}t.loadCaptureCalled=!0}var a=t("loader");if(a.xhrWrappable){var c=t("handle"),s=t(13),f=t(11).generateTracePayload,u=t("ee"),d=["load","error","abort","timeout"],l=d.length,p=t("id"),h=t(17),m=t(16),w=t(14),v=window.XMLHttpRequest;a.features.xhr=!0,t(10),t(6),u.on("new-xhr",function(t){var e=this;e.totalCbs=0,e.called=0,e.cbTime=0,e.end=r,e.ended=!1,e.xhrGuids={},e.lastSize=null,e.loadCaptureCalled=!1,t.addEventListener("load",function(n){o(e,t)},!1),h&&(h>34||h<10)||window.opera||t.addEventListener("progress",function(t){e.lastSize=t.loaded},!1)}),u.on("open-xhr-start",function(t){this.params={method:t[0]},i(this,t[1]),this.metrics={}}),u.on("open-xhr-end",function(t,e){"loader_config"in NREUM&&"xpid"in NREUM.loader_config&&this.sameOrigin&&e.setRequestHeader("X-NewRelic-ID",NREUM.loader_config.xpid);var n=f(this.parsedOrigin);if(n){var r=!1;n.newrelicHeader&&(e.setRequestHeader("newrelic",n.newrelicHeader),r=!0),n.traceContextParentHeader&&(e.setRequestHeader("traceparent",n.traceContextParentHeader),n.traceContextStateHeader&&e.setRequestHeader("tracestate",n.traceContextStateHeader),r=!0),r&&(this.dt=n)}}),u.on("send-xhr-start",function(t,e){var n=this.metrics,r=t[0],i=this;if(n&&r){var o=m(r);o&&(n.txSize=o)}this.startTime=a.now(),this.listener=function(t){try{"abort"!==t.type||i.loadCaptureCalled||(i.params.aborted=!0),("load"!==t.type||i.called===i.totalCbs&&(i.onloadCalled||"function"!=typeof e.onload))&&i.end(e)}catch(n){try{u.emit("internal-error",[n])}catch(r){}}};for(var c=0;c<l;c++)e.addEventListener(d[c],this.listener,!1)}),u.on("xhr-cb-time",function(t,e,n){this.cbTime+=t,e?this.onloadCalled=!0:this.called+=1,this.called!==this.totalCbs||!this.onloadCalled&&"function"==typeof n.onload||this.end(n)}),u.on("xhr-load-added",function(t,e){var n=""+p(t)+!!e;this.xhrGuids&&!this.xhrGuids[n]&&(this.xhrGuids[n]=!0,this.totalCbs+=1)}),u.on("xhr-load-removed",function(t,e){var n=""+p(t)+!!e;this.xhrGuids&&this.xhrGuids[n]&&(delete this.xhrGuids[n],this.totalCbs-=1)}),u.on("addEventListener-end",function(t,e){e instanceof v&&"load"===t[0]&&u.emit("xhr-load-added",[t[1],t[2]],e)}),u.on("removeEventListener-end",function(t,e){e instanceof v&&"load"===t[0]&&u.emit("xhr-load-removed",[t[1],t[2]],e)}),u.on("fn-start",function(t,e,n){e instanceof v&&("onload"===n&&(this.onload=!0),("load"===(t[0]&&t[0].type)||this.onload)&&(this.xhrCbStart=a.now()))}),u.on("fn-end",function(t,e){this.xhrCbStart&&u.emit("xhr-cb-time",[a.now()-this.xhrCbStart,this.onload,e],e)}),u.on("fetch-before-start",function(t){function e(t,e){var n=!1;return e.newrelicHeader&&(t.set("newrelic",e.newrelicHeader),n=!0),e.traceContextParentHeader&&(t.set("traceparent",e.traceContextParentHeader),e.traceContextStateHeader&&t.set("tracestate",e.traceContextStateHeader),n=!0),n}var n,r=t[1]||{};"string"==typeof t[0]?n=t[0]:t[0]&&t[0].url?n=t[0].url:window.URL&&t[0]&&t[0]instanceof URL&&(n=t[0].href),n&&(this.parsedOrigin=s(n),this.sameOrigin=this.parsedOrigin.sameOrigin);var i=f(this.parsedOrigin);if(i&&(i.newrelicHeader||i.traceContextParentHeader))if("string"==typeof t[0]||window.URL&&t[0]&&t[0]instanceof URL){var o={};for(var a in r)o[a]=r[a];o.headers=new Headers(r.headers||{}),e(o.headers,i)&&(this.dt=i),t.length>1?t[1]=o:t.push(o)}else t[0]&&t[0].headers&&e(t[0].headers,i)&&(this.dt=i)})}},{}],13:[function(t,e,n){var r={};e.exports=function(t){if(t in r)return r[t];var e=document.createElement("a"),n=window.location,i={};e.href=t,i.port=e.port;var o=e.href.split("://");!i.port&&o[1]&&(i.port=o[1].split("/")[0].split("@").pop().split(":")[1]),i.port&&"0"!==i.port||(i.port="https"===o[0]?"443":"80"),i.hostname=e.hostname||n.hostname,i.pathname=e.pathname,i.protocol=o[0],"/"!==i.pathname.charAt(0)&&(i.pathname="/"+i.pathname);var a=!e.protocol||":"===e.protocol||e.protocol===n.protocol,c=e.hostname===document.domain&&e.port===n.port;return i.sameOrigin=a&&(!e.hostname||c),"/"===i.pathname&&(r[t]=i),i}},{}],14:[function(t,e,n){function r(t,e){var n=t.responseType;return"json"===n&&null!==e?e:"arraybuffer"===n||"blob"===n||"json"===n?i(t.response):"text"===n||""===n||void 0===n?i(t.responseText):void 0}var i=t(16);e.exports=r},{}],15:[function(t,e,n){function r(){}function i(t,e,n){return function(){return o(t,[f.now()].concat(c(arguments)),e?null:this,n),e?void 0:this}}var o=t("handle"),a=t(23),c=t(24),s=t("ee").get("tracer"),f=t("loader"),u=NREUM;"undefined"==typeof window.newrelic&&(newrelic=u);var d=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],l="api-",p=l+"ixn-";a(d,function(t,e){u[e]=i(l+e,!0,"api")}),u.addPageAction=i(l+"addPageAction",!0),u.setCurrentRouteName=i(l+"routeName",!0),e.exports=newrelic,u.interaction=function(){return(new r).get()};var h=r.prototype={createTracer:function(t,e){var n={},r=this,i="function"==typeof e;return o(p+"tracer",[f.now(),t,n],r),function(){if(s.emit((i?"":"no-")+"fn-start",[f.now(),r,i],n),i)try{return e.apply(this,arguments)}catch(t){throw s.emit("fn-err",[arguments,this,t],n),t}finally{s.emit("fn-end",[f.now()],n)}}}};a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(t,e){h[e]=i(p+e)}),newrelic.noticeError=function(t,e){"string"==typeof t&&(t=new Error(t)),o("err",[t,f.now(),!1,e])}},{}],16:[function(t,e,n){e.exports=function(t){if("string"==typeof t&&t.length)return t.length;if("object"==typeof t){if("undefined"!=typeof ArrayBuffer&&t instanceof ArrayBuffer&&t.byteLength)return t.byteLength;if("undefined"!=typeof Blob&&t instanceof Blob&&t.size)return t.size;if(!("undefined"!=typeof FormData&&t instanceof FormData))try{return JSON.stringify(t).length}catch(e){return}}}},{}],17:[function(t,e,n){var r=0,i=navigator.userAgent.match(/Firefox[\/\s](\d+\.\d+)/);i&&(r=+i[1]),e.exports=r},{}],18:[function(t,e,n){function r(){return c.exists&&performance.now?Math.round(performance.now()):(o=Math.max((new Date).getTime(),o))-a}function i(){return o}var o=(new Date).getTime(),a=o,c=t(25);e.exports=r,e.exports.offset=a,e.exports.getLastTimestamp=i},{}],19:[function(t,e,n){function r(t,e){var n=t.getEntries();n.forEach(function(t){"first-paint"===t.name?d("timing",["fp",Math.floor(t.startTime)]):"first-contentful-paint"===t.name&&d("timing",["fcp",Math.floor(t.startTime)])})}function i(t,e){var n=t.getEntries();n.length>0&&d("lcp",[n[n.length-1]])}function o(t){t.getEntries().forEach(function(t){t.hadRecentInput||d("cls",[t])})}function a(t){if(t instanceof h&&!w){var e=Math.round(t.timeStamp),n={type:t.type};e<=l.now()?n.fid=l.now()-e:e>l.offset&&e<=Date.now()?(e-=l.offset,n.fid=l.now()-e):e=l.now(),w=!0,d("timing",["fi",e,n])}}function c(t){d("pageHide",[l.now(),t])}if(!("init"in NREUM&&"page_view_timing"in NREUM.init&&"enabled"in NREUM.init.page_view_timing&&NREUM.init.page_view_timing.enabled===!1)){var s,f,u,d=t("handle"),l=t("loader"),p=t(22),h=NREUM.o.EV;if("PerformanceObserver"in window&&"function"==typeof window.PerformanceObserver){s=new PerformanceObserver(r);try{s.observe({entryTypes:["paint"]})}catch(m){}f=new PerformanceObserver(i);try{f.observe({entryTypes:["largest-contentful-paint"]})}catch(m){}u=new PerformanceObserver(o);try{u.observe({type:"layout-shift",buffered:!0})}catch(m){}}if("addEventListener"in document){var w=!1,v=["click","keydown","mousedown","pointerdown","touchstart"];v.forEach(function(t){document.addEventListener(t,a,!1)})}p(c)}},{}],20:[function(t,e,n){function r(){function t(){return e?15&e[n++]:16*Math.random()|0}var e=null,n=0,r=window.crypto||window.msCrypto;r&&r.getRandomValues&&(e=r.getRandomValues(new Uint8Array(31)));for(var i,o="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",a="",c=0;c<o.length;c++)i=o[c],"x"===i?a+=t().toString(16):"y"===i?(i=3&t()|8,a+=i.toString(16)):a+=i;return a}function i(){return a(16)}function o(){return a(32)}function a(t){function e(){return n?15&n[r++]:16*Math.random()|0}var n=null,r=0,i=window.crypto||window.msCrypto;i&&i.getRandomValues&&Uint8Array&&(n=i.getRandomValues(new Uint8Array(31)));for(var o=[],a=0;a<t;a++)o.push(e().toString(16));return o.join("")}e.exports={generateUuid:r,generateSpanId:i,generateTraceId:o}},{}],21:[function(t,e,n){function r(t,e){if(!i)return!1;if(t!==i)return!1;if(!e)return!0;if(!o)return!1;for(var n=o.split("."),r=e.split("."),a=0;a<r.length;a++)if(r[a]!==n[a])return!1;return!0}var i=null,o=null,a=/Version\/(\S+)\s+Safari/;if(navigator.userAgent){var c=navigator.userAgent,s=c.match(a);s&&c.indexOf("Chrome")===-1&&c.indexOf("Chromium")===-1&&(i="Safari",o=s[1])}e.exports={agent:i,version:o,match:r}},{}],22:[function(t,e,n){function r(t){function e(){t(a&&document[a]?document[a]:document[i]?"hidden":"visible")}"addEventListener"in document&&o&&document.addEventListener(o,e,!1)}e.exports=r;var i,o,a;"undefined"!=typeof document.hidden?(i="hidden",o="visibilitychange",a="visibilityState"):"undefined"!=typeof document.msHidden?(i="msHidden",o="msvisibilitychange"):"undefined"!=typeof document.webkitHidden&&(i="webkitHidden",o="webkitvisibilitychange",a="webkitVisibilityState")},{}],23:[function(t,e,n){function r(t,e){var n=[],r="",o=0;for(r in t)i.call(t,r)&&(n[o]=e(r,t[r]),o+=1);return n}var i=Object.prototype.hasOwnProperty;e.exports=r},{}],24:[function(t,e,n){function r(t,e,n){e||(e=0),"undefined"==typeof n&&(n=t?t.length:0);for(var r=-1,i=n-e||0,o=Array(i<0?0:i);++r<i;)o[r]=t[e+r];return o}e.exports=r},{}],25:[function(t,e,n){e.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],ee:[function(t,e,n){function r(){}function i(t){function e(t){return t&&t instanceof r?t:t?f(t,s,a):a()}function n(n,r,i,o,a){if(a!==!1&&(a=!0),!p.aborted||o){t&&a&&t(n,r,i);for(var c=e(i),s=m(n),f=s.length,u=0;u<f;u++)s[u].apply(c,r);var l=d[y[n]];return l&&l.push([x,n,r,c]),c}}function o(t,e){g[t]=m(t).concat(e)}function h(t,e){var n=g[t];if(n)for(var r=0;r<n.length;r++)n[r]===e&&n.splice(r,1)}function m(t){return g[t]||[]}function w(t){return l[t]=l[t]||i(n)}function v(t,e){u(t,function(t,n){e=e||"feature",y[n]=e,e in d||(d[e]=[])})}var g={},y={},x={on:o,addEventListener:o,removeEventListener:h,emit:n,get:w,listeners:m,context:e,buffer:v,abort:c,aborted:!1};return x}function o(t){return f(t,s,a)}function a(){return new r}function c(){(d.api||d.feature)&&(p.aborted=!0,d=p.backlog={})}var s="nr@context",f=t("gos"),u=t(23),d={},l={},p=e.exports=i();e.exports.getOrSetContext=o,p.backlog=d},{}],gos:[function(t,e,n){function r(t,e,n){if(i.call(t,e))return t[e];var r=n();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(t,e,{value:r,writable:!0,enumerable:!1}),r}catch(o){}return t[e]=r,r}var i=Object.prototype.hasOwnProperty;e.exports=r},{}],handle:[function(t,e,n){function r(t,e,n,r){i.buffer([t],r),i.emit(t,e,n)}var i=t("ee").get("handle");e.exports=r,r.ee=i},{}],id:[function(t,e,n){function r(t){var e=typeof t;return!t||"object"!==e&&"function"!==e?-1:t===window?0:a(t,o,function(){return i++})}var i=1,o="nr@id",a=t("gos");e.exports=r},{}],loader:[function(t,e,n){function r(){if(!b++){var t=x.info=NREUM.info,e=l.getElementsByTagName("script")[0];if(setTimeout(f.abort,3e4),!(t&&t.licenseKey&&t.applicationID&&e))return f.abort();s(g,function(e,n){t[e]||(t[e]=n)});var n=a();c("mark",["onload",n+x.offset],null,"api"),c("timing",["load",n]);var r=l.createElement("script");r.src="https://"+t.agent,e.parentNode.insertBefore(r,e)}}function i(){"complete"===l.readyState&&o()}function o(){c("mark",["domContent",a()+x.offset],null,"api")}var a=t(18),c=t("handle"),s=t(23),f=t("ee"),u=t(21),d=window,l=d.document,p="addEventListener",h="attachEvent",m=d.XMLHttpRequest,w=m&&m.prototype;NREUM.o={ST:setTimeout,SI:d.setImmediate,CT:clearTimeout,XHR:m,REQ:d.Request,EV:d.Event,PR:d.Promise,MO:d.MutationObserver};var v=""+location,g={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-1198.min.js"},y=m&&w&&w[p]&&!/CriOS/.test(navigator.userAgent),x=e.exports={offset:a.getLastTimestamp(),now:a,origin:v,features:{},xhrWrappable:y,userAgent:u};t(15),t(19),l[p]?(l[p]("DOMContentLoaded",o,!1),d[p]("load",r,!1)):(l[h]("onreadystatechange",i),d[h]("onload",r)),c("mark",["firstbyte",a.getLastTimestamp()],null,"api");var b=0},{}],"wrap-function":[function(t,e,n){function r(t,e){function n(e,n,r,s,f){function nrWrapper(){var o,a,u,l;try{a=this,o=d(arguments),u="function"==typeof r?r(o,a):r||{}}catch(p){i([p,"",[o,a,s],u],t)}c(n+"start",[o,a,s],u,f);try{return l=e.apply(a,o)}catch(h){throw c(n+"err",[o,a,h],u,f),h}finally{c(n+"end",[o,a,l],u,f)}}return a(e)?e:(n||(n=""),nrWrapper[l]=e,o(e,nrWrapper,t),nrWrapper)}function r(t,e,r,i,o){r||(r="");var c,s,f,u="-"===r.charAt(0);for(f=0;f<e.length;f++)s=e[f],c=t[s],a(c)||(t[s]=n(c,u?s+r:r,i,s,o))}function c(n,r,o,a){if(!h||e){var c=h;h=!0;try{t.emit(n,r,o,e,a)}catch(s){i([s,n,r,o],t)}h=c}}return t||(t=u),n.inPlace=r,n.flag=l,n}function i(t,e){e||(e=u);try{e.emit("internal-error",t)}catch(n){}}function o(t,e,n){if(Object.defineProperty&&Object.keys)try{var r=Object.keys(t);return r.forEach(function(n){Object.defineProperty(e,n,{get:function(){return t[n]},set:function(e){return t[n]=e,e}})}),e}catch(o){i([o],n)}for(var a in t)p.call(t,a)&&(e[a]=t[a]);return e}function a(t){return!(t&&t instanceof Function&&t.apply&&!t[l])}function c(t,e){var n=e(t);return n[l]=t,o(t,n,u),n}function s(t,e,n){var r=t[e];t[e]=c(r,n)}function f(){for(var t=arguments.length,e=new Array(t),n=0;n<t;++n)e[n]=arguments[n];return e}var u=t("ee"),d=t(24),l="nr@original",p=Object.prototype.hasOwnProperty,h=!1;e.exports=r,e.exports.wrapFunction=c,e.exports.wrapInPlace=s,e.exports.argsToArray=f},{}]},{},["loader",2,12,4,3]);
+    ;NREUM.loader_config={accountID:"1552446",trustKey:"1552446",agentID:"99590563",licenseKey:"fbf38aa8f4",applicationID:"99590400"}
+    ;NREUM.info={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",licenseKey:"fbf38aa8f4",applicationID:"99590400",sa:1}
+</script>
+
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<meta name="viewport" content="initial-scale=1, user-scalable=0" >
+<meta name="apple-mobile-web-app-status-bar-style" content="black" >
+<meta name="theme-color" content="#222222" >
+		<meta property="fb:app_id" content="340479486046083"/>
+<meta property="og:type" content="ultimaterugbyapp:rugby_league"/>
+<meta property="og:url" content="https://www.ultimaterugby.com/rugby-world-cup-2023"/>
+<meta property="og:title" content="Rugby World Cup 2023"/>
+<meta property="og:description" content="Rugby World Cup 2023 - Live Results, Fixtures and Tables on UltimateRugby"/>
+<meta property="og:image" content="https://www.ultimaterugby.com/images/entities/250938-aada51dcc5-3/rugbyworldcup2023.jpg"/>
+<meta property="al:ios:app_store_id" content="565995979"/>
+<meta property="al:ios:app_name" content="Ultimate Rugby"/>
+<meta property="al:android:package" content="com.ultimaterugby"/>
+<meta property="al:android:app_name" content="Ultimate Rugby"/>
+<meta property="al:web:should_fallback" content="false"/>
+<meta property="al:ios:url" content="ultimaterugby://league/3241"/>
+<meta property="al:android:url" content="ultimaterugby://league/3241"/>
+<meta property="al:web:url" content="https://www.ultimaterugby.com/rugby-world-cup-2023"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:site" content="@ultimaterugby"/>
+<meta name="twitter:title" content="Rugby World Cup 2023"/>
+<meta name="twitter:description" content="Rugby World Cup 2023 - Live Results, Fixtures and Tables on UltimateRugby"/>
+<meta name="twitter:image:src" content="https://www.ultimaterugby.com/images/entities/250938-aada51dcc5-3/rugbyworldcup2023.jpg"/>
+<meta name="twitter:app:name:iphone" content="Ultimate Rugby"/>
+<meta name="twitter:app:name:googleplay" content="Ultimate Rugby"/>
+<meta name="twitter:app:id:iphone" content="565995979"/>
+<meta name="twitter:app:id:googleplay" content="com.ultimaterugby"/>
+<meta name="twitter:app:url:iphone" content="ultimaterugby://league/3241"/>
+<meta name="twitter:app:url:googleplay" content="ultimaterugby://league/3241"/>
+
+		<meta name="description" content="Ultimate Rugby Players, News, Fixtures and Live Results">
+        <meta name="apple-itunes-app" content="app-id=565995979">
+        <meta name="google-play-app" content="app-id=com.ultimaterugby">
+
+        <!-- @see https://developers.google.com/speed/docs/insights/OptimizeCSSDelivery -->
+		<style>
+			html {
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+header {
+  background: #222;
+  color: #999;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;
+  position: relative;
+  z-index: 1000;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.3) 0 1px 2px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.3) 0 1px 2px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0 1px 2px;
+}
+.cookie-policy {
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+footer {
+  border-top: 1px solid #ddd;
+  background: #fff;
+  padding: 20px 0px;
+}
+.fixed {
+  position: fixed;
+  left: 0px;
+  right: 0px;
+}
+.main-content {
+  background: url('https://i.imgur.com/2xghDFK.png') #f3f3f8 repeat-x;
+  padding: 0 0 20px 0;
+  min-height: 600px;
+}
+.vertical-spacer {
+  margin: 15px 0;
+}
+.spacer {
+  margin: 15px 0;
+}
+.hero {
+  background-size: cover;
+  background-position: center center;
+  background-attachment: scroll;
+  background-repeat: no-repeat;
+  position: relative;
+}
+.hero + .container {
+  padding-top: 15px;
+}
+.hero-match {
+  background-image: url(/images/matchCover_3.jpg);
+}
+.hero-team {
+  background-image: url(/images/matchCover_3.jpg);
+}
+.hero-league {
+  background-image: url(/images/matchCover_3.jpg);
+}
+.hero-player {
+  background-image: url(/images/matchCover_3.jpg);
+}
+.hero-background-wrap {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  top: 0px;
+  overflow: hidden;
+  background: #222;
+}
+.hero-background {
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  bottom: 30px;
+  top: -20px;
+}
+.hero-background img {
+  display: block;
+  opacity: 0.6;
+  width: 150%;
+  left: 25%;
+  margin-left: -50%;
+  bottom: 0;
+  position: absolute;
+  background-position: center center;
+  background-size: cover;
+  -webkit-filter: blur(15px);
+}
+.table {
+  background: #fff;
+}
+aside .widget {
+  margin: 0 0 30px 0;
+}
+aside .widget h4 {
+  text-transform: uppercase;
+  color: #333;
+}
+aside .widget h4 a {
+  text-decoration: underline;
+}
+.table-fixed {
+  table-layout: fixed;
+}
+.blur {
+  -webkit-filter: blur(2px);
+}
+.map {
+  height: 200px;
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+}
+.table-weather {
+  table-layout: fixed;
+  width: 100%;
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+  border-collapse: collapse;
+  border-top: none;
+  background: #fff;
+}
+.table-weather td {
+  padding: 10px 5px;
+  line-height: 100%;
+}
+.table-weather img {
+  display: block;
+  margin: 0px auto;
+  max-width: 100%;
+}
+.table-weather .forecast {
+  text-align: center;
+  font-size: 11px;
+}
+.table-weather .forecast .temp-min,
+.table-weather .forecast .temp-max {
+  display: inline-block;
+  margin: 0px 2px;
+}
+.table-weather .forecast .temp-min {
+  color: #777;
+}
+.table-weather .forecast .highlight {
+  background: #ff9;
+}
+.table-weather .forecast td {
+  vertical-align: bottom;
+}
+.table-weather .forecast img {
+  max-width: 40px;
+}
+.table-weather .current .temp-current {
+  display: block;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+.table-weather .current .detail {
+  color: #777;
+  font-size: 11px;
+  line-height: 14px;
+  display: block;
+}
+.table-weather .current img {
+  float: left;
+  margin: 0px 10px 0px 0px;
+  height: 64px;
+  width: 64px;
+}
+.table-weather .current td {
+  border-bottom: 1px solid #ddd;
+}
+.table-weather img.logo {
+  margin: 0;
+  width: auto;
+  height: 20px;
+}
+.hero-location .block-summary {
+  position: relative;
+  height: 200px;
+  padding: 0px;
+}
+.hero-location .map-back {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  height: 200px;
+}
+.hero-location .map-back .map {
+  height: 200px;
+}
+.hero-location .content-overlay {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.3);
+}
+.hero-location .table-weather {
+  margin-top: 15px;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+}
+.hero-location .table-weather .detail {
+  color: inherit;
+}
+.hero-location .table-weather td {
+  border: none;
+}
+.hero-location .table-weather .forecast td {
+  padding: 10px;
+}
+.hero-location .table-weather .forecast img {
+  max-width: 32px;
+}
+.hero-location .table-weather .forecast .temp-min {
+  color: #eee;
+}
+.chart {
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+  padding: 10px;
+  background: #fff;
+  margin-bottom: 30px;
+}
+.block-summary {
+  position: relative;
+  padding: 0 0 20px 0;
+  color: #fff;
+  text-shadow: rgba(0, 0, 0, 0.2) 0px 1px 1px;
+}
+.block-summary a {
+  color: inherit;
+}
+.block-summary .profile-photo {
+  float: left;
+}
+.block-summary .profile-photo img {
+  width: 110px;
+  height: 110px;
+  border-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px;
+}
+.block-summary .profile-detail {
+  margin-left: 140px;
+  position: relative;
+}
+.block-summary .profile-detail h1 {
+  margin-bottom: 20px;
+}
+.block-summary .profile-detail .detail > a,
+.block-summary .profile-detail .detail > span {
+  white-space: nowrap;
+  display: inline-block;
+  margin: 0  15px 5px 0;
+}
+.block-summary .profile-detail .stats {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+.block-summary .profile-detail .stats .number {
+  padding: 5px 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  text-align: center;
+}
+.block-summary .profile-detail .stats .number > span {
+  font-size: 36px;
+  display: block;
+}
+.block-summary .profile-detail .stats .number > small {
+  display: block;
+  text-transform: uppercase;
+}
+.block-summary .hero-strip-top {
+  background: rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+.block-summary .hero-strip-top .dropdown {
+  text-shadow: none;
+}
+.yt-video-player {
+  margin: 15px 0;
+}
+.yt-video-player .embed-responsive {
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+}
+.yt-video-list {
+  margin: 15px 0;
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+  overflow: auto;
+  height: 424px;
+}
+.yt-video-list ul {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+.yt-video-list ul li {
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  background: #fff;
+  zoom: 1;
+  cursor: pointer;
+  display: block;
+  margin: 0;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+.yt-video-list ul li:hover {
+  background: #f8f8f8;
+}
+.yt-video-list ul li:before,
+.yt-video-list ul li:after {
+  display: table;
+  content: "";
+  zoom: 1;
+}
+.yt-video-list ul li:after {
+  clear: both;
+}
+.yt-video-list ul li img {
+  float: left;
+  width: 60px;
+}
+.yt-video-list ul li div {
+  margin-left: 70px;
+}
+.yt-video-list ul li h4 {
+  font-size: 14px;
+}
+.media {
+  margin-bottom: 30px;
+  overflow: visible;
+}
+.media .media-object {
+  float: left;
+  margin-right: 10px;
+}
+.media .media-body {
+  overflow: visible;
+}
+.media .media-body p,
+.media .media-body ul,
+.media .media-body ol {
+  overflow: hidden;
+}
+.media .detail {
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+.media .detail > span {
+  margin-right: 10px;
+  display: inline-block;
+  white-space: nowrap;
+}
+.media .detail > span > a {
+  color: inherit;
+}
+@media (max-width: 991px) {
+  body {
+    font-family: 'Roboto', 'Helvetica Neue', 'Open Sans', sans-serif;
+  }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  footer {
+    padding-bottom: 60px;
+  }
+  .block-summary {
+    padding: 0 0 15px 0;
+  }
+  .block-summary .profile-photo img {
+    height: 70px;
+    width: 70px;
+  }
+  .block-summary .profile-detail {
+    margin-left: 80px;
+  }
+  .block-summary .profile-detail h1 {
+    font-size: 24px;
+    margin: 10px 0px 5px 0px;
+  }
+  .block-summary .profile-detail .stats {
+    position: relative;
+    display: inline-block;
+  }
+  .block-summary .profile-detail .stats .number {
+    padding: 3px 5px;
+  }
+  .block-summary .profile-detail .stats .number > span {
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-block;
+  }
+  .block-summary .profile-detail .stats .number > small {
+    display: inline-block;
+  }
+  .table-weather {
+    background: none;
+  }
+  .table-weather .forecast {
+    display: none;
+  }
+  .ads-wrap {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 0 5px;
+    height: 50px;
+    z-index: 10;
+  }
+  .ads-responsive {
+    position: absolute;
+    left: 50%;
+    margin-left: -160px;
+    width: 320px;
+    height: 50px;
+    z-index: 1000;
+  }
+  .ads-responsive .ads-slot-1 {
+    width: 320px;
+    height: 50px;
+  }
+}
+.img-responsive {
+  max-width: 100%;
+}
+.app-ad-2x1 {
+  position: relative;
+  min-height: 200px;
+  background-image: url('/images/adBackGrass.jpg');
+  background-size: cover;
+  padding: 50px 0;
+}
+.app-ad-2x1 .strip {
+  background: rgba(0, 0, 0, 0.3);
+  zoom: 1;
+}
+.app-ad-2x1 .strip:before,
+.app-ad-2x1 .strip:after {
+  display: table;
+  content: "";
+  zoom: 1;
+}
+.app-ad-2x1 .strip:after {
+  clear: both;
+}
+.app-ad-2x1 .content {
+  padding: 20px 10px;
+  float: right;
+  width: 60%;
+}
+.app-ad-2x1 .content h2 {
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  padding: 0;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: rgba(0, 0, 0, 0.3) 0px 1px 1px;
+  font-size: 18px;
+}
+img.thumb-icon {
+  display: inline-block;
+  border-radius: 2px;
+  height: 24px;
+  margin: 0 0.2em;
+}
+.box {
+  padding: 15px;
+  border: 1px solid;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+}
+.smartbanner {
+  z-index: 10;
+  top: 51px;
+}
+.modal-app {
+  position: fixed;
+  z-index: 1000;
+  display: none;
+  left: 0;
+  right: 0;
+  bottom: -100%;
+  top: 0;
+  color: #fff;
+  padding: 0;
+  background: #222;
+}
+.modal-app .btn-link {
+  color: #999;
+}
+.modal-app .btn-primary {
+  margin-bottom: 20px;
+}
+.modal-app .img-preview {
+  background: black;
+}
+.modal-app .img-preview img {
+  display: block;
+  max-width: 100%;
+}
+.modal-app .heading {
+  margin: 0;
+  padding: 20px 0;
+  font-weight: bold;
+}
+.ads-slot-1 {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+@media only screen and (max-width: 42em){
+  #snack_ldb, #snack_mob_top {
+    min-height: 100px !important;
+  }
+  #snack_dex2, #snack_dex8, #snack_dex9, #snack_mex2, #snack_mex9, #snack_mex10 {
+    min-height: 250px !important;
+  }
+}		</style>
+
+		<link href="/images/favicon.png?123" rel="shortcut icon" type="image/png" ><link href="/images/icon48.png" rel="icon" type="image/png" sizes="48x48" ><link href="/images/icon72.png" rel="icon" type="image/png" sizes="72x72" ><link href="/images/icon96.png" rel="icon" type="image/png" sizes="96x96" ><link href="/images/icon144.png" rel="icon" type="image/png" sizes="144x144" ><link href="/images/icon192.png" rel="icon" type="image/png" sizes="192x192" ><link href="/images/icon512.png" rel="icon" type="image/png" sizes="512x512" ><link href="/images/icon114.png" rel="apple-touch-icon-precomposed" type="image/png" sizes="512x512" ><link href="/manifest.json" rel="manifest" ><link href="https://cdn.ultimaterugby.com/website-assets/css/anon.1783208129.css" media="print" rel="stylesheet" type="text/css" onload="this.onload=null;this.removeAttribute('media');document.getElementsByTagName('header')[0].removeAttribute('style');" >
+        <title>Rugby World Cup 2023 - Results | Ultimate Rugby Players, News, Fixtures and Live Results</title>
+        
+        <script src='https://widgets.snack-projects.co.uk/gdpr/snack-cmp_v2.min.js' id='snack-cmp' async></script>
+    </head>
+	
+	<body>
+		<header style="display:none;">
+						<nav class="navbar">
+								<div class="container">
+					<div class="navbar-inner">
+	<a href="#main-nav" class="btn btn-menu main-nav-toggle visible-xs visible-sm"><i class="fa fa-bars"></i></a>
+
+	<div class="search-mobile visible-xs visible-sm">
+		<input class="typeahead" type="search" placeholder="Search" />
+	</div>
+	<a class="navbar-brand" href="/">
+		<img height="40" width="160" alt="Ultimate Rugby Logo" src="/images/ur-logo.svg" class="logo"/>
+		<h1 style="display:none">Ultimate Rugby</h1>
+	</a>
+	<ul id="main-nav" class="main-nav form form-main-nav-public">
+				<li>
+			<a href="/app/public/index.php/">Home <i class="fa fa-angle-down hidden-xs hidden-sm"></i></a>
+			<div class="secondary-nav hidden-xs hidden-sm">
+				<div class="row">
+	<div class="col-md-8">
+								<h4>Top Stories</h4>
+		<div class="nav-news-list">
+											<div class="media">
+					<img class="lazyload media-object" alt="World Rugby Men's Rankings preview: 18 July, 2026" data-src="/images/entities/367937-d69ed97399-4/14517dc0-a13c-11f0-9be2-514f62a90aaf.jpg"></img>					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/world-rugby-men%27s-rankings-preview%3A-18-july%2C-2026/666348">World Rugby Men&#039;s Rankings preview: 18 July, 2026</a></div>
+						<div class="detail text-muted">
+							<span>12:43 Jul 17</span>
+							<span><i class="fa fa-eye"></i>6202</span>
+						</div>
+						<p>
+							
+World Rugby has published the ranking permutations for this weekend's third rounds of the Nations Championship 2026 and World Rugby...						</p>
+					</div>
+				</div>
+											<div class="media">
+					<img class="lazyload media-object" alt="Discover the 2026/27 Top 14 Calendar" data-src="/images/entities/367330-3a197f6343-4/Top142026.jpg"></img>					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/discover-the-2026%2F27-top-14-calendar/666259">Discover the 2026/27 Top 14 Calendar</a></div>
+						<div class="detail text-muted">
+							<span>17:15 Jul 9</span>
+							<span><i class="fa fa-eye"></i>4215</span>
+						</div>
+						<p>
+							The 2025/2026 season once again confirmed the TOP 14's momentum.&nbsp;The championship recorded a&nbsp;record average attendance of...						</p>
+					</div>
+				</div>
+											<div class="media">
+					<img class="lazyload media-object" alt="NPC Team sheets | Round One" data-src="/images/entities/368606-8c11394d04-4/Screenshot2026-07-29083117.jpg"></img>					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/npc-team-sheets-%7C-round-one/666442">NPC Team sheets | Round One</a></div>
+						<div class="detail text-muted">
+							<span>7:25 Jul 29</span>
+							<span><i class="fa fa-eye"></i>3481</span>
+						</div>
+						<p>
+							The 2026 Hilux NPC kicks off this weekend. Here is the team sheets
+						</p>
+					</div>
+				</div>
+					</div>
+	</div>
+	<div class="col-md-4">
+		<h4>Most recent</h4>
+				<ul class="media-list nav-news-list-small">
+							<li class="media">
+					<a class="pull-left" href="#">
+						<img height="30" width="30" alt="The Highlanders sign Tamani and Tuitama on two year deals" data-src="/images/entities/369009-76598f5bf0-4/20260804141447_media_6a70ff90588738_85740223.jpg" class="lazyload "></img>					</a>
+					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/the-highlanders-sign-tamani-and-tuitama-on-two-year-deals/666462">The Highlanders sign Tamani and Tuitama on two year deals</a></div>
+						<small class="text-muted">7:10 Aug 4</small>
+					</div>
+				</li>
+							<li class="media">
+					<a class="pull-left" href="#">
+						<img height="30" width="30" alt="All Black Injury Update" data-src="/images/entities/369008-41ff11271e-4/Articleimage80.jpg" class="lazyload "></img>					</a>
+					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/all-black-injury-update/666461">All Black Injury Update</a></div>
+						<small class="text-muted">7:07 Aug 4</small>
+					</div>
+				</li>
+							<li class="media">
+					<a class="pull-left" href="#">
+						<img height="30" width="30" alt="Saints sign Italy prop Ion Neculai" data-src="/images/entities/368985-945e8d2f84-4/unnamed.jpg" class="lazyload "></img>					</a>
+					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/saints-sign-italy-prop-ion-neculai/666460">Saints sign Italy prop Ion Neculai</a></div>
+						<small class="text-muted">10:26 Aug 3</small>
+					</div>
+				</li>
+							<li class="media">
+					<a class="pull-left" href="#">
+						<img height="30" width="30" alt="Block one ? | Pre season 2026/27" data-src="/images/entities/368975-6cfc40f1bf-4/BlockonePreseason202627.jpg" class="lazyload "></img>					</a>
+					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/block-one-%3F-%7C-pre-season-2026%2F27/666459">Block one ? | Pre season 2026/27</a></div>
+						<small class="text-muted">8:01 Aug 3</small>
+					</div>
+				</li>
+							<li class="media">
+					<a class="pull-left" href="#">
+						<img height="30" width="30" alt="Mont&eacute;e en puissance, L'INSIDE de la deuxi&egrave;me semaine de la PR&Eacute;-SAISON" data-src="/images/entities/368974-5cbcd1c1bf-4/MonteenpuissanceLINSIDEdeladeuximesemainedelaPR-SAISON.jpg" class="lazyload "></img>					</a>
+					<div class="media-body">
+						<div class="media-heading"><a href="/app/public/index.php/news/mont%C3%A9e-en-puissance%2C-l%27inside-de-la-deuxi%C3%A8me-semaine-de-la-pr%C3%89-saison/666458">Montée en puissance, L&#039;INSIDE de la deuxième semaine de la PRÉ-SAISON</a></div>
+						<small class="text-muted">8:00 Aug 3</small>
+					</div>
+				</li>
+					</ul>
+	</div>
+</div>
+			</div>
+		</li>
+		<li>
+			<a href="/app/public/index.php/match/list">Fixtures & Results <i class="fa fa-angle-down hidden-xs"></i></a>
+			<div class="secondary-nav hidden-xs hidden-sm">
+				<div class="row">
+	<div class="col-md-6">
+		<h4><a href="/app/public/index.php/match/list">Fixtures</a></h4>
+				<ul class="match-list-small">
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622">North Harbour Vs Counties Manukau at North Harbour Stadium 6th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="North Harbour" data-src="/images/entities/266922-9bd88f699c-5/image5.png"></img>					<span class="team-name">North Harbour</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 19:10</span>
+									<span class="date">Thu, Aug 6</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Counties Manukau" data-src="/images/entities/266918-065515e375-5/counties.png"></img>					<span class="team-name">Counties Manukau</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623">Taranaki Vs Waikato at Stadium Taranaki 7th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Taranaki" data-src="/images/entities/266924-7a877bb758-5/processimage.png"></img>					<span class="team-name">Taranaki</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 19:10</span>
+									<span class="date">Fri, Aug 7</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Waikato" data-src="/images/entities/266916-90450ff246-5/Untitled4.png"></img>					<span class="team-name">Waikato</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/south-africa-u18%27s-a-vs-ireland-u18%27s-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100843">South Africa U18&#039;s A Vs Ireland U18&#039;s at Hoërskool Durbanville 7th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="South Africa U18's A" data-src="/images/entities/343256-2cb4278ce1-5/JuniorSpringboks.png"></img>					<span class="team-name">South Africa U18's A</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 11:30</span>
+									<span class="date">Fri, Aug 7</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Ireland U18's" data-src="/images/entities/343257-83a6e7ffd6-5/IrelandLogonew.png"></img>					<span class="team-name">Ireland U18's</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/england-u18-vs-georgia-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100849">England U18 Vs Georgia U18 at Hoërskool Durbanville 7th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="England U18" data-src="/images/entities/343259-db70da4f79-5/EnglandLogo.png"></img>					<span class="team-name">England U18</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 13:30</span>
+									<span class="date">Fri, Aug 7</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Georgia U18" data-src="/images/entities/343258-000a785bd4-5/GeorgiaLogo.png"></img>					<span class="team-name">Georgia U18</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/south-africa-u18%27s-vs-france-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100844">South Africa U18&#039;s Vs France U18 at Hoërskool Durbanville 7th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="South Africa U18's" data-src="/images/entities/343266-80903e26b7-5/JuniorSpringboks.png"></img>					<span class="team-name">South Africa U18's</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 15:30</span>
+									<span class="date">Fri, Aug 7</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="France U18" data-src="/images/entities/343260-912899242e-5/FranceRugbyLogo.png"></img>					<span class="team-name">France U18</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989">Stormers Vs New Zealand at DHL Stadium 7th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Stormers" data-src="/images/entities/343839-4c07d3ce01-5/Screenshot2025-08-14084931.png"></img>					<span class="team-name">Stormers</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 19:00</span>
+									<span class="date">Fri, Aug 7</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="New Zealand" data-src="/images/entities/59150-7ce6c246ed-5/nz.png"></img>					<span class="team-name">New Zealand</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/auckland-vs-wellington-at-eden-park-8th-aug-2026/99624">Auckland Vs Wellington at Eden Park 8th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Auckland" data-src="/images/entities/266915-cdde41dc7a-5/ARU-Crest.png"></img>					<span class="team-name">Auckland</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 14:05</span>
+									<span class="date">Sat, Aug 8</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Wellington" data-src="/images/entities/266917-0772ebb573-5/504247-243324-14.png"></img>					<span class="team-name">Wellington</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/bay-of-plenty-vs-northland-at-rotorua-international-stadium-8th-aug-2026/99625">Bay of Plenty Vs Northland at Rotorua International Stadium 8th Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Bay of Plenty" data-src="/images/entities/266914-4f1336dc1a-5/Untitled3.png"></img>					<span class="team-name">Bay of Plenty</span>
+				</div>
+				<div class="status">
+											<div class="kickoff">
+															<time title="local time" class="js-twipsy">
+									<span class="time"><i class="fa fa-clock-o"></i> 17:05</span>
+									<span class="date">Sat, Aug 8</span>
+								</time>
+													</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Northland" data-src="/images/entities/266920-69c4b4e570-5/Northland-logo.png"></img>					<span class="team-name">Northland</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+	</ul>	</div>
+	<div class="col-md-6">
+		<h4><a href="/app/public/index.php/match/list?date=recent">Results</a></h4>
+				<ul class="match-list-small">
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213">Boland Kavaliers Vs Pumas at Boland Stadium 2nd Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Boland Kavaliers" data-src="/images/entities/144386-a71fd8a382-5/Boland_Cavaliers_logo.png"></img>					<span class="team-name">Boland</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							15						</span>
+						<span class="score win">
+							20						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Aug 2</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Pumas" data-src="/images/entities/266950-4e1d82449b-5/steval-pumas-logo.png"></img>					<span class="team-name">Pumas</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/wellington-vs-hawke%27s-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621">Wellington Vs Hawke&#039;s Bay at Hnry Stadium Wellington 2nd Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Wellington" data-src="/images/entities/266917-0772ebb573-5/504247-243324-14.png"></img>					<span class="team-name">Wellington</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							33						</span>
+						<span class="score win">
+							52						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Aug 2</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Hawke's Bay" data-src="/images/entities/266913-0460f40fb5-5/Untitled2.png"></img>					<span class="team-name">Hawke's Bay</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620">Northland Vs Manawatu at Semenoff Stadium 2nd Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Northland" data-src="/images/entities/266920-69c4b4e570-5/Northland-logo.png"></img>					<span class="team-name">Northland</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							40						</span>
+						<span class="score">
+							14						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Aug 2</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Manawatu" data-src="/images/entities/266921-cce71d1e39-5/manawatu-logo.png"></img>					<span class="team-name">Manawatu</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212">Golden Lions Vs Blue Bulls at Ellis Park 1st Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Golden Lions" data-src="/images/entities/266952-39abd98838-5/lions.png"></img>					<span class="team-name">Golden Lions</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							42						</span>
+						<span class="score">
+							19						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Aug 1</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Blue Bulls" data-src="/images/entities/266949-49e38137e1-5/bb.png"></img>					<span class="team-name">Blue Bulls</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472">Paarl Boys High Vs Paarl Gimnasium at Brug Street Paarl 1st Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Paarl Boys High" data-src="/images/entities/335349-30602f338b-5/PaarlBoysHigh.png"></img>					<span class="team-name">Paarl Boys High</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							11						</span>
+						<span class="score win">
+							25						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Aug 1</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Paarl Gimnasium" data-src="/images/entities/335352-ffb580a315-5/Paarl-Gim-Logo.png"></img>					<span class="team-name">Paarl Gim</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211">Stormers XXIII Vs Natal Sharks at DHL Stadium 1st Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Stormers XXIII" data-src="/images/entities/266954-edd835f2d1-5/image12.png"></img>					<span class="team-name">Stormers XXIII</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							36						</span>
+						<span class="score">
+							28						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Aug 1</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Natal Sharks" data-src="/images/entities/286233-f34cdefd45-5/image.png"></img>					<span class="team-name">Natal Sharks</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/stellenberg-high-school-vs-durbanville-high-school-at-stellenberg-high-school-1st-aug-2026/99605">Stellenberg High School Vs Durbanville High School at Stellenberg High School 1st Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Stellenberg High School" data-src="/images/entities/335354-44c40d9c1e-5/StellenbergHigh.png"></img>					<span class="team-name">Stellenberg High School</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							42						</span>
+						<span class="score">
+							12						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Aug 1</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Durbanville High School" data-src="/images/entities/335343-7aef8e0722-5/durbanville-hoerskool-logo-emblem.png"></img>					<span class="team-name">Durbanville High School</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+					<li>
+			
+
+	<div class="match-item">
+								<div class="match-detail">
+			<a href="/app/public/index.php/match/king-edward-school-%28kes%29-vs-jeppe-boys-high-school-at-kes-%28houghton-estate%29-1st-aug-2026/99471">King Edward School (KES) Vs Jeppe Boys High School at Kes (Houghton Estate) 1st Aug 2026</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="King Edward School (KES)" data-src="/images/entities/338219-6567cb404b-5/KESlogo.png"></img>					<span class="team-name">King Edward School (KES)</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							31						</span>
+						<span class="score win">
+							46						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Aug 1</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Jeppe Boys High School" data-src="/images/entities/338214-6fc34c53bf-5/Jeppelogo.png"></img>					<span class="team-name">Jeppe</span>
+				</div>
+			</div>
+		</div>
+			</div>
+		</li>
+	</ul>	</div>
+</div>
+			</div>
+		</li>
+		<li>
+			<a href="/app/public/index.php/league">Tournaments <i class="fa fa-angle-down hidden-xs hidden-sm"></i></a>
+			<div class="secondary-nav hidden-xs hidden-sm">
+				<div class="nav-league-list">
+<div class="row">
+							<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/361175-46e8d7f8a2-6/NPC.jpg" alt="NPC"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/npc-2026">NPC</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/npc-2026/table">Tables</a></span>
+						<span><a href="/app/public/index.php/npc-2026/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/npc-2026/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622">North Harbour Vs Counties Manukau</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623">Taranaki Vs Waikato</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+					<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/368080-8da6306ad0-6/u18.jpg" alt="u18"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/u18-international-series-2026">U18 Internationals</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/u18-international-series-2026/table">Tables</a></span>
+						<span><a href="/app/public/index.php/u18-international-series-2026/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/u18-international-series-2026/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/south-africa-u18%27s-a-vs-ireland-u18%27s-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100843">South Africa U18&#039;s A Vs Ireland U18&#039;s</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/england-u18-vs-georgia-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100849">England U18 Vs Georgia U18</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+					<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/368027-3f7b030b54-6/730858832_17887157493580281_4329327663551719703_n.jpg" alt="730858832_17887157493580281_4329327663551719703_n"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/rgr-26">Greatest Rivalry '26</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/rgr-26/table">Tables</a></span>
+						<span><a href="/app/public/index.php/rgr-26/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/rgr-26/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989">Stormers Vs New Zealand</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/sharks-vs-new-zealand-at-kings-park-stadium-11th-aug-2026/98990">Sharks Vs New Zealand</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+					<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/351180-abd2daf446-6/ZVwKqVO3_400x400.jpg" alt="ZVwKqVO3_400x400"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/international-friendlies-2026">Tests</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/international-friendlies-2026/table">Tables</a></span>
+						<span><a href="/app/public/index.php/international-friendlies-2026/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/international-friendlies-2026/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/japan-vs-australia-at-hanazono-rugby-stadium-8th-aug-2026/99076">Japan Vs Australia</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/argentina-vs-south-africa-at-estadio-jos%C3%A9-amalfitani-8th-aug-2026/100839">Argentina Vs South Africa</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+					<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/364650-435d076eca-6/CurrieCupLogo.jpg" alt="Currie Cup Logo"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/currie-cup2026">Currie Cup</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/currie-cup2026/table">Tables</a></span>
+						<span><a href="/app/public/index.php/currie-cup2026/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/currie-cup2026/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/griquas-vs-golden-lions-at-suzuki-stadium-8th-aug-2026/100216">Griquas Vs Golden Lions</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/blue-bulls-vs-pumas-at-loftus-versfeld-8th-aug-2026/100215">Blue Bulls Vs Pumas</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+					<div class="col-md-4">
+			<div class="media">
+				<img class="lazyload media-object" data-src="/images/entities/360357-960f04e47d-6/WorldRugbylogo.jpg" alt="WorldRugby logo"></img>				<div class="media-body">
+					<div class="media-heading"><a href="/app/public/index.php/womens-internationals-2026">Women's Internationals</a></div>
+					<div class="detail text-muted">
+						<span><a href="/app/public/index.php/womens-internationals-2026/table">Tables</a></span>
+						<span><a href="/app/public/index.php/womens-internationals-2026/matches">Fixtures</a></span>
+						<span><a href="/app/public/index.php/womens-internationals-2026/results">Results</a></span>
+					</div>
+																<ul class="list-unstyled">
+															<li>
+									<a mode="3" href="/app/public/index.php/match/new-zealand-women-vs-australia-women-at-go-media-stadium-22nd-aug-2026/99578">New Zealand Women Vs Australia Women</a>								</li>
+															<li>
+									<a mode="3" href="/app/public/index.php/match/south-africa-women-vs-new-zealand-women-at-fnb-stadium-5th-sep-2026/99579">South Africa Women Vs New Zealand Women</a>								</li>
+													</ul>
+									</div>
+			</div>
+		</div>
+	</div>
+</div>
+			</div>
+		</li>
+		<li><a href="/app/public/index.php/team">Teams</a></li>
+		<!-- <li>
+			<a href="#favs" class="hidden-xs hidden-sm"><i class="fa fa-star"></i></a>
+			<div class="secondary-nav favs-container"></div>
+		</li> -->
+		<!--<li class="search-btn hidden-xs hidden-sm">
+			<a href="#"><i class="fa fa-search"></i></a>
+			<div class="menu-search">
+				<div class="form-group">
+					<input class="form-control typeahead" type="search" placeholder="Search">
+				</div>
+			</div>
+		</li>-->
+		
+        
+			</ul>
+</div>				</div>
+			</nav>
+		</header>
+		<div class="main-content">
+			<div class="hero hero-league">
+	<div class="hero-background-wrap">
+		<div class="hero-background">
+			<img src="/images/entities/250938-50baf2cc0d-5/rugbyworldcup2023.jpg" alt="rugbyworldcup2023"></img>		</div>
+	</div>
+	<div class="block-summary">
+		<div class="hero-strip-top">
+			<div class="container clearfix">
+				<span class="pull-right">
+					<span class="dropdown">
+          <a href="#" class="js-share" data-toggle="dropdown"><i class="fa fa-share-alt"></i> Share</a>
+          <ul class="dropdown-menu pull-right">
+            <li><a href="https://www.facebook.com/dialog/share?app_id=340479486046083&href=https%3A%2F%2Fwww.ultimaterugby.com%2Frugby-world-cup-2023&redirect_uri=https%3A%2F%2Fwww.ultimaterugby.com%2Frugby-world-cup-2023&display=popup" target="_blank"><i class="fa fa-facebook-square"></i> Facebook</a></li>
+            <li><a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fwww.ultimaterugby.com%2Frugby-world-cup-2023&text=RWC&via=UltimateRugby" target="_blank"><i class="fa fa-twitter-square"></i> Twitter</a></li>
+			<li><a href="https://plus.google.com/share?url=https%3A%2F%2Fwww.ultimaterugby.com%2Frugby-world-cup-2023" target="_blank"><i class="fa fa-google-plus-square"></i> Google+</a></li>
+          </ul>
+        </span>				</span>
+			</div>
+		</div>
+		<div class="container">
+			<div class="profile-photo"><img itemprop="image" src="/images/entities/250938-aada51dcc5-3/rugbyworldcup2023.jpg" alt="rugbyworldcup2023"></img></div>
+			<div class="profile-detail">
+				<h1 itemprop="name">
+					RWC					<span class="pull-right">
+						<a href="#fav" data-toggle="favourtes" data-type="3" data-id="3241">
+							<i class="fa"></i>
+						</a>
+					</span>
+				</h1>
+				<div class="detail">
+					<span>
+						2023					</span>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+			<nav class="navbar-secondary">
+			<div class="container">
+				<ul class="page-nav"><li><a href="/rugby-world-cup-2023"><i class="fa fa-rss"></i> <span>News</span></a></li><li><a href="/rugby-world-cup-2023/table"><i class="fa fa-table"></i> <span>Table</span></a></li><li><a href="/rugby-world-cup-2023/matches"><i class="fa fa-calendar"></i> <span>Fixtures</span></a></li><li class="active"><a href="/rugby-world-cup-2023/results"><i class="fa fa-trophy"></i> <span>Results</span></a></li></ul>			</div>
+		</nav>
+		
+</div>
+
+
+	<div class="container">
+
+	<div class="row">
+	<div class="col-md-8">
+				<div class="match-list form form-match-list">
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="New Zealand v South Africa - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/new-zealand-vs-south-africa-at-stade-de-france-28th-oct-2023/87881" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-28T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/new-zealand-vs-south-africa-at-stade-de-france-28th-oct-2023/87881">New Zealand Vs South Africa at Stade de France 28th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="New Zealand" data-src="/images/entities/304126-a6cddf5841-14/NewZealandHomeJersey-TRANS-Small.png"></img>					<span class="team-name">New Zealand</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							11						</span>
+						<span class="score win">
+							12						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Oct 28</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="South Africa" data-src="/images/entities/259682-eb8e7cbaa7-14/Jerseysize1.png"></img>					<span class="team-name">South Africa</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Argentina v England - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/argentina-vs-england-at-stade-de-france-27th-oct-2023/87880" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-27T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/argentina-vs-england-at-stade-de-france-27th-oct-2023/87880">Argentina Vs England at Stade de France 27th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Argentina" data-src="/images/entities/231209-527703ef2d-14/Jerseysize.png"></img>					<span class="team-name">Argentina</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							23						</span>
+						<span class="score win">
+							26						</span>
+					<div class="kickoff">
+												<span class="date">Fri, Oct 27</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="England" data-src="/images/entities/269856-50af56abba-14/Jerseysize.png"></img>					<span class="team-name">England</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="England v South Africa - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/england-vs-south-africa-at-stade-de-france-21st-oct-2023/87879" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-21T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/england-vs-south-africa-at-stade-de-france-21st-oct-2023/87879">England Vs South Africa at Stade de France 21st Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="England" data-src="/images/entities/269856-50af56abba-14/Jerseysize.png"></img>					<span class="team-name">England</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							15						</span>
+						<span class="score win">
+							16						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Oct 21</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="South Africa" data-src="/images/entities/259682-eb8e7cbaa7-14/Jerseysize1.png"></img>					<span class="team-name">South Africa</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Argentina v New Zealand - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/argentina-vs-new-zealand-at-stade-de-france-20th-oct-2023/87878" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-20T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/argentina-vs-new-zealand-at-stade-de-france-20th-oct-2023/87878">Argentina Vs New Zealand at Stade de France 20th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Argentina" data-src="/images/entities/231209-527703ef2d-14/Jerseysize.png"></img>					<span class="team-name">Argentina</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							6						</span>
+						<span class="score win">
+							44						</span>
+					<div class="kickoff">
+												<span class="date">Fri, Oct 20</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="New Zealand" data-src="/images/entities/304126-a6cddf5841-14/NewZealandHomeJersey-TRANS-Small.png"></img>					<span class="team-name">New Zealand</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="France v South Africa - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/france-vs-south-africa-at-stade-de-france-15th-oct-2023/87877" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-15T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/france-vs-south-africa-at-stade-de-france-15th-oct-2023/87877">France Vs South Africa at Stade de France 15th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="France" data-src="/images/entities/304118-6961e76cd3-14/FranceHomeJerseyTRANS-Small.png"></img>					<span class="team-name">France</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							28						</span>
+						<span class="score win">
+							29						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Oct 15</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="South Africa" data-src="/images/entities/259682-eb8e7cbaa7-14/Jerseysize1.png"></img>					<span class="team-name">South Africa</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="England v Fiji - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/england-vs-fiji-at-stade-v%C3%A9lodrome-15th-oct-2023/87876" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-15T15:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/england-vs-fiji-at-stade-v%C3%A9lodrome-15th-oct-2023/87876">England Vs Fiji at Stade Vélodrome 15th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="England" data-src="/images/entities/269856-50af56abba-14/Jerseysize.png"></img>					<span class="team-name">England</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							30						</span>
+						<span class="score">
+							24						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Oct 15</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Fiji" data-src="/images/entities/289118-fa04ec50b3-14/CopyofJerseysize1.png"></img>					<span class="team-name">Fiji</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade Vélodrome" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="43.26983500" />
+					<meta itemprop="longitude" content="5.39586600" />
+				</span>
+				<span itemprop="name"><a href="/stadium/view/322">Stade Vélodrome</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Ireland v New Zealand - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/ireland-vs-new-zealand-at-stade-de-france-14th-oct-2023/87875" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-14T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/ireland-vs-new-zealand-at-stade-de-france-14th-oct-2023/87875">Ireland Vs New Zealand at Stade de France 14th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Ireland" data-src="/images/entities/289008-f084e09691-14/CopyofJerseysize.png"></img>					<span class="team-name">Ireland</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							24						</span>
+						<span class="score win">
+							28						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Oct 14</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="New Zealand" data-src="/images/entities/304126-a6cddf5841-14/NewZealandHomeJersey-TRANS-Small.png"></img>					<span class="team-name">New Zealand</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade de France" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="48.92440000" />
+					<meta itemprop="longitude" content="2.36000000" />
+				</span>
+				<span itemprop="name"><a href="/stade-de-france">Stade de France</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Wales v Argentina - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/wales-vs-argentina-at-stade-v%C3%A9lodrome-14th-oct-2023/87874" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-14T15:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/wales-vs-argentina-at-stade-v%C3%A9lodrome-14th-oct-2023/87874">Wales Vs Argentina at Stade Vélodrome 14th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Wales" data-src="/images/entities/270770-a0bd756514-14/Jerseysize.png"></img>					<span class="team-name">Wales</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							17						</span>
+						<span class="score win">
+							29						</span>
+					<div class="kickoff">
+												<span class="date">Sat, Oct 14</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Argentina" data-src="/images/entities/231209-527703ef2d-14/Jerseysize.png"></img>					<span class="team-name">Argentina</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade Vélodrome" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="43.26983500" />
+					<meta itemprop="longitude" content="5.39586600" />
+				</span>
+				<span itemprop="name"><a href="/stadium/view/322">Stade Vélodrome</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Fiji v Portugal - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/fiji-vs-portugal-at-stadium-de-toulouse-8th-oct-2023/87873" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-08T19:00:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/fiji-vs-portugal-at-stadium-de-toulouse-8th-oct-2023/87873">Fiji Vs Portugal at Stadium de Toulouse 8th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Fiji" data-src="/images/entities/289118-fa04ec50b3-14/CopyofJerseysize1.png"></img>					<span class="team-name">Fiji</span>
+				</div>
+				<div class="status">
+											<span class="score">
+							23						</span>
+						<span class="score win">
+							24						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Oct 8</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Portugal" data-src="/images/entities/253441-131cd065ea-14/Jerseysize.png"></img>					<span class="team-name">Portugal</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stadium de Toulouse" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="43.58300000" />
+					<meta itemprop="longitude" content="1.43410000" />
+				</span>
+				<span itemprop="name"><a href="/stadium-de-toulouse">Stadium de Toulouse</a></span>
+			</span>
+		</div>
+			</div>
+											
+
+	<div class="match-item" itemscope itemtype="http://schema.org/Event">
+						<meta itemprop="name" content="Tonga v Romania - Rugby World Cup 2023" />
+		<meta itemprop="additionalType" content="Rugby Match" />
+				<meta itemprop="eventStatus" content="Confirmed" />
+				<meta itemprop="url" content="https://www.ultimaterugby.com/match/tonga-vs-romania-at-stade-pierre-mauroy-8th-oct-2023/87872" />
+		<meta itemprop="image" content="/images/entities/250938-8eb175d191-4/rugbyworldcup2023.jpg" />
+		<meta itemprop="startDate" content="2023-10-08T15:45:00+01:00" />
+						<div class="match-detail">
+			<a href="/match/tonga-vs-romania-at-stade-pierre-mauroy-8th-oct-2023/87872">Tonga Vs Romania at Stade Pierre Mauroy 8th Oct 2023</a>			<div class="teams">
+				<div class="team-home">
+					<img class="lazyload team-image" alt="Tonga" data-src="/images/entities/234077-e4934ef6fb-14/Jerseysize1.png"></img>					<span class="team-name">Tonga</span>
+				</div>
+				<div class="status">
+											<span class="score win">
+							45						</span>
+						<span class="score">
+							24						</span>
+					<div class="kickoff">
+												<span class="date">Sun, Oct 8</span>
+										</div>
+									</div>
+				<div class="team-away">
+					<img class="lazyload team-image" alt="Romania" data-src="/images/entities/281652-0b757ba8b1-14/CopyofJerseysize1.png"></img>					<span class="team-name">Romania</span>
+				</div>
+			</div>
+		</div>
+				<div class="extra-detail text-center">
+			<span itemprop="location" itemscope itemtype="http://schema.org/Place">
+				<meta itemprop="name" content="Stade Pierre Mauroy" />
+				<span itemprop="geo" itemscope itemtype="http://schema.org/GeoCoordinates">
+					<meta itemprop="latitude" content="50.61196600" />
+					<meta itemprop="longitude" content="3.13048900" />
+				</span>
+				<span itemprop="name"><a href="/stade-pierre-mauroy">Stade Pierre Mauroy</a></span>
+			</span>
+		</div>
+			</div>
+					</div>
+		<ul class="pager">
+	<!-- Previous page link -->
+			<li class="disabled"><a>&laquo; Previous</a></li>
+	
+	<!-- Next page link -->
+					<li><a accesskey="." title="Next (Alt+.)" href="/rugby-world-cup-2023/results?page=2">Next &raquo;</a></li>
+	</ul>
+
+			</div>
+	<div class="col-md-4">
+	</div>
+</div>
+	</div>
+
+		</div>
+
+        
+<footer class="new-footer">
+    <div class="footer-container">
+        <span>© Ultimate Rugby Ltd | 2026</span>
+        <span><a href="/privacy">Privacy Policy</a> | <a href="mailto:support@ultimaterugby.com">Contact Us</a></span>
+        <span class="social-icons">
+            <a href="https://twitter.com/ultimaterugby">
+                <img src="/images/footer-twitter-icon.png" />
+            </a>
+            <a href="https://www.facebook.com/pages/Ultimate-Rugby/206251019493325">
+                <img src="/images/footer-facebook-icon.png" />
+            </a>
+            <a href="https://www.instagram.com/ultimaterugby">
+                <img src="/images/footer-instagram-icon.png" />
+            </a>
+        </span>
+    </div>
+</footer>
+
+<!-- snack -->
+<div id='div-gpt-ad-1697537819773-0'>
+    <script>
+        googletag.cmd.push(function() { googletag.display('div-gpt-ad-1697537819773-0'); });
+    </script>
+</div>
+
+
+        <div class="modal-app form form-app-modal force-hide">
+            <div class="img-preview">
+                <img data-src="/images/urAppPhoneComp.png" alt="Ultimate Rugby" class="lazyload" style="max-width: 100%" />
+            </div>
+            <div class="cta-container">
+                <div class="container">
+                    <h4 class="text-center heading">Never miss a try, transfer or tackle!</h4>
+                    <div>
+                                                <a href="" class="btn btn-lg btn-block btn-primary get-the-app-now">
+                            <i class="fa "></i> Get the App Now!
+                        </a>
+                        <a href="#" data-app="app-link" class="btn btn-block btn-link">Open in the app</a>
+                        <a href="#" id="app-modal-cancel" class="btn btn-block btn-link">Continue to site</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- <script id="snack_ads" src="https://cdn-header-bidding.snack-media.com/assets/js/snack-loader/825" crossorigin="anonymous"></script> -->
+
+        <link rel="stylesheet" media="print" onload="this.onload=null;this.removeAttribute('media');" href="https://fonts.googleapis.com/css?family=Fira+Sans|Roboto+Slab|Lato|Open+Sans&display=swap">
+
+        <script src="https://kit.fontawesome.com/cb66468c33.js" crossorigin="anonymous"></script>
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-35413216-1', 'auto');
+  ga('send', 'pageview');
+
+</script>        <!-- Facebook Pixel Code -->
+<script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window,document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '578978086348732');
+    fbq('track', 'PageView');
+</script>
+<noscript>
+    <img height="1" width="1"
+         src="https://www.facebook.com/tr?id=578978086348732&ev=PageView
+&noscript=1"/>
+</noscript>
+<!-- End Facebook Pixel Code -->                
+        
+
+        <script type="text/javascript">
+	//<![CDATA[
+	// inject some variables into the script
+	worky = {}
+//    worky.base_url = "/";
+	worky.base_url = "/";
+		worky.use_minified_scripts = true;
+	//worky.google_api_key = "";
+	worky.csrf_token = "nVNN3rgZ4dTpMtSFKFy4r5Y2H4609vDYfXVVGGTsf5zsZ3B8XXM49yXTfcyN7ddMV0Vm0t2c0FSX2K4pH4vvWVwtSbZZpw5ddPs53Krwq20byczJFcT0XJgJhYSpFwzM";
+	// ]]>
+	
+	
+</script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.0/lazysizes.min.js"></script><script type="text/javascript" defer="defer" src="//platform.twitter.com/widgets.js"></script><script type="text/javascript" defer="defer" src="//cdn.playbuzz.com/widget/feed.js"></script><script type="text/javascript" defer="defer" src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script type="text/javascript" defer="defer" src="//www.google.com/jsapi"></script><script type="text/javascript" defer="defer" src="//www.googletagservices.com/tag/js/gpt.js"></script><script type="text/javascript" defer="defer" src="//platform.instagram.com/en_US/embeds.js"></script><script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqERfSD2LdS-AWLL-FcBYvzI301q0IBRw&amp;libraries=places"></script><script type="text/javascript" defer="defer" src="/js/public-lib.min.1783208129.js"></script><script type="text/javascript" defer="defer" src="/js/public-app.1783208129.js"></script>
+<script type="text/javascript">
+	window.addEventListener('DOMContentLoaded', function() {
+		$(document).ready(function () {
+			$("body").tooltip({selector: '[data-toggle=tooltip]'});
+		});
+	});
+</script>
+
+<script type="text/javascript">
+
+    console.log(localStorage);
+
+    if (!localStorage.premiumToastActivelyDismissed) {
+        document.querySelector('.toast-show-more').style.display = 'block';
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+
+        $('.show-more-premum-visit-link').click(function () {
+            $('.toast-show-more').fadeOut(function() {
+                $('.toast-subscribe-now').fadeIn();
+            });
+
+        });
+
+        $('.subscribe-now-collapse-link').click(function () {
+            $('.toast-subscribe-now').fadeOut(function() {
+                $('.toast-show-more').fadeIn();
+            });
+        })
+
+        $('.show-more-close-link').click(function () {
+            $('.toast-show-more').fadeOut();
+            localStorage.premiumToastActivelyDismissed = 1;
+        })
+
+        $('.show-more-close').click(function () {
+            $('.toast-show-more').fadeOut();
+            localStorage.premiumToastActivelyDismissed = 1;
+        })
+    });
+</script>
+
+        
+
+        <div id="snack_dex3"></div>
+        <script id="snack_ads" src="https://cdn-header-bidding.snack-media.com/assets/js/snack-loader/825" crossorigin="anonymous"></script>
+    </body>
+</html>

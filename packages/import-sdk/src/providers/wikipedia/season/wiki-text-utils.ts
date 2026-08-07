@@ -22,6 +22,9 @@ export function stripWikiMarkup(value: string): string {
   text = text.replace(/\b\((?:C|SF|QF|RU|F|PO|P|Q|Q1|Q2|Q3)\)\b/gi, "");
   text = text.replace(/&nbsp;/g, " ");
   text = text.replace(/,/g, "");
+  // Wikipedia flag/thumb size crumbs that leak into labels ("23px England")
+  text = text.replace(/^\d+px\b[\s-]*/i, "");
+  text = text.replace(/[\s-]*\b\d+px\b$/i, "");
   return text.replace(/\s+/g, " ").trim();
 }
 
@@ -30,20 +33,26 @@ export function parseWikiLinkLabel(value: string): string {
 }
 
 const RU_COUNTRY_NAMES: Record<string, string> = {
+  alb: "Albania",
   arg: "Argentina",
   aus: "Australia",
   bel: "Belgium",
+  bra: "Brazil",
   can: "Canada",
   chi: "Chile",
+  chl: "Chile",
   civ: "Ivory Coast",
+  col: "Colombia",
   cze: "Czech Republic",
   den: "Denmark",
   eng: "England",
   esp: "Spain",
   fij: "Fiji",
+  fji: "Fiji",
   fra: "France",
   geo: "Georgia",
   ger: "Germany",
+  gre: "Greece",
   hkg: "Hong Kong",
   ire: "Ireland",
   irl: "Ireland",
@@ -55,11 +64,14 @@ const RU_COUNTRY_NAMES: Record<string, string> = {
   lat: "Latvia",
   ltu: "Lithuania",
   mda: "Moldova",
+  mex: "Mexico",
   nam: "Namibia",
   ned: "Netherlands",
+  nld: "Netherlands",
   nor: "Norway",
   nz: "New Zealand",
   nzl: "New Zealand",
+  per: "Peru",
   pol: "Poland",
   por: "Portugal",
   rom: "Romania",
@@ -72,8 +84,11 @@ const RU_COUNTRY_NAMES: Record<string, string> = {
   spa: "Spain",
   sui: "Switzerland",
   swe: "Sweden",
+  swi: "Switzerland",
   tga: "Tonga",
   ton: "Tonga",
+  uae: "United Arab Emirates",
+  uga: "Uganda",
   uru: "Uruguay",
   usa: "United States",
   wal: "Wales",
@@ -91,18 +106,36 @@ export function parseWikiTeamLabel(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return "";
 
+  // Never surface raw templates as club names.
+  const looksLikeTemplate = /^\{\{/.test(trimmed);
+
   const namedRu = trimmed.match(
-    /\{\{\s*(?:ru-rt|rua-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|[^}]*\|\s*name\s*=\s*([^}|]+)/i,
+    /\{\{\s*(?:ruu-rt|ruu|rua-rt|ru-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|[^}]*\|\s*name\s*=\s*([^}|]+)/i,
   );
   if (namedRu) return stripWikiMarkup(namedRu[1]!).trim();
 
-  const ruMatch = trimmed.match(/\{\{\s*(?:ru-rt|rua-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|\s*([^}|]+)/i);
+  // U20 / age-grade: {{ruu-rt|20|KEN}} or {{ruu|20|RSA}}
+  const ageGrade = trimmed.match(
+    /\{\{\s*(?:ruu-rt|ruu)\s*\|\s*(\d+)\s*\|\s*([^}|]+)/i,
+  );
+  if (ageGrade) {
+    const age = ageGrade[1]!;
+    const token = ageGrade[2]!.trim();
+    const country = ruCodeToCountryName(token) ?? (/^[A-Za-z]{2,3}$/.test(token) ? null : stripWikiMarkup(token));
+    if (country) return `${country} U${age}`;
+    return "";
+  }
+
+  const ruMatch = trimmed.match(
+    /\{\{\s*(?:ru-rt|rua-rt|RuA-rt|Ru-rt|Ru|ru|RuA|rua)\s*\|\s*([^}|]+)/i,
+  );
   if (ruMatch) {
     const token = ruMatch[1]!.trim();
     const fromCode = ruCodeToCountryName(token);
     if (fromCode) return fromCode;
     // {{ru|Japan}} uses a display name rather than an ISO code.
     if (!/^[A-Za-z]{2,3}$/.test(token) && !/^\d+$/.test(token)) return stripWikiMarkup(token);
+    return "";
   }
 
   const rutMatch = trimmed.match(/\{\{\s*(?:n?rut)\s*\|\s*([^}|]+)/i);
@@ -119,6 +152,8 @@ export function parseWikiTeamLabel(value: string): string {
       .trim();
     return national || linkLabel;
   }
+
+  if (looksLikeTemplate) return "";
 
   const fromBareCode = ruCodeToCountryName(trimmed);
   return fromBareCode ?? trimmed;

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type TrackerSettings = {
@@ -14,11 +15,33 @@ type TrackerSettings = {
   matchStartedAt: string | null;
 };
 
+type SaResultOption = {
+  id: string;
+  slug: string;
+  kickoffAt: string | null;
+  opponentName: string;
+  teamScore: number;
+  opponentScore: number;
+  result: "won" | "lost" | "draw" | null;
+  status: string;
+};
+
+function formatResult(row: SaResultOption) {
+  const date = row.kickoffAt
+    ? new Date(row.kickoffAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+    : "—";
+  const letter =
+    row.result === "won" ? "W" : row.result === "lost" ? "L" : row.result === "draw" ? "D" : row.status;
+  return `${date} · ${letter} ${row.teamScore}–${row.opponentScore} vs ${row.opponentName}`;
+}
+
 export function MatchTrackerSettingsPanel({ fixtureId }: { fixtureId: string }) {
   const [settings, setSettings] = useState<TrackerSettings | null>(null);
   const [revisedLocal, setRevisedLocal] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [saResults, setSaResults] = useState<SaResultOption[]>([]);
+  const SA_ID = "b0000000-0000-4000-8000-000000000001";
 
   async function load() {
     const res = await fetch(`/api/admin/matches/${fixtureId}/tracker`);
@@ -41,6 +64,47 @@ export function MatchTrackerSettingsPanel({ fixtureId }: { fixtureId: string }) 
   useEffect(() => {
     void load();
   }, [fixtureId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/admin/teams/${SA_ID}`);
+        const data = await res.json();
+        if (!res.ok || cancelled) return;
+        const fixtures = (data.fixtures ?? []) as Array<{
+          id: string;
+          slug: string;
+          kickoffAt: string | null;
+          opponentName: string;
+          teamScore: number;
+          opponentScore: number;
+          result: "won" | "lost" | "draw" | null;
+          status: string;
+        }>;
+        setSaResults(
+          fixtures
+            .filter((f) => f.status === "full_time" || f.status === "live")
+            .slice(0, 80)
+            .map((f) => ({
+              id: f.id,
+              slug: f.slug,
+              kickoffAt: f.kickoffAt,
+              opponentName: f.opponentName,
+              teamScore: f.teamScore,
+              opponentScore: f.opponentScore,
+              result: f.result,
+              status: f.status,
+            })),
+        );
+      } catch {
+        /* optional */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function patch(body: Record<string, unknown>, okMsg: string) {
     setSaving(true);
@@ -68,6 +132,35 @@ export function MatchTrackerSettingsPanel({ fixtureId }: { fixtureId: string }) 
 
   return (
     <div className="space-y-3 text-sm">
+      <div className="rounded border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
+        <label className="block text-xs uppercase tracking-wide text-zinc-500 m-0">
+          Jump to Springboks result (animation)
+        </label>
+        <select
+          className="cms-select w-full"
+          value={fixtureId}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (next && next !== fixtureId) {
+              window.location.href = `/admin/matches/${next}/animation`;
+            }
+          }}
+        >
+          {saResults.length === 0 ? <option value={fixtureId}>Current fixture</option> : null}
+          {saResults.map((row) => (
+            <option key={row.id} value={row.id}>
+              {formatResult(row)}
+            </option>
+          ))}
+        </select>
+        <p className="m-0 text-xs text-zinc-600">
+          Prefer results over the calendar when rehearsing Springboks match animations.{" "}
+          <Link href={`/admin/teams/${SA_ID}/edit`} className="text-emerald-400 hover:underline">
+            Team fixtures
+          </Link>
+        </p>
+      </div>
+
       <p className="m-0 text-zinc-400">
         Controls public Match Animation countdown, activation, and kick-off. Preview mode never publishes
         test events.

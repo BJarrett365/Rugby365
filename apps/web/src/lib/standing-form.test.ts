@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeFormSequenceFromFixtures,
   normalizeFormSequence,
+  padFormForDisplay,
   parseStandingForm,
   standingFormNeedsRecompute,
 } from "./standing-form";
@@ -15,9 +16,10 @@ describe("normalizeFormSequence", () => {
     expect(normalizeFormSequence("w w l d")).toBe("WWLD");
   });
 
-  it("strips leading/trailing dash padding but keeps interior placeholders", () => {
+  it("strips all dash placeholders (including interior)", () => {
     expect(normalizeFormSequence("-WWWW")).toBe("WWWW");
-    expect(normalizeFormSequence("LL-WW")).toBe("LL-WW");
+    expect(normalizeFormSequence("LL-WW")).toBe("LLWW");
+    expect(normalizeFormSequence("L-LL")).toBe("LLL");
     expect(normalizeFormSequence("--W")).toBe("W");
     expect(normalizeFormSequence("LLL--")).toBe("LLL");
   });
@@ -29,8 +31,18 @@ describe("normalizeFormSequence", () => {
     expect(normalizeFormSequence(null)).toBeNull();
   });
 
-  it("keeps only the most recent results", () => {
-    expect(normalizeFormSequence("WWWWWWWWWWWL")).toHaveLength(10);
+  it("keeps only the most recent five results", () => {
+    expect(normalizeFormSequence("WWWWWWWWWWWL")).toBe("WWWWL");
+  });
+});
+
+describe("padFormForDisplay", () => {
+  it("left-pads shorter sequences to five slots", () => {
+    expect(padFormForDisplay("WWWL")).toBe("-WWWL");
+    expect(padFormForDisplay("LL")).toBe("---LL");
+    expect(padFormForDisplay("L-LL")).toBe("--LLL");
+    expect(padFormForDisplay("WWWWL")).toBe("WWWWL");
+    expect(padFormForDisplay(null)).toBe("-----");
   });
 });
 
@@ -59,9 +71,14 @@ describe("parseStandingForm", () => {
     });
   });
 
-  it("parses plain sequences", () => {
+  it("parses plain sequences and strips dashes", () => {
     expect(parseStandingForm("LWWD")).toEqual({
       lastFive: "LWWD",
+      tryBonusPoints: null,
+      losingBonusPoints: null,
+    });
+    expect(parseStandingForm("L-LL")).toEqual({
+      lastFive: "LLL",
       tryBonusPoints: null,
       losingBonusPoints: null,
     });
@@ -130,10 +147,11 @@ describe("computeFormSequenceFromFixtures", () => {
 });
 
 describe("standingFormNeedsRecompute", () => {
-  it("flags empty and dash-padded feed values", () => {
+  it("flags empty and dash-containing feed values", () => {
     expect(standingFormNeedsRecompute(null)).toBe(true);
     expect(standingFormNeedsRecompute("--W")).toBe(true);
+    expect(standingFormNeedsRecompute("W-LWL")).toBe(true);
     expect(standingFormNeedsRecompute("WWWL")).toBe(false);
-    expect(standingFormNeedsRecompute("W-LWL")).toBe(false);
+    expect(standingFormNeedsRecompute("WWWWL")).toBe(false);
   });
 });

@@ -1,0 +1,17 @@
+{
+  "competitionId": 98,
+  "competitionName": "Rugby World Cup",
+  "season": 2019,
+  "teamCount": 20,
+  "startDate": "20th Sep 2019",
+  "endDate": "2nd Nov 2019",
+  "games": 48,
+  "sourceUrls": {
+    "hub": "https://www.rugbydatabase.co.uk/competition/index.php?competitionId=98",
+    "games": "https://www.rugbydatabase.co.uk/recurring-competitions/competition-games.php?competitionGroupId=1&competitionId=98",
+    "conferences": "https://www.rugbydatabase.co.uk/competition/conferences.php?competitionId=98",
+    "draw": "https://www.rugbydatabase.co.uk/competition/draw.php?competitionId=98",
+    "wikipedia": "https://en.wikipedia.org/wiki/2019_Rugby_World_Cup"
+  },
+  "scrapedAt": "2026-08-04T15:26:06.933Z"
+}

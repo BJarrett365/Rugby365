@@ -382,15 +382,29 @@ export async function MatchDetailView({
       ? "details"
       : activeTab;
 
-  // Light availability for tab badge on every render; full payload only for animation tab (lazy engine).
-  const animationPayload = await buildMatchAnimationPublicPayload(data);
-  const animationBadge: MatchAnimationTabBadge = animationPayload.availability.tabBadge;
-  // Always build Betting Intelligence so win probability can sit in the match header.
+  // Light availability for tab badge; full animation engine only when that tab is open.
+  let animationPayload: MatchAnimationPublicPayload | null = null;
+  let animationBadge: MatchAnimationTabBadge = null;
+  if (resolvedTab === "animation" || resolvedTab === "audio") {
+    animationPayload = await buildMatchAnimationPublicPayload(data);
+    animationBadge = animationPayload.availability.tabBadge;
+  } else {
+    const status = detail.status.toLowerCase();
+    if (/live|first|second|half/.test(status)) animationBadge = "LIVE";
+    else if (/result|finished|complete|ft|full_time/.test(status)) animationBadge = "REPLAY";
+    else if (/fixture|scheduled|upcoming/.test(status)) animationBadge = "SOON";
+  }
+
+  // Betting Intelligence is expensive (H2H/form fan-out). Keep it off the default
+  // Match Centre SSR path — soft-nav was timing out with "network error" when this
+  // raced on every details view. Header win-prob only renders on the Betting tab.
   let bettingIntel: MatchBettingIntelligence | null = null;
-  try {
-    bettingIntel = await buildMatchBettingIntelligence(data);
-  } catch {
-    bettingIntel = null;
+  if (resolvedTab === "betting") {
+    try {
+      bettingIntel = await buildMatchBettingIntelligence(data);
+    } catch {
+      bettingIntel = null;
+    }
   }
 
   return (
@@ -586,16 +600,16 @@ export async function MatchDetailView({
 
             <MatchHeaderMediaActions
               audioReady={
-                animationPayload.audio?.status === "scripts_ready" ||
-                animationPayload.audio?.status === "streaming"
+                animationPayload?.audio?.status === "scripts_ready" ||
+                animationPayload?.audio?.status === "streaming"
               }
-              scriptCount={animationPayload.audio?.scriptCount ?? 0}
+              scriptCount={animationPayload?.audio?.scriptCount ?? 0}
               hasAnimation={
                 animationBadge === "LIVE" ||
                 animationBadge === "REPLAY" ||
-                animationPayload.availability.showLiveControls ||
-                animationPayload.availability.showReplayControls ||
-                animationPayload.availability.showFullTimeResult
+                animationPayload?.availability.showLiveControls ||
+                animationPayload?.availability.showReplayControls ||
+                animationPayload?.availability.showFullTimeResult
               }
               hasWatchalong={hasWatchalong}
               hasHighlights={hasHighlights}

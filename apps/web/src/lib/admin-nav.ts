@@ -155,9 +155,15 @@ export const ADMIN_OPTA_STATS_LINKS: AdminHubLink[] = [
     status: "Live",
   },
   {
+    title: "Clubs",
+    href: "/admin/clubs",
+    description: "Alphabetical club directory with search — open any club for squad, history and stats.",
+    status: "Live",
+  },
+  {
     title: "Teams",
     href: "/admin/teams",
-    description: "Team season stats and match aggregates imported from Planet Rugby / SDMS.",
+    description: "Season-scoped team picker by competition (International / Club / Provincial).",
     status: "Live",
   },
   {
@@ -560,6 +566,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "Content",
     items: [
       { href: "/admin/matches", label: "Matches", short: "Matches" },
+      { href: "/admin/clubs", label: "Clubs", short: "Clubs" },
       { href: "/admin/matches/pregame", label: "Pre-game check", short: "PreGame" },
       { href: "/admin/matches/highlights", label: "Match highlights", short: "Highlights" },
       {
@@ -576,8 +583,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
         href: "/admin/audio-commentary",
         label: "Audio Commentary",
         short: "Voices",
-      },
-      { href: "/admin/teams", label: "Teams", short: "Teams" },
+      },      { href: "/admin/teams", label: "Teams", short: "Teams" },
       { href: "/admin/competitions", label: "Competitions", short: "Comps" },
       { href: "/admin/competitions/catalog", label: "Competition catalog", short: "Catalog" },
       { href: "/admin/players", label: "Players", short: "Players" },

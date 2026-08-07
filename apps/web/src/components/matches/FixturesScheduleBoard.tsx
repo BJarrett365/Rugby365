@@ -475,10 +475,14 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
   );
 }
 
-function seasonOptionsAround(dateKey: string): string[] {
-  const year = Number(dateKey.slice(0, 4));
-  if (!Number.isFinite(year)) return [String(new Date().getFullYear())];
-  return [String(year - 1), String(year), String(year + 1)];
+function nearestDateKey(target: string, dates: string[]): string | null {
+  if (!dates.length) return null;
+  if (dates.includes(target)) return target;
+  const sorted = [...dates].sort();
+  // Prefer next upcoming date on/after target; else last previous.
+  const upcoming = sorted.find((d) => d >= target);
+  if (upcoming) return upcoming;
+  return sorted[sorted.length - 1] ?? null;
 }
 
 export function FixturesScheduleBoard({
@@ -505,6 +509,9 @@ export function FixturesScheduleBoard({
   const [competitionFilter, setCompetitionFilter] = useState("all");
   const [fixtures, setFixtures] = useState<ScheduleFixture[]>([]);
   const [competitions, setCompetitions] = useState<ScheduleCompetition[]>([]);
+  /** Competitions that have fixtures in the selected calendar year (Live Centre picker). */
+  const [yearCompetitions, setYearCompetitions] = useState<ScheduleCompetition[]>([]);
+  const [fixtureYears, setFixtureYears] = useState<number[]>([]);
   const [datesWithMatches, setDatesWithMatches] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [liveCount, setLiveCount] = useState(0);
@@ -518,53 +525,154 @@ export function FixturesScheduleBoard({
 
   const seasonYear =
     (selectedDateKey ? seasonFromDateKey(selectedDateKey) : null) ?? String(new Date().getFullYear());
-  const seasonChoices = useMemo(
-    () => seasonOptionsAround(selectedDateKey ?? `${seasonYear}-01-01`),
-    [selectedDateKey, seasonYear],
-  );
 
-  const mergeFixtureDates = useCallback((dates: string[]) => {
-    setDatesWithMatches((prev) => {
-      let changed = false;
-      const next = new Set(prev);
-      for (const d of dates) {
-        if (!next.has(d)) {
-          next.add(d);
-          changed = true;
-        }
+  const seasonChoices = useMemo(() => {
+    const current = Number(seasonYear);
+    const fromApi = fixtureYears.map(String);
+    if (!fromApi.length) {
+      // Fallback until /api/fixtures/years resolves.
+      if (!Number.isFinite(current)) return [String(new Date().getFullYear())];
+      return [String(current - 1), String(current), String(current + 1)];
+    }
+    const set = new Set(fromApi);
+    if (Number.isFinite(current)) set.add(String(current));
+    return [...set].sort((a, b) => Number(b) - Number(a));
+  }, [fixtureYears, seasonYear]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/fixtures/years");
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { years?: number[] };
+        if (!cancelled && data.years?.length) setFixtureYears(data.years);
+      } catch {
+        /* non-blocking */
       }
-      return changed ? next : prev;
-    });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const year = Number(seasonYear);
+    if (!Number.isFinite(year)) return;
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          year: String(year),
+          tz: browserTimeZone,
+        });
+        const res = await fetch(`/api/fixtures/competitions?${params.toString()}`);
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { competitions?: ScheduleCompetition[] };
+        if (cancelled) return;
+        const list = data.competitions ?? [];
+        setYearCompetitions(list);
+        // Drop a stale competition filter when switching years.
+        setCompetitionFilter((prev) => {
+          if (prev === "all") return prev;
+          return list.some((c) => c.id === prev) ? prev : "all";
+        });
+      } catch {
+        if (!cancelled) setYearCompetitions([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [seasonYear, browserTimeZone]);
+
+  const competitionIdParam =
+    competitionFilter !== "all" && !competitionFilter.startsWith("name:") && !competitionFilter.startsWith("sdms:")
+      ? competitionFilter
+      : null;
+
   const fetchDatesForRange = useCallback(
-    async (start: string, end: string) => {
+    async (start: string, end: string, replace = false) => {
       try {
         const params = new URLSearchParams({ start, end, tz: browserTimeZone });
+        if (competitionIdParam) params.set("competitionId", competitionIdParam);
         const res = await fetch(`/api/fixtures/dates?${params.toString()}`);
         if (!res.ok) return;
         const data = (await res.json()) as { dates?: string[] };
-        if (data.dates?.length) mergeFixtureDates(data.dates);
+        const dates = data.dates ?? [];
+        if (replace) {
+          setDatesWithMatches(new Set(dates));
+        } else {
+          setDatesWithMatches((prev) => {
+            let changed = false;
+            const next = new Set(prev);
+            for (const d of dates) {
+              if (!next.has(d)) {
+                next.add(d);
+                changed = true;
+              }
+            }
+            return changed ? next : prev;
+          });
+        }
       } catch {
         /* non-blocking */
       }
     },
-    [browserTimeZone, mergeFixtureDates],
+    [browserTimeZone, competitionIdParam],
   );
 
   const fetchMonthDates = useCallback(
     (year: number, monthIndex: number) => {
       const { start, end } = monthBoundsFromYearMonth(year, monthIndex);
-      void fetchDatesForRange(start, end);
+      void fetchDatesForRange(start, end, false);
     },
     [fetchDatesForRange],
   );
+
+  // When competition filter changes, reload the year’s date highlights and jump to a real match day.
+  useEffect(() => {
+    if (!selectedDateKey) return;
+    const year = Number(seasonYear);
+    if (!Number.isFinite(year)) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          start: `${year}-01-01`,
+          end: `${year}-12-31`,
+          tz: browserTimeZone,
+        });
+        if (competitionIdParam) params.set("competitionId", competitionIdParam);
+        const res = await fetch(`/api/fixtures/dates?${params.toString()}`);
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { dates?: string[] };
+        const dates = data.dates ?? [];
+        if (cancelled) return;
+        setDatesWithMatches(new Set(dates));
+        if (competitionIdParam && dates.length) {
+          const next = nearestDateKey(selectedDateKey, dates);
+          if (next && next !== selectedDateKey) {
+            setSelectedDateKey(next);
+          }
+        }
+      } catch {
+        /* non-blocking */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally omit selectedDateKey — only re-run when year/competition/tz change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- jump once per competition/year change
+  }, [competitionIdParam, seasonYear, browserTimeZone]);
 
   const load = useCallback(async (dateKey: string) => {
     setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams({ date: dateKey, tz: browserTimeZone });
+      if (competitionIdParam) params.set("competitionId", competitionIdParam);
       const res = await fetch(`/api/fixtures/schedule?${params.toString()}`);
       const text = await res.text();
       let data: Record<string, unknown> = {};
@@ -588,8 +696,12 @@ export function FixturesScheduleBoard({
       );
       setLiveCount((data.liveCount as number) ?? 0);
       const nextDates = (data.datesWithMatches as string[]) ?? [];
-      if (nextDates.length) {
-        mergeFixtureDates(nextDates);
+      if (nextDates.length && !competitionIdParam) {
+        setDatesWithMatches((prev) => {
+          const next = new Set(prev);
+          for (const d of nextDates) next.add(d);
+          return next;
+        });
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load fixtures");
@@ -597,7 +709,7 @@ export function FixturesScheduleBoard({
     } finally {
       setLoading(false);
     }
-  }, [browserTimeZone, mergeFixtureDates]);
+  }, [browserTimeZone, competitionIdParam]);
 
   useEffect(() => {
     if (!selectedDateKey) return;
@@ -628,24 +740,34 @@ export function FixturesScheduleBoard({
 
   const operatorMode = Boolean(onSelectFixture);
 
-  const competitionById = useMemo(
-    () => Object.fromEntries(competitions.map((c) => [c.id, c])),
-    [competitions],
-  );
+  const competitionById = useMemo(() => {
+    const map: Record<string, ScheduleCompetition> = {};
+    for (const c of competitions) map[c.id] = c;
+    for (const c of yearCompetitions) map[c.id] = c;
+    return map;
+  }, [competitions, yearCompetitions]);
 
   const matchDateKeys = useMemo(() => datesWithMatches, [datesWithMatches]);
 
   const competitionOptions = useMemo(() => {
+    // Prefer year-scoped CMS comps so RWC etc. stay selectable off-match-days.
+    if (yearCompetitions.length) {
+      return yearCompetitions.map((c) => ({ id: c.id, name: c.name }));
+    }
+    // Fallback: unique names from the loaded day (covers early load / empty year query).
     const options = new Map<string, string>();
     for (const f of fixtures) {
       const name = competitionDisplayName(f, competitionById);
       const normalized = name.trim().toLowerCase();
-      if (!options.has(normalized)) options.set(normalized, name);
+      if (!options.has(normalized)) {
+        const id = f.competitionId ?? `name:${name}`;
+        options.set(normalized, JSON.stringify({ id, name }));
+      }
     }
-    return [...options.entries()]
-      .map(([, name]) => ({ id: `name:${name}`, name }))
+    return [...options.values()]
+      .map((raw) => JSON.parse(raw) as { id: string; name: string })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [fixtures, competitionById]);
+  }, [yearCompetitions, fixtures, competitionById]);
 
   const filtered = useMemo(() => {
     if (competitionFilter === "all") return fixtures;
@@ -672,7 +794,7 @@ export function FixturesScheduleBoard({
     const parsed = Number(year);
     if (!Number.isFinite(parsed)) return;
     // Clamp invalid dates (e.g. Feb 29) via Date constructor
-    const [ , m, d] = nextKey.split("-").map(Number);
+    const [, m, d] = nextKey.split("-").map(Number);
     const safe = dateKeyLocal(new Date(parsed, (m ?? 1) - 1, d ?? 1));
     setSelectedDateKey(safe);
   };
@@ -695,6 +817,7 @@ export function FixturesScheduleBoard({
         {isPublic ? (
           <>
             <MatchDatePicker
+              key={`mdp-${competitionFilter}-${seasonYear}`}
               selectedKey={selectedDateKey}
               onSelect={setSelectedDateKey}
               matchDateKeys={matchDateKeys}

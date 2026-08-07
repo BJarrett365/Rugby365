@@ -2474,6 +2474,30 @@ html[data-surface="print"] .no-print {
   color: var(--pr-mc-gold-hover, #f0cb7a);
 }
 
+.competition-stats__estimate-note {
+  border: 1px solid color-mix(in srgb, var(--pr-mc-gold, #e7bc63) 45%, transparent);
+  background: color-mix(in srgb, var(--pr-mc-gold, #e7bc63) 12%, transparent);
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+  color: var(--pr-mc-offwhite, #f4f1ea);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.competition-stats__estimate-note strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--pr-mc-gold, #e7bc63);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.competition-stats__estimate-note p {
+  margin: 0;
+  color: color-mix(in srgb, var(--pr-mc-offwhite, #f4f1ea) 88%, transparent);
+}
+
 .stat-board__row--team {
   grid-template-columns: 1.35rem 1.75rem 1fr auto;
 }

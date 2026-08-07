@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-04",
+  "purpose": "Canonical scrape/source URL catalog for Rugby365 ingest (RWC first; reusable for other competitions).",
+  "groups": [
+    {
+      "id": "official-governing-bodies",
+      "label": "Official governing bodies",
+      "urls": [
+        { "name": "World Rugby", "url": "https://www.world.rugby/", "scope": ["global", "rankings", "tournaments"] },
+        { "name": "Rugby World Cup", "url": "https://www.rugbyworldcup.com/", "scope": ["rugby-world-cup"] },
+        { "name": "South African Rugby Union", "url": "https://www.sarugby.co.za/", "scope": ["south-africa", "currie-cup", "rugby-world-cup"] },
+        { "name": "New Zealand Rugby", "url": "https://www.nzrugby.co.nz/", "scope": ["new-zealand", "npc", "super-rugby", "rugby-world-cup"] },
+        { "name": "Rugby Football Union", "url": "https://www.englandrugby.com/", "scope": ["england", "premiership", "rugby-world-cup"] },
+        { "name": "Irish Rugby Football Union", "url": "https://www.irishrugby.ie/", "scope": ["ireland", "urc", "rugby-world-cup"] },
+        { "name": "Welsh Rugby Union", "url": "https://www.wru.wales/", "scope": ["wales", "urc", "rugby-world-cup"] },
+        { "name": "Scottish Rugby", "url": "https://scottishrugby.org/", "scope": ["scotland", "urc", "rugby-world-cup"] },
+        { "name": "Rugby Australia", "url": "https://www.rugby.com.au/", "scope": ["australia", "super-rugby", "rugby-world-cup"] },
+        { "name": "France Rugby (FFR)", "url": "https://www.ffr.fr/", "scope": ["france", "top-14", "rugby-world-cup"] },
+        { "name": "Unión Argentina de Rugby", "url": "https://www.uar.com.ar/", "scope": ["argentina", "rugby-world-cup"] }
+      ]
+    },
+    {
+      "id": "major-competitions",
+      "label": "Major competitions",
+      "urls": [
+        { "name": "Six Nations", "url": "https://www.sixnationsrugby.com/", "scope": ["six-nations"] },
+        { "name": "Super Rugby", "url": "https://super.rugby/", "scope": ["super-rugby"] },
+        { "name": "United Rugby Championship", "url": "https://www.unitedrugby.com/", "scope": ["united-rugby-championship"] },
+        { "name": "Premiership Rugby", "url": "https://www.premiershiprugby.com/", "scope": ["premiership"] },
+        { "name": "EPCR", "url": "https://www.epcrugby.com/", "scope": ["rugby-champions-cup", "challenge-cup"] },
+        { "name": "Ligue Nationale de Rugby", "url": "https://www.lnr.fr/", "scope": ["top-14", "pro-d2"] },
+        { "name": "SANZAAR", "url": "https://sanzarrugby.com/", "scope": ["rugby-championship", "super-rugby"] }
+      ]
+    },
+    {
+      "id": "historical-databases-wikipedia",
+      "label": "Historical databases (Wikipedia RWC)",
+      "urls": [
+        { "name": "Rugby World Cup", "url": "https://en.wikipedia.org/wiki/Rugby_World_Cup", "scope": ["rugby-world-cup"] },
+        { "name": "1987 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/1987_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 1987, "kind": "season" },
+        { "name": "1991 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/1991_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 1991, "kind": "season" },
+        { "name": "1995 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/1995_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 1995, "kind": "season" },
+        { "name": "1999 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/1999_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 1999, "kind": "season" },
+        { "name": "2003 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2003_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2003, "kind": "season" },
+        { "name": "2007 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2007_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2007, "kind": "season" },
+        { "name": "2011 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2011_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2011, "kind": "season" },
+        { "name": "2015 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2015_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2015, "kind": "season" },
+        { "name": "2019 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2019_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2019, "kind": "season" },
+        { "name": "2023 Rugby World Cup", "url": "https://en.wikipedia.org/wiki/2023_Rugby_World_Cup", "scope": ["rugby-world-cup"], "year": 2023, "kind": "season" },
+        { "name": "1987 RWC statistics", "url": "https://en.wikipedia.org/wiki/1987_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 1987, "kind": "statistics" },
+        { "name": "1991 RWC statistics", "url": "https://en.wikipedia.org/wiki/1991_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 1991, "kind": "statistics" },
+        { "name": "1995 RWC statistics", "url": "https://en.wikipedia.org/wiki/1995_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 1995, "kind": "statistics" },
+        { "name": "1999 RWC statistics", "url": "https://en.wikipedia.org/wiki/1999_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 1999, "kind": "statistics" },
+        { "name": "2003 RWC statistics", "url": "https://en.wikipedia.org/wiki/2003_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2003, "kind": "statistics" },
+        { "name": "2007 RWC statistics", "url": "https://en.wikipedia.org/wiki/2007_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2007, "kind": "statistics" },
+        { "name": "2011 RWC statistics", "url": "https://en.wikipedia.org/wiki/2011_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2011, "kind": "statistics" },
+        { "name": "2015 RWC statistics", "url": "https://en.wikipedia.org/wiki/2015_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2015, "kind": "statistics" },
+        { "name": "2019 RWC statistics", "url": "https://en.wikipedia.org/wiki/2019_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2019, "kind": "statistics" },
+        { "name": "2023 RWC statistics", "url": "https://en.wikipedia.org/wiki/2023_Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "year": 2023, "kind": "statistics" },
+        { "name": "List of Rugby World Cup finals", "url": "https://en.wikipedia.org/wiki/List_of_Rugby_World_Cup_finals", "scope": ["rugby-world-cup"], "kind": "archive" },
+        { "name": "Rugby World Cup statistics", "url": "https://en.wikipedia.org/wiki/Rugby_World_Cup_statistics", "scope": ["rugby-world-cup"], "kind": "archive" },
+        { "name": "National team appearances in the Rugby World Cup", "url": "https://en.wikipedia.org/wiki/National_team_appearances_in_the_Rugby_World_Cup", "scope": ["rugby-world-cup"], "kind": "archive" },
+        { "name": "Rugby World Cup all-time table", "url": "https://en.wikipedia.org/wiki/Rugby_World_Cup_all-time_table", "scope": ["rugby-world-cup"], "kind": "archive" }
+      ]
+    },
+    {
+      "id": "player-databases",
+      "label": "Player databases",
+      "urls": [
+        { "name": "ItsRugby", "url": "https://www.itsrugby.co.uk/", "scope": ["players", "transfers"] },
+        { "name": "All.Rugby", "url": "https://all.rugby/", "scope": ["players", "competitions"] },
+        { "name": "Ultimate Rugby", "url": "https://www.ultimaterugby.com/", "scope": ["tables", "fixtures", "rugby-world-cup"] },
+        { "name": "RugbyPass", "url": "https://www.rugbypass.com/", "scope": ["players", "news"] },
+        { "name": "Rugby Database (NZ)", "url": "https://www.rugbydatabase.co.nz/", "scope": ["players", "matches"] },
+        { "name": "StatBunker Rugby", "url": "https://rugby.statbunker.com/", "scope": ["players", "stats"] },
+        { "name": "Rugby Database (UK)", "url": "https://www.rugbydatabase.co.uk/", "scope": ["rugby-world-cup", "matches", "lineups"] }
+      ]
+    },
+    {
+      "id": "news-match-reports",
+      "label": "News / match reports",
+      "urls": [
+        { "name": "ESPN Rugby", "url": "https://www.espn.co.uk/rugby/", "scope": ["news", "match-stats"] },
+        { "name": "Planet Rugby", "url": "https://www.planetrugby.com/", "scope": ["news", "sdms", "rugby-world-cup"] },
+        { "name": "RugbyPass News", "url": "https://www.rugbypass.com/news/", "scope": ["news"] }
+      ]
+    },
+    {
+      "id": "official-stats",
+      "label": "Official stats",
+      "urls": [
+        { "name": "World Rugby Game Analysis — RWC reports", "url": "https://www.world.rugby/the-game/game-analysis/reports/rwc", "scope": ["rugby-world-cup", "analysis"] },
+        { "name": "World Rugby rankings", "url": "https://www.world.rugby/rankings", "scope": ["rankings"] }
+      ]
+    },
+    {
+      "id": "world-rugby-competitions",
+      "label": "World Rugby competitions",
+      "urls": [
+        { "name": "Rugby World Cup", "url": "https://www.rugbyworldcup.com/", "scope": ["rugby-world-cup"] },
+        { "name": "World Rugby tournaments", "url": "https://www.world.rugby/tournaments", "scope": ["tournaments"] },
+        { "name": "World Rugby U20", "url": "https://www.world.rugby/tournaments/u20", "scope": ["u20"] },
+        { "name": "World Rugby Challenger Series", "url": "https://www.world.rugby/tournaments/challenger-series", "scope": ["challenger-series"] }
+      ]
+    },
+    {
+      "id": "europe",
+      "label": "Europe",
+      "urls": [
+        { "name": "EPCR", "url": "https://www.epcrugby.com/", "scope": ["rugby-champions-cup", "challenge-cup"] },
+        { "name": "United Rugby Championship", "url": "https://www.unitedrugby.com/", "scope": ["united-rugby-championship"] },
+        { "name": "Premiership Rugby", "url": "https://www.premiershiprugby.com/", "scope": ["premiership"] },
+        { "name": "Ligue Nationale de Rugby", "url": "https://www.lnr.fr/", "scope": ["top-14"] },
+        { "name": "Six Nations", "url": "https://www.sixnationsrugby.com/", "scope": ["six-nations"] }
+      ]
+    },
+    {
+      "id": "southern-hemisphere",
+      "label": "Southern Hemisphere",
+      "urls": [
+        { "name": "Super Rugby", "url": "https://super.rugby/", "scope": ["super-rugby"] },
+        { "name": "SANZAAR", "url": "https://sanzarrugby.com/", "scope": ["rugby-championship", "super-rugby"] },
+        { "name": "Rugby Australia", "url": "https://www.rugby.com.au/", "scope": ["australia"] },
+        { "name": "New Zealand Rugby", "url": "https://www.nzrugby.co.nz/", "scope": ["new-zealand"] },
+        { "name": "South African Rugby Union", "url": "https://www.sarugby.co.za/", "scope": ["south-africa"] }
+      ]
+    }
+  ]
+}

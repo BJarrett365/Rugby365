@@ -1,0 +1,17 @@
+{
+  "competitionId": 100,
+  "competitionName": "Rugby World Cup",
+  "season": 2015,
+  "teamCount": 20,
+  "startDate": "18th Sep 2015",
+  "endDate": "31st Oct 2015",
+  "games": 48,
+  "sourceUrls": {
+    "hub": "https://www.rugbydatabase.co.uk/competition/index.php?competitionId=100",
+    "games": "https://www.rugbydatabase.co.uk/recurring-competitions/competition-games.php?competitionGroupId=1&competitionId=100",
+    "conferences": "https://www.rugbydatabase.co.uk/competition/conferences.php?competitionId=100",
+    "draw": "https://www.rugbydatabase.co.uk/competition/draw.php?competitionId=100",
+    "wikipedia": "https://en.wikipedia.org/wiki/2015_Rugby_World_Cup"
+  },
+  "scrapedAt": "2026-08-04T15:25:28.291Z"
+}

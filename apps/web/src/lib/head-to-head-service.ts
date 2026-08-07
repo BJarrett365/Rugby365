@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { getFixtureById } from "./fixture-admin-service";
 import {
   buildCompetitionSlots,
+  competitionRecordsFromMeetings,
   type HeadToHeadCompetitionRecord,
   type HeadToHeadComparison,
   type HeadToHeadMeetingRow,
@@ -22,6 +23,7 @@ export {
   H2H_COMPETITION_SLOTS,
   H2H_DATA_FROM_YEAR,
   buildCompetitionSlots,
+  competitionRecordsFromMeetings,
   mergeProviderSnapshot,
   parseSdmsHeadToHeadRecords,
 } from "./head-to-head-shared";
@@ -287,6 +289,7 @@ export async function compareFixtureHeadToHead(fixtureId: string): Promise<HeadT
   );
 
   const meetingSummary = scoreSummary(playedMeetings, homeTeam, awayTeam);
+  const cmsCompetitionRecords = competitionRecordsFromMeetings(playedMeetings, homeTeam);
 
   return {
     fixtureId,
@@ -303,8 +306,8 @@ export async function compareFixtureHeadToHead(fixtureId: string): Promise<HeadT
       linkedToCms: importedMeetings.filter((row) => row.cmsLinked).length,
       missingFromCms: missingFromCms.length,
     },
-    competitionRecords,
-    competitionSlots: buildCompetitionSlots(competitionRecords),
+    competitionRecords: [...cmsCompetitionRecords, ...competitionRecords],
+    competitionSlots: buildCompetitionSlots([...cmsCompetitionRecords, ...competitionRecords]),
     dataFromYear: H2H_DATA_FROM_YEAR,
     meetings,
     sources: {

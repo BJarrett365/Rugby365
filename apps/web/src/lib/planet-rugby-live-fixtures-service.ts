@@ -8,8 +8,8 @@ import {
   utcInstantFromZonedWallClock,
   type SdmsFixtureRow,
 } from "@rugby365/import-sdk";
-import { and, eq, gte, lt } from "drizzle-orm";
-import { fixtures, referees } from "@rugby365/db";
+import { and, asc, desc, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
+import { competitions, fixtures, referees } from "@rugby365/db";
 import { extractYoutubeVideoId } from "./youtube-embed";
 import {
   addDaysToDateKey,
@@ -292,10 +292,12 @@ export async function getScheduleForDate(
     };
   }
 
-  const [sdmsRaw, competitions, datesWithMatches] = await Promise.all([
+  const [sdmsRaw, competitionsRows, datesWithMatches] = await Promise.all([
     fetchSdmsGlobalFixtures(season, start, end),
     listCompetitions(),
-    getFixtureDatesInRange(season, datesRangeStart, datesRangeEnd, timeZone),
+    getFixtureDatesInRange(season, datesRangeStart, datesRangeEnd, timeZone, {
+      competitionId: competitionIdFilter,
+    }),
   ]);
 
   const sdmsRows = filterSdmsRowsByCalendarDate(sdmsRaw ?? [], dateKey, timeZone);
@@ -316,14 +318,14 @@ export async function getScheduleForDate(
 
   const dbRowsAfterImport = await listDbFixturesForDate(dateKey, timeZone);
 
-  const competitionList: ScheduleCompetition[] = competitions.map((c) => ({
+  const competitionList: ScheduleCompetition[] = competitionsRows.map((c) => ({
     id: c.id,
     name: c.name,
     slug: c.slug,
   }));
 
   const competitionBySdms = new Map<string, ScheduleCompetition>();
-  for (const c of competitions) {
+  for (const c of competitionsRows) {
     if (c.sdmsCompCode) competitionBySdms.set(c.sdmsCompCode, { id: c.id, name: c.name, slug: c.slug });
   }
 
@@ -467,7 +469,13 @@ export async function getFixtureDatesInRange(
   startDateKey: string,
   endDateKey: string,
   timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
+  options?: { competitionId?: string | null },
 ): Promise<string[]> {
+  const competitionId = options?.competitionId?.trim() || null;
+  // Competition-scoped calendars are CMS/DB truth — skip expensive global SDMS fan-out.
+  if (competitionId) {
+    return (await getDbFixtureDatesInRange(startDateKey, endDateKey, timeZone, competitionId)).sort();
+  }
   const [sdmsDates, dbDates] = await Promise.all([
     getSdmsDatesWithFixtures(season, startDateKey, endDateKey, timeZone),
     getDbFixtureDatesInRange(startDateKey, endDateKey, timeZone),
@@ -479,14 +487,19 @@ async function getDbFixtureDatesInRange(
   startDateKey: string,
   endDateKey: string,
   timeZone: string,
+  competitionId?: string | null,
 ): Promise<string[]> {
   const db = getDb();
   const start = utcInstantFromZonedWallClock(startDateKey, "00:00:00", timeZone);
   const end = utcInstantFromZonedWallClock(addDaysToDateKey(endDateKey, 1), "00:00:00", timeZone);
+  const conditions = [gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)];
+  if (competitionId) {
+    conditions.push(eq(fixtures.competitionId, competitionId));
+  }
   const rows = await db
     .select({ kickoffAt: fixtures.kickoffAt })
     .from(fixtures)
-    .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)));
+    .where(and(...conditions));
 
   const dates = new Set<string>();
   for (const row of rows) {
@@ -497,6 +510,52 @@ async function getDbFixtureDatesInRange(
     }
   }
   return [...dates];
+}
+
+/**
+ * Calendar years that have at least one kickoff in CMS.
+ * Drives the Live Centre year picker (full history, not ±1).
+ */
+export async function listFixtureCalendarYears(): Promise<number[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      year: sql<number>`extract(year from ${fixtures.kickoffAt})::int`.mapWith(Number),
+    })
+    .from(fixtures)
+    .where(isNotNull(fixtures.kickoffAt))
+    .groupBy(sql`extract(year from ${fixtures.kickoffAt})`)
+    .orderBy(desc(sql`extract(year from ${fixtures.kickoffAt})`));
+
+  return rows.map((r) => r.year).filter((y) => Number.isFinite(y) && y >= 1860 && y <= 2100);
+}
+
+/**
+ * Competitions that have at least one CMS fixture whose kickoff falls in `year`
+ * (interpreted in the given display timezone).
+ */
+export async function listCompetitionsWithFixturesInYear(
+  year: number,
+  timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
+): Promise<ScheduleCompetition[]> {
+  if (!Number.isFinite(year) || year < 1860 || year > 2100) return [];
+  const db = getDb();
+  const start = utcInstantFromZonedWallClock(`${year}-01-01`, "00:00:00", timeZone);
+  const end = utcInstantFromZonedWallClock(`${year + 1}-01-01`, "00:00:00", timeZone);
+
+  const rows = await db
+    .select({
+      id: competitions.id,
+      name: competitions.name,
+      slug: competitions.slug,
+    })
+    .from(fixtures)
+    .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+    .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)))
+    .groupBy(competitions.id, competitions.name, competitions.slug)
+    .orderBy(asc(competitions.name));
+
+  return rows.map((r) => ({ id: r.id, name: r.name, slug: r.slug }));
 }
 
 /** Dates (YYYY-MM-DD) that have at least one SDMS fixture in a range (display timezone). */

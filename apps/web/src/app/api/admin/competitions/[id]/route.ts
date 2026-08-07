@@ -46,6 +46,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ ok: true, ...result });
     }
 
+    if (body.action === "recompute-form") {
+      const { recomputeStandingForms } = await import("@/lib/standing-form-recompute-service");
+      const result = await recomputeStandingForms({
+        competitionId: id,
+        force: body.force === true,
+        activeOnly: body.allSeasons !== true,
+      });
+      return NextResponse.json({ ok: true, ...result });
+    }
+
     if (body.action === "sync-seasons") {
       const result = await syncCompetitionSeasonsFromSdms(id);
       return NextResponse.json({ ok: true, ...result });

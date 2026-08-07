@@ -1,5 +1,6 @@
 "use client";
 
+import { FormDots } from "@/components/competitions/FormDots";
 import { parseStandingForm } from "@/lib/standing-form";
 
 type StandingRow = {
@@ -15,32 +16,6 @@ type StandingRow = {
   points: number;
   form: string | null;
 };
-
-function FormDots({ form }: { form: string | null }) {
-  const { lastFive } = parseStandingForm(form);
-  if (!lastFive) return <span className="text-zinc-600">—</span>;
-  return (
-    <span className="inline-flex gap-0.5">
-      {lastFive.split("").map((c, i) => (
-        <span
-          key={`${c}-${i}`}
-          className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-            c === "W"
-              ? "bg-emerald-600 text-white"
-              : c === "L"
-                ? "bg-red-600 text-white"
-                : c === "D"
-                  ? "bg-zinc-600 text-white"
-                  : "bg-zinc-800 text-zinc-500"
-          }`}
-          title={c === "W" ? "Win" : c === "L" ? "Loss" : c === "D" ? "Draw" : "No result"}
-        >
-          {c}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 export function LeagueTable({
   rows,
@@ -85,7 +60,7 @@ export function LeagueTable({
               <td className="py-2.5 pr-3 font-medium text-zinc-100">{r.teamName}</td>
               {showForm && !compact && (
                 <td className="py-2.5 pr-3">
-                  <FormDots form={r.form} />
+                  <FormDots form={r.form} slots={5} />
                 </td>
               )}
               <td className="py-2.5 pr-2 text-center font-mono tabular-nums">{r.played}</td>

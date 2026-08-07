@@ -1,14 +1,22 @@
 import {
+  formResultForPerspective,
+  recentFormMatchesByTeam,
+} from "./form-table-service";
+import {
   buildLeagueStandingsFromPerspectives,
   filterBySide,
   matchLeaguePoints,
 } from "./rugby-table-metrics-service";
 import type {
+  FormResult,
   RugbyScoringRules,
   RugbyTableStandingRow,
   RugbyTableView,
   TeamFixturePerspective,
 } from "./table-types";
+
+/** Default club-competition form window. World Cup pool stage overrides to 3 or 4. */
+const DEFAULT_LIVE_FORM_SLOTS = 5;
 
 export { parseLiveTableBoolean } from "./table-lab-param-parsers";
 
@@ -113,6 +121,8 @@ export function buildLiveTableStandings(input: {
   rules: RugbyScoringRules;
   tableView: RugbyTableView;
   showMovement: boolean;
+  /** Cap form sequence length (RWC pools: 3 or 4). */
+  formSlots?: number;
 }): {
   rows: RugbyTableStandingRow[];
   preMatchRows: RugbyTableStandingRow[];
@@ -123,6 +133,7 @@ export function buildLiveTableStandings(input: {
   if (input.tableView === "home") scoped = filterBySide(scoped, "home");
   if (input.tableView === "away") scoped = filterBySide(scoped, "away");
 
+  const formSlots = input.formSlots ?? DEFAULT_LIVE_FORM_SLOTS;
   const standingPerspectives = scoped.filter((row) => row.countsTowardStandings !== false);
   const preMatchPerspectives = standingPerspectives.filter((row) => !row.isLive);
   const liveFixtureCount = new Set(
@@ -140,6 +151,16 @@ export function buildLiveTableStandings(input: {
     if (row.isLive) liveByTeam.set(row.teamId, row);
   }
 
+  // Newest-first form from completed + in-play results.
+  const formByTeam = new Map<string, FormResult[]>();
+  for (const [teamId, matches] of recentFormMatchesByTeam(
+    standingPerspectives,
+    formSlots,
+    input.tableView,
+  )) {
+    formByTeam.set(teamId, matches.map(formResultForPerspective));
+  }
+
   const preRankByTeam = new Map(preMatchRows.map((row) => [row.teamId, row.rank]));
 
   rows = rows.map((row) => {
@@ -150,6 +171,7 @@ export function buildLiveTableStandings(input: {
       : null;
     return {
       ...row,
+      formSequence: formByTeam.get(row.teamId) ?? [],
       previousRank: previousRank ?? null,
       movement,
       movementLabel:

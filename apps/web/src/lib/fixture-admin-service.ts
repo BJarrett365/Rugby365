@@ -796,13 +796,32 @@ export async function getFixtureSourcesState(fixtureId: string): Promise<Fixture
   const primarySource =
     readPrimarySourceFromSnapshot(fixture.providerSnapshot) ?? inferredSource;
 
+  const snap =
+    fixture.providerSnapshot && typeof fixture.providerSnapshot === "object"
+      ? (fixture.providerSnapshot as Record<string, unknown>)
+      : {};
+
   const connections: Record<MatchCmsProvider, boolean> = {
     rugby_data: Boolean(rugbyDataExternalId),
     planet_rugby: Boolean(fixture.planetRugbyUrl?.trim() || (fixture.externalMatchId && !fixture.externalMatchId.includes(":"))),
     sport365: Boolean(fixture.sport365Url?.trim()),
-    livesport: Boolean(fixture.externalMatchId?.startsWith("livesport:")),
-    wikipedia: Boolean(fixture.externalMatchId?.startsWith("wikipedia:")),
-    manual: !fixture.planetRugbyUrl?.trim() && !fixture.sport365Url?.trim() && !fixture.externalMatchId?.trim() && !rugbyDataExternalId,
+    livesport: Boolean(
+      fixture.externalMatchId?.startsWith("livesport:") ||
+        typeof snap.livesportUrl === "string" ||
+        typeof snap.liveSportUrl === "string",
+    ),
+    wikipedia: Boolean(
+      fixture.externalMatchId?.startsWith("wikipedia:") ||
+        typeof snap.wikipediaUrl === "string" ||
+        (typeof snap.sourceUrl === "string" && snap.sourceUrl.includes("wikipedia.org")),
+    ),
+    manual: Boolean(
+      typeof snap.manualNotes === "string" ||
+        (!fixture.planetRugbyUrl?.trim() &&
+          !fixture.sport365Url?.trim() &&
+          !fixture.externalMatchId?.trim() &&
+          !rugbyDataExternalId),
+    ),
   };
 
   return {

@@ -117,6 +117,10 @@ export async function syncSeasonStandings(
     .set({ syncedAt })
     .where(eq(competitionSeasons.id, seasonId));
 
+  // Fill gaps where SDMS omitted last_five using finished fixtures in this season.
+  const { recomputeStandingFormForSeason } = await import("./standing-form-recompute-service");
+  await recomputeStandingFormForSeason(seasonId);
+
   return { rowsUpserted, views };
 }
 

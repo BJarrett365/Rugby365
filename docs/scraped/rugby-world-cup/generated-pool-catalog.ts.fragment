@@ -1,0 +1,64 @@
+// Generated from scraped tournament.json — merge into rugby-world-cup-pools.ts
+const POOLS_BY_YEAR = {
+  1987: [
+    { id: "A", label: "Pool A", teams: ["Australia", "England", "USA", "Japan"] },
+    { id: "B", label: "Pool B", teams: ["Wales", "Ireland", "Canada", "Tonga"] },
+    { id: "C", label: "Pool C", teams: ["New Zealand", "Fiji", "Italy", "Argentina"] },
+    { id: "D", label: "Pool D", teams: ["France", "Scotland", "Romania", "Zimbabwe"] },
+  ],
+  1991: [
+    { id: "A", label: "Pool A", teams: ["New Zealand", "England", "Italy", "USA"] },
+    { id: "B", label: "Pool B", teams: ["Scotland", "Ireland", "Japan", "Zimbabwe"] },
+    { id: "C", label: "Pool C", teams: ["Australia", "Samoa", "Wales", "Argentina"] },
+    { id: "D", label: "Pool D", teams: ["France", "Canada", "Romania", "Fiji"] },
+  ],
+  1995: [
+    { id: "A", label: "Pool A", teams: ["South Africa", "Australia", "Canada", "Romania"] },
+    { id: "B", label: "Pool B", teams: ["England", "Samoa", "Italy", "Argentina"] },
+    { id: "C", label: "Pool C", teams: ["New Zealand", "Ireland", "Wales", "Japan"] },
+    { id: "D", label: "Pool D", teams: ["France", "Scotland", "Tonga", "Cote D"] },
+  ],
+  1999: [
+    { id: "A", label: "Pool A", teams: ["South Africa", "Scotland", "Uruguay", "Spain"] },
+    { id: "B", label: "Pool B", teams: ["New Zealand", "England", "Tonga", "Italy"] },
+    { id: "C", label: "Pool C", teams: ["France", "Fiji", "Canada", "Namibia"] },
+    { id: "D", label: "Pool D", teams: ["Wales", "Argentina", "Samoa", "Japan"] },
+    { id: "E", label: "Pool E", teams: ["Australia", "Ireland", "Romania", "USA"] },
+  ],
+  2003: [
+    { id: "A", label: "Pool A", teams: ["Australia", "Ireland", "Argentina", "Romania", "Namibia"] },
+    { id: "B", label: "Pool B", teams: ["France", "Scotland", "Fiji", "USA", "Japan"] },
+    { id: "C", label: "Pool C", teams: ["England", "South Africa", "Samoa", "Uruguay", "Georgia"] },
+    { id: "D", label: "Pool D", teams: ["New Zealand", "Wales", "Italy", "Canada", "Tonga"] },
+  ],
+  2007: [
+    { id: "A", label: "Pool A", teams: ["South Africa", "England", "Tonga", "Samoa", "USA"] },
+    { id: "B", label: "Pool B", teams: ["Australia", "Fiji", "Wales", "Japan", "Canada"] },
+    { id: "C", label: "Pool C", teams: ["New Zealand", "Scotland", "Italy", "Romania", "Portugal"] },
+    { id: "D", label: "Pool D", teams: ["Argentina", "France", "Ireland", "Georgia", "Namibia"] },
+  ],
+  2011: [
+    { id: "A", label: "Pool A", teams: ["New Zealand", "France", "Tonga", "Canada", "Japan"] },
+    { id: "B", label: "Pool B", teams: ["England", "Argentina", "Scotland", "Georgia", "Romania"] },
+    { id: "C", label: "Pool C", teams: ["Ireland", "Australia", "Italy", "USA", "Russia"] },
+    { id: "D", label: "Pool D", teams: ["South Africa", "Wales", "Samoa", "Fiji", "Namibia"] },
+  ],
+  2015: [
+    { id: "A", label: "Pool A", teams: ["Australia", "Wales", "England", "Fiji", "Uruguay"] },
+    { id: "B", label: "Pool B", teams: ["South Africa", "Scotland", "Japan", "Samoa", "USA"] },
+    { id: "C", label: "Pool C", teams: ["New Zealand", "Argentina", "Georgia", "Tonga", "Namibia"] },
+    { id: "D", label: "Pool D", teams: ["Ireland", "France", "Italy", "Romania", "Canada"] },
+  ],
+  2019: [
+    { id: "A", label: "Pool A", teams: ["Japan", "Ireland", "Scotland", "Samoa", "Russia"] },
+    { id: "B", label: "Pool B", teams: ["New Zealand", "South Africa", "Italy", "Namibia", "Canada"] },
+    { id: "C", label: "Pool C", teams: ["England", "France", "Argentina", "Tonga", "USA"] },
+    { id: "D", label: "Pool D", teams: ["Wales", "Australia", "Fiji", "Georgia", "Uruguay"] },
+  ],
+  2023: [
+    { id: "A", label: "Pool A", teams: ["France", "New Zealand", "Italy", "Uruguay", "Namibia"] },
+    { id: "B", label: "Pool B", teams: ["Ireland", "South Africa", "Scotland", "Tonga", "Romania"] },
+    { id: "C", label: "Pool C", teams: ["Wales", "Fiji", "Australia", "Portugal", "Georgia"] },
+    { id: "D", label: "Pool D", teams: ["England", "Argentina", "Japan", "Samoa", "Chile"] },
+  ],
+} as const;

@@ -1,0 +1,97 @@
+{
+  "competitionGroupId": 1,
+  "sourceUrl": "https://www.rugbydatabase.co.uk/recurring-competitions/index.php?competitionGroupId=1",
+  "scrapedAt": "2026-08-04T15:22:14.207Z",
+  "seasons": [
+    {
+      "competitionId": 463,
+      "competitionName": "Rugby World Cup",
+      "season": 1987,
+      "teamCount": 16,
+      "startDate": "22nd May 1987",
+      "endDate": "20th Jun 1987",
+      "games": 32
+    },
+    {
+      "competitionId": 361,
+      "competitionName": "Rugby World Cup",
+      "season": 1991,
+      "teamCount": 16,
+      "startDate": "3rd Oct 1991",
+      "endDate": "2nd Nov 1991",
+      "games": 32
+    },
+    {
+      "competitionId": 344,
+      "competitionName": "Rugby World Cup",
+      "season": 1995,
+      "teamCount": 16,
+      "startDate": "25th May 1995",
+      "endDate": "24th Jun 1995",
+      "games": 32
+    },
+    {
+      "competitionId": 148,
+      "competitionName": "Rugby World Cup",
+      "season": 1999,
+      "teamCount": 20,
+      "startDate": "1st Oct 1999",
+      "endDate": "6th Nov 1999",
+      "games": 41
+    },
+    {
+      "competitionId": 128,
+      "competitionName": "Rugby World Cup",
+      "season": 2003,
+      "teamCount": 20,
+      "startDate": "10th Oct 2003",
+      "endDate": "22nd Nov 2003",
+      "games": 48
+    },
+    {
+      "competitionId": 110,
+      "competitionName": "Rugby World Cup",
+      "season": 2007,
+      "teamCount": 20,
+      "startDate": "7th Sep 2007",
+      "endDate": "20th Oct 2007",
+      "games": 48
+    },
+    {
+      "competitionId": 101,
+      "competitionName": "Rugby World Cup",
+      "season": 2011,
+      "teamCount": 20,
+      "startDate": "9th Sep 2011",
+      "endDate": "23rd Oct 2011",
+      "games": 48
+    },
+    {
+      "competitionId": 100,
+      "competitionName": "Rugby World Cup",
+      "season": 2015,
+      "teamCount": 20,
+      "startDate": "18th Sep 2015",
+      "endDate": "31st Oct 2015",
+      "games": 48
+    },
+    {
+      "competitionId": 98,
+      "competitionName": "Rugby World Cup",
+      "season": 2019,
+      "teamCount": 20,
+      "startDate": "20th Sep 2019",
+      "endDate": "2nd Nov 2019",
+      "games": 48
+    },
+    {
+      "competitionId": 1335,
+      "competitionName": "Rugby World Cup",
+      "season": 2023,
+      "teamCount": 20,
+      "startDate": "8th Sep 2023",
+      "endDate": "28th Oct 2023",
+      "games": 48
+    }
+  ]
+}

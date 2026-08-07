@@ -41,6 +41,8 @@ import {
   normalizePlayerName,
   normalizeTeamName,
   normalizedEntityKey,
+  stripTeamSponsorAndSeasonLabels,
+  teamDedupBaseName,
   teamDedupKey,
 } from "./entity-normalize";
 import { normalizeSlug } from "./fixture-admin-service";
@@ -95,6 +97,14 @@ function scoreTeam(row: DuplicateEntityRow): number {
   if (isJunkTeamSlug(row.slug)) score -= 80;
   if (/^\{\{/.test(row.name)) score -= 50;
   if (/^t=/i.test(row.name)) score -= 8;
+  // Prefer short franchise labels over historic union / sponsor / cite variants.
+  if (/\[[\d]+\]/.test(row.name)) score -= 15;
+  const base = teamDedupBaseName(row.name);
+  const compact = stripTeamSponsorAndSeasonLabels(row.name)
+    .replace(/\s*\[\d+\]\s*$/g, "")
+    .trim()
+    .toLowerCase();
+  if (compact === base) score += 10;
   return score;
 }
 
@@ -553,7 +563,11 @@ export async function mergePlayerRecords(
   }
 }
 
-async function mergeTeamRecords(canonicalId: string, duplicateIds: string[]) {
+export async function mergeTeamRecords(
+  canonicalId: string,
+  duplicateIds: string[],
+  options: { displayName?: string; shortName?: string } = {},
+) {
   if (duplicateIds.length === 0) return;
   const db = getDb();
 
@@ -561,8 +575,9 @@ async function mergeTeamRecords(canonicalId: string, duplicateIds: string[]) {
   if (!canonical) throw new Error("Canonical team not found");
 
   const patch: Partial<typeof teams.$inferInsert> = {
-    name: normalizeTeamName(canonical.name).replace(/^t=/i, "").trim(),
+    name: (options.displayName ?? normalizeTeamName(canonical.name)).replace(/^t=/i, "").trim(),
   };
+  if (options.shortName) patch.shortName = options.shortName;
 
   for (const duplicateId of duplicateIds) {
     const [dup] = await db.select().from(teams).where(eq(teams.id, duplicateId)).limit(1);

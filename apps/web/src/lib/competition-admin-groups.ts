@@ -113,6 +113,8 @@ const BY_CANONICAL_SLUG: Record<string, CatalogEntry> = {
   "division-de-honor": { group: "club", order: 170, label: "División de Honor" },
   "liga-nationala": { group: "club", order: 180, label: "Liga Națională de Rugby" },
   "didi-10": { group: "club", order: 190, label: "Didi 10" },
+  "varsity-cup": { group: "club", order: 200, label: "Varsity Cup" },
+  "varsity-shield": { group: "club", order: 210, label: "Varsity Shield" },
 
   // Provincial
   npc: { group: "provincial", order: 10, label: "NPC" },
@@ -126,6 +128,9 @@ const BY_CANONICAL_SLUG: Record<string, CatalogEntry> = {
   "ranfurly-shield": { group: "provincial", order: 40, label: "Ranfurly Shield" },
   "farah-palmer-cup": { group: "provincial", order: 45, label: "Farah Palmer Cup" },
   "sa-cup": { group: "provincial", order: 50, label: "SA Cup" },
+  "craven-week": { group: "provincial", order: 60, label: "Craven Week" },
+  "academy-week": { group: "provincial", order: 70, label: "Academy Week" },
+  "sa-schools": { group: "provincial", order: 80, label: "SA Schools" },
 
   // Regional
   "rugby-europe-championship": {

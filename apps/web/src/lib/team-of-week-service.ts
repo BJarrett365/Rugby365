@@ -243,11 +243,22 @@ async function loadRoundFixtures(input: {
       homeCoachId: fixtures.homeCoachId,
       awayCoachId: fixtures.awayCoachId,
       refereeId: fixtures.refereeId,
+      externalMatchId: fixtures.externalMatchId,
     })
     .from(fixtures)
     .where(
       and(eq(fixtures.competitionId, input.competitionId), eq(fixtures.seasonId, input.seasonId)),
     );
+
+  if (input.roundKey === "team-of-the-tournament") {
+    return rows.filter((f) => {
+      const ext = f.externalMatchId ?? "";
+      if (ext.startsWith("rwc-wiki-statistics:") || ext.startsWith("rwc-opta-leaderboard:")) {
+        return false;
+      }
+      return isFixtureRatingsPublished(f.status);
+    });
+  }
 
   return rows.filter((f) => normalizeRoundKey(f.round) === input.roundKey);
 }
@@ -766,8 +777,12 @@ export async function generateTeamOfWeek(input: {
   const teamAward = topTeamFromStarting(starting);
 
   const sample = roundFixtures[0];
-  const roundName = formatRoundName(input.roundKey, sample?.round);
-  const roundNumber = extractRoundNumber(sample?.round);
+  const roundName =
+    input.roundKey === "team-of-the-tournament"
+      ? "Team of the Tournament"
+      : formatRoundName(input.roundKey, sample?.round);
+  const roundNumber =
+    input.roundKey === "team-of-the-tournament" ? null : extractRoundNumber(sample?.round);
   const kicks = roundFixtures
     .map((f) => f.kickoffAt)
     .filter((d): d is Date => Boolean(d))

@@ -1,6 +1,7 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
-import { teamMatchStats, teams } from "@rugby365/db";
+import { alias } from "drizzle-orm/pg-core";
+import { fixtures, teamMatchStats, teams } from "@rugby365/db";
 import { getDb } from "./db";
 import {
   getCompetitionBySlug,
@@ -16,6 +17,7 @@ import { teamCodeForLeaderboard } from "./competition-player-stat-display";
 import type { HemisphereFilter } from "./competition-player-leaderboards-service";
 import {
   teamMatchScoringPoints,
+  teamMatchStatsProviderPriority,
   teamStatSectionNumber,
 } from "./competition-team-stat-display";
 
@@ -129,13 +131,17 @@ function sectionNumber(sections: unknown, path: string[]): number {
   return teamStatSectionNumber(sections, path);
 }
 
-function scoringPoints(row: {
-  tries: number;
-  conversions: number;
-  penalties: number;
-  dropGoals: number;
-}): number {
-  return teamMatchScoringPoints(row);
+function scoringPoints(
+  row: {
+    tries: number;
+    conversions: number;
+    penalties: number;
+    dropGoals: number;
+    sections?: unknown;
+  },
+  seasonYear?: number | null,
+): number {
+  return teamMatchScoringPoints(row, { seasonYear, sections: row.sections });
 }
 
 function emptyAgg(
@@ -292,7 +298,14 @@ export async function getCompetitionTeamStatsBySlug(
   }
 
   const db = getDb();
+  const homeTeams = alias(teams, "home_teams");
+  const awayTeams = alias(teams, "away_teams");
   const selectCols = {
+    fixtureId: teamMatchStats.fixtureId,
+    sourceProvider: teamMatchStats.sourceProvider,
+    kickoffAt: fixtures.kickoffAt,
+    homeTeamName: homeTeams.name,
+    awayTeamName: awayTeams.name,
     teamId: teamMatchStats.teamId,
     teamName: teams.name,
     teamSlug: teams.slug,
@@ -313,6 +326,9 @@ export async function getCompetitionTeamStatsBySlug(
     .select(selectCols)
     .from(teamMatchStats)
     .innerJoin(teams, eq(teamMatchStats.teamId, teams.id))
+    .innerJoin(fixtures, eq(teamMatchStats.fixtureId, fixtures.id))
+    .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
+    .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
     .where(
       and(
         eq(teamMatchStats.competitionId, competition.id),
@@ -328,13 +344,41 @@ export async function getCompetitionTeamStatsBySlug(
           .select(selectCols)
           .from(teamMatchStats)
           .innerJoin(teams, eq(teamMatchStats.teamId, teams.id))
+          .innerJoin(fixtures, eq(teamMatchStats.fixtureId, fixtures.id))
+          .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
+          .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
           .where(eq(teamMatchStats.competitionId, competition.id))
           .orderBy(desc(teamMatchStats.syncedAt));
 
   const sourceRows = rows.length > 0 ? rows : fallbackRows;
+
+  function matchIdentity(row: (typeof sourceRows)[number]): string {
+    const day = row.kickoffAt ? row.kickoffAt.toISOString().slice(0, 10) : "nodate";
+    const a = (row.homeTeamName ?? "").trim().toLowerCase();
+    const b = (row.awayTeamName ?? "").trim().toLowerCase();
+    const pair = [a, b].sort().join("|");
+    const team = row.teamName.trim().toLowerCase();
+    // Prefer name-based match identity so rdb/sr twins and duplicate nation ids collapse.
+    return `${day}|${pair}|${team}`;
+  }
+
+  // One row per real match+team — prefer SDMS over historical rollups; collapse twin fixtures.
+  const bestByMatch = new Map<string, (typeof sourceRows)[number]>();
+  for (const row of sourceRows) {
+    const key = matchIdentity(row);
+    const existing = bestByMatch.get(key);
+    if (!existing) {
+      bestByMatch.set(key, row);
+      continue;
+    }
+    const nextPri = teamMatchStatsProviderPriority(row.sourceProvider);
+    const prevPri = teamMatchStatsProviderPriority(existing.sourceProvider);
+    if (nextPri > prevPri) bestByMatch.set(key, row);
+  }
+
   const byTeam = new Map<string, AggregatedTeam>();
 
-  for (const row of sourceRows) {
+  for (const row of bestByMatch.values()) {
     const hemisphere = supportsHemisphereFilter
       ? nationsChampionshipHemisphereForTeam(row.teamName)
       : null;
@@ -346,7 +390,9 @@ export async function getCompetitionTeamStatsBySlug(
       continue;
     }
 
-    const existing = byTeam.get(row.teamId) ?? emptyAgg({
+    // Aggregate by display name so duplicate nation entities don't split boards.
+    const teamKey = row.teamName.trim().toLowerCase();
+    const existing = byTeam.get(teamKey) ?? emptyAgg({
       teamId: row.teamId,
       teamName: row.teamName,
       teamSlug: row.teamSlug,
@@ -358,7 +404,7 @@ export async function getCompetitionTeamStatsBySlug(
     const offloads = sectionNumber(row.sections, ["attack", "offloads"]);
     const cleanBreaks = sectionNumber(row.sections, ["attack", "clean_breaks"]);
     const defendersBeaten = sectionNumber(row.sections, ["attack", "defenders_beaten"]);
-    const points = scoringPoints(row);
+    const points = scoringPoints(row, season.year);
 
     existing.matches += 1;
     existing.points += points;
@@ -373,7 +419,7 @@ export async function getCompetitionTeamStatsBySlug(
     existing.offloads += offloads;
     existing.cleanBreaks += cleanBreaks;
     existing.defendersBeaten += defendersBeaten;
-    byTeam.set(row.teamId, existing);
+    byTeam.set(teamKey, existing);
   }
 
   const aggregated = [...byTeam.values()];
@@ -395,7 +441,7 @@ export async function getCompetitionTeamStatsBySlug(
     ),
     coverage: {
       teamCount: aggregated.length,
-      rowCount: sourceRows.length,
+      rowCount: bestByMatch.size,
     },
   };
 }

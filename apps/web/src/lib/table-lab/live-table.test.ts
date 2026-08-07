@@ -240,6 +240,80 @@ describe("live table", () => {
     expect(bathNoTries?.losingBonusPoints ?? 0).toBe(0);
   });
 
+  it("attaches last-five form sequence newest-first", () => {
+    const fixtures = [
+      perspective({
+        fixtureId: "m1",
+        kickoffAt: new Date("2026-01-01T15:00:00.000Z"),
+        teamId: "t1",
+        teamName: "Bath",
+        side: "home",
+        pointsFor: 20,
+        pointsAgainst: 10,
+        countsTowardStandings: true,
+      }),
+      perspective({
+        fixtureId: "m1",
+        kickoffAt: new Date("2026-01-01T15:00:00.000Z"),
+        teamId: "t2",
+        teamName: "Saracens",
+        side: "away",
+        pointsFor: 10,
+        pointsAgainst: 20,
+        countsTowardStandings: true,
+      }),
+      perspective({
+        fixtureId: "m2",
+        kickoffAt: new Date("2026-01-08T15:00:00.000Z"),
+        teamId: "t1",
+        teamName: "Bath",
+        side: "away",
+        pointsFor: 7,
+        pointsAgainst: 14,
+        countsTowardStandings: true,
+      }),
+      perspective({
+        fixtureId: "m2",
+        kickoffAt: new Date("2026-01-08T15:00:00.000Z"),
+        teamId: "t2",
+        teamName: "Saracens",
+        side: "home",
+        pointsFor: 14,
+        pointsAgainst: 7,
+        countsTowardStandings: true,
+      }),
+      perspective({
+        fixtureId: "m3",
+        kickoffAt: new Date("2026-01-15T15:00:00.000Z"),
+        teamId: "t1",
+        teamName: "Bath",
+        side: "home",
+        pointsFor: 15,
+        pointsAgainst: 15,
+        countsTowardStandings: true,
+      }),
+      perspective({
+        fixtureId: "m3",
+        kickoffAt: new Date("2026-01-15T15:00:00.000Z"),
+        teamId: "t2",
+        teamName: "Saracens",
+        side: "away",
+        pointsFor: 15,
+        pointsAgainst: 15,
+        countsTowardStandings: true,
+      }),
+    ];
+
+    const { rows } = buildLiveTableStandings({
+      perspectives: fixtures,
+      rules,
+      tableView: "all",
+      showMovement: false,
+    });
+    const bath = rows.find((row) => row.teamId === "t1");
+    expect(bath?.formSequence).toEqual(["D", "L", "W"]);
+  });
+
   it("shows movement compared with the pre-match table", () => {
     expect(movementFromRanks(3, 5)).toBe("up");
     expect(movementFromRanks(7, 6)).toBe("down");

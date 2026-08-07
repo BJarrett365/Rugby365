@@ -1,0 +1,842 @@
+{
+  "scrapedAt": "2026-08-04T11:44:56.420Z",
+  "year": 2015,
+  "sources": {
+    "ultimateRugbyTable": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2015/table",
+      "status": 200
+    },
+    "ultimateRugbyResults": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2015/results",
+      "status": 200
+    },
+    "ultimateRugbyFixtures": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2015/fixtures",
+      "status": 200
+    },
+    "official": {
+      "url": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2015",
+      "status": 200
+    }
+  },
+  "competition": {
+    "competitionName": "Rugby World Cup",
+    "competitionSlug": "rugby-world-cup",
+    "competitionType": "International",
+    "governingBody": "World Rugby",
+    "officialWebsite": "https://www.rugbyworldcup.com/",
+    "ultimateRugbyUrl": "https://www.ultimaterugby.com/rugby-world-cup-2015/table",
+    "rugbyWorldCupUrl": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2015",
+    "year": 2015,
+    "host": "England",
+    "dateRange": "September 18 - October 31, 2015",
+    "description": "England hosted the 2015 Men's Rugby World Cup, and New Zealand made history by becoming the first team to win three titles, defeating Australia in the final.",
+    "tournamentFormat": "4 pools of 5.",
+    "numberOfTeams": 20,
+    "numberOfPools": 4,
+    "poolSize": 5,
+    "numberOfMatches": 48,
+    "startDate": null,
+    "endDate": null
+  },
+  "ultimateRugby": {
+    "pools": [
+      {
+        "pool": "Pool A",
+        "rows": [
+          {
+            "pool": "Pool A",
+            "rank": 1,
+            "teamName": "Australia",
+            "played": 4,
+            "won": 4,
+            "lost": 0,
+            "draw": 0,
+            "pointsFor": 141,
+            "pointsAgainst": 35,
+            "pointsDiff": 106,
+            "triesFor": 17,
+            "triesAgainst": 2,
+            "tryBonus": 1,
+            "losingBonus": 0,
+            "points": 17
+          },
+          {
+            "pool": "Pool A",
+            "rank": 2,
+            "teamName": "Wales",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 111,
+            "pointsAgainst": 62,
+            "pointsDiff": 49,
+            "triesFor": 11,
+            "triesAgainst": 2,
+            "tryBonus": 1,
+            "losingBonus": 0,
+            "points": 13
+          },
+          {
+            "pool": "Pool A",
+            "rank": 3,
+            "teamName": "England",
+            "played": 4,
+            "won": 2,
+            "lost": 2,
+            "draw": 0,
+            "pointsFor": 133,
+            "pointsAgainst": 75,
+            "pointsDiff": 58,
+            "triesFor": 16,
+            "triesAgainst": 5,
+            "tryBonus": 2,
+            "losingBonus": 1,
+            "points": 11
+          },
+          {
+            "pool": "Pool A",
+            "rank": 4,
+            "teamName": "Fiji",
+            "played": 4,
+            "won": 1,
+            "lost": 3,
+            "draw": 0,
+            "pointsFor": 84,
+            "pointsAgainst": 101,
+            "pointsDiff": -17,
+            "triesFor": 10,
+            "triesAgainst": 11,
+            "tryBonus": 1,
+            "losingBonus": 0,
+            "points": 5
+          },
+          {
+            "pool": "Pool A",
+            "rank": 5,
+            "teamName": "Uruguay",
+            "played": 4,
+            "won": 0,
+            "lost": 4,
+            "draw": 0,
+            "pointsFor": 30,
+            "pointsAgainst": 226,
+            "pointsDiff": -196,
+            "triesFor": 2,
+            "triesAgainst": 36,
+            "tryBonus": 0,
+            "losingBonus": 0,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool B",
+        "rows": [
+          {
+            "pool": "Pool B",
+            "rank": 1,
+            "teamName": "South Africa",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 176,
+            "pointsAgainst": 56,
+            "pointsDiff": 120,
+            "triesFor": 23,
+            "triesAgainst": 4,
+            "tryBonus": 3,
+            "losingBonus": 1,
+            "points": 16
+          },
+          {
+            "pool": "Pool B",
+            "rank": 2,
+            "teamName": "Scotland",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 136,
+            "pointsAgainst": 93,
+            "pointsDiff": 43,
+            "triesFor": 14,
+            "triesAgainst": 9,
+            "tryBonus": 2,
+            "losingBonus": 0,
+            "points": 14
+          },
+          {
+            "pool": "Pool B",
+            "rank": 3,
+            "teamName": "Japan",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 98,
+            "pointsAgainst": 100,
+            "pointsDiff": -2,
+            "triesFor": 9,
+            "triesAgainst": 12,
+            "tryBonus": 0,
+            "losingBonus": 0,
+            "points": 12
+          },
+          {
+            "pool": "Pool B",
+            "rank": 4,
+            "teamName": "Samoa",
+            "played": 4,
+            "won": 1,
+            "lost": 3,
+            "draw": 0,
+            "pointsFor": 69,
+            "pointsAgainst": 124,
+            "pointsDiff": -55,
+            "triesFor": 7,
+            "triesAgainst": 13,
+            "tryBonus": 1,
+            "losingBonus": 1,
+            "points": 6
+          },
+          {
+            "pool": "Pool B",
+            "rank": 5,
+            "teamName": "USA",
+            "played": 4,
+            "won": 0,
+            "lost": 4,
+            "draw": 0,
+            "pointsFor": 50,
+            "pointsAgainst": 156,
+            "pointsDiff": -106,
+            "triesFor": 5,
+            "triesAgainst": 20,
+            "tryBonus": 0,
+            "losingBonus": 0,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool C",
+        "rows": [
+          {
+            "pool": "Pool C",
+            "rank": 1,
+            "teamName": "New Zealand",
+            "played": 4,
+            "won": 4,
+            "lost": 0,
+            "draw": 0,
+            "pointsFor": 174,
+            "pointsAgainst": 49,
+            "pointsDiff": 125,
+            "triesFor": 25,
+            "triesAgainst": 3,
+            "tryBonus": 3,
+            "losingBonus": 0,
+            "points": 19
+          },
+          {
+            "pool": "Pool C",
+            "rank": 2,
+            "teamName": "Argentina",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 179,
+            "pointsAgainst": 70,
+            "pointsDiff": 109,
+            "triesFor": 22,
+            "triesAgainst": 7,
+            "tryBonus": 3,
+            "losingBonus": 0,
+            "points": 15
+          },
+          {
+            "pool": "Pool C",
+            "rank": 3,
+            "teamName": "Georgia",
+            "played": 4,
+            "won": 2,
+            "lost": 2,
+            "draw": 0,
+            "pointsFor": 53,
+            "pointsAgainst": 123,
+            "pointsDiff": -70,
+            "triesFor": 5,
+            "triesAgainst": 16,
+            "tryBonus": 0,
+            "losingBonus": 0,
+            "points": 8
+          },
+          {
+            "pool": "Pool C",
+            "rank": 4,
+            "teamName": "Tonga",
+            "played": 4,
+            "won": 1,
+            "lost": 3,
+            "draw": 0,
+            "pointsFor": 70,
+            "pointsAgainst": 130,
+            "pointsDiff": -60,
+            "triesFor": 8,
+            "triesAgainst": 17,
+            "tryBonus": 1,
+            "losingBonus": 1,
+            "points": 6
+          },
+          {
+            "pool": "Pool C",
+            "rank": 5,
+            "teamName": "Namibia",
+            "played": 4,
+            "won": 0,
+            "lost": 4,
+            "draw": 0,
+            "pointsFor": 70,
+            "pointsAgainst": 174,
+            "pointsDiff": -104,
+            "triesFor": 8,
+            "triesAgainst": 25,
+            "tryBonus": 0,
+            "losingBonus": 1,
+            "points": 1
+          }
+        ]
+      },
+      {
+        "pool": "Pool D",
+        "rows": [
+          {
+            "pool": "Pool D",
+            "rank": 1,
+            "teamName": "Ireland",
+            "played": 4,
+            "won": 4,
+            "lost": 0,
+            "draw": 0,
+            "pointsFor": 134,
+            "pointsAgainst": 35,
+            "pointsDiff": 99,
+            "triesFor": 16,
+            "triesAgainst": 2,
+            "tryBonus": 2,
+            "losingBonus": 0,
+            "points": 18
+          },
+          {
+            "pool": "Pool D",
+            "rank": 2,
+            "teamName": "France",
+            "played": 4,
+            "won": 3,
+            "lost": 1,
+            "draw": 0,
+            "pointsFor": 120,
+            "pointsAgainst": 63,
+            "pointsDiff": 57,
+            "triesFor": 12,
+            "triesAgainst": 6,
+            "tryBonus": 2,
+            "losingBonus": 0,
+            "points": 14
+          },
+          {
+            "pool": "Pool D",
+            "rank": 3,
+            "teamName": "Italy",
+            "played": 4,
+            "won": 2,
+            "lost": 2,
+            "draw": 0,
+            "pointsFor": 74,
+            "pointsAgainst": 88,
+            "pointsDiff": -14,
+            "triesFor": 7,
+            "triesAgainst": 8,
+            "tryBonus": 1,
+            "losingBonus": 1,
+            "points": 10
+          },
+          {
+            "pool": "Pool D",
+            "rank": 4,
+            "teamName": "Romania",
+            "played": 4,
+            "won": 1,
+            "lost": 3,
+            "draw": 0,
+            "pointsFor": 60,
+            "pointsAgainst": 129,
+            "pointsDiff": -69,
+            "triesFor": 7,
+            "triesAgainst": 17,
+            "tryBonus": 0,
+            "losingBonus": 0,
+            "points": 4
+          },
+          {
+            "pool": "Pool D",
+            "rank": 5,
+            "teamName": "Canada",
+            "played": 4,
+            "won": 0,
+            "lost": 4,
+            "draw": 0,
+            "pointsFor": 58,
+            "pointsAgainst": 131,
+            "pointsDiff": -73,
+            "triesFor": 7,
+            "triesAgainst": 16,
+            "tryBonus": 0,
+            "losingBonus": 2,
+            "points": 2
+          }
+        ]
+      }
+    ],
+    "knockouts": [
+      {
+        "stage": "Quarter-finals",
+        "label": "South Africa Vs Wales at Allianz Stadium Twickenham 17th Oct 2015",
+        "homeTeam": "South Africa",
+        "awayTeam": "Wales",
+        "homeScore": 23,
+        "awayScore": 19,
+        "venueName": "Allianz Stadium Twickenham",
+        "dateText": "17th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/south-africa-vs-wales-at-allianz-stadium-twickenham-17th-oct-2015/2916"
+      },
+      {
+        "stage": "Quarter-finals",
+        "label": "New Zealand Vs France at Principality Stadium 17th Oct 2015",
+        "homeTeam": "New Zealand",
+        "awayTeam": "France",
+        "homeScore": 62,
+        "awayScore": 13,
+        "venueName": "Principality Stadium",
+        "dateText": "17th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/new-zealand-vs-france-at-principality-stadium-17th-oct-2015/2918"
+      },
+      {
+        "stage": "Semi-finals",
+        "label": "South Africa Vs New Zealand at Allianz Stadium Twickenham 24th Oct 2015",
+        "homeTeam": "South Africa",
+        "awayTeam": "New Zealand",
+        "homeScore": 18,
+        "awayScore": 20,
+        "venueName": "Allianz Stadium Twickenham",
+        "dateText": "24th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/south-africa-vs-new-zealand-at-allianz-stadium-twickenham-24th-oct-2015/2921"
+      },
+      {
+        "stage": "Semi-finals",
+        "label": "Ireland Vs Argentina at Principality Stadium 18th Oct 2015",
+        "homeTeam": "Ireland",
+        "awayTeam": "Argentina",
+        "homeScore": 20,
+        "awayScore": 43,
+        "venueName": "Principality Stadium",
+        "dateText": "18th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/ireland-vs-argentina-at-principality-stadium-18th-oct-2015/2919"
+      },
+      {
+        "stage": "Semi-finals",
+        "label": "Australia Vs Scotland at Allianz Stadium Twickenham 18th Oct 2015",
+        "homeTeam": "Australia",
+        "awayTeam": "Scotland",
+        "homeScore": 35,
+        "awayScore": 34,
+        "venueName": "Allianz Stadium Twickenham",
+        "dateText": "18th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/australia-vs-scotland-at-allianz-stadium-twickenham-18th-oct-2015/2920"
+      },
+      {
+        "stage": "Semi-finals",
+        "label": "Argentina Vs Australia at Allianz Stadium Twickenham 25th Oct 2015",
+        "homeTeam": "Argentina",
+        "awayTeam": "Australia",
+        "homeScore": 15,
+        "awayScore": 29,
+        "venueName": "Allianz Stadium Twickenham",
+        "dateText": "25th Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/argentina-vs-australia-at-allianz-stadium-twickenham-25th-oct-2015/2922"
+      },
+      {
+        "stage": "Final",
+        "label": "New Zealand Vs Australia at Allianz Stadium Twickenham 31st Oct 2015",
+        "homeTeam": "New Zealand",
+        "awayTeam": "Australia",
+        "homeScore": 34,
+        "awayScore": 17,
+        "venueName": "Allianz Stadium Twickenham",
+        "dateText": "31st Oct 2015",
+        "sourceUrl": "https://www.ultimaterugby.com/match/new-zealand-vs-australia-at-allianz-stadium-twickenham-31st-oct-2015/8075"
+      }
+    ],
+    "matchLinks": [
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "slug": "north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "matchId": "99622"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "slug": "taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "matchId": "99623"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-u18%27s-a-vs-ireland-u18%27s-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100843",
+        "slug": "south-africa-u18's-a-vs-ireland-u18's-at-hoërskool-durbanville-7th-aug-2026/100843",
+        "matchId": "100843"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/england-u18-vs-georgia-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100849",
+        "slug": "england-u18-vs-georgia-u18-at-hoërskool-durbanville-7th-aug-2026/100849",
+        "matchId": "100849"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-u18%27s-vs-france-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100844",
+        "slug": "south-africa-u18's-vs-france-u18-at-hoërskool-durbanville-7th-aug-2026/100844",
+        "matchId": "100844"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "slug": "stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "matchId": "98989"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/auckland-vs-wellington-at-eden-park-8th-aug-2026/99624",
+        "slug": "auckland-vs-wellington-at-eden-park-8th-aug-2026/99624",
+        "matchId": "99624"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/bay-of-plenty-vs-northland-at-rotorua-international-stadium-8th-aug-2026/99625",
+        "slug": "bay-of-plenty-vs-northland-at-rotorua-international-stadium-8th-aug-2026/99625",
+        "matchId": "99625"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "slug": "boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "matchId": "100213"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/wellington-vs-hawke%27s-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "slug": "wellington-vs-hawke's-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "matchId": "99621"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "slug": "northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "matchId": "99620"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "slug": "golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "matchId": "100212"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "slug": "paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "matchId": "99472"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "slug": "stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "matchId": "100211"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stellenberg-high-school-vs-durbanville-high-school-at-stellenberg-high-school-1st-aug-2026/99605",
+        "slug": "stellenberg-high-school-vs-durbanville-high-school-at-stellenberg-high-school-1st-aug-2026/99605",
+        "matchId": "99605"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/king-edward-school-%28kes%29-vs-jeppe-boys-high-school-at-kes-%28houghton-estate%29-1st-aug-2026/99471",
+        "slug": "king-edward-school-(kes)-vs-jeppe-boys-high-school-at-kes-(houghton-estate)-1st-aug-2026/99471",
+        "matchId": "99471"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/sharks-vs-new-zealand-at-kings-park-stadium-11th-aug-2026/98990",
+        "slug": "sharks-vs-new-zealand-at-kings-park-stadium-11th-aug-2026/98990",
+        "matchId": "98990"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/japan-vs-australia-at-hanazono-rugby-stadium-8th-aug-2026/99076",
+        "slug": "japan-vs-australia-at-hanazono-rugby-stadium-8th-aug-2026/99076",
+        "matchId": "99076"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/argentina-vs-south-africa-at-estadio-jos%C3%A9-amalfitani-8th-aug-2026/100839",
+        "slug": "argentina-vs-south-africa-at-estadio-josé-amalfitani-8th-aug-2026/100839",
+        "matchId": "100839"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/griquas-vs-golden-lions-at-suzuki-stadium-8th-aug-2026/100216",
+        "slug": "griquas-vs-golden-lions-at-suzuki-stadium-8th-aug-2026/100216",
+        "matchId": "100216"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/blue-bulls-vs-pumas-at-loftus-versfeld-8th-aug-2026/100215",
+        "slug": "blue-bulls-vs-pumas-at-loftus-versfeld-8th-aug-2026/100215",
+        "matchId": "100215"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/new-zealand-women-vs-australia-women-at-go-media-stadium-22nd-aug-2026/99578",
+        "slug": "new-zealand-women-vs-australia-women-at-go-media-stadium-22nd-aug-2026/99578",
+        "matchId": "99578"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-women-vs-new-zealand-women-at-fnb-stadium-5th-sep-2026/99579",
+        "slug": "south-africa-women-vs-new-zealand-women-at-fnb-stadium-5th-sep-2026/99579",
+        "matchId": "99579"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/new-zealand-vs-australia-at-allianz-stadium-twickenham-31st-oct-2015/8075",
+        "slug": "new-zealand-vs-australia-at-allianz-stadium-twickenham-31st-oct-2015/8075",
+        "matchId": "8075"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/south-africa-vs-argentina-at-london-stadium-30th-oct-2015/2924",
+        "slug": "south-africa-vs-argentina-at-london-stadium-30th-oct-2015/2924",
+        "matchId": "2924"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/argentina-vs-australia-at-allianz-stadium-twickenham-25th-oct-2015/2922",
+        "slug": "argentina-vs-australia-at-allianz-stadium-twickenham-25th-oct-2015/2922",
+        "matchId": "2922"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/south-africa-vs-new-zealand-at-allianz-stadium-twickenham-24th-oct-2015/2921",
+        "slug": "south-africa-vs-new-zealand-at-allianz-stadium-twickenham-24th-oct-2015/2921",
+        "matchId": "2921"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/australia-vs-scotland-at-allianz-stadium-twickenham-18th-oct-2015/2920",
+        "slug": "australia-vs-scotland-at-allianz-stadium-twickenham-18th-oct-2015/2920",
+        "matchId": "2920"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/ireland-vs-argentina-at-principality-stadium-18th-oct-2015/2919",
+        "slug": "ireland-vs-argentina-at-principality-stadium-18th-oct-2015/2919",
+        "matchId": "2919"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/new-zealand-vs-france-at-principality-stadium-17th-oct-2015/2918",
+        "slug": "new-zealand-vs-france-at-principality-stadium-17th-oct-2015/2918",
+        "matchId": "2918"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/south-africa-vs-wales-at-allianz-stadium-twickenham-17th-oct-2015/2916",
+        "slug": "south-africa-vs-wales-at-allianz-stadium-twickenham-17th-oct-2015/2916",
+        "matchId": "2916"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/usa-vs-japan-at-kingsholm-11th-oct-2015/2402",
+        "slug": "usa-vs-japan-at-kingsholm-11th-oct-2015/2402",
+        "matchId": "2402"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/france-vs-ireland-at-principality-stadium-11th-oct-2015/2421",
+        "slug": "france-vs-ireland-at-principality-stadium-11th-oct-2015/2421",
+        "matchId": "2421"
+      }
+    ]
+  },
+  "official": {
+    "year": 2015,
+    "title": "2015 Men's Rugby World Cup",
+    "dateRange": "September 18 - October 31, 2015",
+    "host": "England",
+    "description": "England hosted the 2015 Men's Rugby World Cup, and New Zealand made history by becoming the first team to win three titles, defeating Australia in the final.",
+    "pools": [
+      {
+        "pool": "Pool A",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "Australia",
+            "teamName": "Australia",
+            "played": 4,
+            "pointsDiff": 106,
+            "points": 17
+          },
+          {
+            "rank": 2,
+            "teamCode": "Wales",
+            "teamName": "Wales",
+            "played": 4,
+            "pointsDiff": 49,
+            "points": 13
+          },
+          {
+            "rank": 3,
+            "teamCode": "England",
+            "teamName": "England",
+            "played": 4,
+            "pointsDiff": 58,
+            "points": 11
+          },
+          {
+            "rank": 4,
+            "teamCode": "Fiji",
+            "teamName": "Fiji",
+            "played": 4,
+            "pointsDiff": -17,
+            "points": 5
+          },
+          {
+            "rank": 5,
+            "teamCode": "Uruguay",
+            "teamName": "Uruguay",
+            "played": 4,
+            "pointsDiff": -196,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool B",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "South Africa",
+            "teamName": "South Africa",
+            "played": 4,
+            "pointsDiff": 120,
+            "points": 16
+          },
+          {
+            "rank": 2,
+            "teamCode": "Scotland",
+            "teamName": "Scotland",
+            "played": 4,
+            "pointsDiff": 43,
+            "points": 14
+          },
+          {
+            "rank": 3,
+            "teamCode": "Japan",
+            "teamName": "Japan",
+            "played": 4,
+            "pointsDiff": -2,
+            "points": 12
+          },
+          {
+            "rank": 4,
+            "teamCode": "Samoa",
+            "teamName": "Samoa",
+            "played": 4,
+            "pointsDiff": -55,
+            "points": 6
+          },
+          {
+            "rank": 5,
+            "teamCode": "USA",
+            "teamName": "USA",
+            "played": 4,
+            "pointsDiff": -106,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool C",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "New Zealand",
+            "teamName": "New Zealand",
+            "played": 4,
+            "pointsDiff": 125,
+            "points": 19
+          },
+          {
+            "rank": 2,
+            "teamCode": "Argentina",
+            "teamName": "Argentina",
+            "played": 4,
+            "pointsDiff": 109,
+            "points": 15
+          },
+          {
+            "rank": 3,
+            "teamCode": "Georgia",
+            "teamName": "Georgia",
+            "played": 4,
+            "pointsDiff": -70,
+            "points": 8
+          },
+          {
+            "rank": 4,
+            "teamCode": "Tonga",
+            "teamName": "Tonga",
+            "played": 4,
+            "pointsDiff": -60,
+            "points": 6
+          },
+          {
+            "rank": 5,
+            "teamCode": "Namibia",
+            "teamName": "Namibia",
+            "played": 4,
+            "pointsDiff": -104,
+            "points": 1
+          }
+        ]
+      },
+      {
+        "pool": "Pool D",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "Ireland",
+            "teamName": "Ireland",
+            "played": 4,
+            "pointsDiff": 99,
+            "points": 18
+          },
+          {
+            "rank": 2,
+            "teamCode": "France",
+            "teamName": "France",
+            "played": 4,
+            "pointsDiff": 57,
+            "points": 14
+          },
+          {
+            "rank": 3,
+            "teamCode": "Italy",
+            "teamName": "Italy",
+            "played": 4,
+            "pointsDiff": -14,
+            "points": 10
+          },
+          {
+            "rank": 4,
+            "teamCode": "Romania",
+            "teamName": "Romania",
+            "played": 4,
+            "pointsDiff": -69,
+            "points": 4
+          },
+          {
+            "rank": 5,
+            "teamCode": "Canada",
+            "teamName": "Canada",
+            "played": 4,
+            "pointsDiff": -73,
+            "points": 2
+          }
+        ]
+      }
+    ],
+    "sourceUrl": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2015"
+  }
+}

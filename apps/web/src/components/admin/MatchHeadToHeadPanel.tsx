@@ -137,6 +137,7 @@ export function MatchHeadToHeadPanel({
             awayTeam={data.awayTeam}
             slots={data.competitionSlots}
             dataFromYear={data.dataFromYear}
+            sourceLabel="CMS fixtures + Planet Rugby SDMS"
           />
         </div>
       ) : null}

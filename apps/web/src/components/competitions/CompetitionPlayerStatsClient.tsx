@@ -102,7 +102,7 @@ export function CompetitionPlayerStatsClient({
   const [data, setData] = useState<CompetitionPlayerStatsPayload | null>(null);
   const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
   const [hemisphere, setHemisphere] = useState<HemisphereFilter>(initialHemisphere);
-  const [showAdditional, setShowAdditional] = useState(false);
+  const [showAdditional, setShowAdditional] = useState(true);
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +123,11 @@ export function CompetitionPlayerStatsClient({
     }
     setData(json);
     if (!seasonLabel && json.season?.label) setSeasonLabel(json.season.label);
+    const advancedPrimaryEmpty = (json.boards ?? [])
+      .filter((b) => ["tacklesCompleted", "metresCarried", "carries"].includes(b.metric))
+      .every((b) => b.entries.length === 0);
+    const additionalHasData = (json.additionalBoards ?? []).some((b) => b.entries.length > 0);
+    if (advancedPrimaryEmpty && additionalHasData) setShowAdditional(true);
     setLoading(false);
   }, [slug, seasonLabel, hemisphere]);
 
@@ -220,6 +225,12 @@ export function CompetitionPlayerStatsClient({
         <p className="text-amber-400 text-sm">{error}</p>
       ) : (
         <>
+          {data?.estimationNote ? (
+            <aside className="competition-stats__estimate-note mb-4" role="note">
+              <strong>Estimated statistics</strong>
+              <p>{data.estimationNote}</p>
+            </aside>
+          ) : null}
           <div className="stat-board-grid mb-6">
             {(data?.boards ?? []).map((board) => (
               <LeaderboardCard

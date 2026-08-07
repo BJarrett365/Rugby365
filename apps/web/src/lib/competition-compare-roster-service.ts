@@ -6,6 +6,7 @@
 import "server-only";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { fixturePlayers, fixtures, players, teams } from "@rugby365/db";
+import { isRealCompareRosterTeamName } from "./compare-roster-team-name";
 import { getDb } from "./db";
 import {
   getCompetitionBySlug,
@@ -34,18 +35,43 @@ export type CompetitionCompareRoster = {
   players: CompareRosterPlayer[];
 };
 
+export { isRealCompareRosterTeamName } from "./compare-roster-team-name";
+
+function dedupeTeamsById(list: CompareRosterTeam[]): CompareRosterTeam[] {
+  const seen = new Set<string>();
+  const out: CompareRosterTeam[] = [];
+  for (const team of list) {
+    if (seen.has(team.id)) continue;
+    seen.add(team.id);
+    out.push(team);
+  }
+  return out;
+}
+
 async function listTeamsFromFixtures(competitionId: string): Promise<CompareRosterTeam[]> {
   const db = getDb();
   const rows = await db
     .select({
       homeTeamId: fixtures.homeTeamId,
       awayTeamId: fixtures.awayTeamId,
+      externalMatchId: fixtures.externalMatchId,
+      stage: fixtures.stage,
+      round: fixtures.round,
     })
     .from(fixtures)
     .where(eq(fixtures.competitionId, competitionId));
 
   const ids = new Set<string>();
   for (const row of rows) {
+    const external = row.externalMatchId ?? "";
+    if (
+      external.startsWith("rwc-wiki-statistics:") ||
+      external.startsWith("rwc-opta-leaderboard:") ||
+      row.stage === "stats_seed" ||
+      row.round === "stats_seed"
+    ) {
+      continue;
+    }
     if (row.homeTeamId) ids.add(row.homeTeamId);
     if (row.awayTeamId) ids.add(row.awayTeamId);
   }
@@ -79,6 +105,7 @@ export async function getCompetitionCompareRosterBySlug(
   const standingsData = await getCompetitionStandingsBySlug(competition.slug);
   const standingTeams: CompareRosterTeam[] = (standingsData?.standings ?? [])
     .filter((row) => Boolean(row.teamId && row.teamName))
+    .filter((row) => isRealCompareRosterTeamName(row.teamName!))
     .map((row) => ({
       id: row.teamId!,
       name: row.teamName!,
@@ -86,10 +113,16 @@ export async function getCompetitionCompareRosterBySlug(
       shortName: row.teamShortName ?? null,
     }));
 
-  const teamsList =
-    standingTeams.length > 0
-      ? standingTeams.sort((a, b) => a.name.localeCompare(b.name))
-      : await listTeamsFromFixtures(competition.id);
+  const fixtureTeams = (await listTeamsFromFixtures(competition.id)).filter((t) =>
+    isRealCompareRosterTeamName(t.name),
+  );
+
+  // Prefer standings when they have real clubs/nations; always merge fixtures so
+  // draw placeholders that only appear in one source are filtered consistently,
+  // and real nations from fixtures are not dropped when standings are bracket-heavy.
+  const teamsList = dedupeTeamsById(
+    [...standingTeams, ...fixtureTeams].sort((a, b) => a.name.localeCompare(b.name)),
+  );
 
   if (teamsList.length === 0) {
     return {

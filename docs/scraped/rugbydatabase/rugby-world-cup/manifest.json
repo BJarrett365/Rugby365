@@ -1,0 +1,69 @@
+{
+  "scrapedAt": "2026-08-04T15:27:11.955Z",
+  "groupId": 1,
+  "delayMs": 450,
+  "onlyYears": null,
+  "skipGames": false,
+  "summary": [
+    {
+      "season": 1987,
+      "listed": 32,
+      "scraped": 32,
+      "skipped": 0
+    },
+    {
+      "season": 1991,
+      "listed": 32,
+      "scraped": 32,
+      "skipped": 0
+    },
+    {
+      "season": 1995,
+      "listed": 32,
+      "scraped": 32,
+      "skipped": 0
+    },
+    {
+      "season": 1999,
+      "listed": 41,
+      "scraped": 41,
+      "skipped": 0
+    },
+    {
+      "season": 2003,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    },
+    {
+      "season": 2007,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    },
+    {
+      "season": 2011,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    },
+    {
+      "season": 2015,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    },
+    {
+      "season": 2019,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    },
+    {
+      "season": 2023,
+      "listed": 48,
+      "scraped": 48,
+      "skipped": 0
+    }
+  ]
+}

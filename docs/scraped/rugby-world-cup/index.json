@@ -1,0 +1,78 @@
+{
+  "scrapedAt": "2026-08-04T11:44:59.114Z",
+  "competitionName": "Rugby World Cup",
+  "competitionSlug": "rugby-world-cup",
+  "competitionType": "International",
+  "governingBody": "World Rugby",
+  "officialWebsite": "https://www.rugbyworldcup.com/",
+  "logoHint": "https://www.rugbyworldcup.com/",
+  "seasons": [
+    {
+      "year": 1987,
+      "path": "1987/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 1991,
+      "path": "1991/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 1995,
+      "path": "1995/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 1999,
+      "path": "1999/tournament.json",
+      "pools": 5,
+      "rows": 0
+    },
+    {
+      "year": 2003,
+      "path": "2003/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 2007,
+      "path": "2007/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 2011,
+      "path": "2011/tournament.json",
+      "pools": 4,
+      "rows": 0
+    },
+    {
+      "year": 2015,
+      "path": "2015/tournament.json",
+      "pools": 4,
+      "rows": 20
+    },
+    {
+      "year": 2019,
+      "path": "2019/tournament.json",
+      "pools": 4,
+      "rows": 20
+    },
+    {
+      "year": 2023,
+      "path": "2023/tournament.json",
+      "pools": 4,
+      "rows": 20
+    },
+    {
+      "year": 2027,
+      "path": "2027/tournament.json",
+      "pools": 0,
+      "rows": 0
+    }
+  ],
+  "notes": "Pool tables + knockout summaries from Ultimate Rugby; host/date/description/pool codes from rugbyworldcup.com past-tournament pages. Match events/refs/coaches on Ultimate Rugby match pages are app/JS-gated — use Wikipedia / SDMS enrich for those fields."
+}

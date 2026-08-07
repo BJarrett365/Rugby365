@@ -3,6 +3,7 @@ import {
   canonicalPlayerDisplayName,
   entityNameQualityScore,
   fixReversedTwoWordPlayerName,
+  isJunkPlayerName,
   isSdmsExternalId,
   normalizePlayerName,
   normalizeTeamName,
@@ -75,6 +76,32 @@ describe("teamDedupBaseName", () => {
   it("does not merge Sale Sharks with Sharks after sponsor strip", () => {
     expect(teamDedupKey("Sale Sharks")).not.toBe(teamDedupKey("Sharks"));
   });
+
+  it("aliases SA franchise / Currie Cup union names onto one senior identity", () => {
+    expect(teamDedupKey("Blue Bulls")).toBe(teamDedupKey("Bulls"));
+    expect(teamDedupKey("Northern Bulls")).toBe(teamDedupKey("Bulls"));
+    expect(teamDedupKey("Golden Lions")).toBe(teamDedupKey("Lions"));
+    expect(teamDedupKey("Gauteng Lions")).toBe(teamDedupKey("Lions"));
+    expect(teamDedupKey("Natal Sharks")).toBe(teamDedupKey("Sharks"));
+    expect(teamDedupKey("Coastal Sharks")).toBe(teamDedupKey("Sharks"));
+    expect(teamDedupKey("Free State Cheetahs")).toBe(teamDedupKey("Cheetahs"));
+    expect(teamDedupKey("Western Stormers")).toBe(teamDedupKey("Stormers"));
+    expect(teamDedupKey("Western Province")).not.toBe(teamDedupKey("Stormers"));
+    expect(teamDedupKey("Wellington Lions")).not.toBe(teamDedupKey("Lions"));
+  });
+
+  it("strips Wikipedia cite brackets from the base label", () => {
+    expect(teamDedupBaseName("Clermont [2]")).toBe("clermont");
+    expect(teamDedupKey("Clermont [6]")).toBe(teamDedupKey("Clermont"));
+  });
+
+  it("collapses British & Irish Lions wiki/historic variants", () => {
+    expect(teamDedupKey("23px British & Irish Lions")).toBe(teamDedupKey("British & Irish Lions"));
+    expect(teamDedupKey("British & Irish Lions 23px")).toBe(teamDedupKey("British & Irish Lions"));
+    expect(teamDedupKey("British Lions")).toBe(teamDedupKey("British & Irish Lions"));
+    expect(teamDedupKey("British and Irish Lions")).toBe(teamDedupKey("British & Irish Lions"));
+    expect(normalizeTeamName("23px British & Irish Lions")).toBe("British & Irish Lions");
+  });
 });
 
 describe("entityNameQualityScore", () => {
@@ -96,6 +123,16 @@ describe("isSdmsExternalId", () => {
 describe("normalizePlayerName", () => {
   it("collapses whitespace in player names", () => {
     expect(normalizePlayerName("Kieran  Hardy")).toBe("Kieran Hardy");
+  });
+});
+
+describe("isJunkPlayerName", () => {
+  it("flags roster / feed placeholders", () => {
+    expect(isJunkPlayerName("To Be ANNOUNCED")).toBe(true);
+    expect(isJunkPlayerName("TBA")).toBe(true);
+    expect(isJunkPlayerName("-")).toBe(true);
+    expect(isJunkPlayerName("Unknown")).toBe(true);
+    expect(isJunkPlayerName("Morne Steyn")).toBe(false);
   });
 });
 

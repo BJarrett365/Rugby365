@@ -1,0 +1,1943 @@
+{
+  "year": 2019,
+  "sourceUrl": "https://en.wikipedia.org/wiki/2019_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-06T08:43:10.418Z",
+  "entries": [
+    {
+      "playerName": "Josh Adams",
+      "teamName": "Wales",
+      "tries": 7,
+      "points": 35,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0,
+      "lineBreaks": 18
+    },
+    {
+      "playerName": "Makazole Mapimpi",
+      "teamName": "South Africa",
+      "tries": 6,
+      "points": 30,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kotaro Matsushima",
+      "teamName": "Japan",
+      "tries": 5,
+      "points": 25,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Julián Montoya",
+      "teamName": "Argentina",
+      "tries": 4,
+      "points": 20,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kenki Fukuoka",
+      "teamName": "Japan",
+      "tries": 4,
+      "points": 20,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ben Smith",
+      "teamName": "New Zealand",
+      "tries": 4,
+      "points": 20,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Dane Haylett-Petty",
+      "teamName": "Australia",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Marika Koroibete",
+      "teamName": "Australia",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Luke Cowan-Dickie",
+      "teamName": "England",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jonny May",
+      "teamName": "England",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Manu Tuilagi",
+      "teamName": "England",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Andrew Conway",
+      "teamName": "Ireland",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Beauden Barrett",
+      "teamName": "New Zealand",
+      "tries": 3,
+      "points": 18,
+      "conversions": 0,
+      "penalties": 1,
+      "dropGoals": 0,
+      "metresCarried": 460,
+      "carries": 86
+    },
+    {
+      "playerName": "Jordie Barrett",
+      "teamName": "New Zealand",
+      "tries": 3,
+      "points": 31,
+      "conversions": 8,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George Horne",
+      "teamName": "Scotland",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Cheslin Kolbe",
+      "teamName": "South Africa",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Bongi Mbonambi",
+      "teamName": "South Africa",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Cobus Reinach",
+      "teamName": "South Africa",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Telusa Veainu",
+      "teamName": "Tonga",
+      "tries": 3,
+      "points": 15,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Juan Cruz Mallia",
+      "teamName": "Argentina",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Joaquín Tuculet",
+      "teamName": "Argentina",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Will Genia",
+      "teamName": "Australia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Michael Hooper",
+      "teamName": "Australia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tevita Kuridrani",
+      "teamName": "Australia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tolu Latu",
+      "teamName": "Australia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Joe Cokanasiga",
+      "teamName": "England",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George Ford",
+      "teamName": "England",
+      "tries": 2,
+      "points": 32,
+      "conversions": 5,
+      "penalties": 4,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Niko Matawalu",
+      "teamName": "Fiji",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Waisea Nayacalevu",
+      "teamName": "Fiji",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Semi Radradra",
+      "teamName": "Fiji",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Api Ratuniyarawa",
+      "teamName": "Fiji",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Josua Tuisova",
+      "teamName": "Fiji",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gaël Fickou",
+      "teamName": "France",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Alivereti Raka",
+      "teamName": "France",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Virimi Vakatawa",
+      "teamName": "France",
+      "tries": 5,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Levan Chilachava",
+      "teamName": "Georgia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Alexander Todua",
+      "teamName": "Georgia",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rory Best",
+      "teamName": "Ireland",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tadhg Furlong",
+      "teamName": "Ireland",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rob Kearney",
+      "teamName": "Ireland",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Garry Ringrose",
+      "teamName": "Ireland",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Johnny Sexton",
+      "teamName": "Ireland",
+      "tries": 2,
+      "points": 26,
+      "conversions": 8,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mattia Bellini",
+      "teamName": "Italy",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matteo Minozzi",
+      "teamName": "Italy",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Scott Barrett",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George Bridge",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Anton Lienert-Brown",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Joe Moody",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sevu Reece",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Aaron Smith",
+      "teamName": "New Zealand",
+      "tries": 2
+    },
+    {
+      "playerName": "Brad Weber",
+      "teamName": "New Zealand",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ed Fidow",
+      "teamName": "Samoa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Alapati Leiua",
+      "teamName": "Samoa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Adam Hastings",
+      "teamName": "Scotland",
+      "tries": 2,
+      "points": 26,
+      "conversions": 8,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Lukhanyo Am",
+      "teamName": "South Africa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Schalk Brits",
+      "teamName": "South Africa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Damian de Allende",
+      "teamName": "South Africa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Warrick Gelant",
+      "teamName": "South Africa",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mali Hingano",
+      "teamName": "Tonga",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Blaine Scully",
+      "teamName": "United States",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mike Te'o",
+      "teamName": "United States",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Manuel Diana",
+      "teamName": "Uruguay",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gareth Davies",
+      "teamName": "Wales",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Liam Williams",
+      "teamName": "Wales",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tomos Williams",
+      "teamName": "Wales",
+      "tries": 2,
+      "points": 10,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Handré Pollard",
+      "teamName": "South Africa",
+      "points": 69,
+      "tries": 0,
+      "conversions": 9,
+      "penalties": 16,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Owen Farrell",
+      "teamName": "England",
+      "points": 58,
+      "tries": 0,
+      "conversions": 11,
+      "penalties": 12,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Richie Mo'unga",
+      "teamName": "New Zealand",
+      "points": 54,
+      "tries": 1,
+      "conversions": 20,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Yu Tamura",
+      "teamName": "Japan",
+      "points": 51,
+      "tries": 0,
+      "conversions": 9,
+      "penalties": 11,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Dan Biggar",
+      "teamName": "Wales",
+      "points": 41,
+      "tries": 0,
+      "conversions": 10,
+      "penalties": 6,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Felipe Berchesi",
+      "teamName": "Uruguay",
+      "points": 30,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 6,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Elton Jantjies",
+      "teamName": "South Africa",
+      "points": 28,
+      "tries": 0,
+      "conversions": 14,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Romain Ntamack",
+      "teamName": "France",
+      "points": 27,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 5,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rhys Patchell",
+      "teamName": "Wales",
+      "points": 24,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 5,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Christian Lealiifano",
+      "teamName": "Australia",
+      "points": 23,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tommaso Allan",
+      "teamName": "Italy",
+      "points": 23,
+      "tries": 1,
+      "conversions": 6,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ben Volavola",
+      "teamName": "Fiji",
+      "points": 21,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sonatane Takulua",
+      "teamName": "Tonga",
+      "points": 21,
+      "tries": 1,
+      "conversions": 5,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Nicolás Sánchez",
+      "teamName": "Argentina",
+      "points": 20,
+      "tries": 1,
+      "conversions": 6,
+      "penalties": 1,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Benjamín Urdapilleta",
+      "teamName": "Argentina",
+      "points": 19,
+      "tries": 0,
+      "conversions": 5,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Henry Taefu",
+      "teamName": "Samoa",
+      "points": 19,
+      "tries": 1,
+      "conversions": 1,
+      "penalties": 4,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Greig Laidlaw",
+      "teamName": "Scotland",
+      "points": 19,
+      "tries": 1,
+      "conversions": 4,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matt To'omua",
+      "teamName": "Australia",
+      "points": 18,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "AJ MacGinty",
+      "teamName": "United States",
+      "points": 17,
+      "tries": 0,
+      "conversions": 4,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Damian Stevens",
+      "teamName": "Namibia",
+      "points": 14,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 3,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Yuri Kushnarev",
+      "teamName": "Russia",
+      "points": 14,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 3,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Tedo Abzhandadze",
+      "teamName": "Georgia",
+      "points": 12,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Carlo Canna",
+      "teamName": "Italy",
+      "points": 11,
+      "tries": 1,
+      "conversions": 3,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Cliven Loubser",
+      "teamName": "Namibia",
+      "points": 10,
+      "tries": 0,
+      "conversions": 2,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Aaton Smith",
+      "teamName": "New Zealand",
+      "points": 10,
+      "tries": 2,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Leigh Halfpenny",
+      "teamName": "Wales",
+      "points": 10,
+      "tries": 0,
+      "conversions": 6,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Camille Lopez",
+      "teamName": "France",
+      "points": 9,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 0,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Jack Carty",
+      "teamName": "Ireland",
+      "points": 9,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 1,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Reece Hodge",
+      "teamName": "Australia",
+      "points": 8,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 1,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Soso Matiashvili",
+      "teamName": "Georgia",
+      "points": 8,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 2,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Finn Russell",
+      "teamName": "Scotland",
+      "points": 7,
+      "tries": 1,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Siale Piutau",
+      "teamName": "Tonga",
+      "points": 7,
+      "tries": 1,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gonzalo Bertranou",
+      "teamName": "Argentina",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Santiago Carreras",
+      "teamName": "Argentina",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jerónimo de la Fuente",
+      "teamName": "Argentina",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matías Moroni",
+      "teamName": "Argentina",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Guido Petti",
+      "teamName": "Argentina",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Adam Ashley-Cooper",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jack Dempsey",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Samu Kerevi",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jordan Petaia",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "James Slipper",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Nic White",
+      "teamName": "Australia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Andrew Coe",
+      "teamName": "Canada",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matt Heaton",
+      "teamName": "Canada",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Elliot Daly",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jamie George",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Lewis Ludlam",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jack Nowell",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ruaridh McConnochie",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kyle Sinckler",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Billy Vunipola",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Anthony Watson",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ben Youngs",
+      "teamName": "England",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mesu Dolokoto",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Semi Kunatani",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Frank Lomani",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Eroni Mawi",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kini Murimurivalu",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Peceli Yato",
+      "teamName": "Fiji",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Antoine Dupont",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Yoann Huget",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Charles Ollivon",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jefferson Poirot",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Baptiste Serin",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sébastien Vahaamahina",
+      "teamName": "France",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jaba Bregvadze",
+      "teamName": "Georgia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Otar Giorgadze",
+      "teamName": "Georgia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Mamuka Gorgodze",
+      "teamName": "Georgia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Giorgi Kveseladze",
+      "teamName": "Georgia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Shalva Mamukashvili",
+      "teamName": "Georgia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Robbie Henshaw",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jordan Larmour",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Peter O'Mahony",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rhys Ruddock",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "James Ryan",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "CJ Stander",
+      "teamName": "Ireland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Dean Budd",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sebastian Negri",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jake Polledri",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Braam Steyn",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tito Tebaldi",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Federico Zani",
+      "teamName": "Italy",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kazuki Himeno",
+      "teamName": "Japan",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Keita Inagaki",
+      "teamName": "Japan",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Lappies Labuschagné",
+      "teamName": "Japan",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Timothy Lafaele",
+      "teamName": "Japan",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "JC Greyling",
+      "teamName": "Namibia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Chad Plato",
+      "teamName": "Namibia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ryan Crotty",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Shannon Frizell",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rieko Ioane",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "TJ Perenara",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ardie Savea",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Angus Ta'avao",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Codie Taylor",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matt Todd",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sonny Bill Williams",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sam Whitelock",
+      "teamName": "New Zealand",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kirill Golosnitsky",
+      "teamName": "Russia",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Afa Amosa",
+      "teamName": "Samoa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jack Lam",
+      "teamName": "Samoa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rey Lee-Lo",
+      "teamName": "Samoa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "John Barclay",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Zander Fagerson",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Sean Maitland",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Stuart McInally",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "WP Nel",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tommy Seymour",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George Turner",
+      "teamName": "Scotland",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Faf de Klerk",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Pieter-Steph du Toit",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Siya Kolisi",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Francois Louw",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Frans Malherbe",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Malcolm Marx",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "S'busiso Nkosi",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "RG Snyman",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "François Steyn",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Damian Willemse",
+      "teamName": "South Africa",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Siegfried Fisiihoi",
+      "teamName": "Tonga",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Zane Kapeli",
+      "teamName": "Tonga",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Bryce Campbell",
+      "teamName": "United States",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tony Lamborn",
+      "teamName": "United States",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Paul Lasike",
+      "teamName": "United States",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Santiago Arata",
+      "teamName": "Uruguay",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Juan Manuel Cat",
+      "teamName": "Uruguay",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Germán Kessler",
+      "teamName": "Uruguay",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Andrés Vilaseca",
+      "teamName": "Uruguay",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Hallam Amos",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jonathan Davies",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ross Moriarty",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "George North",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Hadleigh Parkes",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Nicky Smith",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Justin Tipuric",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Aaron Wainwright",
+      "teamName": "Wales",
+      "points": 5,
+      "tries": 1,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Joey Carbery",
+      "teamName": "Ireland",
+      "points": 4,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Peter Nelson",
+      "teamName": "Canada",
+      "points": 4,
+      "tries": 0,
+      "conversions": 2,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Tusi Pisi",
+      "teamName": "Samoa",
+      "points": 4,
+      "tries": 0,
+      "conversions": 2,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Bernard Foley",
+      "teamName": "Australia",
+      "points": 3,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 1,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Stuart Hogg",
+      "teamName": "Scotland",
+      "points": 3,
+      "tries": 0,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Emiliano Boffelli",
+      "teamName": "Argentina",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Josh Matavesi",
+      "teamName": "Fiji",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Thomas Ramos",
+      "teamName": "France",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Conor Murray",
+      "teamName": "Ireland",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rikiya Matsuda",
+      "teamName": "Japan",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "James Faiva",
+      "teamName": "Tonga",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Latiume Fosita",
+      "teamName": "Tonga",
+      "points": 2,
+      "tries": 0,
+      "conversions": 1,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Alun Wyn Jones",
+      "teamName": "Wales",
+      "tacklesCompleted": 79
+    },
+    {
+      "playerName": "Maro Itoje",
+      "teamName": "England",
+      "turnoversWon": 11
+    }
+  ],
+  "notes": []
+}

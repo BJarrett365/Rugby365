@@ -192,6 +192,11 @@ const CALENDAR_YEAR_COMPETITION_SLUGS = new Set([
   "farah-palmer-cup",
   "sa-cup",
   "ranfurly-shield",
+  "varsity-cup",
+  "varsity-shield",
+  "craven-week",
+  "academy-week",
+  "sa-schools",
 ]);
 
 /** Southern hemisphere internationals / tournaments use calendar year (2024), not 2024–25. */

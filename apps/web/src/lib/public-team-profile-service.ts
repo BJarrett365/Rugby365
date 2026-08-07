@@ -168,8 +168,9 @@ export async function getPublicTeamProfile(
   };
 
   const recentResults = mapped.filter((f) => f.status === "full_time").slice(0, 10);
+  const nowIso = new Date().toISOString();
   const upcoming = mapped
-    .filter((f) => f.status === "scheduled")
+    .filter((f) => f.status === "scheduled" && (f.kickoffAt == null || f.kickoffAt >= nowIso))
     .sort((a, b) => (a.kickoffAt ?? "").localeCompare(b.kickoffAt ?? ""))
     .slice(0, 8);
 

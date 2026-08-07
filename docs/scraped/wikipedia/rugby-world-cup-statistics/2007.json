@@ -1,0 +1,170 @@
+{
+  "year": 2007,
+  "sourceUrl": "https://en.wikipedia.org/wiki/2007_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-05T14:56:55.657Z",
+  "entries": [
+    {
+      "playerName": "Bryan Habana",
+      "teamName": "South Africa",
+      "points": 40,
+      "tries": 8,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Drew Mitchell",
+      "teamName": "Australia",
+      "points": 35,
+      "tries": 7
+    },
+    {
+      "playerName": "Shane Williams",
+      "teamName": "Wales",
+      "points": 30,
+      "tries": 6
+    },
+    {
+      "playerName": "Vincent Clerc",
+      "teamName": "France",
+      "points": 25,
+      "tries": 5
+    },
+    {
+      "playerName": "Chris Latham",
+      "teamName": "Australia",
+      "points": 25,
+      "tries": 5
+    },
+    {
+      "playerName": "Sitiveni Sivivatu",
+      "teamName": "New Zealand",
+      "points": 20,
+      "tries": 4
+    },
+    {
+      "playerName": "Jaque Fourie",
+      "teamName": "South Africa",
+      "points": 20,
+      "tries": 4
+    },
+    {
+      "playerName": "Paul Sackey",
+      "teamName": "England",
+      "points": 20,
+      "tries": 4
+    },
+    {
+      "playerName": "JP Pietersen",
+      "teamName": "South Africa",
+      "points": 20,
+      "tries": 4
+    },
+    {
+      "playerName": "Juan Smith",
+      "teamName": "South Africa",
+      "points": 20,
+      "tries": 4
+    },
+    {
+      "playerName": "Percy Montgomery",
+      "teamName": "South Africa",
+      "points": 105,
+      "tries": 2,
+      "conversions": 22,
+      "penalties": 17,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Felipe Contepomi",
+      "teamName": "Argentina",
+      "points": 91,
+      "tries": 3,
+      "conversions": 11,
+      "penalties": 18,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jonny Wilkinson",
+      "teamName": "England",
+      "points": 67,
+      "tries": 0,
+      "conversions": 5,
+      "penalties": 14,
+      "dropGoals": 5
+    },
+    {
+      "playerName": "Nick Evans",
+      "teamName": "New Zealand",
+      "points": 50,
+      "tries": 2,
+      "conversions": 20,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jean-Baptiste Élissalde",
+      "teamName": "France",
+      "points": 47,
+      "tries": 1,
+      "conversions": 12,
+      "penalties": 6,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Chris Paterson",
+      "teamName": "Scotland",
+      "points": 46,
+      "tries": 1,
+      "conversions": 10,
+      "penalties": 7,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Pierre Hola",
+      "teamName": "Tonga",
+      "points": 44,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 10,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Lionel Beauxis",
+      "teamName": "France",
+      "points": 43,
+      "tries": 1,
+      "conversions": 7,
+      "penalties": 8,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Nicky Little",
+      "teamName": "Fiji",
+      "points": 42,
+      "tries": 0,
+      "conversions": 9,
+      "penalties": 8,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Dan Carter",
+      "teamName": "New Zealand",
+      "points": 40,
+      "tries": 1,
+      "conversions": 10,
+      "penalties": 5,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Matt Giteau",
+      "teamName": "Australia",
+      "points": 40,
+      "tries": 3,
+      "conversions": 8,
+      "penalties": 3,
+      "dropGoals": 0
+    }
+  ],
+  "notes": []
+}

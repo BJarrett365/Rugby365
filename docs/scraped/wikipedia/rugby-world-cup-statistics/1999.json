@@ -1,0 +1,187 @@
+{
+  "year": 1999,
+  "sourceUrl": "https://en.wikipedia.org/wiki/1999_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-05T11:48:07.434Z",
+  "entries": [
+    {
+      "playerName": "Jonah Lomu",
+      "teamName": "New Zealand",
+      "points": 40,
+      "tries": 8,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jeff Wilson",
+      "teamName": "New Zealand",
+      "points": 30,
+      "tries": 6,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Dan Luger",
+      "teamName": "England",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Keith Wood",
+      "teamName": "Ireland",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Philippe Bernat-Salles",
+      "teamName": "France",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Viliame Satala",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Ben Tune",
+      "teamName": "Australia",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Brian Lima",
+      "teamName": "Samoa",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Cameron Murray",
+      "teamName": "Scotland",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Émile Ntamack",
+      "teamName": "France",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gonzalo Quesada",
+      "teamName": "Argentina",
+      "points": 102,
+      "tries": 0,
+      "conversions": 3,
+      "penalties": 31,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Matt Burke",
+      "teamName": "Australia",
+      "points": 101,
+      "tries": 2,
+      "conversions": 17,
+      "penalties": 19,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jannie de Beer",
+      "teamName": "South Africa",
+      "points": 97,
+      "tries": 0,
+      "conversions": 17,
+      "penalties": 15,
+      "dropGoals": 6
+    },
+    {
+      "playerName": "Andrew Mehrtens",
+      "teamName": "New Zealand",
+      "points": 79,
+      "tries": 0,
+      "conversions": 11,
+      "penalties": 19,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Jonny Wilkinson",
+      "teamName": "England",
+      "points": 69,
+      "tries": 1,
+      "conversions": 8,
+      "penalties": 16,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Christophe Lamaison",
+      "teamName": "France",
+      "points": 65,
+      "tries": 1,
+      "conversions": 9,
+      "penalties": 12,
+      "dropGoals": 2
+    },
+    {
+      "playerName": "Silao Leaega",
+      "teamName": "Samoa",
+      "points": 62,
+      "tries": 2,
+      "conversions": 11,
+      "penalties": 10,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Neil Jenkins",
+      "teamName": "Wales",
+      "points": 57,
+      "tries": 0,
+      "conversions": 12,
+      "penalties": 11,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Paul Grayson",
+      "teamName": "England",
+      "points": 54,
+      "tries": 0,
+      "conversions": 12,
+      "penalties": 10,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Kenny Logan",
+      "teamName": "Scotland",
+      "points": 51,
+      "tries": 0,
+      "conversions": 9,
+      "penalties": 11,
+      "dropGoals": 0
+    }
+  ],
+  "notes": []
+}

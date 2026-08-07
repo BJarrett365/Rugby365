@@ -50,9 +50,9 @@ function emptySideStats(): Record<SdmsPlayerStatCategory, SdmsPlayerStatsBundle 
   };
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+async function fetchJson<T>(url: string, timeoutMs = 20_000): Promise<T | null> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20_000);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
@@ -68,8 +68,14 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   }
 }
 
-export async function fetchSdmsMatchStats(matchId: string): Promise<SdmsMatchStatsBundle | null> {
-  const json = await fetchJson<{ data: SdmsMatchStatsBundle }>(`${SDMS_BASE}/match/${matchId}/match-stats`);
+export async function fetchSdmsMatchStats(
+  matchId: string,
+  opts?: { timeoutMs?: number },
+): Promise<SdmsMatchStatsBundle | null> {
+  const json = await fetchJson<{ data: SdmsMatchStatsBundle }>(
+    `${SDMS_BASE}/match/${matchId}/match-stats`,
+    opts?.timeoutMs,
+  );
   return json?.data ?? null;
 }
 
@@ -77,21 +83,26 @@ export async function fetchSdmsPlayerStats(
   matchId: string,
   side: "home" | "away",
   category: SdmsPlayerStatCategory,
+  opts?: { timeoutMs?: number },
 ): Promise<SdmsPlayerStatsBundle | null> {
   const json = await fetchJson<{ data: SdmsPlayerStatsBundle }>(
     `${SDMS_BASE}/match/${matchId}/player-stats/${side}/${category}`,
+    opts?.timeoutMs,
   );
   return json?.data ?? null;
 }
 
-export async function fetchSdmsMatchPlayerStats(matchId: string): Promise<SdmsMatchPlayerStats> {
+export async function fetchSdmsMatchPlayerStats(
+  matchId: string,
+  opts?: { timeoutMs?: number },
+): Promise<SdmsMatchPlayerStats> {
   const sides: Array<"home" | "away"> = ["home", "away"];
   const results = await Promise.all(
     sides.flatMap((side) =>
       SDMS_PLAYER_STAT_CATEGORIES.map(async (category) => ({
         side,
         category,
-        data: await fetchSdmsPlayerStats(matchId, side, category),
+        data: await fetchSdmsPlayerStats(matchId, side, category, opts),
       })),
     ),
   );

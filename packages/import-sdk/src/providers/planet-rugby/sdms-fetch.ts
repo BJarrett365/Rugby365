@@ -91,9 +91,9 @@ export type SdmsFixtureRow = {
   competition_name?: string;
 };
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+async function fetchJson<T>(url: string, timeoutMs = 20_000): Promise<T | null> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20_000);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
@@ -109,18 +109,25 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   }
 }
 
-export async function fetchSdmsMatchDetail(matchId: string): Promise<SdmsMatchDetail | null> {
-  const json = await fetchJson<{ data: SdmsMatchDetail }>(`${SDMS_BASE}/match/${matchId}/detail`);
+export async function fetchSdmsMatchDetail(
+  matchId: string,
+  opts?: { timeoutMs?: number },
+): Promise<SdmsMatchDetail | null> {
+  const json = await fetchJson<{ data: SdmsMatchDetail }>(
+    `${SDMS_BASE}/match/${matchId}/detail`,
+    opts?.timeoutMs,
+  );
   return json?.data ?? null;
 }
 
 /** Previous meetings list used by Planet Rugby Match Centre Head-to-Head. */
 export async function fetchSdmsPreviousMeetings(
   matchId: string,
+  opts?: { timeoutMs?: number },
 ): Promise<Record<string, unknown>[]> {
   const json = await fetchJson<{
     data?: { previous_meetings?: Record<string, unknown>[] } | Record<string, unknown>[];
-  }>(`${SDMS_BASE}/match/${matchId}/previous-meetings`);
+  }>(`${SDMS_BASE}/match/${matchId}/previous-meetings`, opts?.timeoutMs);
   const data = json?.data;
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object" && Array.isArray(data.previous_meetings)) {
@@ -130,10 +137,13 @@ export async function fetchSdmsPreviousMeetings(
 }
 
 /** Competition H2H aggregates (wins / averages). Prefer over detail.head_to_head when present. */
-export async function fetchSdmsHeadToHead(matchId: string): Promise<Record<string, unknown>[]> {
+export async function fetchSdmsHeadToHead(
+  matchId: string,
+  opts?: { timeoutMs?: number },
+): Promise<Record<string, unknown>[]> {
   const json = await fetchJson<{
     data?: { head_to_head?: Record<string, unknown>[] } | Record<string, unknown>[];
-  }>(`${SDMS_BASE}/match/${matchId}/h2h`);
+  }>(`${SDMS_BASE}/match/${matchId}/h2h`, opts?.timeoutMs);
   const data = json?.data;
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object" && Array.isArray(data.head_to_head)) {
@@ -142,9 +152,10 @@ export async function fetchSdmsHeadToHead(matchId: string): Promise<Record<strin
   return [];
 }
 
-export async function fetchSdmsLineups(matchId: string) {
+export async function fetchSdmsLineups(matchId: string, opts?: { timeoutMs?: number }) {
   const json = await fetchJson<{ data: import("./sdms-lineups").SdmsLineupsData }>(
     `${SDMS_BASE}/match/${matchId}/lineups`,
+    opts?.timeoutMs,
   );
   return json?.data ?? null;
 }

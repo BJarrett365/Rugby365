@@ -1,0 +1,1885 @@
+{
+  "year": 1991,
+  "scrapedAt": "2026-08-04T14:34:02.255Z",
+  "matched": 208,
+  "enriched": 37,
+  "failed": 171,
+  "skipped": 166,
+  "report": [
+    {
+      "title": "Abdelatif Benazzi",
+      "status": "enrich_failed",
+      "playerId": "2d504334-21f7-4d3a-a51e-1ec23db92cff",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Adrian Davies",
+      "status": "enrich_failed",
+      "playerId": "29c93b15-97e9-4809-b45c-0171acdc34ea",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Adrian Garvey",
+      "status": "enrich_failed",
+      "playerId": "893e6c18-2093-4673-8552-46b1a5d89758",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Adrian Lungu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Agustín Zanoni",
+      "status": "unmatched"
+    },
+    {
+      "title": "Aisake Nadolo",
+      "status": "enrich_failed",
+      "playerId": "4c59064b-dff5-4553-9dfd-30b0781f64d2",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Al Charron",
+      "status": "unmatched"
+    },
+    {
+      "title": "Alan Watt (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "70f93d93-2280-4d70-bc51-838ab3067fb5",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Alan Whetton",
+      "status": "enrich_failed",
+      "playerId": "20dade1e-9836-4788-8465-1c3c79af9f15",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Alessandro Bottacchiari",
+      "status": "unmatched"
+    },
+    {
+      "title": "Alex Nicholls (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Alifereti Dere",
+      "status": "enrich_failed",
+      "playerId": "fb322ab3-929e-46c2-bed3-6b07724e5398",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Andrei Gurănescu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Andrew Aiolupo",
+      "status": "enrich_failed",
+      "playerId": "868c8994-a711-47cf-8a09-e4ad9cd46518",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Andy Earl (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "0bd8cbd6-9837-450e-b92e-b1c62e170177",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Andy Ferreira",
+      "status": "unmatched"
+    },
+    {
+      "title": "Anthony Herbert (rugby)",
+      "status": "enrich_failed",
+      "playerId": "8f28ac8d-457a-4bff-94c5-f85166e52f9f",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Antonio Colella",
+      "status": "unmatched"
+    },
+    {
+      "title": "Apollo Perelini",
+      "status": "enrich_failed",
+      "playerId": "1534db9d-a7bd-4759-bf95-c233c9341e02",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Arthur Emyr",
+      "status": "unmatched"
+    },
+    {
+      "title": "Atsushi Oyagi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Bernie McCahill",
+      "status": "enrich_failed",
+      "playerId": "5e07389f-8053-40fe-a822-592fa4b920d8",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Bill Leversee",
+      "status": "unmatched"
+    },
+    {
+      "title": "Bob Egerton",
+      "status": "enrich_failed",
+      "playerId": "437da409-159d-4f42-b816-518414dbd8a7",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Brendan Mullin",
+      "status": "enrich_failed",
+      "playerId": "81bbd272-fd82-4c21-9bff-550a77bd47b6",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Brendan Nasser",
+      "status": "enrich_failed",
+      "playerId": "30748431-9082-4a69-a7c6-74c72cadd231",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Brendon Dawson",
+      "status": "unmatched"
+    },
+    {
+      "title": "Brian Currin (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Brian Lima",
+      "status": "enriched",
+      "playerId": "27fb227d-87f4-4aaf-88d3-2ee6e495344d"
+    },
+    {
+      "title": "Brian Moore (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "f7d0df8b-6c81-45cc-8808-5ea345ca90b7",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Brian Robinson (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "227ab8e5-aa2e-4f02-9553-bc5f8ae516e6",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Brian Vizard",
+      "status": "unmatched"
+    },
+    {
+      "title": "Bruce Breen",
+      "status": "unmatched"
+    },
+    {
+      "title": "Cameron Lillicrap",
+      "status": "enrich_failed",
+      "playerId": "b3e128d8-5174-4005-bdd1-c362697db7d2",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Carlo Checchinato",
+      "status": "enrich_failed",
+      "playerId": "acaff512-1999-4096-ae44-85a735f41684",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Carlo Orlandi (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Cătălin Sasu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Chris Botha (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Chris Gray (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "7daa4524-e949-4fde-a90d-6340c6f3113c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Chris O'Brien (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Chris Oti",
+      "status": "enrich_failed",
+      "playerId": "e28ee403-f469-4a79-868f-1383cce5650a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Chris Roberts (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Chris Tynan",
+      "status": "unmatched"
+    },
+    {
+      "title": "Christian Stewart",
+      "status": "unmatched"
+    },
+    {
+      "title": "Christopher Lippert",
+      "status": "unmatched"
+    },
+    {
+      "title": "Constantin Cojocariu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Craig Chalmers",
+      "status": "enrich_failed",
+      "playerId": "43279121-92a4-4745-b21f-d19f120b5760",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Craig Innes",
+      "status": "enrich_failed",
+      "playerId": "7d6f4ee2-a7d9-45c1-a017-e867832bf99b",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Dan Crowley (rugby union)",
+      "status": "enriched",
+      "playerId": "cefbcb5c-fe8f-41f3-8896-590293ee1540"
+    },
+    {
+      "title": "Dan Jackart",
+      "status": "unmatched"
+    },
+    {
+      "title": "Daniel Neaga",
+      "status": "unmatched"
+    },
+    {
+      "title": "Daniele Tebaldi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Danny Kaleopa",
+      "status": "enriched",
+      "playerId": "a2f05310-775c-4449-b0f5-349c436c6303"
+    },
+    {
+      "title": "Darren Muirhead",
+      "status": "unmatched"
+    },
+    {
+      "title": "Dave Lougheed",
+      "status": "unmatched"
+    },
+    {
+      "title": "Dave Walters (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "David Campese",
+      "status": "enrich_failed",
+      "playerId": "52dbd01e-ad3a-40ef-b65e-31d21e930868",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "David Curtis (rugby union)",
+      "status": "enriched",
+      "playerId": "9ac595f4-6ad2-4057-8745-b474bd2ef730"
+    },
+    {
+      "title": "David Knox (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "David Milne (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "c28015c4-6934-4bf6-afb3-3c6b7ca3d1c2",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "David Nucifora",
+      "status": "enrich_failed",
+      "playerId": "98f19f03-5c21-485b-b5dd-10fd2e61cb57",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "David Sio",
+      "status": "enrich_failed",
+      "playerId": "f6b98449-52f7-4a4d-bc43-61b840a801cd",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "David Sole",
+      "status": "enrich_failed",
+      "playerId": "f4caffc8-7930-4299-9eb7-d7586a619605",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "David Speirs (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "David Wyn Evans",
+      "status": "unmatched"
+    },
+    {
+      "title": "Dean Richards (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "b670af57-0777-4177-82be-d0795975c2c0",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Derek White (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "f48302ed-2f2a-4c3d-91e2-dffe794c9f80",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Des Fitzgerald",
+      "status": "enrich_failed",
+      "playerId": "53685902-349d-4469-82fc-a5cc91110492",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Didier Camberabero",
+      "status": "enrich_failed",
+      "playerId": "d58c43a8-7506-44fe-99a5-d0813f08bf9c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Diego Cash",
+      "status": "unmatched"
+    },
+    {
+      "title": "Diego Cuesta Silva",
+      "status": "enrich_failed",
+      "playerId": "5d4d9704-3812-4edf-8f00-5d7ead298f11",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Diego Domínguez (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Doddie Weir",
+      "status": "enrich_failed",
+      "playerId": "65e9d6d3-f669-4744-bda3-1df38580277c",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Donal Lenihan",
+      "status": "enrich_failed",
+      "playerId": "c59554a7-5bea-4427-a7a5-52c90badbbad",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Douglas Wyllie",
+      "status": "enrich_failed",
+      "playerId": "1864b2cc-7297-4fd2-815a-53ce4aede3cc",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Dranivesi Baleiwai",
+      "status": "unmatched"
+    },
+    {
+      "title": "Eddie Evans",
+      "status": "unmatched"
+    },
+    {
+      "title": "Eddie Ioane",
+      "status": "enrich_failed",
+      "playerId": "f208ddf9-3c27-47f9-aabb-d6a0627587c3",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Edgardo Venturi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Eduardo Laborde",
+      "status": "unmatched"
+    },
+    {
+      "title": "Eiji Kutsuki",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ekeroma Luaiufi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Emyr Lewis",
+      "status": "enriched",
+      "playerId": "9035d0f5-89c5-411c-9718-0b8559337b71"
+    },
+    {
+      "title": "Epeli Naituivau",
+      "status": "enriched",
+      "playerId": "62cff125-bf10-4eca-816b-aeb73ee9eeb2"
+    },
+    {
+      "title": "Éric Champ",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ewan MacMillan",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ewen McKenzie",
+      "status": "enriched",
+      "playerId": "92ee67e5-cd03-454c-b61c-61ec6ec92e8a"
+    },
+    {
+      "title": "Fabien Galthié",
+      "status": "unmatched"
+    },
+    {
+      "title": "Fabio Gaetaniello",
+      "status": "unmatched"
+    },
+    {
+      "title": "Federico Méndez",
+      "status": "unmatched"
+    },
+    {
+      "title": "Fergus Aherne",
+      "status": "enrich_failed",
+      "playerId": "c768252f-3c46-4000-9887-0e5dbad42869",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Fili Seru",
+      "status": "enrich_failed",
+      "playerId": "e9eea4d6-6827-46cc-995b-13bd40ce3d51",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Filipo Saena",
+      "status": "enrich_failed",
+      "playerId": "eb60eb1f-ab4a-425c-ac05-b4c00596a2c5",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Finlay Calder",
+      "status": "enrich_failed",
+      "playerId": "60781002-2d53-4165-924e-037091214519",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Francesco Pietrosanti",
+      "status": "unmatched"
+    },
+    {
+      "title": "Francisco Irarrázaval",
+      "status": "unmatched"
+    },
+    {
+      "title": "Franck Mesnel",
+      "status": "enrich_failed",
+      "playerId": "d6cb887f-8c7a-4806-919b-8df00d0cec62",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Franco Properzi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Frank Bunce",
+      "status": "enrich_failed",
+      "playerId": "53d30640-5ce4-4161-bfdf-a0856e5a3a13",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Fred Paoli",
+      "status": "unmatched"
+    },
+    {
+      "title": "Freddie Tuilagi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gabriel Vlad",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gareth Rees (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Garin Jenkins",
+      "status": "enriched",
+      "playerId": "caf7d294-123e-4500-afc8-ec384ec59fe2"
+    },
+    {
+      "title": "Gary Armstrong (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "e07a7f5b-a5ca-460d-a8fa-860706e04237",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Gary Dukelow",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gary Halpin",
+      "status": "enriched",
+      "playerId": "7b9345c5-6ea0-49cc-90e9-6c66386faa26"
+    },
+    {
+      "title": "Gary Hein",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gary Pearce (rugby union)",
+      "status": "enriched",
+      "playerId": "88505dde-209d-402c-a1b6-1d01359cf265"
+    },
+    {
+      "title": "Gary Rees",
+      "status": "enrich_failed",
+      "playerId": "c9a1aa25-4251-4ee9-aa7b-2e6aee9a4c8e",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Gary Whetton",
+      "status": "enrich_failed",
+      "playerId": "8985c919-ce1f-4a0d-b590-747dacf74113",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Gavin Hastings",
+      "status": "enrich_failed",
+      "playerId": "ccc4337e-3ff5-423d-be09-c282ed1115ba",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Germán Llanes",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gheorghe Ion",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gheorghe Leonte",
+      "status": "unmatched"
+    },
+    {
+      "title": "Giambattista Croci",
+      "status": "unmatched"
+    },
+    {
+      "title": "Giancarlo Pivetta",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gianni Zanon",
+      "status": "unmatched"
+    },
+    {
+      "title": "Giovanni Grespan",
+      "status": "unmatched"
+    },
+    {
+      "title": "Glenn Ennis",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gonzalo Camardón",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gord MacKinnon",
+      "status": "unmatched"
+    },
+    {
+      "title": "Gordon Hamilton (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "fc733778-41bc-40ff-bb50-7b15e2104471",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Graeme Bachop",
+      "status": "enrich_failed",
+      "playerId": "87752a84-917e-4031-8c19-94373997ef3a",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Graham Dowd",
+      "status": "enrich_failed",
+      "playerId": "3388f6ed-780e-4b00-9785-a637cb095246",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Graham Marshall (rugby union)",
+      "status": "enriched",
+      "playerId": "f009b251-06fc-4a3d-ae18-b061184109b0"
+    },
+    {
+      "title": "Graham Purvis",
+      "status": "enrich_failed",
+      "playerId": "136c2f23-dac0-4a82-9f7d-6d04b30f56ac",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Graham Shiel",
+      "status": "enrich_failed",
+      "playerId": "511e15e7-6902-4530-b483-744645a2cf54",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Grant Fox",
+      "status": "enrich_failed",
+      "playerId": "73eeca6e-2ec9-4bca-931e-ccd0f9b153dd",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Grégoire Lascubé",
+      "status": "unmatched"
+    },
+    {
+      "title": "Greig Oliver",
+      "status": "enrich_failed",
+      "playerId": "e1aa60e2-3a08-4335-b486-12ed82406577",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Guido Rossi (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Guillermo Angaut",
+      "status": "unmatched"
+    },
+    {
+      "title": "Guillermo del Castillo",
+      "status": "enrich_failed",
+      "playerId": "a5c0c39e-c9f8-4026-a7ba-bf5660dd340a",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Gustavo Jorge",
+      "status": "unmatched"
+    },
+    {
+      "title": "Haralambie Dumitraș",
+      "status": "unmatched"
+    },
+    {
+      "title": "Henri Sanz",
+      "status": "enrich_failed",
+      "playerId": "c7914fc5-e136-4dc5-9a21-bfa98f91ae97",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Hernán García Simón",
+      "status": "unmatched"
+    },
+    {
+      "title": "Hirofumi Ouchi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Hiroyuki Kajihara",
+      "status": "unmatched"
+    },
+    {
+      "title": "Honeywell Nguruve",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ian Jones (rugby union, born 1967)",
+      "status": "enrich_failed",
+      "playerId": "4e6e6682-95d6-49d8-99d0-abb06e928848",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Ian Noble",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ieuan Evans",
+      "status": "enrich_failed",
+      "playerId": "d184e54d-c22e-4faf-a917-66f1fabe49ac",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Ifereimi Tawake",
+      "status": "enriched",
+      "playerId": "b513487d-4168-4bb5-a4ab-eb3c27991a38"
+    },
+    {
+      "title": "Ilaitia Savai",
+      "status": "enrich_failed",
+      "playerId": "bcd43a2b-8386-446b-af03-14ac486c0ca5",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Ilie Ivanciuc",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ivan Francescato",
+      "status": "unmatched"
+    },
+    {
+      "title": "Iwan Tukalo",
+      "status": "enrich_failed",
+      "playerId": "3289bcff-59e2-4577-9c12-f5a2ff88ed31",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jack Clarke (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "81fc8306-9d7b-47e6-9210-8941766edb68",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jason Hewett",
+      "status": "enrich_failed",
+      "playerId": "f2464ac3-dcf9-4e49-9c4f-c284918706f0",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jason Leonard",
+      "status": "enriched",
+      "playerId": "6e76d9c3-520b-4cd2-8a9f-574f1273558b"
+    },
+    {
+      "title": "Jason Little (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "f75bf461-9019-4238-9369-91e059af1c9c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Jay Wilkerson",
+      "status": "unmatched"
+    },
+    {
+      "title": "Jean-Baptiste Lafond",
+      "status": "enrich_failed",
+      "playerId": "3e0712fc-6ce4-4bbd-b9bd-78fb9cb35839",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Jean-Luc Sadourny",
+      "status": "enrich_failed",
+      "playerId": "19e7aa8c-c43f-4e1e-aaf4-fcc888d022e9",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Jean-Marie Cadieu",
+      "status": "enriched",
+      "playerId": "5b7d43fe-53df-4a7a-a541-fd9255c20b1c"
+    },
+    {
+      "title": "Jeff Miller (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "6649e6b5-24cb-4861-acb4-f185f75c4085",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jeff Probyn",
+      "status": "enrich_failed",
+      "playerId": "c0478181-8e1b-4572-875e-9304da3a2ab9",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jeremy Guscott",
+      "status": "enrich_failed",
+      "playerId": "fe79b24c-b1f9-4d33-87f0-fe792da8f9bf",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jim Staples",
+      "status": "enrich_failed",
+      "playerId": "be3bec41-7270-4c30-b3f1-69d4da42d041",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "John Allan (rugby union, born 1963)",
+      "status": "enriched",
+      "playerId": "2048ef91-30c6-4ef5-9155-e6b9f5ec3772"
+    },
+    {
+      "title": "John Eales",
+      "status": "enrich_failed",
+      "playerId": "6bd38427-98b9-4801-8993-2f47a4c73e74",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "John Flett (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "e45a3c34-de9e-4c9e-b95e-04c6ef47bcc2",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "John Graf",
+      "status": "unmatched"
+    },
+    {
+      "title": "John Jeffrey",
+      "status": "enrich_failed",
+      "playerId": "a26e58b5-27ca-4954-9803-b8c512b84d68",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "John Kirwan (rugby)",
+      "status": "enrich_failed",
+      "playerId": "b31a4651-23c0-4a51-97fd-161b94fcfcbb",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "John Lecky (rugby union, born 1960)",
+      "status": "unmatched"
+    },
+    {
+      "title": "John Olver (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "023fea71-affa-4410-b6e8-0fd7bea20d86",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "John Robertsen",
+      "status": "unmatched"
+    },
+    {
+      "title": "John Timu (rugby)",
+      "status": "enrich_failed",
+      "playerId": "50702c40-d5f5-4288-8e9d-4476e6e177cf",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Jon Preston",
+      "status": "enrich_failed",
+      "playerId": "8619afb2-859b-4fb9-92e7-bb1722c1472c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Jonathan Webb",
+      "status": "unmatched"
+    },
+    {
+      "title": "José Santamarina",
+      "status": "unmatched"
+    },
+    {
+      "title": "Junior Paramore",
+      "status": "enrich_failed",
+      "playerId": "fbe7e964-0550-4b60-b588-08bff22a6d90",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Kaleveti Naisoro",
+      "status": "unmatched"
+    },
+    {
+      "title": "Karl Svoboda (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Katsufumi Miyamoto",
+      "status": "unmatched"
+    },
+    {
+      "title": "Katsuhiro Matsuo",
+      "status": "unmatched"
+    },
+    {
+      "title": "Kazuaki Takahashi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Keith Crossan",
+      "status": "enrich_failed",
+      "playerId": "95c17f25-4c1b-48ed-89b8-52be4143c556",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Ken Waters",
+      "status": "enrich_failed",
+      "playerId": "27aab822-4dce-4e48-b463-4992f046bdc0",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Kenichi Kimura (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Kenny Milne (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "2f54a682-da64-4ee9-a30f-43603811e125",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Kenny Murphy (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "716a0944-9577-44a5-95fa-555fb27a6469",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Kevin Higgins (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Kevin Moseley",
+      "status": "enrich_failed",
+      "playerId": "73d824a6-d971-430f-97b0-32293d4214aa",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Kevin Swords",
+      "status": "unmatched"
+    },
+    {
+      "title": "Kieran Crowley",
+      "status": "enrich_failed",
+      "playerId": "da49b055-3ccc-461c-a11d-887aabd9d498",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Laisenia Kato",
+      "status": "unmatched"
+    },
+    {
+      "title": "Lance Manga",
+      "status": "unmatched"
+    },
+    {
+      "title": "Laurance Delaney",
+      "status": "enrich_failed",
+      "playerId": "664f6726-4e4c-4d30-ae1d-c1c93a43a73e",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Laurent Cabannes",
+      "status": "enrich_failed",
+      "playerId": "8c5ee7c4-759f-4297-b867-8b63b6bb2ab3",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Lisandro Arbizu",
+      "status": "enriched",
+      "playerId": "f7cd2d07-cd36-4cab-bc21-74a209400000"
+    },
+    {
+      "title": "Louis Armary",
+      "status": "enrich_failed",
+      "playerId": "b02cdd50-32ec-49d0-84c3-cf2109ff6c55",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Lucian Colceriu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Luigi Troiani",
+      "status": "unmatched"
+    },
+    {
+      "title": "Luis Molina (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Manuel Aguirre (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Marc Cécillon",
+      "status": "unmatched"
+    },
+    {
+      "title": "Marcello Cuttitta",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mariano Bosch",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mariano Lombardi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mario Carreras",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mark Birtwistle",
+      "status": "enrich_failed",
+      "playerId": "3c0e61f3-33b2-4402-8981-ade54d331f7f",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Mark Carter (rugby)",
+      "status": "enrich_failed",
+      "playerId": "a8526a87-efa7-421d-9086-ddd5d8a1fae2",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Mark Letcher",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mark Pidcock",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mark Ring",
+      "status": "enrich_failed",
+      "playerId": "995e4533-cc52-4091-a51e-54ee44f0205f",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Mark Williams (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mark Wyatt (rugby union, born 1961)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Martín Terán",
+      "status": "unmatched"
+    },
+    {
+      "title": "Marty Roebuck",
+      "status": "enrich_failed",
+      "playerId": "1a5e99e3-413d-48e3-86f2-e8c28f06c39e",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Martyn Morris",
+      "status": "enriched",
+      "playerId": "a42c2850-5225-4c36-9a1f-f1a524f1d4bf"
+    },
+    {
+      "title": "Masahiro Kunda",
+      "status": "enrich_failed",
+      "playerId": "16025708-a942-4aa2-ac51-190dad246848",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Masami Horikoshi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Masanori Takura",
+      "status": "unmatched"
+    },
+    {
+      "title": "Massimo Bonomi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Massimo Cuttitta",
+      "status": "unmatched"
+    },
+    {
+      "title": "Massimo Giovanelli",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mata'afa Keenan",
+      "status": "enrich_failed",
+      "playerId": "887bbc1b-b021-4c20-af02-86a90e9698c6",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Mathew Vaea",
+      "status": "enrich_failed",
+      "playerId": "fdac8366-014d-4fcb-b666-569fbb9640e0",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Matías Allen",
+      "status": "unmatched"
+    },
+    {
+      "title": "Max Olsson",
+      "status": "enriched",
+      "playerId": "36b27be0-d389-496b-9c8c-9f0a26a56f7e"
+    },
+    {
+      "title": "Michael Jones (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "6fbd4f08-a4ae-47f6-950f-2290983ec17b",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Michael Lynagh",
+      "status": "enrich_failed",
+      "playerId": "1146b68b-942c-4101-9d3a-11a3af927ca3",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Michael Skinner (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Michel Courtiols",
+      "status": "unmatched"
+    },
+    {
+      "title": "Mick Galwey",
+      "status": "enriched",
+      "playerId": "c2277048-9ed8-4d5b-91f3-fdde7e58dc47"
+    },
+    {
+      "title": "Mike Griffiths",
+      "status": "enrich_failed",
+      "playerId": "869ac84a-07f1-4c48-a129-d16208d64dda",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Mike Hall (rugby union)",
+      "status": "enriched",
+      "playerId": "0fe1e61e-49dc-4291-b182-31dc58101a4d"
+    },
+    {
+      "title": "Mike Rayer",
+      "status": "enriched",
+      "playerId": "cf9f8295-659f-4307-b31a-4304ece791d4"
+    },
+    {
+      "title": "Mike Teague",
+      "status": "enriched",
+      "playerId": "a08d70f9-19ff-451e-888c-7f19c2a5c8b1"
+    },
+    {
+      "title": "Mosese Taga",
+      "status": "enrich_failed",
+      "playerId": "9f0b4533-a129-44eb-9d05-21909a048e39",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Mosese Vosanibola",
+      "status": "unmatched"
+    },
+    {
+      "title": "Naibuka Vuli",
+      "status": "enrich_failed",
+      "playerId": "fb605b04-56c8-4488-a6d5-976dffed840f",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Neculai Nichitean",
+      "status": "unmatched"
+    },
+    {
+      "title": "Neil Francis (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "a29ddeea-bab3-48a0-afc2-6ec0afc4c1e3",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Nick Farr-Jones",
+      "status": "enrich_failed",
+      "playerId": "84c0f094-e3a2-4c77-b582-c0d9c100e508",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Nick Popplewell",
+      "status": "enriched",
+      "playerId": "1c67cd64-2590-454d-93cc-f7ec3e99a5b6"
+    },
+    {
+      "title": "Nicolae Răcean",
+      "status": "unmatched"
+    },
+    {
+      "title": "Nigel Heslop",
+      "status": "enriched",
+      "playerId": "4509bb6b-bb57-424d-b628-e37f196600ea"
+    },
+    {
+      "title": "Nigel Redman",
+      "status": "enrich_failed",
+      "playerId": "f35bf26a-b0a4-4734-aa84-ee847a6a5c0c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Noa Nadruku",
+      "status": "enrich_failed",
+      "playerId": "effc9b2d-175a-4c94-bc0d-cfb9f4958940",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Noel Mannion",
+      "status": "enrich_failed",
+      "playerId": "d60fc760-32ae-43f6-ba6a-cae7530f3c8d",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Norm Hadley",
+      "status": "unmatched"
+    },
+    {
+      "title": "Norm Mottram",
+      "status": "unmatched"
+    },
+    {
+      "title": "Olivier Roumat",
+      "status": "enrich_failed",
+      "playerId": "e0b3c6ea-f279-4a93-8efb-48edad209016",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Opeti Turuva",
+      "status": "enrich_failed",
+      "playerId": "503838a0-bf8c-489d-8d1e-757c5759cef2",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Osamu Ota",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pablo Buabse",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pablo Garretón",
+      "status": "unmatched"
+    },
+    {
+      "title": "Palemia Lilomaiava",
+      "status": "unmatched"
+    },
+    {
+      "title": "Paolo Vaccari",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pascal Ondarts",
+      "status": "enriched",
+      "playerId": "8dfd673c-cc57-43aa-a89a-bb6acaef0eab"
+    },
+    {
+      "title": "Pat Johnson (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pat Lam",
+      "status": "enriched",
+      "playerId": "407efbb2-98e2-4efd-932d-4a43f9399c4e"
+    },
+    {
+      "title": "Pat O'Hara (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "7c3a52fc-3386-4b27-a7ed-d95ece46fc72",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Pat Palmer (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Patrice Lagisquet",
+      "status": "enriched",
+      "playerId": "c04303ea-8170-4cdb-bd67-6b95b295fe54"
+    },
+    {
+      "title": "Paul Ackford",
+      "status": "enriched",
+      "playerId": "a9aaf027-90d7-44cb-9a9c-a568fc1992f9"
+    },
+    {
+      "title": "Paul Arnold (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "f1271c62-87c0-45be-8d40-49bb2bd4976a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Paul Burnell",
+      "status": "enrich_failed",
+      "playerId": "ce03fa63-1733-4001-a54b-f9d1ebdc3d6b",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Paul Henderson (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "58227dc5-94d1-4f84-b5a6-c22b6c90dacc",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Paul Rendall",
+      "status": "enrich_failed",
+      "playerId": "bf6ba265-3267-480a-ae65-45aae1dc4716",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Paul Sheehy",
+      "status": "unmatched"
+    },
+    {
+      "title": "Paul Szabo (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pauliasi Tabulutu",
+      "status": "enriched",
+      "playerId": "cf95edd2-8681-4c65-b992-de33bc093d58"
+    },
+    {
+      "title": "Pedro Sporleder",
+      "status": "enrich_failed",
+      "playerId": "5feef029-383b-4fd4-a1b2-0041e64a0d37",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Peni Volavola (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "133e96fa-f00e-463c-87fb-48deaebcad02",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Peter Dods",
+      "status": "enrich_failed",
+      "playerId": "4c370857-a6ff-4d04-8fb6-db396abce988",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Peter Fatialofa",
+      "status": "enrich_failed",
+      "playerId": "448ff29e-7cf3-4cec-b2b9-3449a179ee76",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Peter Slattery",
+      "status": "enrich_failed",
+      "playerId": "6acc0af9-8900-49d3-a3f9-4983a5d08644",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Peter Winterbottom",
+      "status": "enrich_failed",
+      "playerId": "74d979f3-0be2-4c6f-b646-03c35c24c872",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Phil Davies (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "1f4d00e3-97cc-469b-b9b9-88ac07d69f17",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Phil Kearns",
+      "status": "enrich_failed",
+      "playerId": "dbd69ca9-b871-4d57-9497-d1fc02914536",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Phil May (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "2fb8bd4a-a5ac-4a23-890f-fcf813b23d61",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Philippe Gimbert",
+      "status": "enrich_failed",
+      "playerId": "16e27b46-397e-4a71-8a22-61702a5640e5",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Philippe Marocco",
+      "status": "enrich_failed",
+      "playerId": "6ce5c29a-7486-4685-a529-a90a3e45ab91",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Philippe Saint-André",
+      "status": "unmatched"
+    },
+    {
+      "title": "Philippe Sella",
+      "status": "enrich_failed",
+      "playerId": "145f5a7d-9493-4202-9ea7-6c0c46257cad",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Phillip Matthews",
+      "status": "unmatched"
+    },
+    {
+      "title": "Pita Naruma",
+      "status": "enrich_failed",
+      "playerId": "31980688-e3e8-4f4f-bef5-bd64930522ee",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Ralph Keyes",
+      "status": "enrich_failed",
+      "playerId": "f3f02d6f-a9a5-4ca3-9269-1e17f5e8a1dd",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Ray Nelson (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ricardo Le Fort",
+      "status": "enrich_failed",
+      "playerId": "a6b1f594-4cdf-4d43-b7a4-7d67c37a626b",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Richard Hill (rugby union, born 1961)",
+      "status": "enrich_failed",
+      "playerId": "b72150fc-1eee-42ea-9f1e-97c1162bf552",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Richard Loe",
+      "status": "enriched",
+      "playerId": "7c93863d-5076-4e44-a973-fb5e68202a47"
+    },
+    {
+      "title": "Richard Tombs",
+      "status": "unmatched"
+    },
+    {
+      "title": "Richard Tsimba",
+      "status": "unmatched"
+    },
+    {
+      "title": "Richard Webster (rugby)",
+      "status": "enrich_failed",
+      "playerId": "c2bf6584-5138-4d1d-824a-b5bb3cba5aa8",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Richie Collins",
+      "status": "enrich_failed",
+      "playerId": "f8ae9152-fde1-4d4c-ae5f-a5dc3a507eda",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Rob Andrew",
+      "status": "enrich_failed",
+      "playerId": "8d123051-ae67-454f-aca1-b087e0a1fb2a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Rob Demblon",
+      "status": "unmatched"
+    },
+    {
+      "title": "Rob Saunders",
+      "status": "enrich_failed",
+      "playerId": "0061dc86-bc59-48ff-8ac2-9168ce5e088a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Robert Jones (rugby union, born 1965)",
+      "status": "enrich_failed",
+      "playerId": "44ff4c0c-c22a-4d74-90d7-8b5d4b45fc8b",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Roberto Favaro",
+      "status": "unmatched"
+    },
+    {
+      "title": "Roberto Saetti",
+      "status": "unmatched"
+    },
+    {
+      "title": "Robin Hunter (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Rod McCall",
+      "status": "enrich_failed",
+      "playerId": "cf486b87-ee8f-479e-b806-4b784faf05fd",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Ron van den Brink",
+      "status": "unmatched"
+    },
+    {
+      "title": "Rory Underwood",
+      "status": "enrich_failed",
+      "playerId": "8f7c8839-f1e4-4833-a83a-566a67b8e183",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Roy Radu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Salacieli Naivilawasa",
+      "status": "enrich_failed",
+      "playerId": "12af6873-9946-4eb9-995d-f8c5893052a3",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Sam Domoni",
+      "status": "enrich_failed",
+      "playerId": "84a6d647-30fe-437d-a03f-42793d3a014b",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Sandu Ciorăscu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Santiago Mesón",
+      "status": "unmatched"
+    },
+    {
+      "title": "Savenaca Aria",
+      "status": "enrich_failed",
+      "playerId": "a22d61cd-fc6e-455e-aaa0-382a94b1660e",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Scott Gibbs",
+      "status": "enriched",
+      "playerId": "846bfdbd-5f22-4982-a78d-c304aacea4ba"
+    },
+    {
+      "title": "Scott Hastings (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "d43eca54-da94-438b-8997-ac6c57eb5769",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Scott Stewart (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Sean Fitzpatrick",
+      "status": "enrich_failed",
+      "playerId": "b597c1c8-5275-4383-b701-6d94a52ba095",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Sean Lineen",
+      "status": "enrich_failed",
+      "playerId": "1f11ed70-377d-4b2f-8864-dbff7f906485",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Seiji Hirao",
+      "status": "unmatched"
+    },
+    {
+      "title": "Serge Blanco",
+      "status": "enrich_failed",
+      "playerId": "083296db-09fb-40c8-ba7d-5b06cf073554",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Severo Koroduadua",
+      "status": "unmatched"
+    },
+    {
+      "title": "Shawn Lipman",
+      "status": "unmatched"
+    },
+    {
+      "title": "Shayne Philpott",
+      "status": "enrich_failed",
+      "playerId": "7645ff48-8353-4f22-8180-8682d2bc95df",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Shinobu Aoki",
+      "status": "unmatched"
+    },
+    {
+      "title": "Shuji Nakashima",
+      "status": "unmatched"
+    },
+    {
+      "title": "Sila Vaifale",
+      "status": "enrich_failed",
+      "playerId": "991ed730-67d3-42ad-a398-5c04872cc6a5",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Simon Geoghegan",
+      "status": "enrich_failed",
+      "playerId": "a1b2c2fd-984c-4dec-a54f-fd60bee2d276",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Simon Halliday",
+      "status": "enrich_failed",
+      "playerId": "ad4ad513-3db0-4eaf-a995-16d50bc57abb",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Simon Hodgkinson",
+      "status": "enrich_failed",
+      "playerId": "a37ec57d-bfdf-404f-81b3-b79fb6b9a6c7",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Simon Poidevin",
+      "status": "enrich_failed",
+      "playerId": "b9239fe1-9432-4c6e-bb88-ad4e7642ebe9",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Sinali Latu",
+      "status": "unmatched"
+    },
+    {
+      "title": "Ștefan Tofan",
+      "status": "unmatched"
+    },
+    {
+      "title": "Stefano Barba",
+      "status": "unmatched"
+    },
+    {
+      "title": "Stefano Bordon",
+      "status": "unmatched"
+    },
+    {
+      "title": "Stephen Bachop",
+      "status": "enrich_failed",
+      "playerId": "cd15e0cd-8153-499b-96ea-d168fb702484",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Steve Cutler (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Steve Ford",
+      "status": "enriched",
+      "playerId": "3b6c6fb5-8610-4f7e-b04f-2f6b3cc06534"
+    },
+    {
+      "title": "Steve Gray (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Steve McDowall",
+      "status": "enrich_failed",
+      "playerId": "31cf80ac-7d98-49a6-abe3-1933a34a960c",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Steve Smith (rugby union, born 1959)",
+      "status": "enrich_failed",
+      "playerId": "37272e65-8e94-48da-9700-5f9d8ed1fcf6",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Takahiro Hosokawa",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tatsuya Maeda (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Terry Kingston",
+      "status": "enrich_failed",
+      "playerId": "c0107ccb-2cc5-4ab0-b105-bba18f3b3770",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Terry Wright (rugby union)",
+      "status": "enriched",
+      "playerId": "94c0755e-6f0c-48ce-afa9-e0617c5a100f"
+    },
+    {
+      "title": "Terunori Masuho",
+      "status": "enrich_failed",
+      "playerId": "07928188-23b9-4420-974b-6b70fe6529be",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Tevita Vonolagi",
+      "status": "enrich_failed",
+      "playerId": "0f472d5e-4db3-413c-a644-2e9b9b488e39",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Thierry Devergie",
+      "status": "enrich_failed",
+      "playerId": "c8e32646-0364-46b4-9ae0-616c6a574521",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Thierry Lacroix",
+      "status": "enriched",
+      "playerId": "6f0491d4-ce71-42bb-8720-7dd5cc4f121e"
+    },
+    {
+      "title": "Tiberiu Brînză",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tim Horan",
+      "status": "enriched",
+      "playerId": "54ab351e-c7c5-48c1-9f4a-290d66845180"
+    },
+    {
+      "title": "Timo Tagaloa",
+      "status": "enriched",
+      "playerId": "4c200f57-7454-487c-9e6c-af76cec57195"
+    },
+    {
+      "title": "Toʻo Vaega",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tom Woods (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tomasi Lovo",
+      "status": "enriched",
+      "playerId": "8e52e5c8-d2e5-4e3c-96aa-89f1632d253a"
+    },
+    {
+      "title": "Tomasi Rabaka",
+      "status": "enrich_failed",
+      "playerId": "57d15add-26a8-4dd1-80c3-03b92e563c82",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Tony Clement (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "eb9934c9-b824-41fc-8ea1-1153758419c6",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Tony Daly",
+      "status": "enrich_failed",
+      "playerId": "de8221d2-e245-49ca-9d0b-42ad73f75fd5",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Tony Flay",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tony Ridnell",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tony Stanger",
+      "status": "enrich_failed",
+      "playerId": "3cbb32ef-761f-4144-8c07-404d31db4faf",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Toshiyuki Hayashi",
+      "status": "unmatched"
+    },
+    {
+      "title": "Troy Coker",
+      "status": "enrich_failed",
+      "playerId": "5687ff5d-acdb-4cb1-b8f0-18c2641fba2a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Tsutomu Matsuda",
+      "status": "enrich_failed",
+      "playerId": "83ba7969-341b-469b-a178-3ccb4975f98e",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Tsuyoshi Fujita",
+      "status": "unmatched"
+    },
+    {
+      "title": "Tu Nu'uali'itia",
+      "status": "enrich_failed",
+      "playerId": "12e1fd17-5f8a-4c8e-b914-88e5b4bb7d7f",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Tupo Fa'amasino",
+      "status": "enrich_failed",
+      "playerId": "8e5ffb14-16fb-4e61-95f3-5eae5bb6c18d",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Va'aiga Tuigamala",
+      "status": "enrich_failed",
+      "playerId": "3358a4ca-0dce-46eb-8c84-934c6815963e",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Vili Alaalatoa",
+      "status": "unmatched"
+    },
+    {
+      "title": "Viliami Ofahengaue",
+      "status": "enrich_failed",
+      "playerId": "633540c4-5684-4f19-9bc2-14914fb71c7d",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Vince Cunningham",
+      "status": "enrich_failed",
+      "playerId": "b4f08842-339d-4ff2-bdd7-0b9aa0567b7a",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Wade Dooley",
+      "status": "enrich_failed",
+      "playerId": "e6e45ede-110a-489b-bbdc-98f06942b84b",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Waisale Serevi",
+      "status": "enrich_failed",
+      "playerId": "3dcb786f-21d1-4598-818d-5849a7e5c145",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Walter Little (rugby union)",
+      "status": "enrich_failed",
+      "playerId": "e34a8a97-6893-42d1-b0c7-4d265fa6595e",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Wataru Murata",
+      "status": "enrich_failed",
+      "playerId": "5f6297d9-3f2a-4a8a-894a-048a2135b89f",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "Will Carling",
+      "status": "enrich_failed",
+      "playerId": "9e51839e-b43e-4b41-82e9-8472d3f57c1b",
+      "reason": "matched_no_new_data"
+    },
+    {
+      "title": "William Schultz (rugby union)",
+      "status": "unmatched"
+    },
+    {
+      "title": "Yoshihito Yoshida",
+      "status": "unmatched"
+    },
+    {
+      "title": "Yukio Motoki",
+      "status": "enrich_failed",
+      "playerId": "8946e4d9-d9d5-4883-b8d3-784f76f5e6da",
+      "reason": "no_matching_wikipedia_article"
+    },
+    {
+      "title": "Zinzan Brooke",
+      "status": "enrich_failed",
+      "playerId": "77da4246-462a-4780-9f7a-f631368ebd7b",
+      "reason": "no_matching_wikipedia_article"
+    }
+  ]
+}

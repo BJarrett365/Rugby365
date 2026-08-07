@@ -38,11 +38,39 @@ type FixtureMeta = {
   attendance?: number | null;
   competitionName?: string | null;
   competition?: { id: string; name: string; slug: string } | null;
+  providerSnapshot?: Record<string, unknown> | null;
 };
 
-function payloadName(payload: Record<string, unknown> | null, key: string): string {
-  const v = payload?.[key];
-  return typeof v === "string" ? v : "";
+function payloadName(payload: Record<string, unknown> | null, ...keys: string[]): string {
+  if (!payload) return "";
+  for (const key of keys) {
+    const v = payload[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function eventPlayerLabel(row: EventRow): string {
+  return (
+    payloadName(row.payload, "playerName", "player", "player_name") ||
+    "—"
+  );
+}
+
+function eventSubOutLabel(row: EventRow): string {
+  const type = String(row.payload?.type ?? row.eventType).toLowerCase();
+  if (type.includes("sub off") || type.includes("substitution_out") || type === "sub_off") {
+    return payloadName(row.payload, "playerOutName", "player", "playerName") || "—";
+  }
+  return payloadName(row.payload, "playerOutName") || "—";
+}
+
+function eventSubInLabel(row: EventRow): string {
+  const type = String(row.payload?.type ?? row.eventType).toLowerCase();
+  if (type.includes("sub on") || type.includes("substitution_in") || type === "sub_on") {
+    return payloadName(row.payload, "playerInName", "player", "playerName") || "—";
+  }
+  return payloadName(row.payload, "playerInName") || "—";
 }
 
 function EventTable({
@@ -90,13 +118,17 @@ function EventTable({
               <td className="capitalize">{row.eventType.replace(/_/g, " ")}</td>
               {showSub ? (
                 <>
-                  <td>{payloadName(row.payload, "playerOutName") || "—"}</td>
-                  <td>{payloadName(row.payload, "playerInName") || "—"}</td>
+                  <td>{eventSubOutLabel(row)}</td>
+                  <td>{eventSubInLabel(row)}</td>
                 </>
               ) : (
-                <td>{payloadName(row.payload, "playerName") || "—"}</td>
+                <td>{eventPlayerLabel(row)}</td>
               )}
-              {showAssist ? <td>{payloadName(row.payload, "assistPlayerName") || "—"}</td> : null}
+              {showAssist ? (
+                <td>
+                  {payloadName(row.payload, "assistPlayerName", "assist_player", "assist") || "—"}
+                </td>
+              ) : null}
               <td className="font-mono">{row.minute}&apos;</td>
               {showScore ? (
                 <td className="font-mono">
@@ -510,7 +542,29 @@ export function MatchEventsEditor({ fixtureId }: { fixtureId: string }) {
         <h4 className="cms-section-title text-sm m-0">TMO / TV referee</h4>
         <p className="m-0 text-xs text-zinc-500">
           Fourth official / television match official review. Publishes to public Match Animation signals.
+          Official named on the SDMS feed (if present) shows below.
         </p>
+        {(() => {
+          const snap = fixture?.providerSnapshot;
+          const refs = Array.isArray(snap?.referees) ? (snap!.referees as Array<Record<string, unknown>>) : [];
+          const tmo = refs.find((r) => /tmo|television|tv\s*match/i.test(String(r.role ?? "")));
+          const assistants = refs.filter((r) => /assistant/i.test(String(r.role ?? "")));
+          if (!tmo && assistants.length === 0) return null;
+          return (
+            <ul className="m-0 list-none p-0 text-sm text-zinc-300 space-y-1">
+              {tmo ? (
+                <li>
+                  TMO: <span className="text-zinc-100">{String(tmo.name ?? "—")}</span>
+                </li>
+              ) : null}
+              {assistants.map((a, i) => (
+                <li key={i}>
+                  Assistant: <span className="text-zinc-100">{String(a.name ?? "—")}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        })()}
         <div className="match-cms-editor-form">
           <select className="cms-select" value={tmoTeamId} onChange={(e) => setTmoTeamId(e.target.value)}>
             <option value="">No team</option>

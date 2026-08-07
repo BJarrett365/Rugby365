@@ -1,0 +1,413 @@
+{
+  "scrapedAt": "2026-08-04T11:44:53.553Z",
+  "year": 2003,
+  "sources": {
+    "ultimateRugbyTable": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2003/table",
+      "status": 200
+    },
+    "ultimateRugbyResults": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2003/results",
+      "status": 200
+    },
+    "ultimateRugbyFixtures": {
+      "url": "https://www.ultimaterugby.com/rugby-world-cup-2003/fixtures",
+      "status": 200
+    },
+    "official": {
+      "url": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2003",
+      "status": 200
+    }
+  },
+  "competition": {
+    "competitionName": "Rugby World Cup",
+    "competitionSlug": "rugby-world-cup",
+    "competitionType": "International",
+    "governingBody": "World Rugby",
+    "officialWebsite": "https://www.rugbyworldcup.com/",
+    "ultimateRugbyUrl": "https://www.ultimaterugby.com/rugby-world-cup-2003/table",
+    "rugbyWorldCupUrl": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2003",
+    "year": 2003,
+    "host": "Australia",
+    "dateRange": "October 10 - November 22, 2003",
+    "description": "Australia hosted the 2003 Men's Rugby World Cup, where England triumphed in a dramatic final with Jonny Wilkinson's iconic drop goal sealing victory over the Wallabies.",
+    "tournamentFormat": "4 pools of 5.",
+    "numberOfTeams": 20,
+    "numberOfPools": 4,
+    "poolSize": 5,
+    "numberOfMatches": 48,
+    "startDate": null,
+    "endDate": null
+  },
+  "ultimateRugby": {
+    "pools": [],
+    "knockouts": [],
+    "matchLinks": [
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "slug": "north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "matchId": "99622"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "slug": "taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "matchId": "99623"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-u18%27s-a-vs-ireland-u18%27s-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100843",
+        "slug": "south-africa-u18's-a-vs-ireland-u18's-at-hoërskool-durbanville-7th-aug-2026/100843",
+        "matchId": "100843"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/england-u18-vs-georgia-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100849",
+        "slug": "england-u18-vs-georgia-u18-at-hoërskool-durbanville-7th-aug-2026/100849",
+        "matchId": "100849"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-u18%27s-vs-france-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100844",
+        "slug": "south-africa-u18's-vs-france-u18-at-hoërskool-durbanville-7th-aug-2026/100844",
+        "matchId": "100844"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "slug": "stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "matchId": "98989"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/auckland-vs-wellington-at-eden-park-8th-aug-2026/99624",
+        "slug": "auckland-vs-wellington-at-eden-park-8th-aug-2026/99624",
+        "matchId": "99624"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/bay-of-plenty-vs-northland-at-rotorua-international-stadium-8th-aug-2026/99625",
+        "slug": "bay-of-plenty-vs-northland-at-rotorua-international-stadium-8th-aug-2026/99625",
+        "matchId": "99625"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "slug": "boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "matchId": "100213"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/wellington-vs-hawke%27s-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "slug": "wellington-vs-hawke's-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "matchId": "99621"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "slug": "northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "matchId": "99620"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "slug": "golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "matchId": "100212"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "slug": "paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "matchId": "99472"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "slug": "stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "matchId": "100211"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/stellenberg-high-school-vs-durbanville-high-school-at-stellenberg-high-school-1st-aug-2026/99605",
+        "slug": "stellenberg-high-school-vs-durbanville-high-school-at-stellenberg-high-school-1st-aug-2026/99605",
+        "matchId": "99605"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/king-edward-school-%28kes%29-vs-jeppe-boys-high-school-at-kes-%28houghton-estate%29-1st-aug-2026/99471",
+        "slug": "king-edward-school-(kes)-vs-jeppe-boys-high-school-at-kes-(houghton-estate)-1st-aug-2026/99471",
+        "matchId": "99471"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/sharks-vs-new-zealand-at-kings-park-stadium-11th-aug-2026/98990",
+        "slug": "sharks-vs-new-zealand-at-kings-park-stadium-11th-aug-2026/98990",
+        "matchId": "98990"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/japan-vs-australia-at-hanazono-rugby-stadium-8th-aug-2026/99076",
+        "slug": "japan-vs-australia-at-hanazono-rugby-stadium-8th-aug-2026/99076",
+        "matchId": "99076"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/argentina-vs-south-africa-at-estadio-jos%C3%A9-amalfitani-8th-aug-2026/100839",
+        "slug": "argentina-vs-south-africa-at-estadio-josé-amalfitani-8th-aug-2026/100839",
+        "matchId": "100839"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/griquas-vs-golden-lions-at-suzuki-stadium-8th-aug-2026/100216",
+        "slug": "griquas-vs-golden-lions-at-suzuki-stadium-8th-aug-2026/100216",
+        "matchId": "100216"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/blue-bulls-vs-pumas-at-loftus-versfeld-8th-aug-2026/100215",
+        "slug": "blue-bulls-vs-pumas-at-loftus-versfeld-8th-aug-2026/100215",
+        "matchId": "100215"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/new-zealand-women-vs-australia-women-at-go-media-stadium-22nd-aug-2026/99578",
+        "slug": "new-zealand-women-vs-australia-women-at-go-media-stadium-22nd-aug-2026/99578",
+        "matchId": "99578"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/app/public/index.php/match/south-africa-women-vs-new-zealand-women-at-fnb-stadium-5th-sep-2026/99579",
+        "slug": "south-africa-women-vs-new-zealand-women-at-fnb-stadium-5th-sep-2026/99579",
+        "matchId": "99579"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "slug": "north-harbour-vs-counties-manukau-at-north-harbour-stadium-6th-aug-2026/99622",
+        "matchId": "99622"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "slug": "taranaki-vs-waikato-at-stadium-taranaki-7th-aug-2026/99623",
+        "matchId": "99623"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/south-africa-u18%27s-a-vs-ireland-u18%27s-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100843",
+        "slug": "south-africa-u18's-a-vs-ireland-u18's-at-hoërskool-durbanville-7th-aug-2026/100843",
+        "matchId": "100843"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/england-u18-vs-georgia-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100849",
+        "slug": "england-u18-vs-georgia-u18-at-hoërskool-durbanville-7th-aug-2026/100849",
+        "matchId": "100849"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/south-africa-u18%27s-vs-france-u18-at-ho%C3%ABrskool-durbanville-7th-aug-2026/100844",
+        "slug": "south-africa-u18's-vs-france-u18-at-hoërskool-durbanville-7th-aug-2026/100844",
+        "matchId": "100844"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "slug": "stormers-vs-new-zealand-at-dhl-stadium-7th-aug-2026/98989",
+        "matchId": "98989"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "slug": "boland-kavaliers-vs-pumas-at-boland-stadium-2nd-aug-2026/100213",
+        "matchId": "100213"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/wellington-vs-hawke%27s-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "slug": "wellington-vs-hawke's-bay-at-hnry-stadium-wellington-2nd-aug-2026/99621",
+        "matchId": "99621"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "slug": "northland-vs-manawatu-at-semenoff-stadium-2nd-aug-2026/99620",
+        "matchId": "99620"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "slug": "golden-lions-vs-blue-bulls-at-ellis-park-1st-aug-2026/100212",
+        "matchId": "100212"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "slug": "paarl-boys-high-vs-paarl-gimnasium-at-brug-street-paarl-1st-aug-2026/99472",
+        "matchId": "99472"
+      },
+      {
+        "url": "https://www.ultimaterugby.com/match/stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "slug": "stormers-xxiii-vs-natal-sharks-at-dhl-stadium-1st-aug-2026/100211",
+        "matchId": "100211"
+      }
+    ]
+  },
+  "official": {
+    "year": 2003,
+    "title": "2003 Men's Rugby World Cup",
+    "dateRange": "October 10 - November 22, 2003",
+    "host": "Australia",
+    "description": "Australia hosted the 2003 Men's Rugby World Cup, where England triumphed in a dramatic final with Jonny Wilkinson's iconic drop goal sealing victory over the Wallabies.",
+    "pools": [
+      {
+        "pool": "Pool A",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "Australia",
+            "teamName": "Australia",
+            "played": 4,
+            "pointsDiff": 241,
+            "points": 18
+          },
+          {
+            "rank": 2,
+            "teamCode": "Ireland",
+            "teamName": "Ireland",
+            "played": 4,
+            "pointsDiff": 85,
+            "points": 15
+          },
+          {
+            "rank": 3,
+            "teamCode": "Argentina",
+            "teamName": "Argentina",
+            "played": 4,
+            "pointsDiff": 83,
+            "points": 11
+          },
+          {
+            "rank": 4,
+            "teamCode": "Romania",
+            "teamName": "Romania",
+            "played": 4,
+            "pointsDiff": -127,
+            "points": 5
+          },
+          {
+            "rank": 5,
+            "teamCode": "Namibia",
+            "teamName": "Namibia",
+            "played": 4,
+            "pointsDiff": -282,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool B",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "France",
+            "teamName": "France",
+            "played": 4,
+            "pointsDiff": 134,
+            "points": 20
+          },
+          {
+            "rank": 2,
+            "teamCode": "Scotland",
+            "teamName": "Scotland",
+            "played": 4,
+            "pointsDiff": 5,
+            "points": 14
+          },
+          {
+            "rank": 3,
+            "teamCode": "Fiji",
+            "teamName": "Fiji",
+            "played": 4,
+            "pointsDiff": -16,
+            "points": 10
+          },
+          {
+            "rank": 4,
+            "teamCode": "USA",
+            "teamName": "USA",
+            "played": 4,
+            "pointsDiff": -39,
+            "points": 6
+          },
+          {
+            "rank": 5,
+            "teamCode": "Japan",
+            "teamName": "Japan",
+            "played": 4,
+            "pointsDiff": -84,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool C",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "England",
+            "teamName": "England",
+            "played": 4,
+            "pointsDiff": 208,
+            "points": 19
+          },
+          {
+            "rank": 2,
+            "teamCode": "South Africa",
+            "teamName": "South Africa",
+            "played": 4,
+            "pointsDiff": 124,
+            "points": 15
+          },
+          {
+            "rank": 3,
+            "teamCode": "Samoa",
+            "teamName": "Samoa",
+            "played": 4,
+            "pointsDiff": 21,
+            "points": 10
+          },
+          {
+            "rank": 4,
+            "teamCode": "Uruguay",
+            "teamName": "Uruguay",
+            "played": 4,
+            "pointsDiff": -199,
+            "points": 4
+          },
+          {
+            "rank": 5,
+            "teamCode": "Georgia",
+            "teamName": "Georgia",
+            "played": 4,
+            "pointsDiff": -154,
+            "points": 0
+          }
+        ]
+      },
+      {
+        "pool": "Pool D",
+        "rows": [
+          {
+            "rank": 1,
+            "teamCode": "New Zealand",
+            "teamName": "New Zealand",
+            "played": 4,
+            "pointsDiff": 225,
+            "points": 20
+          },
+          {
+            "rank": 2,
+            "teamCode": "Wales",
+            "teamName": "Wales",
+            "played": 4,
+            "pointsDiff": 34,
+            "points": 14
+          },
+          {
+            "rank": 3,
+            "teamCode": "Italy",
+            "teamName": "Italy",
+            "played": 4,
+            "pointsDiff": -46,
+            "points": 8
+          },
+          {
+            "rank": 4,
+            "teamCode": "Canada",
+            "teamName": "Canada",
+            "played": 4,
+            "pointsDiff": -81,
+            "points": 5
+          },
+          {
+            "rank": 5,
+            "teamCode": "Tonga",
+            "teamName": "Tonga",
+            "played": 4,
+            "pointsDiff": -132,
+            "points": 1
+          }
+        ]
+      }
+    ],
+    "sourceUrl": "https://www.rugbyworldcup.com/2027/en/past-tournaments/2003"
+  }
+}

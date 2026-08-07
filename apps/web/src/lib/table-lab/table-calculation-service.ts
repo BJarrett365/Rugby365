@@ -540,6 +540,8 @@ async function loadPerspectives(input: {
         countsTowardStandings: !isScheduled,
         matchClockLabel: formatMatchClock(fixture.matchMinute, fixture.period),
         fixtureStatus: fixture.status,
+        stage: fixture.stage ?? null,
+        round: fixture.round ?? null,
       });
     }
   }
@@ -578,6 +580,11 @@ async function trySyncedStandings(
     const legacyMeta = parseStandingForm(row.form);
     const tryBonusPoints = row.tryBonusPoints || legacyMeta.tryBonusPoints;
     const losingBonusPoints = row.losingBonusPoints || legacyMeta.losingBonusPoints;
+    const formLetters = legacyMeta.lastFive ?? "";
+    // formSequence is newest-first to match Table Lab form tables.
+    const formSequence = [...formLetters]
+      .reverse()
+      .filter((letter): letter is "W" | "D" | "L" => letter === "W" || letter === "D" || letter === "L");
     return {
       rank: row.rank,
       teamId: row.teamId,
@@ -595,6 +602,7 @@ async function trySyncedStandings(
       losingBonusPoints,
       bonusPoints: row.bonusPoints,
       leaguePoints: row.points,
+      formSequence,
     };
   });
 }
@@ -2275,11 +2283,36 @@ export async function calculateRugbyTable(
     const includeScheduledMatches = parseLiveTableBoolean(context.includeScheduledMatches, false);
     const showMovement = parseLiveTableBoolean(context.showMovement, true);
 
-    const livePerspectives = await loadPerspectives({
+    let livePerspectives = await loadPerspectives({
       seasonId: context.seasonId,
       competitionId: context.competitionId,
       liveTable: { includeLiveMatches, includeScheduledMatches },
     });
+
+    const competition = context.competitionId
+      ? await getCompetitionById(context.competitionId)
+      : null;
+    const { isRugbyWorldCupSlug, isWorldCupKnockoutStage, poolStageFormSlots, resolveRugbyWorldCupYear, rugbyWorldCupPoolsForYear } =
+      await import("../rugby-world-cup-pools");
+    const isWorldCup = isRugbyWorldCupSlug(competition?.slug);
+    let formSlots: number | undefined;
+    if (isWorldCup) {
+      // Pool tables must not include knockout results (QF+).
+      livePerspectives = livePerspectives.filter(
+        (row) => !isWorldCupKnockoutStage(row.stage, row.round),
+      );
+      const [seasonRow] = await getDb()
+        .select({ year: competitionSeasons.year, label: competitionSeasons.label })
+        .from(competitionSeasons)
+        .where(eq(competitionSeasons.id, context.seasonId))
+        .limit(1);
+      const year = resolveRugbyWorldCupYear({
+        seasonYear: seasonRow?.year,
+        seasonLabel: seasonRow?.label,
+      });
+      const pools = rugbyWorldCupPoolsForYear(year);
+      if (pools[0]) formSlots = poolStageFormSlots(pools[0].teams.length);
+    }
 
     const scoringRules = await getScoringRulesForCompetition(context.competitionId);
     const built = buildLiveTableStandings({
@@ -2287,6 +2320,7 @@ export async function calculateRugbyTable(
       rules: scoringRules,
       tableView,
       showMovement,
+      formSlots,
     });
 
     const coveragePerspectives = livePerspectives.filter(
@@ -2327,9 +2361,12 @@ export async function calculateRugbyTable(
         },
         liveUpdatedAt: new Date().toISOString(),
         liveMatchCount: built.liveFixtureCount,
-        liveTableCalculationNote: liveTableCalculationNote(),
+        liveTableCalculationNote: isWorldCup
+          ? "Pool standings are calculated from pool-stage matches only (knockouts excluded)."
+          : liveTableCalculationNote(),
         showMovement,
         includeLiveMatches,
+        ...(formSlots != null ? { formMatchCount: formSlots } : {}),
       },
       context,
       tableView,

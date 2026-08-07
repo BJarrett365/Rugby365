@@ -1,0 +1,161 @@
+{
+  "year": 1995,
+  "sourceUrl": "https://en.wikipedia.org/wiki/1995_Rugby_World_Cup_statistics",
+  "scrapedAt": "2026-08-05T11:08:23.078Z",
+  "entries": [
+    {
+      "playerName": "Jonah Lomu",
+      "teamName": "New Zealand",
+      "points": 35,
+      "tries": 7,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Marc Ellis",
+      "teamName": "New Zealand",
+      "points": 35,
+      "tries": 7,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gavin Hastings",
+      "teamName": "Scotland",
+      "points": 104,
+      "tries": 5,
+      "conversions": 14,
+      "penalties": 17,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Rory Underwood",
+      "teamName": "England",
+      "points": 25,
+      "tries": 5,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Adriaan Richter",
+      "teamName": "South Africa",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Chester Williams",
+      "teamName": "South Africa",
+      "points": 20,
+      "tries": 4,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Thierry Lacroix",
+      "teamName": "France",
+      "points": 112,
+      "tries": 4,
+      "conversions": 7,
+      "penalties": 26,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Émile Ntamack",
+      "teamName": "France",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Eric Rush",
+      "teamName": "New Zealand",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Gareth Thomas",
+      "teamName": "Wales",
+      "points": 15,
+      "tries": 3,
+      "conversions": 0,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Andrew Mehrtens",
+      "teamName": "New Zealand",
+      "points": 84,
+      "tries": 1,
+      "conversions": 14,
+      "penalties": 14,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Rob Andrew",
+      "teamName": "England",
+      "points": 79,
+      "tries": 0,
+      "conversions": 5,
+      "penalties": 20,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Joel Stransky",
+      "teamName": "South Africa",
+      "points": 61,
+      "tries": 1,
+      "conversions": 4,
+      "penalties": 13,
+      "dropGoals": 3
+    },
+    {
+      "playerName": "Michael Lynagh",
+      "teamName": "Australia",
+      "points": 47,
+      "tries": 2,
+      "conversions": 5,
+      "penalties": 9,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Simon Culhane",
+      "teamName": "New Zealand",
+      "points": 45,
+      "tries": 1,
+      "conversions": 20,
+      "penalties": 0,
+      "dropGoals": 0
+    },
+    {
+      "playerName": "Neil Jenkins",
+      "teamName": "Wales",
+      "points": 41,
+      "tries": 0,
+      "conversions": 7,
+      "penalties": 8,
+      "dropGoals": 1
+    },
+    {
+      "playerName": "Diego Domínguez",
+      "teamName": "Italy",
+      "points": 39,
+      "tries": 1,
+      "conversions": 5,
+      "penalties": 7,
+      "dropGoals": 1
+    }
+  ],
+  "notes": []
+}

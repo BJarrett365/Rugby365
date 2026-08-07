@@ -191,7 +191,7 @@ export function MatchCentreSidebar({
   const [fixtures, setFixtures] = useState<ScheduleFixture[] | null>(
     () => sidebarFixtureCache.get(cacheKey) ?? null,
   );
-  const dates = useMemo(() => dateRange(matchDate, 7, 7), [matchDate]);
+  const dates = useMemo(() => dateRange(matchDate, 1, 1), [matchDate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -201,10 +201,18 @@ export function MatchCentreSidebar({
       return;
     }
     setFixtures(null);
+    const controller = new AbortController();
+    // Fail soft: an endless "Loading fixtures…" is worse than an empty rail.
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+      if (!cancelled) setFixtures((prev) => prev ?? []);
+    }, 6_000);
     // lite=1: DB-only, no provider sync / win-prob enrichment (keeps Match Centre snappy).
     Promise.all(
       dates.map((date) =>
-        fetch(`/api/fixtures/schedule?${new URLSearchParams({ date, lite: "1" }).toString()}`)
+        fetch(`/api/fixtures/schedule?${new URLSearchParams({ date, lite: "1" }).toString()}`, {
+          signal: controller.signal,
+        })
           .then((res) => (res.ok ? res.json() : null))
           .then((json: SchedulePayload | null) => json?.fixtures ?? [])
           .catch(() => [] as ScheduleFixture[]),
@@ -235,9 +243,14 @@ export function MatchCentreSidebar({
       })
       .catch(() => {
         if (!cancelled) setFixtures([]);
+      })
+      .finally(() => {
+        window.clearTimeout(timeout);
       });
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
     };
   }, [cacheKey, dates, competitionName, competitionId]);
 

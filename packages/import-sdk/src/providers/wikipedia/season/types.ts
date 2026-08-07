@@ -25,6 +25,15 @@ export type WikipediaStandingRow = {
   qualificationNotes: string | null;
 };
 
+export type WikipediaScoringEvent = {
+  eventType: "try" | "conversion" | "penalty" | "drop_goal";
+  teamSide: "home" | "away";
+  minute: number;
+  playerName: string;
+  /** Present on tries when Wikipedia marks converted (c) / missed (m). */
+  converted?: boolean | null;
+};
+
 export type WikipediaFixtureRow = {
   date: string | null;
   kickoffAt: string | null;
@@ -40,6 +49,7 @@ export type WikipediaFixtureRow = {
   stage: WikipediaSeasonStage;
   status: "full_time" | "scheduled" | "postponed" | "cancelled";
   notes: string | null;
+  scoringEvents?: WikipediaScoringEvent[];
 };
 
 export type WikipediaClubRow = {

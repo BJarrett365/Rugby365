@@ -4,6 +4,7 @@ import {
   parsePoolWikitableStandings,
   parseSportsTableModule,
   parseRugbyboxFixtures,
+  parseResultTableFixtures,
 } from "./parse-season-page";
 
 const TABLE = `
@@ -73,6 +74,45 @@ describe("parseRugbyboxFixtures", () => {
       status: "full_time",
     });
   });
+
+  it("parses spaced {{rugby box}} templates with scorers", () => {
+    const wikitext = `
+===Pool A===
+{{rugby box
+|date=25 May 1995
+|home={{ru-rt|RSA}}
+|score=27–18
+|away={{ru|AUS}}
+|try1=[[Pieter Hendriks|Hendriks]] 37' m<br />[[Joel Stransky|Stransky]] 63' c
+|con1=[[Joel Stransky|Stransky]] (1/2) 64'
+|pen1=[[Joel Stransky|Stransky]] (4/4) 5', 21', 29', 45'
+|drop1=[[Joel Stransky|Stransky]] (1/3) 49'
+|try2=[[Michael Lynagh|Lynagh]] 33' c<br />[[Phil Kearns|Kearns]] 78' m
+|con2=[[Michael Lynagh|Lynagh]] (1/2) 34'
+|pen2=[[Michael Lynagh|Lynagh]] (2/3) 3', 17'
+|stadium=[[Newlands Stadium|Newlands]], [[Cape Town]]
+|attendance=44,778
+|referee=[[Derek Bevan]] ([[Welsh Rugby Union|Wales]])
+}}
+`;
+    const fixtures = parseRugbyboxFixtures(wikitext, { defaultRound: "Pool A" });
+    expect(fixtures).toHaveLength(1);
+    expect(fixtures[0]).toMatchObject({
+      homeTeam: "South Africa",
+      awayTeam: "Australia",
+      homeScore: 27,
+      awayScore: 18,
+      venueName: "Newlands",
+      attendance: 44778,
+      refereeName: "Derek Bevan (Wales)",
+      status: "full_time",
+    });
+    expect(fixtures[0]!.scoringEvents?.some((e) => e.eventType === "try" && e.playerName === "Hendriks" && e.minute === 37)).toBe(
+      true,
+    );
+    expect(fixtures[0]!.scoringEvents?.filter((e) => e.eventType === "penalty" && e.teamSide === "home")).toHaveLength(4);
+    expect(fixtures[0]!.notes).toMatch(/Tries:/);
+  });
 });
 
 describe("parsePoolWikitableStandings", () => {
@@ -137,6 +177,57 @@ describe("parseRugbyboxFixtures invoke module", () => {
       homeScore: 27,
       awayScore: 13,
       attendance: 78680,
+    });
+  });
+});
+
+describe("parseWikiTeamLabel national templates", () => {
+  it("resolves senior and U20 wiki country templates", async () => {
+    const { parseWikiTeamLabel } = await import("./wiki-text-utils");
+    expect(parseWikiTeamLabel("{{ru-rt|ALB}}")).toBe("Albania");
+    expect(parseWikiTeamLabel("{{Ru-rt|BRA}}")).toBe("Brazil");
+    expect(parseWikiTeamLabel("{{ruu-rt|20|KEN}}")).toBe("Kenya U20");
+    expect(parseWikiTeamLabel("{{ruu|20|RSA}}")).toBe("South Africa U20");
+    expect(parseWikiTeamLabel("{{Ru|SAM|name=Samoa XV}}")).toBe("Samoa XV");
+    expect(parseWikiTeamLabel("{{unknown|FOO}}")).toBe("");
+  });
+});
+
+describe("parseResultTableFixtures", () => {
+  it("parses Nations Cup style result rows with scores and scheduled v", () => {
+    const fixtures = parseResultTableFixtures(
+      `====Round 1====
+{| style="width:100%" cellspacing="1"
+|-
+!width=15%|
+!width=25%|
+!width=10%|
+!width=25%|
+|- style=font-size:90%
+|align=right|4 July 2026||align=right|{{ru-rt|URU}}||align=center|[[Series#Uruguay v Georgia|34–41]]||{{ru|GEO}}||[[Estadio Charrua]], [[Montevideo]]
+|- style=font-size:90%
+|align=right|7 November 2026||align=right|{{ru-rt|GEO}}||align=center|[[Series#Georgia v Tonga|v]]||{{ru|TON}}||TBA
+|}
+`,
+      { defaultRound: "Round 1", matchweek: 1 },
+    );
+    expect(fixtures).toHaveLength(2);
+    expect(fixtures[0]).toMatchObject({
+      homeTeam: "Uruguay",
+      awayTeam: "Georgia",
+      homeScore: 34,
+      awayScore: 41,
+      status: "full_time",
+      venueName: "Estadio Charrua Montevideo",
+      round: "Round 1",
+    });
+    expect(fixtures[1]).toMatchObject({
+      homeTeam: "Georgia",
+      awayTeam: "Tonga",
+      homeScore: null,
+      awayScore: null,
+      status: "scheduled",
+      venueName: null,
     });
   });
 });
