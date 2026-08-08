@@ -25,6 +25,7 @@ export * from "./providers/wikipedia/season/parse-season-page";
 export * from "./providers/wikipedia/season/parse-clubs-table";
 export * from "./providers/wikipedia/season/wiki-text-utils";
 export * from "./providers/rugbypass/parse-player-profile";
+export * from "./providers/rugbypass/parse-coach-profile";
 export * from "./providers/world-rugby/rankings-types";
 export * from "./providers/world-rugby/parse-rankings";
 export * from "./providers/world-rugby/fetch-rankings";

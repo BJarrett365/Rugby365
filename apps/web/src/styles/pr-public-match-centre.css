@@ -1170,9 +1170,20 @@
   align-items: center;
 }
 
-.pr-mc-header__footer-link:hover .pr-mc-header__footer-name {
+.pr-mc-header__footer-link .pr-mc-header__footer-name {
   color: var(--pr-mc-gold, #e7bc63);
+}
+
+.pr-mc-header__footer-link:hover .pr-mc-header__footer-name {
+  color: var(--pr-mc-gold-hover, #f0cb7a);
   text-decoration: underline;
+}
+
+/* Beat .admin-shell a:not(.cms-btn) so coach/ref links stay gold in the match header */
+.admin-shell a.pr-mc-header__footer-link,
+.admin-shell a.pr-mc-header__footer-link:hover {
+  color: inherit;
+  text-decoration: none;
 }
 
 .pr-mc-header__footer-label {
@@ -8006,29 +8017,101 @@
   }
 }
 
-/* Planet Rugby Legends */
+/* Planet Rugby Legends — dark Match Centre theme */
+.pr-legends-page {
+  color: var(--pr-mc-white, #f7f7f5);
+}
+
+.pr-legends-header {
+  margin-bottom: 0.25rem;
+}
+
+.pr-legends-header .pr-mc-pr-badge,
+.pr-legends-header__eyebrow {
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  margin: 0 0 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(231, 188, 99, 0.16);
+  border: 1px solid rgba(231, 188, 99, 0.35);
+  color: var(--pr-mc-gold, #e7bc63);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .pr-legends-header h1 {
   margin: 0.25rem 0;
+  color: var(--pr-mc-white, #f7f7f5);
+  font-size: clamp(1.5rem, 1.8vw + 1.1rem, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
+
 .pr-legends-header__lede {
-  margin: 0.35rem 0 0;
-  color: var(--pr-muted, #6b7280);
+  margin: 0.45rem 0 0;
+  color: #e4e8e7;
   max-width: 42rem;
+  line-height: 1.55;
+  font-size: 0.975rem;
 }
+
 .pr-legends-header__links {
-  margin: 0.65rem 0 0;
+  margin: 0.75rem 0 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
   font-size: 0.9rem;
+  color: var(--pr-mc-grey, #a7adac);
 }
+
+.pr-legends-header__links a {
+  color: var(--pr-mc-gold, #e7bc63);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.pr-legends-header__links a:hover {
+  color: var(--pr-mc-gold-hover, #f0cb7a);
+  text-decoration: underline;
+}
+
+.pr-legends-page .pr-player-filters {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--pr-mc-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: rgba(15, 42, 49, 0.55);
+}
+
+.pr-legends-page .pr-players-directory__search {
+  min-width: 16rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--pr-mc-border, rgba(255, 255, 255, 0.16));
+  border-radius: 6px;
+  background: var(--pr-mc-navy, #0f2a31);
+  color: var(--pr-mc-white, #f7f7f5);
+}
+
+.pr-legends-page .pr-players-directory__search::placeholder {
+  color: rgba(167, 173, 172, 0.75);
+}
+
 .pr-legends-section {
-  margin: 1.5rem 0 0;
+  margin: 1.75rem 0 0;
 }
+
 .pr-legends-section h2 {
-  margin: 0 0 0.75rem;
-  font-size: 1.15rem;
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--pr-mc-white, #f7f7f5);
+  letter-spacing: 0.01em;
 }
+
 .pr-legends-chip-row {
   list-style: none;
   margin: 0 0 1rem;
@@ -8037,25 +8120,50 @@
   flex-wrap: wrap;
   gap: 0.45rem;
 }
+
 .pr-legends-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.7rem;
   text-decoration: none;
-  color: inherit;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fff;
+  color: var(--pr-mc-white, #f7f7f5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(47, 86, 92, 0.95);
   font-size: 0.85rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
+
+.pr-legends-chip:hover {
+  border-color: rgba(231, 188, 99, 0.55);
+  background: #355f65;
+  color: var(--pr-mc-white, #f7f7f5) !important;
+}
+
 .pr-legends-chip span {
-  color: var(--pr-muted, #6b7280);
+  color: var(--pr-mc-gold, #e7bc63);
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
+
 .pr-legends-chip.is-active {
-  border-color: rgba(0, 0, 0, 0.35);
+  border-color: var(--pr-mc-gold, #e7bc63);
+  background: var(--pr-mc-gold, #e7bc63);
+  color: var(--pr-mc-navy, #0f2a31) !important;
   font-weight: 700;
 }
+
+.pr-legends-chip.is-active:hover {
+  background: var(--pr-mc-gold-hover, #f0cb7a);
+  border-color: var(--pr-mc-gold-hover, #f0cb7a);
+  color: var(--pr-mc-navy, #0f2a31) !important;
+}
+
+.pr-legends-chip.is-active span {
+  color: var(--pr-mc-navy, #0f2a31);
+}
+
 .pr-legends-collections {
   list-style: none;
   margin: 0;
@@ -8064,37 +8172,57 @@
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   gap: 0.75rem;
 }
+
 .pr-legends-collection-card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.9rem 1rem;
+  gap: 0.4rem;
+  padding: 1rem 1.05rem;
   text-decoration: none;
-  color: inherit;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff;
+  color: var(--pr-mc-white, #f7f7f5) !important;
+  border: 1px solid var(--pr-mc-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--pr-mc-navy, #0f2a31);
   min-height: 7.5rem;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
+
+.pr-legends-collection-card:hover {
+  border-color: rgba(231, 188, 99, 0.45);
+  color: var(--pr-mc-white, #f7f7f5) !important;
+}
+
 .pr-legends-collection-card h3 {
   margin: 0;
   font-size: 1rem;
+  font-weight: 700;
+  color: var(--pr-mc-white, #f7f7f5);
+  line-height: 1.3;
 }
+
 .pr-legends-collection-card p {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--pr-muted, #6b7280);
+  color: #e4e8e7;
   flex: 1;
+  line-height: 1.45;
 }
+
 .pr-legends-collection-card__meta {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--pr-mc-gold, #e7bc63);
 }
+
 .pr-legends-collection-card.is-active {
-  border-color: rgba(0, 0, 0, 0.35);
+  border-color: var(--pr-mc-gold, #e7bc63);
+  box-shadow: inset 0 0 0 1px rgba(231, 188, 99, 0.25);
 }
+
 .pr-legends-collection-card.is-disabled {
   opacity: 0.65;
 }
+
 .pr-legends-grid {
   list-style: none;
   margin: 0.75rem 0 0;
@@ -8103,28 +8231,64 @@
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
   gap: 0.75rem;
 }
+
 .pr-legends-card {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto auto;
   column-gap: 0.65rem;
   row-gap: 0.15rem;
-  padding: 0.75rem;
+  padding: 0.8rem;
   text-decoration: none;
-  color: inherit;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff;
+  color: var(--pr-mc-white, #f7f7f5) !important;
+  border: 1px solid var(--pr-mc-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: var(--pr-mc-navy, #0f2a31);
+  transition: border-color 0.15s ease;
 }
+
+.pr-legends-card:hover {
+  border-color: rgba(231, 188, 99, 0.45);
+  color: var(--pr-mc-white, #f7f7f5) !important;
+}
+
 .pr-legends-card > :first-child {
   grid-row: 1 / span 3;
 }
+
 .pr-legends-card__name {
   font-weight: 700;
+  color: var(--pr-mc-white, #f7f7f5);
 }
+
 .pr-legends-card__meta,
 .pr-legends-card__tags {
   font-size: 0.8rem;
-  color: var(--pr-muted, #6b7280);
+  color: #e4e8e7;
+}
+
+.pr-legends-page .pr-mc-transfers-muted {
+  color: #e4e8e7;
+}
+
+/* Beat .admin-shell a:not(.cms-btn) gold link color on Legends surfaces */
+.admin-shell a.pr-legends-chip,
+.admin-shell a.pr-legends-collection-card,
+.admin-shell a.pr-legends-card {
+  color: var(--pr-mc-white, #f7f7f5);
+  text-decoration: none;
+}
+
+.admin-shell a.pr-legends-chip:hover,
+.admin-shell a.pr-legends-collection-card:hover,
+.admin-shell a.pr-legends-card:hover {
+  color: var(--pr-mc-white, #f7f7f5);
+  text-decoration: none;
+}
+
+.admin-shell a.pr-legends-chip.is-active,
+.admin-shell a.pr-legends-chip.is-active:hover {
+  color: var(--pr-mc-navy, #0f2a31);
 }
 
 /* Betting Intelligence — dark Match Centre theme */

@@ -44,6 +44,8 @@ export default function MatchCommentaryBridgePage({
   const [audioScripts, setAudioScripts] = useState<AudioScript[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [activatingAudio, setActivatingAudio] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [audioExpanded, setAudioExpanded] = useState(false);
@@ -106,7 +108,8 @@ export default function MatchCommentaryBridgePage({
     void load();
   }, [load]);
 
-  async function generate() {
+  async function generate(withAudio: boolean) {
+    setConfirmOpen(false);
     setGenerating(true);
     setError(null);
     setStatus(null);
@@ -114,7 +117,7 @@ export default function MatchCommentaryBridgePage({
       const res = await fetch(`/api/admin/matches/${id}/commentary/generate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ replace: true, generateAudioScripts: true }),
+        body: JSON.stringify({ replace: true, generateAudioScripts: withAudio }),
       });
       const data = (await res.json()) as {
         created?: number;
@@ -127,7 +130,9 @@ export default function MatchCommentaryBridgePage({
       setLines(data.lines ?? []);
       setAudioScripts(data.audioScripts ?? []);
       setStatus(
-        `Generated ${data.created ?? 0} written lines and ${data.audioScriptsCreated ?? 0} Lead/Analyst audio scripts.`,
+        withAudio
+          ? `Live Commentary activated (${data.created ?? 0} lines). Live Audio activated (${data.audioScriptsCreated ?? 0} scripts).`
+          : `Live Commentary activated (${data.created ?? 0} lines). Audio left off — Activate Audio later without rebuilding commentary.`,
       );
       await load();
     } catch (err) {
@@ -137,27 +142,117 @@ export default function MatchCommentaryBridgePage({
     }
   }
 
+  async function activateAudioFromCommentary() {
+    if (lines.length === 0) {
+      setError("Activate Live Commentary first — Audio needs the written timeline.");
+      return;
+    }
+    setActivatingAudio(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const res = await fetch(`/api/admin/matches/${id}/audio/scripts/regenerate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ replace: true }),
+      });
+      const data = (await res.json()) as {
+        created?: number;
+        scripts?: AudioScript[];
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) throw new Error(data.error || data.message || "Audio activation failed");
+      setAudioScripts(data.scripts ?? []);
+      setStatus(
+        `Live Audio activated from existing commentary (${data.created ?? data.scripts?.length ?? 0} scripts). Written lines were not changed.`,
+      );
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Audio activation failed");
+    } finally {
+      setActivatingAudio(false);
+    }
+  }
+
+  const busy = generating || activatingAudio;
+
   return (
     <MatchCmsFeatureShell
       matchId={id}
       title="Live Commentary"
-      description="Commentary Intelligence Engine on screen; Live Audio Commentary as a separate Lead + Analyst broadcast rewrite (never TTS of prose)."
+      description="Generate activates Live Commentary on the match page. Audio is optional and separate."
       actions={
-        <button
-          type="button"
-          className="cms-btn cms-btn--primary"
-          disabled={generating}
-          onClick={() => void generate()}
-        >
-          {generating ? "Generating…" : "Generate from match data"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="cms-btn cms-btn--primary"
+            disabled={busy}
+            onClick={() => setConfirmOpen(true)}
+          >
+            {generating ? "Generating…" : "Generate from match data"}
+          </button>
+          <button
+            type="button"
+            className="cms-btn cms-btn--secondary"
+            disabled={busy || lines.length === 0}
+            onClick={() => void activateAudioFromCommentary()}
+          >
+            {activatingAudio
+              ? "Activating Audio…"
+              : audioScripts.length > 0
+                ? "Rebuild Audio"
+                : "Activate Audio"}
+          </button>
+        </div>
       }
     >
       <div className="cms-card text-sm text-zinc-300 space-y-4">
+        {confirmOpen ? (
+          <div
+            className="rounded-md border border-[var(--pr-gold)]/50 bg-zinc-950 px-4 py-4 space-y-3"
+            role="dialog"
+            aria-labelledby="generate-confirm-title"
+          >
+            <p id="generate-confirm-title" className="m-0 text-zinc-100 font-medium">
+              Activate Live Commentary from match data?
+            </p>
+            <p className="m-0 text-zinc-400 text-sm leading-relaxed">
+              This publishes the written timeline on the public match page. Do you also want to power
+              Live Audio now? You can Activate Audio later without rebuilding commentary.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                className="cms-btn cms-btn--primary"
+                disabled={busy}
+                onClick={() => void generate(true)}
+              >
+                Activate Audio
+              </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary"
+                disabled={busy}
+                onClick={() => void generate(false)}
+              >
+                Commentary only
+              </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary"
+                disabled={busy}
+                onClick={() => setConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <p className="m-0 text-zinc-400">
-          Pre-match: welcome, weather, table race, Betting Intelligence, head to heads, lineups. In-play:
-          live events plus multi-layer journalist insights. Audio drafts rewrite each line for dual
-          SA-English Currie Cup commentators. See{" "}
+          Generate from match data publishes Live Commentary. Activate Audio is a separate step that
+          builds Lead/Analyst scripts from the written timeline only. See{" "}
           <Link href="/admin/knowledge/commentary-rules" className="text-[var(--pr-gold)] hover:underline">
             Commentary Rules
           </Link>{" "}
@@ -205,13 +300,27 @@ export default function MatchCommentaryBridgePage({
                 </p>
                 <p className="mt-1 mb-0 text-zinc-200">
                   {audioScripts.length > 0
-                    ? `${audioScripts.length} audio scripts ready`
+                    ? `${audioScripts.length} audio scripts ready — Audio tab active on match page`
                     : lines.length > 0
-                      ? "No audio scripts yet — regenerate to produce Lead/Analyst drafts"
-                      : "Generate commentary to create Lead/Analyst audio scripts"}
+                      ? "Audio off — use Activate Audio to power Live Audio from these lines"
+                      : "Generate Live Commentary first, then Activate Audio when you want it"}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                {lines.length > 0 ? (
+                  <button
+                    type="button"
+                    className="cms-btn cms-btn--primary"
+                    disabled={busy}
+                    onClick={() => void activateAudioFromCommentary()}
+                  >
+                    {activatingAudio
+                      ? "Activating Audio…"
+                      : audioScripts.length > 0
+                        ? "Rebuild Audio"
+                        : "Activate Audio"}
+                  </button>
+                ) : null}
                 {audioScripts.length > 0 ? (
                   <button
                     type="button"

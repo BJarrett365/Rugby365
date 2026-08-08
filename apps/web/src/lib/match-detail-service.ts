@@ -25,6 +25,7 @@ import { getDb } from "./db";
 import {
   mapCmsEventsToPublicKeyEvents,
   mapSdmsEventsToPublicKeyEvents,
+  selectPublicKeyEvents,
   type PublicKeyEvent,
 } from "./match-key-events";
 import { buildMatchEntityContext, type MatchEntityContext } from "./entity-lookup-service";
@@ -45,6 +46,7 @@ import {
 } from "./fixture-broadcasters-service";
 import {
   listFixtureSquadPlayerIds,
+  ensureSdmsProvidersRegistered,
   ensureSdmsTeamsRegistered,
 } from "./match-entity-sync-service";
 import { syncFixtureLiveStateFromSdms } from "./fixture-live-score-sync";
@@ -458,7 +460,13 @@ export async function getMatchDetailForPage(
           new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
         ])
       : Promise.resolve();
-  const fixturePromise = cmsFixtureRow ? getFixtureById(cmsFixtureRow.id) : Promise.resolve(null);
+  // Reload fixture after coach resolve so newly assigned home/away coaches appear
+  // on the same request (parallel getFixtureById used to race ahead of the write).
+  const fixturePromise = (async () => {
+    if (!cmsFixtureRow) return null;
+    await coachesPromise;
+    return getFixtureById(cmsFixtureRow.id);
+  })();
   const staffPromise = cmsFixtureRow
     ? listStaffMatchRatingsForFixture(cmsFixtureRow.id)
     : Promise.resolve(null);
@@ -572,6 +580,21 @@ export async function getMatchDetailForPage(
       away_team: detail.away_team_slug,
       match_date: detail.date,
     });
+
+  // Player Stats / Line Up tabs need CMS profiles so names can link to /players/[slug].
+  if (needPlayerStats || tab === "lineups") {
+    try {
+      await Promise.race([
+        ensureSdmsProvidersRegistered(detail, lineups, needPlayerStats ? playerStats : null),
+        new Promise<void>((resolve) => setTimeout(resolve, 4_000)),
+      ]);
+    } catch (error) {
+      console.warn(
+        `[match-detail] ensureSdmsProvidersRegistered failed for ${matchId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
 
   const entities = await buildMatchEntityContext({
     detail,
@@ -740,15 +763,17 @@ export async function getMatchDetailForPage(
     : null;
 
   const bonusPoints: MatchBonusPoints | null = bonusResult;
-  let keyEvents: PublicKeyEvent[] = mapSdmsEventsToPublicKeyEvents(detail.key_events ?? []);
-  if (cmsEventRows.length > 0) {
-    keyEvents = mapCmsEventsToPublicKeyEvents(
-      cmsEventRows.map((r) => ({
-        ...r,
-        payload: (r.payload ?? {}) as Record<string, unknown>,
-      })),
-    );
-  }
+  const sdmsKeyEvents = mapSdmsEventsToPublicKeyEvents(detail.key_events ?? []);
+  const cmsKeyEvents =
+    cmsEventRows.length > 0
+      ? mapCmsEventsToPublicKeyEvents(
+          cmsEventRows.map((r) => ({
+            ...r,
+            payload: (r.payload ?? {}) as Record<string, unknown>,
+          })),
+        )
+      : [];
+  const keyEvents = selectPublicKeyEvents(sdmsKeyEvents, cmsKeyEvents);
   const broadcasters: MatchDetailPageData["broadcasters"] = broadcasterRows.map((row) => ({
     id: row.id,
     label: formatBroadcasterLabel(row),

@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type { SdmsKeyEvent } from "@rugby365/import-sdk";
 import type { HalfTimeScore } from "@/lib/match-header-utils";
+import { isHomeSideKeyEvent } from "@/lib/match-key-events";
 
 type MarkerKind = "try" | "conversion" | "penalty" | "drop" | "yellow" | "red";
 
@@ -61,12 +62,14 @@ function spreadMarkers(markers: PlacedMarker[], minGapPct: number): PlacedMarker
 export function MatchEventTimelineStrip({
   events,
   homeTeamId,
+  homeTeamIds,
   homeTeamName,
   awayTeamName,
   halfTimeScore,
 }: {
   events: SdmsKeyEvent[];
   homeTeamId?: string;
+  homeTeamIds?: Array<string | null | undefined>;
   homeTeamName?: string;
   awayTeamName?: string;
   halfTimeScore?: HalfTimeScore | null;
@@ -74,6 +77,7 @@ export function MatchEventTimelineStrip({
   const tipId = useId();
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const maxMinute = Math.max(80, ...events.map((e) => e.minute || 0));
+  const homeIds = homeTeamIds?.length ? homeTeamIds : [homeTeamId];
 
   const raw: PlacedMarker[] = [];
   events.forEach((event, i) => {
@@ -81,7 +85,7 @@ export function MatchEventTimelineStrip({
     if (!marker) return;
     const minute = event.minute || 0;
     const left = Math.min(98, Math.max(2, (minute / maxMinute) * 100));
-    const isHome = homeTeamId ? event.team_id === homeTeamId : true;
+    const isHome = isHomeSideKeyEvent(event.team_id, homeIds);
     raw.push({
       key: `${event.minute}-${marker.letter}-${event.player_id ?? event.player_name ?? i}`,
       letter: marker.letter,

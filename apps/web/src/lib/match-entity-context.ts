@@ -23,6 +23,19 @@ export function normalizeProviderPlayerName(name: string): string {
     .trim();
 }
 
+/** "Sam Clarke" and "Clarke Sam" both key to the same lookup form. */
+export function playerNameLookupKeys(name: string): string[] {
+  const normalized = normalizeProviderPlayerName(name);
+  if (!normalized) return [];
+  const lower = normalized.toLowerCase();
+  const parts = lower.split(" ").filter(Boolean);
+  const keys = new Set<string>([lower, normalized.toLowerCase()]);
+  if (parts.length >= 2) {
+    keys.add([...parts].reverse().join(" "));
+  }
+  return [...keys];
+}
+
 /**
  * SDMS scoring detail packs multi-kick minutes into player_name
  * ("Moyo Simphiwe Vusi (5', 14', 41')") while `minute` is only the first.
@@ -54,8 +67,11 @@ export function lookupPlayerLink(
   }
   const raw = input.name?.trim();
   if (!raw) return null;
-  const normalized = normalizeProviderPlayerName(raw).toLowerCase();
-  return context.playersByName[normalized] ?? context.playersByName[raw.toLowerCase()] ?? null;
+  for (const key of playerNameLookupKeys(raw)) {
+    const hit = context.playersByName[key];
+    if (hit) return hit;
+  }
+  return null;
 }
 
 export function lookupTeamLink(

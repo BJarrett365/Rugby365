@@ -143,6 +143,14 @@ export const AUDIO_COMPETITION_SCOPES = [
   { scope: "npc", label: "NPC (New Zealand)", accentHint: "New Zealand English" },
   { scope: "top14", label: "Top 14 (France)", accentHint: "French-accented English" },
   { scope: "urc", label: "United Rugby Championship", accentHint: "Neutral / mixed" },
+  {
+    scope: "nations_championship",
+    label: "Nations Championship",
+    accentHint: "International English",
+  },
+  { scope: "six_nations", label: "Six Nations", accentHint: "British / Irish English" },
+  { scope: "super_rugby", label: "Super Rugby", accentHint: "New Zealand / Australian English" },
+  { scope: "champions_cup", label: "Investec Champions Cup", accentHint: "Neutral / mixed" },
   { scope: "global", label: "Default broadcast (Global)", accentHint: "Neutral" },
 ] as const;
 
@@ -154,15 +162,20 @@ export function preferredAccentFiltersForScope(scope?: string | null): string[] 
     case "currie_cup":
       return ["South African", "British"];
     case "premiership":
-      return ["British"];
+    case "six_nations":
+      return ["British", "Irish"];
     case "mlr":
       return ["American"];
     case "npc":
+    case "super_rugby":
       return ["New Zealand", "Australian"];
     case "top14":
       return ["British", "French"];
     case "urc":
+    case "champions_cup":
       return ["British", "Irish", "South African"];
+    case "nations_championship":
+      return ["British", "American", "Australian", "New Zealand", "South African"];
     default:
       return [];
   }
@@ -184,6 +197,8 @@ export function accentDisplayLabel(accent?: string | null): string {
       return "New Zealand English";
     case "french_english":
       return "French-accented English";
+    case "international_english":
+      return "International English";
     case "neutral":
       return "Neutral";
     default:
@@ -227,6 +242,14 @@ export function scopeTopicLabel(scope?: string | null): string {
       return "Top 14";
     case "urc":
       return "URC";
+    case "nations_championship":
+      return "Nations Championship";
+    case "six_nations":
+      return "Six Nations";
+    case "super_rugby":
+      return "Super Rugby";
+    case "champions_cup":
+      return "Champions Cup";
     case "global":
       return "Global";
     default:
@@ -274,11 +297,25 @@ export function competitionScopeFromSlugOrName(
   ) {
     return "urc";
   }
+  // World Rugby Nations Championship (12-team) — before Six Nations.
+  if (
+    (hay.includes("nations championship") || hay.includes("nations-championship")) &&
+    !hay.includes("six")
+  ) {
+    return "nations_championship";
+  }
   if (hay.includes("six nations") || hay.includes("six-nations")) {
-    return "global";
+    return "six_nations";
   }
   if (hay.includes("super rugby") || hay.includes("super-rugby")) {
-    return "global";
+    return "super_rugby";
+  }
+  if (
+    hay.includes("champions cup") ||
+    hay.includes("champions-cup") ||
+    hay.includes("investec champions")
+  ) {
+    return "champions_cup";
   }
 
   return "global";

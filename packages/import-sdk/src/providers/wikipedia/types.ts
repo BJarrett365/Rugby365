@@ -36,9 +36,13 @@ export const WikipediaCoachArchiveSchema = z.object({
   birthDate: z.string().optional(),
   birthPlace: z.string().optional(),
   nationality: z.string().optional(),
+  heightCm: z.number().optional(),
   imageUrl: z.string().optional(),
   bioSummary: z.string().optional(),
   coachingCareer: z.array(WikipediaCoachingStintSchema).optional(),
+  playingCareer: z.array(WikipediaCareerStintSchema).optional(),
+  /** Free-text honour lines from wiki sections — never auto-published. */
+  honourLines: z.array(z.string()).optional(),
   infoboxTemplate: z.string().optional(),
 });
 

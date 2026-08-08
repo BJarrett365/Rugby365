@@ -10,11 +10,16 @@ import { getDb } from "./db";
 import {
   type CmsEntityLink,
   type MatchEntityContext,
-  normalizeProviderPlayerName,
+  playerNameLookupKeys,
 } from "./match-entity-context";
 
 export type { CmsEntityLink, MatchEntityContext } from "./match-entity-context";
-export { lookupPlayerLink, lookupTeamLink, normalizeProviderPlayerName } from "./match-entity-context";
+export {
+  lookupPlayerLink,
+  lookupTeamLink,
+  normalizeProviderPlayerName,
+  playerNameLookupKeys,
+} from "./match-entity-context";
 
 function linkFromPlayer(row: {
   id: string;
@@ -161,9 +166,9 @@ export async function buildMatchEntityContext(input: {
   const playersByExternalId = Object.fromEntries(playersByExt);
   const playersByName: Record<string, CmsEntityLink> = {};
   for (const link of playersByExt.values()) {
-    playersByName[link.name.toLowerCase()] = link;
-    const normalized = normalizeProviderPlayerName(link.name).toLowerCase();
-    if (normalized) playersByName[normalized] = link;
+    for (const key of playerNameLookupKeys(link.name)) {
+      playersByName[key] = link;
+    }
   }
 
   return {

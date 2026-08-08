@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { coaches, teamCoachingStaff, teams } from "@rugby365/db";
+import { coachHonours, coachPlayingStints, coaches, teams } from "@rugby365/db";
 import {
   fetchWikipediaCategoryMembers,
   fetchWikipediaCategorySubcategories,
@@ -13,8 +13,14 @@ import {
   createCoach,
   getCoachById,
   resolveCoach,
+  updateCoach,
   upsertCoachingStaffAssignment,
 } from "./coach-admin-service";
+import {
+  parseWikipediaHonourLines,
+  compareProposedHonours,
+  type ProposedCoachHonour,
+} from "./coach-wikipedia-honours-parse";
 import {
   findCoachCategoryByUrl,
   IMPORTABLE_INTERNATIONAL_COACH_CATEGORIES,
@@ -26,6 +32,7 @@ import {
   buildCoachTeamResolver,
   loadCmsTeamsForCoachAssignment,
 } from "./coach-team-resolve-service";
+import { namesLikelyMatch } from "./player-profile-enrichment-service";
 
 type CoachTeamResolver = ReturnType<typeof buildCoachTeamResolver>;
 import { getWikimediaEnterpriseAccessToken } from "./wikimedia-enterprise-client";
@@ -208,7 +215,68 @@ async function upsertCoachFromArchive(
     notes: notes || null,
   });
 
+  await updateCoach(coach.id, {
+    fullName: archive.fullName ?? null,
+    placeOfBirth: archive.birthPlace ?? null,
+    heightCm: archive.heightCm ?? null,
+  });
+
+  // Playing career stints — structured, unverified until CMS review
+  if (archive.playingCareer?.length) {
+    const db = getDb();
+    const existing = await db
+      .select()
+      .from(coachPlayingStints)
+      .where(eq(coachPlayingStints.coachId, coach.id));
+    const keys = new Set(existing.map((e) => `${e.teamType}|${e.yearsLabel}|${e.teamName}`));
+    let sort = existing.length;
+    for (const stint of archive.playingCareer) {
+      const teamType =
+        stint.careerType === "international"
+          ? "international"
+          : stint.careerType === "cup"
+            ? "franchise"
+            : "club";
+      const key = `${teamType}|${stint.yearsLabel}|${stint.teamName}`;
+      if (keys.has(key)) continue;
+      await db.insert(coachPlayingStints).values({
+        coachId: coach.id,
+        teamType,
+        yearsLabel: stint.yearsLabel,
+        startYear: stint.startYear ?? null,
+        endYear: stint.endYear ?? null,
+        teamName: stint.teamName,
+        apps: stint.apps ?? null,
+        points: stint.points ?? null,
+        sortOrder: stint.sortOrder ?? sort++,
+        sourceProvider: "wikipedia",
+        sourceUrl: archive.wikipediaUrl,
+        showOnOverview: teamType === "international",
+      });
+      keys.add(key);
+    }
+  }
+
   return { coach, created: !existing };
+}
+
+export async function previewCoachWikipediaHonours(coachId: string): Promise<{
+  proposed: ProposedCoachHonour[];
+  review: ReturnType<typeof compareProposedHonours>;
+}> {
+  const coach = await getCoachById(coachId);
+  if (!coach?.wikipediaUrl) throw new Error("Coach has no Wikipedia URL");
+  const archive = await parseCoachArchive(coach.wikipediaUrl);
+  const proposed = parseWikipediaHonourLines(archive.honourLines ?? [], "coach");
+  const existing = await getDb()
+    .select({
+      competitionName: coachHonours.competitionName,
+      year: coachHonours.year,
+      achievementType: coachHonours.achievementType,
+    })
+    .from(coachHonours)
+    .where(eq(coachHonours.coachId, coachId));
+  return { proposed, review: compareProposedHonours(proposed, existing) };
 }
 
 async function ensureCategoryNationalTeamAssignment(
@@ -420,12 +488,159 @@ export async function importInternationalCoachCategories(input?: {
   };
 }
 
-export async function enrichCoachFromWikipedia(coachId: string): Promise<CoachWikipediaImportResult> {
+export async function enrichCoachFromWikipedia(
+  coachId: string,
+  options?: { sourceUrl?: string },
+): Promise<
+  CoachWikipediaImportResult & {
+    enriched: boolean;
+    fieldsUpdated: string[];
+    reason?: string;
+  }
+> {
   const coach = await getCoachById(coachId);
   if (!coach) throw new Error("Coach not found");
-  if (!coach.wikipediaUrl) throw new Error("Coach has no Wikipedia URL");
 
-  return importCoachFromWikipedia({ articleTitleOrUrl: coach.wikipediaUrl });
+  const articleUrl = options?.sourceUrl?.trim() || coach.wikipediaUrl?.trim() || null;
+  if (!articleUrl) {
+    return {
+      coachId,
+      slug: coach.slug,
+      created: false,
+      wikipediaUrl: "",
+      assignmentsCreated: 0,
+      assignmentsUpdated: 0,
+      enriched: false,
+      fieldsUpdated: [],
+      reason: "missing_wikipedia_url",
+    };
+  }
+
+  // Persist URL even if parse fails later (mirrors player enrich behaviour).
+  if (options?.sourceUrl?.trim() && options.sourceUrl.trim() !== coach.wikipediaUrl) {
+    await updateCoach(coachId, { wikipediaUrl: options.sourceUrl.trim() });
+  }
+
+  const archive = await parseCoachArchive(articleUrl);
+  if (!namesLikelyMatch(coach.name, archive.name)) {
+    await updateCoach(coachId, { wikipediaUrl: archive.wikipediaUrl });
+    return {
+      coachId,
+      slug: coach.slug,
+      created: false,
+      wikipediaUrl: archive.wikipediaUrl,
+      assignmentsCreated: 0,
+      assignmentsUpdated: 0,
+      enriched: false,
+      fieldsUpdated: ["wikipediaUrl"],
+      reason: "name_mismatch",
+    };
+  }
+
+  const fieldsUpdated: string[] = [];
+  const pick = (existing: string | null | undefined, incoming: string | null | undefined) => {
+    if (existing?.trim()) return undefined;
+    return incoming?.trim() || undefined;
+  };
+
+  const patch: Parameters<typeof updateCoach>[1] = {
+    wikipediaUrl: archive.wikipediaUrl,
+  };
+  fieldsUpdated.push("wikipediaUrl");
+
+  if (archive.wikidataId && !coach.wikidataId) {
+    patch.wikidataId = archive.wikidataId;
+    fieldsUpdated.push("wikidataId");
+  }
+  const fullName = pick(coach.fullName, archive.fullName);
+  if (fullName) {
+    patch.fullName = fullName;
+    fieldsUpdated.push("fullName");
+  }
+  if (!coach.birthDate && archive.birthDate) {
+    patch.birthDate = archive.birthDate;
+    fieldsUpdated.push("birthDate");
+  }
+  const placeOfBirth = pick(coach.placeOfBirth, archive.birthPlace);
+  if (placeOfBirth) {
+    patch.placeOfBirth = placeOfBirth;
+    fieldsUpdated.push("placeOfBirth");
+  }
+  const nationality = pick(coach.nationality, archive.nationality);
+  if (nationality) {
+    patch.nationality = nationality;
+    fieldsUpdated.push("nationality");
+  }
+  if (coach.heightCm == null && archive.heightCm != null && archive.heightCm > 0) {
+    patch.heightCm = archive.heightCm;
+    fieldsUpdated.push("heightCm");
+  }
+  const bio = pick(coach.bioSummary, archive.bioSummary);
+  if (bio) {
+    patch.bioSummary = bio;
+    fieldsUpdated.push("bioSummary");
+  }
+  if (!coach.imageUrl?.trim() && archive.imageUrl) {
+    patch.imageUrl = archive.imageUrl;
+    fieldsUpdated.push("imageUrl");
+  }
+
+  await updateCoach(coachId, patch);
+
+  // Playing career + coaching assignments (additive)
+  if (archive.playingCareer?.length) {
+    const db = getDb();
+    const existingStints = await db
+      .select()
+      .from(coachPlayingStints)
+      .where(eq(coachPlayingStints.coachId, coachId));
+    const keys = new Set(
+      existingStints.map((e) => `${e.teamType}|${e.yearsLabel}|${e.teamName}`),
+    );
+    let sort = existingStints.length;
+    for (const stint of archive.playingCareer) {
+      const teamType =
+        stint.careerType === "international"
+          ? "international"
+          : stint.careerType === "cup"
+            ? "franchise"
+            : "club";
+      const key = `${teamType}|${stint.yearsLabel}|${stint.teamName}`;
+      if (keys.has(key)) continue;
+      await db.insert(coachPlayingStints).values({
+        coachId,
+        teamType,
+        yearsLabel: stint.yearsLabel,
+        startYear: stint.startYear ?? null,
+        endYear: stint.endYear ?? null,
+        teamName: stint.teamName,
+        apps: stint.apps ?? null,
+        points: stint.points ?? null,
+        sortOrder: stint.sortOrder ?? sort++,
+        sourceProvider: "wikipedia",
+        sourceUrl: archive.wikipediaUrl,
+        showOnOverview: teamType === "international",
+      });
+      keys.add(key);
+      fieldsUpdated.push("playingStint");
+    }
+  }
+
+  const { assignmentsCreated, assignmentsUpdated } = await upsertAssignmentsFromArchive(
+    coachId,
+    archive,
+  );
+
+  return {
+    coachId,
+    slug: coach.slug,
+    created: false,
+    wikipediaUrl: archive.wikipediaUrl,
+    assignmentsCreated,
+    assignmentsUpdated,
+    enriched: true,
+    fieldsUpdated,
+  };
 }
 
 export function filterCoachingCareerForTeam(

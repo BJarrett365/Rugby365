@@ -630,6 +630,16 @@ export function buildAudioScriptsForCommentaryLines(
   return drafts;
 }
 
+/** Remove all audio scripts for a fixture (keeps public Audio tab hidden). */
+export async function clearAudioCommentaryScriptsForFixture(fixtureId: string): Promise<number> {
+  const db = getDb();
+  const deleted = await db
+    .delete(audioCommentaryScripts)
+    .where(eq(audioCommentaryScripts.fixtureId, fixtureId))
+    .returning({ id: audioCommentaryScripts.id });
+  return deleted.length;
+}
+
 export async function listAudioCommentaryScripts(
   fixtureId: string,
 ): Promise<StoredAudioScript[]> {

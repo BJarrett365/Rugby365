@@ -166,7 +166,13 @@ async function seed() {
   }).onConflictDoNothing();
 
   await db.insert(teams).values([
-    { id: IDS.teamSa, slug: "south-africa", name: "South Africa", shortName: "SA" },
+    {
+      id: IDS.teamSa,
+      slug: "south-africa",
+      name: "South Africa",
+      shortName: "SA",
+      imageUrl: "/crest-references/south-africa-official.png",
+    },
     { id: IDS.teamBarb, slug: "barbarians", name: "Barbarians", shortName: "BAR" },
   ]).onConflictDoNothing();
 

@@ -42,7 +42,7 @@ export default async function LegendsHubPage({ searchParams }: PageProps) {
       </nav>
 
       <header className="pr-legends-header">
-        <p className="pr-mc-pr-badge">Planet Rugby Legends</p>
+        <p className="pr-legends-header__eyebrow">Planet Rugby Legends</p>
         <h1>Legends</h1>
         <p className="pr-legends-header__lede">
           The players who defined each era of rugby — linked to full Rugby365 profiles.{" "}
@@ -110,8 +110,14 @@ export default async function LegendsHubPage({ searchParams }: PageProps) {
                 <h3>{col.label}</h3>
                 <p>{col.description}</p>
                 <span className="pr-legends-collection-card__meta">
-                  {col.count} {col.entityKind === "coach" ? "coach" : "player"}
-                  {col.count === 1 ? "" : "s"}
+                  {col.count}{" "}
+                  {col.entityKind === "coach"
+                    ? col.count === 1
+                      ? "coach"
+                      : "coaches"
+                    : col.count === 1
+                      ? "player"
+                      : "players"}
                 </span>
               </Link>
             </li>

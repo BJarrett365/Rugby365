@@ -29,6 +29,7 @@ describe("PUBLIC_MATCH_TAB_ORDER", () => {
       "details",
       "animation",
       "audio",
+      "data-commentary",
       "watchalong",
       "highlights",
       "stats",
@@ -45,6 +46,7 @@ describe("parseMatchDetailTab / shareable URL", () => {
   it("parses animation, audio, and media tabs", () => {
     expect(parseMatchDetailTab("animation")).toBe("animation");
     expect(parseMatchDetailTab("audio")).toBe("audio");
+    expect(parseMatchDetailTab("data-commentary")).toBe("data-commentary");
     expect(parseMatchDetailTab("watchalong")).toBe("watchalong");
     expect(parseMatchDetailTab("highlights")).toBe("highlights");
     expect(parseMatchDetailTab("stats")).toBe("stats");

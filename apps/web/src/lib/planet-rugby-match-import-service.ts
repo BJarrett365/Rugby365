@@ -363,6 +363,21 @@ export async function enrichFixtureFromSdmsMatch(
     }
   }
 
+  try {
+    const { refreshActivatedNarrativeCommentary } = await import(
+      "./match-narrative-live-refresh"
+    );
+    await refreshActivatedNarrativeCommentary(fixtureId, {
+      force: true,
+      syncProvider: false,
+    });
+  } catch (error) {
+    console.warn(
+      `[planet-rugby] narrative refresh failed for ${fixtureId}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
   return {
     fixtureId,
     matchId,

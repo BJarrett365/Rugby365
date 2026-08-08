@@ -353,6 +353,23 @@ describe("match narrative commentary", () => {
     expect(buildKickOffLine(baseCtx).body).toContain("1' — And we're underway at Boland Stadium!");
   });
 
+  it("keeps Generate pre-match only when the fixture is still scheduled with no events", () => {
+    const scheduled: NarrativeMatchContext = {
+      ...baseCtx,
+      status: "scheduled",
+      events: [],
+      finalHomeScore: undefined,
+      finalAwayScore: undefined,
+      manOfTheMatch: null,
+      teamStats: undefined,
+      playerStatHighlights: [],
+    };
+    const lines = buildMatchNarrativeCommentary(scheduled);
+    expect(lines.some((l) => l.segment === "kick_off")).toBe(false);
+    expect(lines.some((l) => /underway|Half-time|10' —|25' —|60' —/i.test(l.body))).toBe(false);
+    expect(buildIntelligenceInPlayCommentary(scheduled)).toEqual([]);
+  });
+
   it("uses coach-named changes instead of substitutions", () => {
     const lines = buildMatchNarrativeCommentary(baseCtx);
     const change = lines.find((l) => l.segment === "coach_watch");

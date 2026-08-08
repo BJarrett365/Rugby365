@@ -20,13 +20,18 @@ import { MatchBettingIntelligencePanel } from "./MatchBettingIntelligencePanel";
 import { MatchHeaderWinProbability } from "./MatchHeaderWinProbability";
 import { MatchAnimationSection } from "./MatchAnimationSection";
 import { MatchAudioCommentaryPanel } from "./MatchAudioCommentaryPanel";
+import { MatchDataCommentaryPanel } from "./MatchDataCommentaryPanel";
 import { MatchHeaderMediaActions } from "./MatchHeaderMediaActions";
 import { MatchYoutubeEmbedSection } from "./MatchYoutubeEmbedSection";
 import { TeamCrest } from "./TeamCrest";
 import { WeatherIcon } from "./WeatherIcon";
 import { EMPTY_MATCH_ANIMATION_AUDIO } from "@/lib/match-animation-public-audio";
 import { collectHeaderCards, resolveHalfTimeScore } from "@/lib/match-header-utils";
-import { buildMatchAnimationPublicPayload } from "@/lib/match-animation-public-service";
+import {
+  buildMatchAnimationPublicPayload,
+  loadPublicMatchMediaVisibility,
+} from "@/lib/match-animation-public-service";
+import { listMatchNarrativeCommentary } from "@/lib/match-narrative-commentary-service";
 import { buildMatchBettingIntelligence } from "@/lib/match-betting-intelligence-service";
 import type { MatchBettingIntelligence } from "@/lib/match-betting-intelligence-types";
 import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
@@ -131,7 +136,7 @@ function MatchDetailEditPanel({
   );
 }
 
-function MatchDetailPanel({
+async function MatchDetailPanel({
   tab,
   data,
   animationPayload,
@@ -166,6 +171,39 @@ function MatchDetailPanel({
         homeName={detail.home_team_name}
         awayName={detail.away_team_name}
         commentaryHref={cmsFixture?.slug ? `/matches/${cmsFixture.slug}/commentary` : null}
+      />
+    );
+  }
+
+  if (tab === "data-commentary") {
+    if (!cmsFixture?.id) {
+      return (
+        <p className="match-detail-empty">
+          Commentary needs a CMS match record. Import this fixture, then refresh.
+        </p>
+      );
+    }
+    const lines = await listMatchNarrativeCommentary(cmsFixture.id);
+    if (lines.length === 0) {
+      return (
+        <p className="match-detail-empty">
+          Written commentary has not been published for this match yet.
+        </p>
+      );
+    }
+    return (
+      <MatchDataCommentaryPanel
+        fixtureId={cmsFixture.id}
+        lines={lines.map((line) => ({
+          id: line.id,
+          minute: line.minute,
+          second: line.second,
+          body: line.body,
+          outputType: line.outputType,
+          source: line.source,
+        }))}
+        homeName={detail.home_team_name}
+        awayName={detail.away_team_name}
       />
     );
   }
@@ -304,6 +342,11 @@ function MatchDetailPanel({
       <KeyEventsPanel
         events={data.keyEvents}
         homeTeamId={detail.home_team_id}
+        homeTeamIds={[
+          detail.home_team_id,
+          entities.homeTeam?.id,
+          entities.homeTeam?.externalProviderId,
+        ]}
         entities={entities}
       />
       {(data.rugby365PotmName || data.officialPotmName) && (
@@ -375,10 +418,24 @@ export async function MatchDetailView({
 
   const hasHighlights = Boolean(youtubeEmbedSrc(cmsFixture?.highlightsYoutubeUrl));
   const hasWatchalong = Boolean(youtubeEmbedSrc(cmsFixture?.watchalongYoutubeUrl));
-  // YouTube tabs are CMS-gated — ignore deep links when that field is empty.
+
+  const mediaVisibility = await loadPublicMatchMediaVisibility({
+    fixtureId: cmsFixture?.id ?? null,
+    fixtureStatus: detail.status,
+    period: null,
+    scheduledKickoffAt: kickoffAt,
+    watchalongYoutubeUrl: cmsFixture?.watchalongYoutubeUrl,
+    highlightsYoutubeUrl: cmsFixture?.highlightsYoutubeUrl,
+    publishedEventCount: data.keyEvents?.length ?? 0,
+  });
+
+  // Media tabs are CMS-gated — ignore deep links when that surface is inactive.
   const resolvedTab =
-    (activeTab === "highlights" && !hasHighlights) ||
-    (activeTab === "watchalong" && !hasWatchalong)
+    (activeTab === "highlights" && !mediaVisibility.highlights) ||
+    (activeTab === "watchalong" && !mediaVisibility.watchalong) ||
+    (activeTab === "audio" && !mediaVisibility.audio) ||
+    (activeTab === "data-commentary" && !mediaVisibility.commentary) ||
+    (activeTab === "animation" && !mediaVisibility.animation)
       ? "details"
       : activeTab;
 
@@ -582,6 +639,11 @@ export async function MatchDetailView({
             <MatchEventTimelineStrip
               events={keyEvents}
               homeTeamId={detail.home_team_id}
+              homeTeamIds={[
+                detail.home_team_id,
+                entities.homeTeam?.id,
+                entities.homeTeam?.externalProviderId,
+              ]}
               homeTeamName={detail.home_team_name}
               awayTeamName={detail.away_team_name}
               halfTimeScore={halfTime}
@@ -591,6 +653,11 @@ export async function MatchDetailView({
               matchStats={matchStats}
               events={keyEvents}
               homeTeamId={detail.home_team_id}
+              homeTeamIds={[
+                detail.home_team_id,
+                entities.homeTeam?.id,
+                entities.homeTeam?.externalProviderId,
+              ]}
               homeName={detail.home_team_name}
               awayName={detail.away_team_name}
               homeImageUrl={homeImageUrl}
@@ -611,8 +678,8 @@ export async function MatchDetailView({
                 animationPayload?.availability.showReplayControls ||
                 animationPayload?.availability.showFullTimeResult
               }
-              hasWatchalong={hasWatchalong}
-              hasHighlights={hasHighlights}
+              hasWatchalong={mediaVisibility.watchalong}
+              hasHighlights={mediaVisibility.highlights}
             />
 
             {(homeCoach || awayCoach || refName) ? (
@@ -681,8 +748,7 @@ export async function MatchDetailView({
 
           <MatchDetailTabs
             activeTab={resolvedTab}
-            hasWatchalong={hasWatchalong}
-            hasHighlights={hasHighlights}
+            mediaVisibility={mediaVisibility}
           />
 
           <MatchDetailPanel

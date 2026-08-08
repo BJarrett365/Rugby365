@@ -193,8 +193,27 @@ export async function listPlayerCollectionSlugs(playerId: string): Promise<strin
 }
 
 export async function listPublicCollectionMembers(slug: string) {
+  const catalog = LEGEND_COLLECTIONS.find((c) => c.slug === slug);
   const collection = await getLegendCollectionBySlug(slug);
-  if (!collection || !collection.isPublic) return null;
+
+  // Catalog collections should render even before Admin seeds DB rows.
+  if (!collection || !collection.isPublic) {
+    if (!catalog) return null;
+    return {
+      collection: {
+        id: "",
+        slug: catalog.slug,
+        label: catalog.label,
+        description: catalog.description,
+        entityKind: catalog.entityKind,
+        sortOrder: 0,
+        isPublic: true,
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
+      },
+      members: [],
+    };
+  }
 
   const db = getDb();
 

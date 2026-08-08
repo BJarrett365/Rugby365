@@ -46,5 +46,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const suggestion = await processEventForCommentary(event.id);
 
+  try {
+    const { refreshActivatedNarrativeCommentary } = await import(
+      "@/lib/match-narrative-live-refresh"
+    );
+    await refreshActivatedNarrativeCommentary(fixtureId, {
+      force: true,
+      syncProvider: false,
+    });
+  } catch (error) {
+    console.warn(
+      `[events] narrative refresh failed for ${fixtureId}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
+
   return NextResponse.json({ event, suggestion });
 }

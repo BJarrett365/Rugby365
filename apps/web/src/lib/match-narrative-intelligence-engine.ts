@@ -12,6 +12,10 @@ import type {
   NarrativeMatchContext,
 } from "./match-narrative-commentary";
 import {
+  isPreMatchNarrativeStatus,
+  narrativeProgressMinute,
+} from "./match-narrative-commentary";
+import {
   BREAKDOWN_GOOD,
   DEFENCE_STAND,
   INSIGHT_OPENINGS,
@@ -97,14 +101,34 @@ function applyScore(
   event: NarrativeEventInput,
   delta: number,
 ) {
+  const before = { ...running };
   if (typeof event.homeScore === "number" && typeof event.awayScore === "number") {
+    // Ignore absolute scorelines that already exceed the known fixture score —
+    // dual imports sometimes stamp a double-counted board.
+    if (
+      ctx.finalHomeScore != null &&
+      ctx.finalAwayScore != null &&
+      (event.homeScore > ctx.finalHomeScore || event.awayScore > ctx.finalAwayScore)
+    ) {
+      return;
+    }
     running.home = event.homeScore;
     running.away = event.awayScore;
-    return;
+  } else {
+    const team = (event.teamName ?? "").trim();
+    if (team === ctx.homeName) running.home += delta;
+    else if (team === ctx.awayName) running.away += delta;
   }
-  const team = (event.teamName ?? "").trim();
-  if (team === ctx.homeName) running.home += delta;
-  else if (team === ctx.awayName) running.away += delta;
+
+  // Safety net: never let narrative outrun the official scoreline.
+  if (
+    ctx.finalHomeScore != null &&
+    ctx.finalAwayScore != null &&
+    (running.home > ctx.finalHomeScore || running.away > ctx.finalAwayScore)
+  ) {
+    running.home = before.home;
+    running.away = before.away;
+  }
 }
 
 function coachFor(ctx: NarrativeMatchContext, teamName: string): string | null {
@@ -161,7 +185,7 @@ function buildLiveEventClause(
 
   if (type.includes("penalty_try")) {
     applyScore(ctx, running, event, 7);
-    scored = true;
+    scored = running.home !== prev.home || running.away !== prev.away;
     priority = 5;
     body =
       style === "excited"
@@ -169,7 +193,7 @@ function buildLiveEventClause(
         : `${minute}' — Penalty try. The referee marches under the posts for ${team || "the attacking side"}. ${scoreText(ctx, running.home, running.away)}.`;
   } else if (type === "try" || (type.includes("try") && !type.includes("conversion"))) {
     applyScore(ctx, running, event, 5);
-    scored = true;
+    scored = running.home !== prev.home || running.away !== prev.away;
     priority = 5;
     if (style === "storytelling") {
       body = player
@@ -198,7 +222,7 @@ function buildLiveEventClause(
       : `${minute}' — Conversion good. ${scoreText(ctx, running.home, running.away)}.`;
   } else if (type.includes("penalty_goal")) {
     applyScore(ctx, running, event, 3);
-    scored = true;
+    scored = running.home !== prev.home || running.away !== prev.away;
     priority = 5;
     body = player
       ? `${minute}' — ${player} slots the penalty for ${team || "their side"}. ${scoreText(ctx, running.home, running.away)}.`
@@ -208,7 +232,7 @@ function buildLiveEventClause(
     body = `${minute}' — Penalty to ${team || "the attacking side"} after the opposition are caught on the wrong side of the law.`;
   } else if (type.includes("drop_goal")) {
     applyScore(ctx, running, event, 3);
-    scored = true;
+    scored = running.home !== prev.home || running.away !== prev.away;
     priority = 5;
     body = player
       ? `${minute}' — Drop goal! ${player} for ${team || "their side"}. ${scoreText(ctx, running.home, running.away)}.`
@@ -254,6 +278,15 @@ function buildLiveEventClause(
     story.lastScoreMinute = minute;
     story.homeScore = running.home;
     story.awayScore = running.away;
+  } else if (
+    type.includes("penalty_try") ||
+    ((type === "try" || type.includes("try")) && !type.includes("conversion")) ||
+    (type.includes("conversion") && !type.includes("miss")) ||
+    type.includes("penalty_goal") ||
+    type.includes("drop_goal")
+  ) {
+    // Dual-import twin that did not move the board — drop the duplicate line.
+    return { body: null, priority: 1, scored: false };
   }
 
   return { body, priority, scored };
@@ -823,6 +856,11 @@ function lightBlendAfterScore(
 export function buildIntelligenceInPlayCommentary(
   ctx: NarrativeMatchContext,
 ): NarrativeCommentaryLine[] {
+  const progress = narrativeProgressMinute(ctx);
+  if (isPreMatchNarrativeStatus(ctx.status) && progress <= 0) {
+    return [];
+  }
+
   const lines: NarrativeCommentaryLine[] = [];
   const running = { home: 0, away: 0 };
   const story: StoryState = {
@@ -939,19 +977,19 @@ export function buildIntelligenceInPlayCommentary(
     }
   }
 
-  if (!story.earlyStory) {
+  if (!story.earlyStory && progress >= 8) {
     const score = scoreAsOfMinute(ctx.events, ctx.homeName, ctx.awayName, 10);
     const body = clauseMatchStory(ctx, 10, score, story, "early");
     lines.push(line(10, 5, "match_story", `10' — ${body}`, 4, ["match_story"]));
     story.earlyStory = true;
   }
-  if (!story.midStory) {
+  if (!story.midStory && progress >= 22) {
     const score = scoreAsOfMinute(ctx.events, ctx.homeName, ctx.awayName, 25);
     const body = clauseMatchStory(ctx, 25, score, story, "mid");
     lines.push(line(25, 5, "match_story", `25' — ${body}`, 4, ["match_story"]));
     story.midStory = true;
   }
-  if (!seenHalfTime) {
+  if (!seenHalfTime && progress >= 40) {
     const ht = scoreAsOfMinute(ctx.events, ctx.homeName, ctx.awayName, 40);
     story.halfTimeHome = ht.home;
     story.halfTimeAway = ht.away;
@@ -964,7 +1002,7 @@ export function buildIntelligenceInPlayCommentary(
     ]);
     if (htInsight) lines.push(htInsight);
   }
-  if (!story.hourStory) {
+  if (!story.hourStory && progress >= 55) {
     const hour = scoreAsOfMinute(ctx.events, ctx.homeName, ctx.awayName, 60);
     const body = clauseMatchStory(ctx, 60, hour, story, "hour");
     lines.push(line(60, 5, "match_story", `60' — ${body}`, 4, ["match_story", "whats_next"]));
@@ -972,8 +1010,8 @@ export function buildIntelligenceInPlayCommentary(
 
   const eventMax = ctx.events.reduce((m, e) => Math.max(m, e.minute), 0);
   const shouldClose =
-    seenFullTime || /full_time|finished|result|complete|live/i.test(ctx.status ?? "");
-  const maxMinute = Math.min(80, Math.max(eventMax, shouldClose ? 80 : eventMax));
+    seenFullTime || /full_time|finished|result|complete/i.test(ctx.status ?? "");
+  const maxMinute = Math.min(80, Math.max(eventMax, progress, shouldClose ? 80 : 0));
 
   const busyMinutes = new Set(lines.filter((l) => l.minute >= 1).map((l) => l.minute));
 

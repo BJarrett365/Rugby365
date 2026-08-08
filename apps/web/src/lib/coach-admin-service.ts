@@ -13,6 +13,7 @@ import {
   coachingRoleLabel,
   normalizeCoachingRole,
 } from "./coach-types";
+import { normalizeCoachFieldProvenance } from "./coach-field-provenance";
 import { calculatePlayerAge } from "./player-profile-utils";
 
 function uniqueCoachSlug(base: string, externalProviderId?: string): string {
@@ -321,19 +322,58 @@ export async function createCoach(input: {
   return coach;
 }
 
+function trimOrNull(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function parseOptionalDate(value: string | Date | null | undefined): Date | null {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) throw new Error("Invalid date");
+  return parsed;
+}
+
 export async function updateCoach(
   id: string,
   input: Partial<{
     name: string;
     slug: string;
+    knownAs: string | null;
+    fullName: string | null;
     birthDate: string | null;
+    placeOfBirth: string | null;
+    countryOfBirth: string | null;
     nationality: string | null;
+    secondNationality: string | null;
+    heightCm: number | null;
+    formerPlayingPositions: string | null;
+    playingCareerStatus: string | null;
+    coachingCareerStartYear: number | null;
+    appointedOn: string | null;
+    contractExpiresOn: string | null;
+    preferredSystem: string | null;
+    coachingStyle: string | null;
+    preferredSystemProvenance: string;
+    coachingStyleProvenance: string;
     imageUrl: string | null;
     bioSummary: string | null;
     wikipediaUrl: string | null;
     wikidataId: string | null;
     sourceUrl: string | null;
     notes: string | null;
+    isPublic: boolean;
+    publishStatus: string;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    ogImageUrl: string | null;
+    careerRecordPartial: boolean;
+    careerRecordNotes: string | null;
+    lastVerifiedAt: string | Date | null;
+    /** When true, sets lastVerifiedAt to now. */
+    verify: boolean;
     socialAccounts: CoachSocialAccounts;
   }>,
 ) {
@@ -347,19 +387,77 @@ export async function updateCoach(
     if (slugErr) throw new Error(slugErr);
   }
 
+  const lastVerifiedAt =
+    input.verify === true
+      ? new Date()
+      : input.lastVerifiedAt !== undefined
+        ? parseOptionalDate(input.lastVerifiedAt)
+        : undefined;
+
   const [row] = await db
     .update(coaches)
     .set({
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
       ...(input.slug !== undefined ? { slug } : {}),
+      ...(input.knownAs !== undefined ? { knownAs: trimOrNull(input.knownAs) } : {}),
+      ...(input.fullName !== undefined ? { fullName: trimOrNull(input.fullName) } : {}),
       ...(input.birthDate !== undefined ? { birthDate: input.birthDate } : {}),
-      ...(input.nationality !== undefined ? { nationality: input.nationality?.trim() || null } : {}),
-      ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl?.trim() || null } : {}),
-      ...(input.bioSummary !== undefined ? { bioSummary: input.bioSummary?.trim() || null } : {}),
-      ...(input.wikipediaUrl !== undefined ? { wikipediaUrl: input.wikipediaUrl?.trim() || null } : {}),
-      ...(input.wikidataId !== undefined ? { wikidataId: input.wikidataId?.trim() || null } : {}),
-      ...(input.sourceUrl !== undefined ? { sourceUrl: input.sourceUrl?.trim() || null } : {}),
-      ...(input.notes !== undefined ? { notes: input.notes?.trim() || null } : {}),
+      ...(input.placeOfBirth !== undefined ? { placeOfBirth: trimOrNull(input.placeOfBirth) } : {}),
+      ...(input.countryOfBirth !== undefined
+        ? { countryOfBirth: trimOrNull(input.countryOfBirth) }
+        : {}),
+      ...(input.nationality !== undefined ? { nationality: trimOrNull(input.nationality) } : {}),
+      ...(input.secondNationality !== undefined
+        ? { secondNationality: trimOrNull(input.secondNationality) }
+        : {}),
+      ...(input.heightCm !== undefined ? { heightCm: input.heightCm } : {}),
+      ...(input.formerPlayingPositions !== undefined
+        ? { formerPlayingPositions: trimOrNull(input.formerPlayingPositions) }
+        : {}),
+      ...(input.playingCareerStatus !== undefined
+        ? { playingCareerStatus: trimOrNull(input.playingCareerStatus) }
+        : {}),
+      ...(input.coachingCareerStartYear !== undefined
+        ? { coachingCareerStartYear: input.coachingCareerStartYear }
+        : {}),
+      ...(input.appointedOn !== undefined ? { appointedOn: input.appointedOn } : {}),
+      ...(input.contractExpiresOn !== undefined
+        ? { contractExpiresOn: input.contractExpiresOn }
+        : {}),
+      ...(input.preferredSystem !== undefined
+        ? { preferredSystem: trimOrNull(input.preferredSystem) }
+        : {}),
+      ...(input.coachingStyle !== undefined
+        ? { coachingStyle: trimOrNull(input.coachingStyle) }
+        : {}),
+      ...(input.preferredSystemProvenance !== undefined
+        ? { preferredSystemProvenance: normalizeCoachFieldProvenance(input.preferredSystemProvenance) }
+        : {}),
+      ...(input.coachingStyleProvenance !== undefined
+        ? { coachingStyleProvenance: normalizeCoachFieldProvenance(input.coachingStyleProvenance) }
+        : {}),
+      ...(input.imageUrl !== undefined ? { imageUrl: trimOrNull(input.imageUrl) } : {}),
+      ...(input.bioSummary !== undefined ? { bioSummary: trimOrNull(input.bioSummary) } : {}),
+      ...(input.wikipediaUrl !== undefined ? { wikipediaUrl: trimOrNull(input.wikipediaUrl) } : {}),
+      ...(input.wikidataId !== undefined ? { wikidataId: trimOrNull(input.wikidataId) } : {}),
+      ...(input.sourceUrl !== undefined ? { sourceUrl: trimOrNull(input.sourceUrl) } : {}),
+      ...(input.notes !== undefined ? { notes: trimOrNull(input.notes) } : {}),
+      ...(input.isPublic !== undefined ? { isPublic: input.isPublic } : {}),
+      ...(input.publishStatus !== undefined
+        ? { publishStatus: trimOrNull(input.publishStatus) ?? "published" }
+        : {}),
+      ...(input.seoTitle !== undefined ? { seoTitle: trimOrNull(input.seoTitle) } : {}),
+      ...(input.seoDescription !== undefined
+        ? { seoDescription: trimOrNull(input.seoDescription) }
+        : {}),
+      ...(input.ogImageUrl !== undefined ? { ogImageUrl: trimOrNull(input.ogImageUrl) } : {}),
+      ...(input.careerRecordPartial !== undefined
+        ? { careerRecordPartial: input.careerRecordPartial }
+        : {}),
+      ...(input.careerRecordNotes !== undefined
+        ? { careerRecordNotes: trimOrNull(input.careerRecordNotes) }
+        : {}),
+      ...(lastVerifiedAt !== undefined ? { lastVerifiedAt } : {}),
       ...(input.socialAccounts !== undefined
         ? { socialAccounts: normalizeCoachSocialAccounts(input.socialAccounts) }
         : {}),

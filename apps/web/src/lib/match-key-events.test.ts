@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   dedupePublicKeyEvents,
   formatMatchEventMinute,
+  isHomeSideKeyEvent,
   mapCmsEventsToPublicKeyEvents,
   mapSdmsEventsToPublicKeyEvents,
   pairSubstitutionKeyEvents,
+  selectPublicKeyEvents,
 } from "./match-key-events";
 
 describe("formatMatchEventMinute", () => {
@@ -12,6 +14,40 @@ describe("formatMatchEventMinute", () => {
     expect(formatMatchEventMinute(2)).toBe("2'");
     expect(formatMatchEventMinute(63)).toBe("63'");
     expect(formatMatchEventMinute(2.9)).toBe("2'");
+  });
+});
+
+describe("isHomeSideKeyEvent", () => {
+  it("matches either CMS uuid or SDMS provider id", () => {
+    expect(isHomeSideKeyEvent("294zzzj8", ["7b1ee9db-a8ee-4db6-88a5-425212c63001", "294zzzj8"])).toBe(
+      true,
+    );
+    expect(
+      isHomeSideKeyEvent("7b1ee9db-a8ee-4db6-88a5-425212c63001", [
+        "7b1ee9db-a8ee-4db6-88a5-425212c63001",
+        "294zzzj8",
+      ]),
+    ).toBe(true);
+    expect(isHomeSideKeyEvent("m98e2y9x", ["294zzzj8", "7b1ee9db-a8ee-4db6-88a5-425212c63001"])).toBe(
+      false,
+    );
+  });
+});
+
+describe("selectPublicKeyEvents", () => {
+  it("prefers the fuller SDMS timeline over sparse CMS scoring rows", () => {
+    const cms = [
+      { type: "Try", minute: 3, team_id: "home", player_name: "A" },
+      { type: "Try", minute: 21, team_id: "away", player_name: "B" },
+    ];
+    const sdms = [
+      ...cms,
+      { type: "Sub On", minute: 20, team_id: "home", player_name: "C", player_on: "C" },
+      { type: "Conversion", minute: 25, team_id: "home", player_name: "D" },
+      { type: "Try", minute: 48, team_id: "home", player_name: "E" },
+    ];
+    const selected = selectPublicKeyEvents(sdms, cms);
+    expect(selected).toBe(sdms);
   });
 });
 

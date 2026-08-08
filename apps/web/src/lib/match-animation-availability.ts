@@ -371,6 +371,7 @@ export const PUBLIC_MATCH_TAB_ORDER = [
   "details",
   "animation",
   "audio",
+  "data-commentary",
   "watchalong",
   "highlights",
   "stats",
@@ -380,3 +381,49 @@ export const PUBLIC_MATCH_TAB_ORDER = [
   "head-to-head",
   "betting",
 ] as const;
+
+/** Optional media tabs — only shown when activated / content exists on the match. */
+export type PublicMatchMediaVisibility = {
+  animation: boolean;
+  audio: boolean;
+  commentary: boolean;
+  watchalong: boolean;
+  highlights: boolean;
+};
+
+export function visiblePublicMatchTabs(
+  visibility: PublicMatchMediaVisibility,
+): Array<(typeof PUBLIC_MATCH_TAB_ORDER)[number]> {
+  return PUBLIC_MATCH_TAB_ORDER.filter((tab) => {
+    switch (tab) {
+      case "animation":
+        return visibility.animation;
+      case "audio":
+        return visibility.audio;
+      case "data-commentary":
+        return visibility.commentary;
+      case "watchalong":
+        return visibility.watchalong;
+      case "highlights":
+        return visibility.highlights;
+      default:
+        return true;
+    }
+  });
+}
+
+/**
+ * Public Animation tab: only when the match is activated (or live/replay with real data).
+ * Pre-match "SOON" countdown alone does not surface the tab.
+ */
+export function isPublicAnimationTabVisible(input: {
+  settings: AnimationSettingsSnapshot | null;
+  availability: ResolvedAnimationAvailability;
+}): boolean {
+  const { settings, availability } = input;
+  if (availability.tabBadge === "Unavailable") return false;
+  if (availability.showLiveControls || availability.showReplayControls) return true;
+  if (availability.showFullTimeResult && availability.tabBadge === "REPLAY") return true;
+  if (settings?.publicAnimationEnabled || settings?.trackerActivated) return true;
+  return false;
+}
