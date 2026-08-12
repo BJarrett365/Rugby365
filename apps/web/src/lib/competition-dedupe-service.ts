@@ -47,6 +47,8 @@ function scoreCompetition(row: CompRow): number {
     slug: row.slug,
     activeSeason: row.seasonCount > 0 ? { id: "x" } : null,
   });
+  // Never keep Supabase-merge legacy clones as the canonical row.
+  if (row.slug.includes("__legacy__")) score -= 500;
   if (row.sdmsCompCode) score += 40;
   if (row.externalProviderId && !/^\d+$/.test(row.externalProviderId)) score += 20;
   if (row.externalProviderId) score += 10;
@@ -229,15 +231,39 @@ async function mergeCompetitionPair(keeper: CompRow, loser: CompRow) {
 
   await migrateCompetitionId(loser.id, keeper.id);
 
+  // Clear unique keys on the loser first so we can move them onto the keeper
+  // (or delete the loser) without colliding with competitions_*_unique.
+  const loserProviderId = loser.externalProviderId;
+  const loserSdms = loser.sdmsCompCode;
+  if (loserProviderId || loserSdms) {
+    await db
+      .update(competitions)
+      .set({
+        externalProviderId: null,
+        sdmsCompCode: null,
+      })
+      .where(eq(competitions.id, loser.id));
+  }
+
   // Prefer richer provider ids on keeper when missing.
   const patch: Partial<typeof competitions.$inferInsert> = {
     name: canonicalCompetitionDisplayName(keeper.name),
   };
-  if (!keeper.externalProviderId && loser.externalProviderId) {
-    patch.externalProviderId = loser.externalProviderId;
+  if (!keeper.externalProviderId && loserProviderId) {
+    const clash = await db
+      .select({ id: competitions.id })
+      .from(competitions)
+      .where(eq(competitions.externalProviderId, loserProviderId))
+      .limit(1);
+    if (!clash.length) patch.externalProviderId = loserProviderId;
   }
-  if (!keeper.sdmsCompCode && loser.sdmsCompCode) {
-    patch.sdmsCompCode = loser.sdmsCompCode;
+  if (!keeper.sdmsCompCode && loserSdms) {
+    const clash = await db
+      .select({ id: competitions.id })
+      .from(competitions)
+      .where(eq(competitions.sdmsCompCode, loserSdms))
+      .limit(1);
+    if (!clash.length) patch.sdmsCompCode = loserSdms;
   }
   await db.update(competitions).set(patch).where(eq(competitions.id, keeper.id));
 
@@ -263,31 +289,89 @@ export async function findDuplicateCompetitionGroups(): Promise<
     }));
 }
 
+/**
+ * Merge Supabase-sync `__legacy__` slug clones into the competition whose slug
+ * matches the prefix before `__legacy__` (e.g. rugby-championship__legacy__db2fe388
+ * → rugby-championship). Falls back to best non-legacy row with the same
+ * canonical display name when the exact base slug is missing.
+ */
+export async function findLegacySlugCompetitionGroups(): Promise<
+  Array<{ canonicalName: string; rows: CompRow[] }>
+> {
+  const rows = await loadCompetitionRows();
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  const groups = new Map<string, CompRow[]>();
+
+  for (const row of rows) {
+    const marker = row.slug.indexOf("__legacy__");
+    if (marker < 0) continue;
+    const baseSlug = row.slug.slice(0, marker);
+    if (!baseSlug) continue;
+
+    const keeper =
+      bySlug.get(baseSlug) ??
+      rows
+        .filter(
+          (r) =>
+            !r.slug.includes("__legacy__") &&
+            canonicalCompetitionDisplayName(r.name).toLowerCase() ===
+              canonicalCompetitionDisplayName(row.name).toLowerCase(),
+        )
+        .sort((a, b) => scoreCompetition(b) - scoreCompetition(a))[0] ??
+      null;
+    if (!keeper || keeper.id === row.id) continue;
+
+    const key = keeper.id;
+    const list = groups.get(key) ?? [keeper];
+    if (!list.some((r) => r.id === row.id)) list.push(row);
+    groups.set(key, list);
+  }
+
+  return [...groups.values()]
+    .filter((list) => list.length > 1)
+    .map((list) => {
+      const sorted = [...list].sort((a, b) => scoreCompetition(b) - scoreCompetition(a));
+      return {
+        canonicalName: canonicalCompetitionDisplayName(sorted[0]!.name),
+        rows: sorted,
+      };
+    });
+}
+
 export async function mergeDuplicateCompetitions(options?: {
   dryRun?: boolean;
 }): Promise<CompetitionDedupeSummary> {
   const dryRun = options?.dryRun ?? false;
-  const groups = await findDuplicateCompetitionGroups();
+  // Slug-legacy first (handles renamed display names), then name duplicates.
+  const groups = [
+    ...(await findLegacySlugCompetitionGroups()),
+    ...(await findDuplicateCompetitionGroups()),
+  ];
   const summary: CompetitionDedupeSummary = {
-    groups: groups.length,
+    groups: 0,
     merged: 0,
     deleted: 0,
     details: [],
   };
+  const seenLosers = new Set<string>();
 
   for (const group of groups) {
     const [keeper, ...losers] = group.rows;
-    if (!keeper || !losers.length) continue;
+    if (!keeper) continue;
+    const pending = losers.filter((l) => l.id !== keeper.id && !seenLosers.has(l.id));
+    if (!pending.length) continue;
+    for (const loser of pending) seenLosers.add(loser.id);
+    summary.groups += 1;
     summary.details.push({
       canonicalName: group.canonicalName,
       keptId: keeper.id,
       keptSlug: keeper.slug,
-      removedIds: losers.map((l) => l.id),
+      removedIds: pending.map((l) => l.id),
     });
     summary.merged += 1;
-    summary.deleted += losers.length;
+    summary.deleted += pending.length;
     if (dryRun) continue;
-    for (const loser of losers) {
+    for (const loser of pending) {
       await mergeCompetitionPair(keeper, loser);
     }
   }

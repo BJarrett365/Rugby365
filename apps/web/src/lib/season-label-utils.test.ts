@@ -18,6 +18,8 @@ describe("season-label-utils", () => {
   it("parses slash and dash season labels", () => {
     expect(parseSeasonStartYear("2025/26")).toBe(2025);
     expect(parseSeasonStartYear("2025\u201326")).toBe(2025);
+    expect(parseSeasonStartYear("2012\u20132013")).toBe(2012);
+    expect(parseSeasonStartYear("2012-2013")).toBe(2012);
     expect(parseSeasonStartYear("2026")).toBe(2026);
   });
 

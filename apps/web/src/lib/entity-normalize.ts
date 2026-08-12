@@ -75,10 +75,23 @@ export function teamDedupTier(name: string): TeamDedupTier {
   return "senior";
 }
 
+/** International nicknames that should collapse onto the country label for team dedupe. */
+const TEAM_DEDUP_ALIASES: Record<string, string> = {
+  "all blacks": "new zealand",
+  "new zealand (all blacks)": "new zealand",
+  springboks: "south africa",
+  "south africa springboks": "south africa",
+  wallabies: "australia",
+  pumas: "argentina",
+  "los pumas": "argentina",
+};
+
 /** Base club/country label with age/gender tier markers removed for duplicate matching. */
 export function teamDedupBaseName(name: string): string {
   let normalized = stripTeamSponsorAndSeasonLabels(name);
   normalized = normalized
+    .replace(/\{\{[^}]+\}\}/g, " ")
+    .replace(/[|_]/g, " ")
     .replace(/\s*\(asst\.\)/gi, "")
     .replace(/\s*\(loan\)/gi, "")
     .replace(/\s*\(forwards\)/gi, "")
@@ -94,8 +107,11 @@ export function teamDedupBaseName(name: string): string {
     .replace(/\s+rugby\b/gi, "")
     .replace(/[),]+/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
-  return normalized.toLowerCase();
+    .trim()
+    .toLowerCase();
+  if (TEAM_DEDUP_ALIASES[normalized]) return TEAM_DEDUP_ALIASES[normalized]!;
+  if (/\bzaf\b/.test(normalized)) return "south africa";
+  return normalized;
 }
 
 /** Duplicate teams must share base name and tier — Women/U18/U20 never merge with senior sides. */

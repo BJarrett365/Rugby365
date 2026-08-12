@@ -321,17 +321,8 @@ export async function getCompetitionTeamStatsBySlug(
     )
     .orderBy(desc(teamMatchStats.syncedAt));
 
-  const fallbackRows =
-    rows.length > 0
-      ? []
-      : await db
-          .select(selectCols)
-          .from(teamMatchStats)
-          .innerJoin(teams, eq(teamMatchStats.teamId, teams.id))
-          .where(eq(teamMatchStats.competitionId, competition.id))
-          .orderBy(desc(teamMatchStats.syncedAt));
-
-  const sourceRows = rows.length > 0 ? rows : fallbackRows;
+  // Strict season scope — never fall back to other seasons' team stats.
+  const sourceRows = rows;
   const byTeam = new Map<string, AggregatedTeam>();
 
   for (const row of sourceRows) {

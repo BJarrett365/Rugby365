@@ -36,12 +36,18 @@ export function parseSeasonStartYear(label: string): number | null {
   const trimmed = label.trim();
   if (!trimmed) return null;
 
-  const crossYear = trimmed.match(/^(\d{4})\s*[/\u2013-]\s*(\d{2})$/);
+  const crossYear = trimmed.match(/^(\d{4})\s*[/\u2013-]\s*(\d{2}|\d{4})$/);
   if (crossYear) {
     const startYear = Number.parseInt(crossYear[1]!, 10);
-    const endShort = Number.parseInt(crossYear[2]!, 10);
-    const expectedEnd = (startYear + 1) % 100;
-    if (endShort === expectedEnd) return startYear;
+    const endRaw = crossYear[2]!;
+    if (endRaw.length === 4) {
+      const endYear = Number.parseInt(endRaw, 10);
+      if (endYear === startYear + 1) return startYear;
+    } else {
+      const endShort = Number.parseInt(endRaw, 10);
+      const expectedEnd = (startYear + 1) % 100;
+      if (endShort === expectedEnd) return startYear;
+    }
   }
 
   const singleYear = trimmed.match(/^(\d{4})$/);

@@ -151,6 +151,16 @@ import {
   liveTableCalculationNote,
   parseLiveTableBoolean,
 } from "./live-table-service";
+import {
+  canonicalStandingsTeamName,
+  isActivelyLiveFixture,
+  isHealthyStandingsRows,
+  isRugbyChampionshipParticipant,
+  isUnknownStandingsTeamName,
+  pickCanonicalFixturesForStandings,
+  pickCanonicalTeamIdByName,
+  resolveTeamNamesFromFixtureSlug,
+} from "./standings-fixture-dedupe";
 import { canonicalKeyFromName } from "./premiership-team-identity";
 import { DEFAULT_TABLE_COMPETITION_SLUG } from "../competition-list-utils";
 import { currentDomesticSeasonStartYear } from "../season-label-utils";
@@ -270,7 +280,11 @@ async function loadPerspectives(input: {
   let completed = fixtureRows.filter((row) => {
     const status = row.status.toLowerCase();
     if (COMPLETED_STATUSES.has(status)) return true;
-    if (input.liveTable?.includeLiveMatches && isLiveFixtureStatus(row.status)) return true;
+    if (input.liveTable?.includeLiveMatches && isLiveFixtureStatus(row.status)) {
+      // Drop abandoned/stale "live" rows so they do not pollute standings.
+      if (!isActivelyLiveFixture(row.status, row.kickoffAt)) return false;
+      return true;
+    }
     if (input.liveTable?.includeScheduledMatches && isScheduledFixtureStatus(row.status)) return true;
     if (!input.liveTable) {
       return isCompletedFixture(row.status, row.homeScore, row.awayScore);
@@ -302,10 +316,62 @@ async function loadPerspectives(input: {
   const teamById = Object.fromEntries(teamRows.map((row) => [row.id, row]));
   const teamNameById = Object.fromEntries(teamRows.map((row) => [row.id, row.name]));
 
+  completed = pickCanonicalFixturesForStandings(completed, (fixture) => {
+    const homeName = fixture.homeTeamId ? (teamNameById[fixture.homeTeamId] ?? "Unknown") : "Unknown";
+    const awayName = fixture.awayTeamId ? (teamNameById[fixture.awayTeamId] ?? "Unknown") : "Unknown";
+    const resolved = resolveTeamNamesFromFixtureSlug(fixture.slug, homeName, awayName);
+    return {
+      id: fixture.id,
+      slug: fixture.slug,
+      status: fixture.status,
+      homeScore: fixture.homeScore,
+      awayScore: fixture.awayScore,
+      homeName: resolved.homeName,
+      awayName: resolved.awayName,
+      kickoffAt: fixture.kickoffAt,
+    };
+  });
+
+  const canonicalTeams = pickCanonicalTeamIdByName([
+    // Always consider known nation rows so mislabeled fixture sides can remount onto them.
+    ...teamRows
+      .map((row) => ({
+        id: row.id,
+        name: canonicalStandingsTeamName(row.name),
+        slug: row.slug,
+      }))
+      .filter((row) => !isUnknownStandingsTeamName(row.name) && row.name.trim().length > 0),
+    ...completed.flatMap((fixture) => {
+      const ids = [fixture.homeTeamId, fixture.awayTeamId].filter(Boolean) as string[];
+      return ids.map((id) => {
+        const team = teamById[id];
+        const rawName = team?.name ?? teamNameById[id] ?? "Unknown";
+        const resolved = resolveTeamNamesFromFixtureSlug(
+          fixture.slug,
+          fixture.homeTeamId === id ? rawName : "Unknown",
+          fixture.awayTeamId === id ? rawName : "Unknown",
+        );
+        const name =
+          fixture.homeTeamId === id
+            ? resolved.homeName
+            : fixture.awayTeamId === id
+              ? resolved.awayName
+              : canonicalStandingsTeamName(rawName);
+        return {
+          id,
+          name: isUnknownStandingsTeamName(name) ? rawName : name,
+          slug: team?.slug ?? id,
+        };
+      });
+    }),
+  ]);
+
+  const dedupedFixtureIds = completed.map((row) => row.id);
+
   const statsRows = await db
     .select()
     .from(teamMatchStats)
-    .where(inArray(teamMatchStats.fixtureId, fixtureIds));
+    .where(inArray(teamMatchStats.fixtureId, dedupedFixtureIds));
 
   const statsByFixtureTeam = new Map<string, typeof teamMatchStats.$inferSelect>();
   for (const row of statsRows) {
@@ -315,7 +381,7 @@ async function loadPerspectives(input: {
   const eventRows = await db
     .select()
     .from(matchEvents)
-    .where(inArray(matchEvents.fixtureId, fixtureIds));
+    .where(inArray(matchEvents.fixtureId, dedupedFixtureIds));
 
   const eventsByFixture = new Map<string, Array<typeof matchEvents.$inferSelect>>();
   for (const event of eventRows) {
@@ -365,19 +431,41 @@ async function loadPerspectives(input: {
     const redCards = events.filter((event) => event.eventType === "red_card");
 
     for (const side of ["home", "away"] as const) {
-      const teamId = side === "home" ? fixture.homeTeamId : fixture.awayTeamId;
-      const opponentId = side === "home" ? fixture.awayTeamId : fixture.homeTeamId;
-      const teamRow = teamById[teamId];
-      const opponentRow = teamById[opponentId];
+      const rawTeamId = side === "home" ? fixture.homeTeamId : fixture.awayTeamId;
+      const rawOpponentId = side === "home" ? fixture.awayTeamId : fixture.homeTeamId;
+      const rawTeamName = teamNameById[rawTeamId] ?? "Unknown";
+      const rawOpponentName = teamNameById[rawOpponentId] ?? "Unknown";
+      const resolvedNames = resolveTeamNamesFromFixtureSlug(
+        fixture.slug,
+        side === "home" ? rawTeamName : rawOpponentName,
+        side === "home" ? rawOpponentName : rawTeamName,
+      );
+      const displayTeamName =
+        side === "home" ? resolvedNames.homeName : resolvedNames.awayName;
+      const displayOpponentName =
+        side === "home" ? resolvedNames.awayName : resolvedNames.homeName;
+      const canonicalTeam = canonicalTeams.get(displayTeamName.toLowerCase());
+      const canonicalOpponent = canonicalTeams.get(displayOpponentName.toLowerCase());
+      const teamId = canonicalTeam?.id ?? rawTeamId;
+      const opponentId = canonicalOpponent?.id ?? rawOpponentId;
+      const teamName = canonicalTeam?.name ?? canonicalStandingsTeamName(displayTeamName);
+      const opponentName =
+        canonicalOpponent?.name ?? canonicalStandingsTeamName(displayOpponentName);
+      const teamRow = teamById[teamId] ?? teamById[rawTeamId];
+      const opponentRow = teamById[opponentId] ?? teamById[rawOpponentId];
       const pointsFor = side === "home" ? fixture.homeScore : fixture.awayScore;
       const pointsAgainst = side === "home" ? fixture.awayScore : fixture.homeScore;
       const normalizedStatus = fixture.status.toLowerCase();
       const fixtureCompleted = COMPLETED_STATUSES.has(normalizedStatus);
       const isLive =
-        !fixtureCompleted && isLiveFixtureStatus(fixture.status);
+        !fixtureCompleted && isActivelyLiveFixture(fixture.status, fixture.kickoffAt);
       const isScheduled = isScheduledFixtureStatus(fixture.status);
-      const stat = statsByFixtureTeam.get(`${fixture.id}:${teamId}`);
-      const oppStat = statsByFixtureTeam.get(`${fixture.id}:${opponentId}`);
+      const stat =
+        statsByFixtureTeam.get(`${fixture.id}:${rawTeamId}`) ??
+        statsByFixtureTeam.get(`${fixture.id}:${teamId}`);
+      const oppStat =
+        statsByFixtureTeam.get(`${fixture.id}:${rawOpponentId}`) ??
+        statsByFixtureTeam.get(`${fixture.id}:${opponentId}`);
       const sections = (stat?.sections ?? {}) as Record<string, Record<string, number>>;
 
       const firstHalfFor = side === "home" ? firstHalfHome : firstHalfAway;
@@ -429,11 +517,11 @@ async function loadPerspectives(input: {
         fixtureId: fixture.id,
         kickoffAt: fixture.kickoffAt,
         teamId,
-        teamName: teamNameById[teamId] ?? "Unknown",
+        teamName,
         teamSlug: teamRow?.slug ?? null,
         seasonStartYear: resolveSeasonStartYearFromKickoff(fixture.kickoffAt, seasonYearCatalog),
         opponentId,
-        opponentName: teamNameById[opponentId] ?? "Unknown",
+        opponentName,
         side,
         teamHemisphere: resolveHemisphereFromDb(teamRow?.hemisphere),
         opponentHemisphere: resolveHemisphereFromDb(opponentRow?.hemisphere),
@@ -463,9 +551,13 @@ async function loadPerspectives(input: {
         scoreAtSixtyFor,
         scoreAtSixtyAgainst,
         scoredFirst:
-          firstScore.verified && firstScore.teamId ? firstScore.teamId === teamId : null,
+          firstScore.verified && firstScore.teamId
+            ? firstScore.teamId === teamId || firstScore.teamId === rawTeamId
+            : null,
         concededFirst:
-          firstScore.verified && firstScore.teamId ? firstScore.teamId === opponentId : null,
+          firstScore.verified && firstScore.teamId
+            ? firstScore.teamId === opponentId || firstScore.teamId === rawOpponentId
+            : null,
         firstScoreEventType: firstScore.verified ? firstScore.eventType : null,
         firstScoreMinute: firstScore.verified ? firstScore.minute : null,
         firstScoreVerified: firstScore.verified,
@@ -531,15 +623,41 @@ async function loadPerspectives(input: {
         dominantTackles: sectionNumber(sections, "defence", "dominant_tackles"),
         missedTackles: sectionNumber(sections, "defence", "tackles_missed"),
         penaltiesConceded: sectionNumber(sections, "discipline", "penalties_conceded"),
-        yellowCards: yellowCards.filter((event) => event.teamId === teamId).length,
-        redCards: redCards.filter((event) => event.teamId === teamId).length,
+        yellowCards: yellowCards.filter(
+          (event) => event.teamId === teamId || event.teamId === rawTeamId,
+        ).length,
+        redCards: redCards.filter(
+          (event) => event.teamId === teamId || event.teamId === rawTeamId,
+        ).length,
         opponentLeagueRank: null,
         isLive,
         isScheduled,
         countsTowardStandings: !isScheduled,
-        matchClockLabel: formatMatchClock(fixture.matchMinute, fixture.period),
+        matchClockLabel: isLive
+          ? formatMatchClock(fixture.matchMinute, fixture.period)
+          : null,
         fixtureStatus: fixture.status,
       });
+    }
+  }
+
+  if (season) {
+    const competition = await getCompetitionById(season.competitionId);
+    if (competition?.slug === "rugby-championship") {
+      return perspectives.filter(
+        (row) =>
+          isRugbyChampionshipParticipant(row.teamName) &&
+          isRugbyChampionshipParticipant(row.opponentName),
+      );
+    }
+  } else if (input.competitionId) {
+    const competition = await getCompetitionById(input.competitionId);
+    if (competition?.slug === "rugby-championship") {
+      return perspectives.filter(
+        (row) =>
+          isRugbyChampionshipParticipant(row.teamName) &&
+          isRugbyChampionshipParticipant(row.opponentName),
+      );
     }
   }
 
@@ -588,7 +706,7 @@ async function trySyncedStandings(
   if (!seasonId) return null;
   const rows = await getSeasonStandings(seasonId, view);
   if (!rows.length) return null;
-  return rows.map((row) => {
+  const mapped = rows.map((row) => {
     const bonusMeta = parseStandingFormMeta(row.form);
     const tryBonusPoints = bonusMeta.tryBonusPoints ?? null;
     const losingBonusPoints = bonusMeta.losingBonusPoints ?? null;
@@ -611,6 +729,8 @@ async function trySyncedStandings(
       leaguePoints: row.points,
     };
   });
+  if (!isHealthyStandingsRows(mapped)) return null;
+  return mapped;
 }
 
 async function buildTableMetadata(
@@ -2303,6 +2423,45 @@ export async function calculateRugbyTable(
       showMovement,
     });
 
+    // Finished seasons: prefer curated synced standings over duplicate-heavy fixture calc.
+    if (built.liveFixtureCount === 0) {
+      const standingView = standingViewForTableView(tableView);
+      const synced = await trySyncedStandings(context.seasonId, standingView);
+      if (synced?.length) {
+        const coveragePerspectives = livePerspectives.filter(
+          (row) => row.countsTowardStandings !== false,
+        );
+        const cleanedSynced = synced.filter((row) => !isUnknownStandingsTeamName(row.teamName));
+        return attachTableLabMetadata(
+          {
+            definition,
+            available: cleanedSynced.length > 0,
+            confidence: "high",
+            dataCoveragePct: 100,
+            rows: cleanedSynced,
+            warnings: liveWarnings,
+            fixtureCount: new Set(coveragePerspectives.map((row) => row.fixtureId)).size,
+            evaluatedFixtureCount: coveragePerspectives.length,
+            context: {
+              ...context,
+              tableView,
+              includeLiveMatches,
+              includeScheduledMatches,
+              showMovement: false,
+            },
+            liveUpdatedAt: new Date().toISOString(),
+            liveMatchCount: 0,
+            liveTableCalculationNote: null,
+            showMovement: false,
+            includeLiveMatches,
+          },
+          context,
+          tableView,
+          coveragePerspectives,
+        );
+      }
+    }
+
     const coveragePerspectives = livePerspectives.filter(
       (row) => row.countsTowardStandings !== false,
     );
@@ -2322,13 +2481,15 @@ export async function calculateRugbyTable(
       );
     }
 
+    const cleanedRows = built.rows.filter((row) => !isUnknownStandingsTeamName(row.teamName));
+
     return attachTableLabMetadata(
       {
         definition,
-        available: built.rows.length > 0,
+        available: cleanedRows.length > 0,
         confidence: liveCoverage.confidence,
         dataCoveragePct: liveCoverage.dataCoveragePct,
-        rows: built.rows,
+        rows: cleanedRows,
         warnings: [...liveCoverage.warnings, ...liveWarnings],
         fixtureCount: new Set(coveragePerspectives.map((row) => row.fixtureId)).size,
         evaluatedFixtureCount: coveragePerspectives.length,
@@ -2337,12 +2498,13 @@ export async function calculateRugbyTable(
           tableView,
           includeLiveMatches,
           includeScheduledMatches,
-          showMovement,
+          showMovement: showMovement && built.liveFixtureCount > 0,
         },
         liveUpdatedAt: new Date().toISOString(),
         liveMatchCount: built.liveFixtureCount,
-        liveTableCalculationNote: liveTableCalculationNote(),
-        showMovement,
+        liveTableCalculationNote:
+          built.liveFixtureCount > 0 ? liveTableCalculationNote() : null,
+        showMovement: showMovement && built.liveFixtureCount > 0,
         includeLiveMatches,
       },
       context,

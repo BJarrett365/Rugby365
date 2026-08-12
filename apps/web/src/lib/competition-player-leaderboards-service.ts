@@ -1,17 +1,38 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
-import { playerMatchPerformanceStats, players, teams } from "@rugby365/db";
+import {
+  playerMatchPerformanceStats,
+  playerSeasonStats,
+  players,
+  teams,
+} from "@rugby365/db";
 import { getDb } from "./db";
+import {
+  isRugbyChampionshipLineageSlug,
+  isRugbyChampionshipPickerYear,
+  rugbyChampionshipEraForYear,
+  rugbyChampionshipEraLabel,
+  rugbyChampionshipPickerDisplayLabel,
+  RUGBY_CHAMPIONSHIP_FIRST_YEAR,
+  TRI_NATIONS_FIRST_YEAR,
+} from "./rugby-championship-lineage";
+import { pickDefaultSeasonForPicker } from "./season-list-utils";
+import {
+  currentDomesticSeasonStartYear,
+  formatSeasonRangeLabel,
+  parseSeasonStartYear,
+  usesDomesticSeasonCatalog,
+} from "./season-label-utils";
 import {
   getCompetitionBySlug,
   listSeasonsForPicker,
   syncDomesticSeasonCatalog,
+  upsertSeason,
 } from "./competition-admin-service";
 import {
   isNationsChampionshipSlug,
   nationsChampionshipHemisphereForTeam,
 } from "./nations-championship-hemisphere";
-import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "./season-label-utils";
 import {
   LEADERBOARD_VALUE_LABELS,
   teamCodeForLeaderboard,
@@ -54,6 +75,9 @@ export type CompetitionLeaderboardBoard = {
   metric: LeaderboardMetric;
   label: string;
   valueLabel: string;
+  /** True when at least one player has a non-zero value for this metric in-season. */
+  hasTrackedData: boolean;
+  emptyMessage: string;
   entries: CompetitionLeaderboardEntry[];
 };
 
@@ -65,8 +89,16 @@ export type CompetitionPlayerStatsPayload = {
     year: number;
     isActive: boolean;
     displayLabel?: string;
+    era?: string | null;
+    eraGroup?: string | null;
   }>;
-  season: { id: string; label: string; year: number; isActive: boolean } | null;
+  season: {
+    id: string;
+    label: string;
+    year: number;
+    isActive: boolean;
+    era?: string | null;
+  } | null;
   hemisphereFilter: HemisphereFilter;
   supportsHemisphereFilter: boolean;
   boards: CompetitionLeaderboardBoard[];
@@ -74,6 +106,7 @@ export type CompetitionPlayerStatsPayload = {
   coverage: {
     playerCount: number;
     rowCount: number;
+    source: "season_stats" | "match_stats" | "none";
   };
 };
 
@@ -160,12 +193,23 @@ function metricValue(row: AggregatedPlayer, metric: LeaderboardMetric): number {
   return row[metric] ?? 0;
 }
 
+function emptyMessageForBoard(hasTrackedData: boolean, playerCount: number): string {
+  if (playerCount === 0) {
+    return "No player statistics available for this season.";
+  }
+  if (!hasTrackedData) {
+    return "No data available for this season.";
+  }
+  return "No data available for this season.";
+}
+
 function rankBoard(
   rows: AggregatedPlayer[],
   metric: LeaderboardMetric,
   label: string,
   limit: number,
 ): CompetitionLeaderboardBoard {
+  const hasTrackedData = rows.some((row) => metricValue(row, metric) > 0);
   const ranked = [...rows]
     .map((row) => ({ row, value: metricValue(row, metric) }))
     .filter((entry) => entry.value > 0)
@@ -180,6 +224,8 @@ function rankBoard(
     metric,
     label,
     valueLabel: LEADERBOARD_VALUE_LABELS[metric] ?? "VAL",
+    hasTrackedData,
+    emptyMessage: emptyMessageForBoard(hasTrackedData, rows.length),
     entries: ranked.map((entry, index) => ({
       rank: index + 1,
       playerId: entry.row.playerId,
@@ -203,128 +249,219 @@ function rankBoard(
   };
 }
 
+function decorateSeasonsForCompetition(
+  slug: string,
+  seasons: Awaited<ReturnType<typeof listSeasonsForPicker>>,
+) {
+  if (!isRugbyChampionshipLineageSlug(slug)) {
+    return seasons.map((season) => ({
+      ...season,
+      era: null as string | null,
+      eraGroup: null as string | null,
+    }));
+  }
+
+  return seasons
+    .filter((season) => isRugbyChampionshipPickerYear(season.year))
+    .map((season) => {
+      const era = rugbyChampionshipEraForYear(season.year);
+      const eraLabel = rugbyChampionshipEraLabel(era);
+      // Preserve " — just finished" (and similar) suffixes from decorateSeasonPickerRows.
+      const statusSuffix =
+        typeof season.displayLabel === "string" && season.displayLabel.includes(" — ")
+          ? season.displayLabel.slice(season.displayLabel.indexOf(" — "))
+          : "";
+      return {
+        ...season,
+        era: eraLabel,
+        eraGroup: eraLabel,
+        displayLabel: rugbyChampionshipPickerDisplayLabel(season.year, statusSuffix),
+      };
+    });
+}
+
+/** Guarantee Tri Nations + Rugby Championship season rows exist for the picker. */
+async function ensureRugbyChampionshipSeasonCatalog(competitionId: string) {
+  const existing = await listSeasonsForPicker(competitionId);
+  const years = new Set(existing.map((season) => season.year));
+  const lastYear = Math.max(currentDomesticSeasonStartYear(), RUGBY_CHAMPIONSHIP_FIRST_YEAR);
+  for (let year = lastYear; year >= TRI_NATIONS_FIRST_YEAR; year -= 1) {
+    if (years.has(year)) continue;
+    await upsertSeason({
+      competitionId,
+      label: formatSeasonRangeLabel(year),
+      seasonKind: "club",
+    });
+  }
+}
+
+async function seasonIdsWithPlayerStats(competitionId: string): Promise<Set<string>> {
+  const db = getDb();
+  const [seasonRows, matchRows] = await Promise.all([
+    db
+      .selectDistinct({ seasonId: playerSeasonStats.seasonId })
+      .from(playerSeasonStats)
+      .where(eq(playerSeasonStats.competitionId, competitionId)),
+    db
+      .selectDistinct({ seasonId: playerMatchPerformanceStats.seasonId })
+      .from(playerMatchPerformanceStats)
+      .where(eq(playerMatchPerformanceStats.competitionId, competitionId)),
+  ]);
+
+  const ids = new Set<string>();
+  for (const row of seasonRows) {
+    if (row.seasonId) ids.add(row.seasonId);
+  }
+  for (const row of matchRows) {
+    if (row.seasonId) ids.add(row.seasonId);
+  }
+  return ids;
+}
+
 async function resolveSeasonForCompetition(
   competitionId: string,
+  competitionSlug: string,
   seasonLabel?: string,
 ) {
-  const seasons = await listSeasonsForPicker(competitionId);
-  const active = seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
-  if (!seasonLabel?.trim()) return { seasons, season: active };
+  if (isRugbyChampionshipLineageSlug(competitionSlug)) {
+    await ensureRugbyChampionshipSeasonCatalog(competitionId);
+  }
+
+  const seasons = decorateSeasonsForCompetition(
+    competitionSlug,
+    await listSeasonsForPicker(competitionId),
+  );
+
+  if (!seasonLabel?.trim()) {
+    const withStats = await seasonIdsWithPlayerStats(competitionId);
+    const latestWithStats =
+      seasons.find((season) => withStats.has(season.id)) ?? null;
+    const fallback = pickDefaultSeasonForPicker(seasons) ?? seasons[0] ?? null;
+    return { seasons, season: latestWithStats ?? fallback };
+  }
 
   const requested = seasonLabel.trim();
   const requestedYear = parseSeasonStartYear(requested);
   const match =
     seasons.find((s) => s.label === requested) ??
     seasons.find((s) => s.label.replace(/–/g, "-") === requested.replace(/–/g, "-")) ??
+    seasons.find((s) => (s.displayLabel ?? "") === requested) ??
+    seasons.find((s) => (s.displayLabel ?? "").replace(/–/g, "-") === requested.replace(/–/g, "-")) ??
     (requestedYear != null ? seasons.find((s) => s.year === requestedYear) : null) ??
     null;
   return { seasons, season: match };
 }
 
-export async function getCompetitionPlayerStatsBySlug(
-  slug: string,
-  options: {
-    seasonLabel?: string;
-    hemisphere?: HemisphereFilter;
-    limit?: number;
-  } = {},
-): Promise<CompetitionPlayerStatsPayload | null> {
-  const competition = await getCompetitionBySlug(slug);
-  if (!competition) return null;
-
-  if (usesDomesticSeasonCatalog(competition.competitionType)) {
-    await syncDomesticSeasonCatalog(competition.id);
-  }
-
-  const { seasons, season } = await resolveSeasonForCompetition(
-    competition.id,
-    options.seasonLabel,
-  );
-  const supportsHemisphereFilter = isNationsChampionshipSlug(competition.slug);
-  const hemisphereFilter: HemisphereFilter =
-    supportsHemisphereFilter && options.hemisphere
-      ? options.hemisphere
-      : "all";
-  const limit = Math.min(Math.max(options.limit ?? 5, 1), 50);
-
-  if (!season) {
-    return {
-      competition: {
-        id: competition.id,
-        slug: competition.slug,
-        name: competition.name,
-      },
-      seasons,
-      season: null,
-      hemisphereFilter,
-      supportsHemisphereFilter,
-      boards: PRIMARY_BOARDS.map((b) => ({
-        ...b,
-        valueLabel: LEADERBOARD_VALUE_LABELS[b.metric] ?? "VAL",
-        entries: [],
-      })),
-      additionalBoards: ADDITIONAL_BOARDS.map((b) => ({
-        ...b,
-        valueLabel: LEADERBOARD_VALUE_LABELS[b.metric] ?? "VAL",
-        entries: [],
-      })),
-      coverage: { playerCount: 0, rowCount: 0 },
-    };
-  }
-
+async function loadSeasonStatAggregates(
+  competitionId: string,
+  seasonId: string,
+): Promise<AggregatedPlayer[]> {
   const db = getDb();
-  const selectCols = {
-    playerId: playerMatchPerformanceStats.playerId,
-    playerName: players.name,
-    playerSlug: players.slug,
-    playerImageUrl: players.imageUrl,
-    teamId: playerMatchPerformanceStats.teamId,
-    teamName: teams.name,
-    teamSlug: teams.slug,
-    teamShortName: teams.shortName,
-    teamImageUrl: teams.imageUrl,
-    minutesPlayed: playerMatchPerformanceStats.minutesPlayed,
-    points: playerMatchPerformanceStats.points,
-    tries: playerMatchPerformanceStats.tries,
-    tacklesCompleted: playerMatchPerformanceStats.tacklesCompleted,
-    metresCarried: playerMatchPerformanceStats.metresCarried,
-    carries: playerMatchPerformanceStats.carries,
-    tryAssists: playerMatchPerformanceStats.tryAssists,
-    defendersBeaten: playerMatchPerformanceStats.defendersBeaten,
-    lineBreaks: playerMatchPerformanceStats.lineBreaks,
-    turnoversWon: playerMatchPerformanceStats.turnoversWon,
-    dominantTackles: playerMatchPerformanceStats.dominantTackles,
-    postContactMetres: playerMatchPerformanceStats.postContactMetres,
-  };
-
   const rows = await db
-    .select(selectCols)
+    .select({
+      playerId: playerSeasonStats.playerId,
+      playerName: players.name,
+      playerSlug: players.slug,
+      playerImageUrl: players.imageUrl,
+      teamId: playerSeasonStats.teamId,
+      teamName: teams.name,
+      teamSlug: teams.slug,
+      teamShortName: teams.shortName,
+      teamImageUrl: teams.imageUrl,
+      appearances: playerSeasonStats.appearances,
+      minutesPlayed: playerSeasonStats.minutesPlayed,
+      points: playerSeasonStats.points,
+      tries: playerSeasonStats.tries,
+      tacklesCompleted: playerSeasonStats.tacklesCompleted,
+      metresCarried: playerSeasonStats.metresCarried,
+      carries: playerSeasonStats.carries,
+      tryAssists: playerSeasonStats.tryAssists,
+      defendersBeaten: playerSeasonStats.defendersBeaten,
+      lineBreaks: playerSeasonStats.lineBreaks,
+      turnoversWon: playerSeasonStats.turnoversWon,
+      dominantTackles: playerSeasonStats.dominantTackles,
+      postContactMetres: playerSeasonStats.postContactMetres,
+    })
+    .from(playerSeasonStats)
+    .innerJoin(players, eq(playerSeasonStats.playerId, players.id))
+    .innerJoin(teams, eq(playerSeasonStats.teamId, teams.id))
+    .where(
+      and(
+        eq(playerSeasonStats.competitionId, competitionId),
+        eq(playerSeasonStats.seasonId, seasonId),
+      ),
+    )
+    .orderBy(desc(playerSeasonStats.points));
+
+  return rows.map((row) => ({
+    playerId: row.playerId,
+    playerName: row.playerName,
+    playerSlug: row.playerSlug,
+    playerImageUrl: row.playerImageUrl,
+    teamId: row.teamId,
+    teamName: row.teamName,
+    teamSlug: row.teamSlug,
+    teamShortName: row.teamShortName,
+    teamImageUrl: row.teamImageUrl,
+    appearances: row.appearances ?? 0,
+    minutesPlayed: row.minutesPlayed ?? 0,
+    points: row.points ?? 0,
+    tries: row.tries ?? 0,
+    tacklesCompleted: row.tacklesCompleted ?? 0,
+    metresCarried: row.metresCarried ?? 0,
+    carries: row.carries ?? 0,
+    tryAssists: row.tryAssists ?? 0,
+    defendersBeaten: row.defendersBeaten ?? 0,
+    lineBreaks: row.lineBreaks ?? 0,
+    turnoversWon: row.turnoversWon ?? 0,
+    dominantTackles: row.dominantTackles ?? 0,
+    postContactMetres: row.postContactMetres ?? 0,
+    hemisphere: nationsChampionshipHemisphereForTeam(row.teamName),
+  }));
+}
+
+async function loadMatchStatAggregates(
+  competitionId: string,
+  seasonId: string,
+): Promise<{ players: AggregatedPlayer[]; rowCount: number }> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      playerId: playerMatchPerformanceStats.playerId,
+      playerName: players.name,
+      playerSlug: players.slug,
+      playerImageUrl: players.imageUrl,
+      teamId: playerMatchPerformanceStats.teamId,
+      teamName: teams.name,
+      teamSlug: teams.slug,
+      teamShortName: teams.shortName,
+      teamImageUrl: teams.imageUrl,
+      minutesPlayed: playerMatchPerformanceStats.minutesPlayed,
+      points: playerMatchPerformanceStats.points,
+      tries: playerMatchPerformanceStats.tries,
+      tacklesCompleted: playerMatchPerformanceStats.tacklesCompleted,
+      metresCarried: playerMatchPerformanceStats.metresCarried,
+      carries: playerMatchPerformanceStats.carries,
+      tryAssists: playerMatchPerformanceStats.tryAssists,
+      defendersBeaten: playerMatchPerformanceStats.defendersBeaten,
+      lineBreaks: playerMatchPerformanceStats.lineBreaks,
+      turnoversWon: playerMatchPerformanceStats.turnoversWon,
+      dominantTackles: playerMatchPerformanceStats.dominantTackles,
+      postContactMetres: playerMatchPerformanceStats.postContactMetres,
+    })
     .from(playerMatchPerformanceStats)
     .innerJoin(players, eq(playerMatchPerformanceStats.playerId, players.id))
     .innerJoin(teams, eq(playerMatchPerformanceStats.teamId, teams.id))
     .where(
       and(
-        eq(playerMatchPerformanceStats.competitionId, competition.id),
-        eq(playerMatchPerformanceStats.seasonId, season.id),
+        eq(playerMatchPerformanceStats.competitionId, competitionId),
+        eq(playerMatchPerformanceStats.seasonId, seasonId),
       ),
     )
     .orderBy(desc(playerMatchPerformanceStats.syncedAt));
 
-  // Also include rows linked via competition only (season null) for partial imports.
-  const fallbackRows =
-    rows.length > 0
-      ? []
-      : await db
-          .select(selectCols)
-          .from(playerMatchPerformanceStats)
-          .innerJoin(players, eq(playerMatchPerformanceStats.playerId, players.id))
-          .innerJoin(teams, eq(playerMatchPerformanceStats.teamId, teams.id))
-          .where(eq(playerMatchPerformanceStats.competitionId, competition.id));
-
-  const sourceRows = rows.length > 0 ? rows : fallbackRows;
   const buckets = new Map<string, AggregatedPlayer>();
-
-  for (const row of sourceRows) {
+  for (const row of rows) {
     const key = `${row.playerId}:${row.teamId}`;
     const existing =
       buckets.get(key) ??
@@ -357,10 +494,116 @@ export async function getCompetitionPlayerStatsBySlug(
     buckets.set(key, existing);
   }
 
-  let aggregated = [...buckets.values()];
+  return { players: [...buckets.values()], rowCount: rows.length };
+}
+
+function emptyBoards(): {
+  boards: CompetitionLeaderboardBoard[];
+  additionalBoards: CompetitionLeaderboardBoard[];
+} {
+  return {
+    boards: PRIMARY_BOARDS.map((b) => ({
+      ...b,
+      valueLabel: LEADERBOARD_VALUE_LABELS[b.metric] ?? "VAL",
+      hasTrackedData: false,
+      emptyMessage: "No player statistics available for this season.",
+      entries: [],
+    })),
+    additionalBoards: ADDITIONAL_BOARDS.map((b) => ({
+      ...b,
+      valueLabel: LEADERBOARD_VALUE_LABELS[b.metric] ?? "VAL",
+      hasTrackedData: false,
+      emptyMessage: "No player statistics available for this season.",
+      entries: [],
+    })),
+  };
+}
+
+/** Exported for unit tests — metrics with all zeros are treated as untracked. */
+export function metricHasTrackedData(
+  rows: Array<Partial<Record<LeaderboardMetric, number>>>,
+  metric: LeaderboardMetric,
+): boolean {
+  return rows.some((row) => (row[metric] ?? 0) > 0);
+}
+
+export async function getCompetitionPlayerStatsBySlug(
+  slug: string,
+  options: {
+    seasonLabel?: string;
+    hemisphere?: HemisphereFilter;
+    limit?: number;
+  } = {},
+): Promise<CompetitionPlayerStatsPayload | null> {
+  const competition = await getCompetitionBySlug(slug);
+  if (!competition) return null;
+
+  // Avoid re-expanding the domestic 1987→current catalog over RC / Tri Nations lineage.
+  if (
+    usesDomesticSeasonCatalog(competition.competitionType) &&
+    !isRugbyChampionshipLineageSlug(competition.slug)
+  ) {
+    await syncDomesticSeasonCatalog(competition.id);
+  }
+
+  const { seasons, season } = await resolveSeasonForCompetition(
+    competition.id,
+    competition.slug,
+    options.seasonLabel,
+  );
+  const supportsHemisphereFilter = isNationsChampionshipSlug(competition.slug);
+  const hemisphereFilter: HemisphereFilter =
+    supportsHemisphereFilter && options.hemisphere
+      ? options.hemisphere
+      : "all";
+  const limit = Math.min(Math.max(options.limit ?? 5, 1), 50);
+
+  if (!season) {
+    const empty = emptyBoards();
+    return {
+      competition: {
+        id: competition.id,
+        slug: competition.slug,
+        name: competition.name,
+      },
+      seasons,
+      season: null,
+      hemisphereFilter,
+      supportsHemisphereFilter,
+      ...empty,
+      coverage: { playerCount: 0, rowCount: 0, source: "none" },
+    };
+  }
+
+  const seasonEra = isRugbyChampionshipLineageSlug(competition.slug)
+    ? rugbyChampionshipEraLabel(rugbyChampionshipEraForYear(season.year))
+    : null;
+
+  // Prefer season aggregates (full squad coverage) when present for this season only.
+  let aggregated = await loadSeasonStatAggregates(competition.id, season.id);
+  let rowCount = aggregated.length;
+  let source: CompetitionPlayerStatsPayload["coverage"]["source"] =
+    aggregated.length > 0 ? "season_stats" : "none";
+
+  if (aggregated.length === 0) {
+    const matchAgg = await loadMatchStatAggregates(competition.id, season.id);
+    aggregated = matchAgg.players;
+    rowCount = matchAgg.rowCount;
+    source = matchAgg.rowCount > 0 ? "match_stats" : "none";
+  }
+
+  // Never fall back to another season's rows.
   if (supportsHemisphereFilter && hemisphereFilter !== "all") {
     aggregated = aggregated.filter((row) => row.hemisphere === hemisphereFilter);
   }
+
+  // Drop unknown placeholders from public boards.
+  aggregated = aggregated.filter(
+    (row) =>
+      row.playerName.trim().length > 0 &&
+      !/^unknown\b/i.test(row.playerName) &&
+      !/^unknown\b/i.test(row.teamName),
+  );
 
   return {
     competition: {
@@ -374,6 +617,7 @@ export async function getCompetitionPlayerStatsBySlug(
       label: season.label,
       year: season.year,
       isActive: Boolean(season.isActive),
+      era: seasonEra,
     },
     hemisphereFilter,
     supportsHemisphereFilter,
@@ -385,7 +629,8 @@ export async function getCompetitionPlayerStatsBySlug(
     ),
     coverage: {
       playerCount: aggregated.length,
-      rowCount: sourceRows.length,
+      rowCount,
+      source,
     },
   };
 }

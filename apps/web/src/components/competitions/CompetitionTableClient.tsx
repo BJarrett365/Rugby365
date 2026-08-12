@@ -68,7 +68,8 @@ export function CompetitionTableClient({
     const liveRes = await fetch(`/api/competitions/by-slug/${slug}/live-table?${params}`);
     const liveData = await liveRes.json();
 
-    if (liveRes.ok && liveData.result?.rows?.length) {
+    // Live-table path now dedupes fixtures / skips polluted synced rows.
+    if (liveRes.ok && Array.isArray(liveData.result?.rows) && liveData.result.rows.length > 0) {
       setCompetitionId(liveData.competition?.id ?? "");
       setCompetitionName(liveData.competition?.name ?? slug);
       setSeasons(liveData.seasons ?? []);
@@ -192,7 +193,7 @@ export function CompetitionTableClient({
         <p className="text-sm text-zinc-500 m-0">
           {competitionName || slug} · {view === "overall" ? "Total" : view} standings
           {seasonLabel ? ` · ${seasonLabel}` : ""}
-          {liveResult ? " · Live table" : ""}
+          {(liveResult?.liveMatchCount ?? 0) > 0 ? " · Live" : ""}
         </p>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -215,7 +216,9 @@ export function CompetitionTableClient({
         <CompetitionLiveTable
           rows={liveResult.rows}
           hemisphereGroups={liveResult.hemisphereGroups}
-          showMovement={liveResult.showMovement !== false}
+          showMovement={
+            liveResult.showMovement !== false && (liveResult.liveMatchCount ?? 0) > 0
+          }
           liveMatchCount={liveResult.liveMatchCount}
           note={liveResult.liveTableCalculationNote ?? liveResult.filterSummary}
         />

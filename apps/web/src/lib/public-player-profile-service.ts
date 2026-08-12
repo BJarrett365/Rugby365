@@ -253,7 +253,10 @@ export type PublicPlayerProfile = {
     worldCup: number;
     top14: number;
     premiership: number;
+    urc: number;
     sixNations: number;
+    /** Club league championships (Top 14 + Premiership + URC + Currie Cup). */
+    leagueTitles: number;
     other: number;
   };
   playingStyle: string | null;
@@ -615,7 +618,8 @@ export async function getPublicPlayerProfile(
       careerStatus: player.careerStatus,
       statusOverride: player.statusOverride,
     }),
-    loadPlayerAppearances(player.id, { internationalTeamId: intlId }),
+    // Load all comps; this service scopes to domestic/international after load.
+    loadPlayerAppearances(player.id, { view: "all", internationalTeamId: intlId }),
     resolveCurrentClubCompetitionName(clubId),
     db
       .select()
@@ -677,6 +681,32 @@ export async function getPublicPlayerProfile(
   const summary = summarizeAppearances(filtered);
   const positionsPlayed = positionBreakdown(allAppearances);
 
+  // Overview season tiles: if the active view has no rows (common for overseas
+  // Springboks with only Test fixtures in CMS), fall back to all competitions.
+  let seasonSummary = summary;
+  let seasonEffectiveFilter = effectiveSeasonFilter;
+  if (!filtered.length && allAppearances.length) {
+    const allSeasonOptions = buildSeasonOptions(allAppearances);
+    let allFiltered = filterAppearances(allAppearances, {
+      season: seasonFilter,
+      competition: competitionFilter === "all" ? "all" : competitionFilter,
+      currentDomesticSlug,
+    });
+    let allEffective = seasonFilter;
+    if (seasonFilter === "current" && allFiltered.length === 0 && allSeasonOptions[0]) {
+      allEffective = allSeasonOptions[0].slug;
+      allFiltered = filterAppearances(allAppearances, {
+        season: allEffective,
+        competition: competitionFilter === "all" ? "all" : competitionFilter,
+        currentDomesticSlug,
+      });
+    }
+    if (allFiltered.length) {
+      seasonSummary = summarizeAppearances(allFiltered);
+      seasonEffectiveFilter = allEffective;
+    }
+  }
+
   const intlTries = intlAppsRows.reduce((s, r) => s + (r.tries ?? 0), 0);
   const intlPointsCalc = intlAppsRows.reduce((s, r) => s + (r.points ?? 0), 0);
   const intlCompetitions = [
@@ -693,10 +723,18 @@ export async function getPublicPlayerProfile(
   const stintIntlApps = internationalStints.reduce((sum, s) => sum + (s.apps ?? 0), 0) || null;
   const stintIntlPoints =
     internationalStints.reduce((sum, s) => sum + (s.points ?? 0), 0) || null;
+  const stintIntlTries =
+    internationalStints.reduce((sum, s) => sum + (s.tries ?? 0), 0) || null;
 
   const calculatedIntlApps = intlAppsRows.length || null;
-  const internationalApps = calculatedIntlApps ?? stintIntlApps;
-  const internationalPoints = (intlPointsCalc || null) ?? stintIntlPoints;
+  // Prefer the higher total: Wikipedia career stints are often more complete than CMS match rows.
+  const internationalApps =
+    Math.max(calculatedIntlApps ?? 0, stintIntlApps ?? 0) || null;
+  const internationalPoints =
+    Math.max(intlPointsCalc || 0, stintIntlPoints ?? 0) || null;
+  // International tries: CMS match rows when present; else Wikipedia/stint totals when recorded.
+  const internationalTries =
+    Math.max(intlTries || 0, stintIntlTries ?? 0) || null;
 
   const matchTotal = filtered.length;
   const matchRows = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -930,13 +968,24 @@ export async function getPublicPlayerProfile(
     });
   }
 
+  const top14 = sumTitleCounts(structuredTitles, "top_14");
+  const premiership = sumTitleCounts(structuredTitles, "premiership");
+  const urc = sumTitleCounts(structuredTitles, "urc");
+  const currieCup = sumTitleCounts(structuredTitles, "currie_cup");
   const titleCounts = {
     worldCup: sumTitleCounts(structuredTitles, "world_cup"),
-    top14: sumTitleCounts(structuredTitles, "top_14"),
-    premiership: sumTitleCounts(structuredTitles, "premiership"),
+    top14,
+    premiership,
+    urc,
     sixNations: sumTitleCounts(structuredTitles, "six_nations"),
+    leagueTitles: top14 + premiership + urc + currieCup,
     other: structuredTitles
-      .filter((t) => !["world_cup", "top_14", "premiership", "six_nations"].includes(t.titleType))
+      .filter(
+        (t) =>
+          !["world_cup", "top_14", "premiership", "urc", "currie_cup", "six_nations"].includes(
+            t.titleType,
+          ),
+      )
       .reduce((sum, t) => sum + (t.count || 1), 0),
   };
 
@@ -1209,34 +1258,44 @@ export async function getPublicPlayerProfile(
     playerValue,
     scoutIntelligence,
     rankings,
-    seasonSnapshot: filtered.length
+    seasonSnapshot: seasonSummary.appearances
       ? {
-          seasonLabel: summary.seasonLabel,
-          appearances: summary.appearances,
-          starts: summary.starts,
-          bench: summary.bench,
-          minutesPlayed: summary.minutesPlayed,
-          tries: summary.tries,
-          points: summary.points,
-          tryAssists: summary.tryAssists,
-          carries: summary.carries,
-          metresCarried: summary.metresCarried,
-          tacklesMade: summary.tacklesMade,
-          tacklesCompleted: summary.tacklesCompleted,
-          turnoversWon: summary.turnoversWon,
-          lineBreaks: summary.lineBreaks,
-          defendersBeaten: summary.defendersBeaten,
-          attackRank: summary.attackRank,
-          defenceRank: summary.defenceRank,
-          ratingAverage: summary.ratingAverage,
-          ratedAppearances: summary.ratedAppearances,
+          seasonLabel: seasonSummary.seasonLabel,
+          appearances: seasonSummary.appearances,
+          starts: seasonSummary.starts,
+          bench: seasonSummary.bench,
+          minutesPlayed: seasonSummary.minutesPlayed,
+          tries: seasonSummary.tries,
+          points: seasonSummary.points,
+          tryAssists: seasonSummary.tryAssists,
+          carries: seasonSummary.carries,
+          metresCarried: seasonSummary.metresCarried,
+          tacklesMade: seasonSummary.tacklesMade,
+          tacklesCompleted: seasonSummary.tacklesCompleted,
+          turnoversWon: seasonSummary.turnoversWon,
+          lineBreaks: seasonSummary.lineBreaks,
+          defendersBeaten: seasonSummary.defendersBeaten,
+          attackRank: seasonSummary.attackRank,
+          defenceRank: seasonSummary.defenceRank,
+          ratingAverage: seasonSummary.ratingAverage,
+          ratedAppearances: seasonSummary.ratedAppearances,
         }
       : null,
     filters: {
-      season: effectiveSeasonFilter,
+      season: seasonEffectiveFilter,
       competition: competitionFilter,
-      seasonOptions,
-      competitionOptions,
+      seasonOptions:
+        seasonOptions.length > 0 ? seasonOptions : buildSeasonOptions(allAppearances),
+      competitionOptions:
+        competitionOptions.length > 0
+          ? competitionOptions
+          : buildCompetitionOptions(
+              filterAppearances(allAppearances, {
+                season: seasonEffectiveFilter,
+                competition: "all",
+                currentDomesticSlug,
+              }),
+            ),
     },
     career: {
       appearances: allAppearances.length || null,
@@ -1277,7 +1336,7 @@ export async function getPublicPlayerProfile(
     internationalSummary: {
       nation: nationName,
       caps: internationalApps,
-      tries: intlTries || null,
+      tries: internationalTries,
       points: internationalPoints,
       competitions: intlCompetitions,
     },

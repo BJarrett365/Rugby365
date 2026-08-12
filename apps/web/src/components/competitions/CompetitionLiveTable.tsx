@@ -10,7 +10,19 @@ function movementArrow(movement: RugbyTableStandingRow["movement"]): string {
 }
 
 function isLiveRow(row: RugbyTableStandingRow): boolean {
-  return Boolean(row.liveCurrentScore || row.liveMatchLabel || row.liveStatus === "live");
+  // Require an explicit in-play status — do not treat leftover score labels alone as live.
+  if (!row.liveStatus) return false;
+  const status = row.liveStatus.toLowerCase().replace(/[\s-]+/g, "_");
+  return (
+    status === "live" ||
+    status === "in_progress" ||
+    status === "first_half" ||
+    status === "second_half" ||
+    status === "ht" ||
+    status === "half_time" ||
+    status === "halftime" ||
+    Boolean(row.liveCurrentScore && row.liveMatchLabel)
+  );
 }
 
 function LiveScoreBadge({ row }: { row: RugbyTableStandingRow }) {
@@ -157,12 +169,10 @@ export function CompetitionLiveTable({
         </div>
       ) : null}
 
-      {note || liveMatchCount != null ? (
+      {(liveMatchCount ?? 0) > 0 ? (
         <p className="live-table__note">
-          {note}
-          {liveMatchCount != null
-            ? `${note ? " · " : ""}${liveMatchCount} live match${liveMatchCount === 1 ? "" : "es"}`
-            : ""}
+          {note ? `${note} · ` : ""}
+          {liveMatchCount} live match{liveMatchCount === 1 ? "" : "es"}
         </p>
       ) : null}
 

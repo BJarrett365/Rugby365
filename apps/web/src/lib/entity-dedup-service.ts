@@ -429,7 +429,8 @@ export async function mergePlayerRecords(
   }
 }
 
-async function mergeTeamRecords(canonicalId: string, duplicateIds: string[]) {
+/** Merge duplicate team rows into a canonical team, rewiring related records. */
+export async function mergeTeamRecords(canonicalId: string, duplicateIds: string[]) {
   if (duplicateIds.length === 0) return;
   const db = getDb();
 
