@@ -21,6 +21,8 @@ export const WikipediaCoachingStintSchema = z.object({
   startYear: z.number().nullable().optional(),
   endYear: z.number().nullable().optional(),
   teamName: z.string(),
+  /** Parsed from parentheses e.g. "South Africa (Technical Adviser)" */
+  roleHint: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
 });
 

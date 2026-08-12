@@ -4378,18 +4378,63 @@
   stroke: rgba(255, 255, 255, 0.7);
   stroke-width: 0.4;
 }
-.pr-rugby-pitch__dot--main {
-  fill: #f5c542;
+.pr-rugby-pitch__dot--primary {
+  fill: #22c55e;
   stroke: #fff;
 }
 .pr-rugby-pitch__dot--secondary {
-  fill: #8fd4b1;
+  fill: #e7bc63;
+  stroke: #fff;
+}
+.pr-rugby-pitch__dot--utility {
+  fill: #38bdf8;
+  stroke: #fff;
+}
+.pr-rugby-pitch__dot--rare {
+  fill: #9ca3af;
+  stroke: #fff;
+}
+/* Legacy aliases used by older call sites */
+.pr-rugby-pitch__dot--main {
+  fill: #22c55e;
   stroke: #fff;
 }
 .pr-rugby-pitch__num {
   fill: #0b1f16;
   font-size: 3.2px;
   font-weight: 700;
+}
+.pr-rugby-pitch__legend {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
+  font-size: 0.62rem;
+  color: var(--pr-muted, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pr-rugby-pitch__legend-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+.pr-rugby-pitch__legend-dot--primary {
+  background: #22c55e;
+}
+.pr-rugby-pitch__legend-dot--secondary {
+  background: #e7bc63;
+}
+.pr-rugby-pitch__legend-dot--utility {
+  background: #38bdf8;
+}
+.pr-rugby-pitch__legend-dot--rare {
+  background: #9ca3af;
 }
 .pr-rugby-pitch__caption {
   margin-top: 0.5rem;

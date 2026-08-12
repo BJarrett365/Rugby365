@@ -6,7 +6,23 @@ export const metadata: Metadata = {
   description: "Head-to-head player comparison — ratings, market value and stats.",
 };
 
-export default function ComparePlayersPage() {
+type PageProps = {
+  searchParams: Promise<{
+    player1?: string;
+    player2?: string;
+    player?: string;
+    opponent?: string;
+    compare?: string;
+  }>;
+};
+
+export default async function ComparePlayersPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const playerA =
+    sp.player1?.trim() || sp.player?.trim() || null;
+  const playerB =
+    sp.player2?.trim() || sp.opponent?.trim() || sp.compare?.trim() || null;
+
   return (
     <article className="pr-mc-fixtures-page">
       <header className="mb-4">
@@ -16,7 +32,7 @@ export default function ComparePlayersPage() {
           For each side: competition → team → player (or search). Players can come from different competitions.
         </p>
       </header>
-      <ComparePlayersPicker />
+      <ComparePlayersPicker initialPlayerA={playerA} initialPlayerB={playerB} />
     </article>
   );
 }

@@ -183,6 +183,7 @@ async function ensureSeasonRecord(competitionId: string, kickoffAt: Date) {
 export async function importMatchPerformanceStats(
   fixtureId: string,
   matchId: string,
+  options: { timeoutMs?: number } = {},
 ): Promise<MatchStatsImportResult> {
   const fixture = await getFixtureById(fixtureId);
   if (!fixture) throw new Error("Fixture not found");
@@ -200,10 +201,11 @@ export async function importMatchPerformanceStats(
       kickoffAt,
     })) ?? (await ensureSeasonRecord(fixture.competitionId, kickoffAt));
 
+  const fetchOpts = options.timeoutMs != null ? { timeoutMs: options.timeoutMs } : undefined;
   const [detail, matchStats, playerStats] = await Promise.all([
-    fetchSdmsMatchDetail(matchId),
-    fetchSdmsMatchStats(matchId),
-    fetchSdmsMatchPlayerStats(matchId),
+    fetchSdmsMatchDetail(matchId, fetchOpts),
+    fetchSdmsMatchStats(matchId, fetchOpts),
+    fetchSdmsMatchPlayerStats(matchId, fetchOpts),
   ]);
   if (!detail) throw new Error(`SDMS match detail not found: ${matchId}`);
 

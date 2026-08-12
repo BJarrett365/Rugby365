@@ -103,8 +103,13 @@ export type PublicPlayerProfile = {
   university: string | null;
   nationName: string | null;
   nationCode: string | null;
-  club: { name: string; slug: string | null; imageUrl: string | null } | null;
-  internationalTeam: { name: string; slug: string | null; imageUrl: string | null } | null;
+  club: { name: string; slug: string | null; imageUrl: string | null; shortName: string | null } | null;
+  internationalTeam: {
+    name: string;
+    slug: string | null;
+    imageUrl: string | null;
+    shortName: string | null;
+  } | null;
   /** Current club's domestic competition (not historic season competition). */
   competitionName: string | null;
   latestRecordedSeason: {
@@ -260,13 +265,18 @@ export type PublicPlayerProfile = {
   clubDebutOn: string | null;
   agent: { name: string | null; agency: string | null } | null;
   contract: {
+    startsOn: string | null;
     expiresOn: string | null;
     expiresLabel: string | null;
+    /** Year range for hero display e.g. "2025 – 2027"; null when neither date known. */
+    termLabel: string | null;
     reportedSalaryGbp: number | null;
     reportedSalaryLabel: string | null;
     salaryAsOf: string | null;
     /** True when salary comes from CMS reported figure (not model estimate). */
     salaryIsReported: boolean;
+    /** True when contract end (and optional start) comes from verified CMS fields. */
+    datesVerified: boolean;
   };
   positionsPlayed: Array<{ position: string; appearances: number }>;
   ratingSeries: Array<{
@@ -560,7 +570,12 @@ export async function getPublicPlayerProfile(
   ] = await Promise.all([
     clubId
       ? db
-          .select({ name: teams.name, slug: teams.slug, imageUrl: teams.imageUrl })
+          .select({
+            name: teams.name,
+            slug: teams.slug,
+            imageUrl: teams.imageUrl,
+            shortName: teams.shortName,
+          })
           .from(teams)
           .where(eq(teams.id, clubId))
           .limit(1)
@@ -568,7 +583,12 @@ export async function getPublicPlayerProfile(
       : Promise.resolve(null),
     intlId
       ? db
-          .select({ name: teams.name, slug: teams.slug, imageUrl: teams.imageUrl })
+          .select({
+            name: teams.name,
+            slug: teams.slug,
+            imageUrl: teams.imageUrl,
+            shortName: teams.shortName,
+          })
           .from(teams)
           .where(eq(teams.id, intlId))
           .limit(1)
@@ -944,6 +964,9 @@ export async function getPublicPlayerProfile(
     ? String(player.clubDebutOn).slice(0, 10)
     : null;
 
+  const contractStartsOn = player.contractStartOn
+    ? String(player.contractStartOn).slice(0, 10)
+    : null;
   const contractExpiresOn = player.contractExpiresOn
     ? String(player.contractExpiresOn).slice(0, 10)
     : null;
@@ -951,9 +974,22 @@ export async function getPublicPlayerProfile(
   if (contractExpiresOn) {
     const d = new Date(contractExpiresOn);
     if (!Number.isNaN(d.getTime())) {
-      expiresLabel = d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+      expiresLabel = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
     }
   }
+  let contractTermLabel: string | null = null;
+  if (contractStartsOn || contractExpiresOn) {
+    const startY = contractStartsOn ? new Date(contractStartsOn).getUTCFullYear() : null;
+    const endY = contractExpiresOn ? new Date(contractExpiresOn).getUTCFullYear() : null;
+    if (startY != null && endY != null && !Number.isNaN(startY) && !Number.isNaN(endY)) {
+      contractTermLabel = `${startY} – ${endY}`;
+    } else if (endY != null && !Number.isNaN(endY)) {
+      contractTermLabel = String(endY);
+    } else if (startY != null && !Number.isNaN(startY)) {
+      contractTermLabel = `${startY} –`;
+    }
+  }
+  const contractDatesVerified = Boolean(player.contractVerifiedAt) || Boolean(contractExpiresOn);
   const reportedSalary =
     player.reportedSalaryGbp != null && Number.isFinite(Number(player.reportedSalaryGbp))
       ? Number(player.reportedSalaryGbp)
@@ -1121,10 +1157,12 @@ export async function getPublicPlayerProfile(
       name: player.name,
       imageUrl: player.imageUrl,
       rating:
-        currentRating != null && Number.isFinite(currentRating) ? Math.round(currentRating) : null,
+        currentRating != null && Number.isFinite(currentRating) ? Math.round(currentRating * 10) / 10 : null,
       positionName: player.positionName,
       nationName,
       competitionName: currentCompetitionName,
+      competitionVerified: Boolean(currentCompetitionName),
+      modelVersion: ratingRow?.modelVersion ?? null,
     });
   } catch (error) {
     console.warn(
@@ -1183,10 +1221,20 @@ export async function getPublicPlayerProfile(
     nationName,
     nationCode: player.nationCode,
     club: clubName
-      ? { name: clubName, slug: clubRow?.slug ?? null, imageUrl: clubRow?.imageUrl ?? null }
+      ? {
+          name: clubName,
+          slug: clubRow?.slug ?? null,
+          imageUrl: clubRow?.imageUrl ?? null,
+          shortName: clubRow?.shortName ?? null,
+        }
       : null,
     internationalTeam: nationName
-      ? { name: nationName, slug: intlRow?.slug ?? null, imageUrl: intlRow?.imageUrl ?? null }
+      ? {
+          name: nationName,
+          slug: intlRow?.slug ?? null,
+          imageUrl: intlRow?.imageUrl ?? null,
+          shortName: intlRow?.shortName ?? null,
+        }
       : null,
     competitionName: currentCompetitionName,
     latestRecordedSeason:
@@ -1299,12 +1347,15 @@ export async function getPublicPlayerProfile(
         ? { name: player.agentName ?? null, agency: player.agentAgency ?? null }
         : null,
     contract: {
+      startsOn: contractStartsOn,
       expiresOn: contractExpiresOn,
       expiresLabel,
+      termLabel: contractTermLabel,
       reportedSalaryGbp: reportedSalary,
       reportedSalaryLabel: reportedSalary != null ? formatGbpCompact(reportedSalary) : null,
       salaryAsOf: player.salaryAsOf ? String(player.salaryAsOf).slice(0, 10) : null,
       salaryIsReported: reportedSalary != null,
+      datesVerified: contractDatesVerified,
     },
     positionsPlayed,
     ratingSeries,

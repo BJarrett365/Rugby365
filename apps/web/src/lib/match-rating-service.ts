@@ -2,7 +2,7 @@
  * Rugby365 Match Ratings (0–10 scale) for lineup display.
  * Stored per fixture+player — do not invent a separate display rating.
  */
-import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import {
   fixturePlayers,
   fixtures,
@@ -659,6 +659,161 @@ export async function getAdminFixtureLineupRatings(
   return { ...bundle, ratings };
 }
 
+/** Prevent concurrent SDMS enrich of the same fixture (page after() + backfill stampede). */
+const sdmsEnrichInflight = new Set<string>();
+
+/**
+ * If a finished fixture has linked squad/performance data but missing match-rating rows
+ * (e.g. squad imported after the first ratings pass, or CMS never enriched from SDMS),
+ * sync from SDMS when needed and calculate ratings from real performance stats.
+ * Idempotent when all expected ratings already exist.
+ *
+ * Pass `allowSdmsEnrich: false` on the Match Centre request path — SDMS enrich is
+ * 13+ HTTP calls (default 20s each) plus stats import and must not block RSC.
+ */
+export async function ensureMissingFixturePlayerMatchRatings(
+  fixtureId: string,
+  options: { matchId?: string | null; allowSdmsEnrich?: boolean } = {},
+): Promise<{
+  enriched: boolean;
+  calculated: number;
+  triggered: boolean;
+  needsSdmsEnrich: boolean;
+}> {
+  const db = getDb();
+  const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
+    return { enriched: false, calculated: 0, triggered: false, needsSdmsEnrich: false };
+  }
+
+  const countRows = async (
+    table: typeof fixturePlayers | typeof playerMatchPerformanceStats | typeof playerMatchRatings,
+  ): Promise<number> => {
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(table)
+      .where(eq(table.fixtureId, fixtureId));
+    return row?.count ?? 0;
+  };
+
+  const countPerfPlayersMissingRatings = async (): Promise<{
+    perfCount: number;
+    missingCount: number;
+  }> => {
+    const perfRows = await db
+      .select({ playerId: playerMatchPerformanceStats.playerId })
+      .from(playerMatchPerformanceStats)
+      .where(eq(playerMatchPerformanceStats.fixtureId, fixtureId));
+    if (perfRows.length === 0) return { perfCount: 0, missingCount: 0 };
+
+    const perfPlayerIds = perfRows.map((r) => r.playerId);
+    const ratingRows = await db
+      .select({ playerId: playerMatchRatings.playerId })
+      .from(playerMatchRatings)
+      .where(
+        and(
+          eq(playerMatchRatings.fixtureId, fixtureId),
+          inArray(playerMatchRatings.playerId, perfPlayerIds),
+          sql`${playerMatchRatings.rating} is not null`,
+        ),
+      );
+    const ratedIds = new Set(ratingRows.map((r) => r.playerId));
+    return {
+      perfCount: perfPlayerIds.length,
+      missingCount: perfPlayerIds.filter((id) => !ratedIds.has(id)).length,
+    };
+  };
+
+  let enriched = false;
+  let squadCount = await countRows(fixturePlayers);
+  let perfCount = await countRows(playerMatchPerformanceStats);
+
+  const matchId = options.matchId ?? fixture.externalMatchId;
+  const allowSdmsEnrich = options.allowSdmsEnrich !== false;
+  if ((squadCount === 0 || perfCount === 0) && matchId && allowSdmsEnrich) {
+    if (sdmsEnrichInflight.has(fixtureId)) {
+      // Another caller is already pulling this match from SDMS.
+    } else {
+      sdmsEnrichInflight.add(fixtureId);
+      try {
+        const { enrichFixtureFromSdmsMatch } = await import("./planet-rugby-match-import-service");
+        await enrichFixtureFromSdmsMatch(fixtureId, matchId, { timeoutMs: 8_000 });
+        enriched = true;
+        squadCount = await countRows(fixturePlayers);
+        perfCount = await countRows(playerMatchPerformanceStats);
+      } catch {
+        // Enrichment is best-effort — still attempt calc from any existing performance rows.
+      } finally {
+        sdmsEnrichInflight.delete(fixtureId);
+      }
+    }
+  }
+
+  const { perfCount: perfPlayers, missingCount } = await countPerfPlayersMissingRatings();
+  const needsSdmsEnrich =
+    Boolean(matchId) && (squadCount === 0 || perfCount === 0) && !allowSdmsEnrich;
+  if (perfPlayers === 0 || missingCount === 0) {
+    return { enriched, calculated: 0, triggered: enriched, needsSdmsEnrich };
+  }
+
+  try {
+    const result = await calculateAndPersistFixtureMatchRatings(fixtureId);
+    return { enriched, calculated: result.calculated, triggered: true, needsSdmsEnrich };
+  } catch {
+    return { enriched, calculated: 0, triggered: enriched, needsSdmsEnrich };
+  }
+}
+
+/**
+ * If a finished fixture has linked squad players without stored career ratings
+ * (e.g. first match appearance before batch career calc), compute and persist them.
+ * Idempotent when all squad players already have career ratings.
+ */
+export async function ensureMissingFixturePlayerCareerRatings(
+  fixtureId: string,
+): Promise<{ calculated: number; triggered: boolean }> {
+  const db = getDb();
+  const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
+    return { calculated: 0, triggered: false };
+  }
+
+  const squadRows = await db
+    .select({ playerId: fixturePlayers.playerId })
+    .from(fixturePlayers)
+    .where(eq(fixturePlayers.fixtureId, fixtureId));
+  const playerIds = [...new Set(squadRows.map((row) => row.playerId))];
+  if (playerIds.length === 0) return { calculated: 0, triggered: false };
+
+  const existingRows = await db
+    .select({ playerId: playerRatings.playerId })
+    .from(playerRatings)
+    .where(
+      and(
+        inArray(playerRatings.playerId, playerIds),
+        or(
+          sql`${playerRatings.playerRating} is not null`,
+          sql`${playerRatings.manualOverrideRating} is not null`,
+        ),
+      ),
+    );
+  const ratedIds = new Set(existingRows.map((row) => row.playerId));
+  const missingIds = playerIds.filter((id) => !ratedIds.has(id));
+  if (missingIds.length === 0) return { calculated: 0, triggered: false };
+
+  const { calculateAndPersistPlayerRating } = await import("./player-bio-packet-service");
+  let calculated = 0;
+  for (const playerId of missingIds) {
+    try {
+      const rating = await calculateAndPersistPlayerRating(playerId);
+      if (rating.displayRating != null) calculated += 1;
+    } catch {
+      // Career rating backfill is best-effort per player.
+    }
+  }
+  return { calculated, triggered: true };
+}
+
 export async function calculateAndPersistFixtureMatchRatings(fixtureId: string): Promise<{
   calculated: number;
   potmPlayerId: string | null;
@@ -711,7 +866,26 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
 
   const squadByPlayer = new Map(squadRows.map((s) => [s.playerId, s]));
 
-  const status: MatchRatingStatus = "final";
+  const statusForProvider = (provider: string | null | undefined): MatchRatingStatus => {
+    if (
+      provider === "sdms" ||
+      provider === "rugby_data" ||
+      provider === "ai_algorithm_estimate"
+    ) {
+      return "final";
+    }
+    // Scoring-only / rollup historic rows — keep visible but mark provisional (low confidence).
+    if (
+      provider === "fixture_players" ||
+      provider === "scoring_events" ||
+      provider === "rwc_player_rollup" ||
+      provider === "opta_published_leaderboard" ||
+      provider === "wikipedia_statistics"
+    ) {
+      return "provisional";
+    }
+    return providerRank(provider) >= 80 ? "final" : "provisional";
+  };
 
   let best: { playerId: string; rating: number } | null = null;
   let calculated = 0;
@@ -724,6 +898,7 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
       extras: (perf.extras ?? {}) as Record<string, unknown>,
     });
     const impacts = buildImpacts(perf);
+    const status = statusForProvider(perf.sourceProvider);
 
     const prevConditions = [
       eq(playerMatchRatings.playerId, perf.playerId),
@@ -829,7 +1004,7 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
     .where(eq(playerMatchRatings.fixtureId, fixtureId));
 
   let potmPlayerId: string | null = null;
-  if (best && status === "final") {
+  if (best) {
     potmPlayerId = best.playerId;
     await db
       .update(playerMatchRatings)
@@ -870,6 +1045,19 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
     });
   } catch {
     // DNP ledger is best-effort; never block match ratings.
+  }
+
+  try {
+    const { cascadeFixtureDataChange } = await import("./data-change-event-service");
+    await cascadeFixtureDataChange({
+      fixtureId,
+      eventType: "PLAYER_RATINGS_UPDATED",
+      source: "rugby365",
+      importMethod: "SYSTEM",
+      processNow: false,
+    });
+  } catch {
+    // Stale marking is best-effort.
   }
 
   return { calculated, potmPlayerId, coachesCalculated, refereeCalculated };

@@ -595,6 +595,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/referees", label: "Referees", short: "Refs" },
       { href: "/admin/squads", label: "Squads", short: "Squads" },
       { href: "/admin/data-audit", label: "Data audit", short: "Audit" },
+      { href: "/admin/data-backfill", label: "Data Backfill", short: "Backfill" },
       { href: "/admin/season-repair", label: "Season repair", short: "Seasons" },
       { href: "/admin/data-audit/squads", label: "Membership audit", short: "Memb" },
       { href: "/admin/opta-stats", label: "Opta Stats", short: "Stats" },
@@ -603,6 +604,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { href: "/admin/team-of-the-week", label: "Team of the Week", short: "TotW" },
       { href: "/admin/shirt-library", label: "Shirt Library CMS", short: "ShirtsAdm" },
       { href: "/admin/crest-library", label: "Crest Library CMS", short: "CrestsAdm" },
+      { href: "/admin/assets/honours-icons", label: "Honours Icons", short: "Honours" },
     ],
   },
   {

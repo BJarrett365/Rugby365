@@ -1,11 +1,63 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import type { PublicCoachProfile } from "@/lib/public-coach-profile-service";
 import { scoreBandColor } from "@/lib/coach-rating-service";
-import { formatPublicDate, formatPublicKickoff } from "@/lib/public-entity-profile-utils";
+import {
+  POWER_INDEX_DISPLAY_LEFT,
+  POWER_INDEX_DISPLAY_RIGHT,
+} from "@/lib/coach-power-index-engine";
+import { formatPublicDate } from "@/lib/public-entity-profile-utils";
+import { formatCoachResultDate } from "@/lib/coach-perspective-result";
 import { PublicEntityPreviewBanner } from "@/components/entities/PublicEntityProfileBits";
+import {
+  CareerTimelineBadge,
+  careerBadgeKindFromTimeline,
+} from "./CareerTimelineBadge";
 import { CoachPlayingCareer } from "./CoachPlayingCareer";
 import { CoachCareerSnapshot } from "./CoachCareerSnapshot";
+import { CoachProfileAssetImage } from "./CoachProfileAssetImage";
+import { CoachRatingTrendsCard } from "./CoachRatingTrendsCard";
+import { CoachAwardsCard } from "./CoachAwardsCard";
+import { CoachMedalRecordCard } from "./CoachMedalRecordCard";
+import { HonourAwardIcon, HonourTrophyIcon } from "@/components/honours/HonourIcons";
 import { isCoachAssessment } from "@/lib/coach-field-provenance";
+
+function formatCoachResultDateMobile(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const mon = d
+    .toLocaleString("en-GB", { month: "short", timeZone: "UTC" })
+    .toUpperCase();
+  return `${day} ${mon}`;
+}
+
+function formatCoachResultDetailDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d
+    .toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+    .toUpperCase();
+}
+
+function formatCoachResultKickoff(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  });
+}
 
 function dash(v: string | number | null | undefined): string {
   if (v == null || v === "") return "—";
@@ -18,6 +70,15 @@ function bandClass(score: number | null): string {
   if (b === "orange") return "orange";
   if (b === "red") return "red";
   return "";
+}
+
+/** Power Index score bands (design tokens via CSS classes). */
+function powerBandClass(score: number | null): string {
+  if (score == null) return "muted";
+  if (score >= 90) return "";
+  if (score >= 80) return "amber";
+  if (score >= 70) return "orange";
+  return "red";
 }
 
 function stars(rating: number | null): string {
@@ -64,48 +125,29 @@ const NAV: Array<{ id: string; label: string; href?: string }> = [
   { id: "history", label: "History", href: "history" },
   { id: "matches", label: "Matches", href: "matches" },
   { id: "h2h", label: "Head-to-Head", href: "compare" },
-  { id: "rankings", label: "Rankings" },
+  { id: "rankings", label: "Rankings", href: "/rankings/coaches" },
   { id: "news", label: "News" },
 ];
 
 export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfile }) {
   const r = profile.ratings;
   const cr = profile.careerRecord;
-  const powerMetrics = [
-    "results",
-    "attack",
-    "defence",
-    "set_piece",
-    "breakdown",
-    "kicking",
-    "discipline",
-    "selection",
-    "game_management",
-    "player_development",
-    "experience",
-    "current_form",
-  ] as const;
-
-  const powerLeft = powerMetrics.slice(0, 6);
-  const powerRight = powerMetrics.slice(6);
-  const metricMap = new Map(r.metrics.map((m) => [m.key, m]));
-
-  const historyPoints = profile.ratingHistory;
-  const chartPath = (() => {
-    if (historyPoints.length < 2) return "";
-    const vals = historyPoints.map((p) => p.rating);
-    const min = Math.min(...vals, 50);
-    const max = Math.max(...vals, 100);
-    const w = 300;
-    const h = 120;
-    return historyPoints
-      .map((p, i) => {
-        const x = (i / (historyPoints.length - 1)) * w;
-        const y = h - ((p.rating - min) / Math.max(1, max - min)) * (h - 10) - 5;
-        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ");
-  })();
+  // Same source as Recent Results (oldest → newest for form strip).
+  const formResults =
+    profile.recentMatches.length > 0
+      ? [...profile.recentMatches]
+          .reverse()
+          .map((m) => m.result)
+          .filter((x): x is "W" | "D" | "L" => x != null)
+      : cr.form;
+  const powerLeft = POWER_INDEX_DISPLAY_LEFT;
+  const powerRight = POWER_INDEX_DISPLAY_RIGHT;
+  /** Prefer Intelligence scores so Power Index card always matches CI. */
+  const metricMap = new Map(
+    (r.intelligence?.length ? r.intelligence : r.metrics).map((m) => [m.key, m]),
+  );
+  const powerPct = r.powerIndex != null ? Math.max(0, Math.min(100, r.powerIndex)) : 0;
+  const ringCircumference = 2 * Math.PI * 54;
 
   const appointedYear = profile.appointedOn?.slice(0, 4) ?? null;
   const contractYear = profile.contractExpiresOn?.slice(0, 4) ?? null;
@@ -120,7 +162,11 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
 
       <nav className="pr-coach-profile__nav" aria-label="Coach sections">
         {NAV.map((item) => {
-          const href = item.href ? `/coaches/${profile.slug}/${item.href}` : `#${item.id}`;
+          const href = item.href?.startsWith("/")
+            ? item.href
+            : item.href
+              ? `/coaches/${profile.slug}/${item.href}`
+              : `#${item.id}`;
           return (
             <Link key={item.id} href={href} className={item.id === "overview" ? "is-active" : undefined}>
               {item.label}
@@ -255,36 +301,67 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
         <CoachCareerSnapshot rows={profile.careerSnapshot} />
       </section>
 
-      <div className="pr-coach-kpi">
+      <div
+        className="pr-coach-kpi"
+        style={
+          {
+            ["--kpi-cols"]: r.competitionRank != null ? 8 : 7,
+          } as CSSProperties
+        }
+      >
         <div className="pr-coach-kpi__cell">
-          <div className="pr-coach-kpi__label">Rugby365 Rating</div>
-          <div className="pr-coach-kpi__value">
-            {r.overallRating != null ? r.overallRating.toFixed(1) : "—"}
-          </div>
-          <div className="pr-coach-kpi__stars">{stars(r.overallRating)}</div>
+          <Link
+            href={`/coaches/${profile.slug}/rating`}
+            className="pr-coach-kpi__link"
+            title="Overall coaching rating based on current strength, career results, big matches, improvement, development and honours."
+          >
+            <div className="pr-coach-kpi__label">Rugby365 Coach Rating</div>
+            <div className="pr-coach-kpi__value">
+              {r.overallRating != null ? r.overallRating.toFixed(1) : "—"}
+            </div>
+            <div className="pr-coach-kpi__stars">{stars(r.overallRating)}</div>
+          </Link>
         </div>
         <div className="pr-coach-kpi__cell">
-          <div className="pr-coach-kpi__label">World Rank</div>
-          <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
-            {r.worldRank != null ? `#${r.worldRank}` : "—"}
-          </div>
-          <div className="pr-coach-kpi__sub">
-            {r.rankedOutOf != null ? `Out of ${r.rankedOutOf}` : r.provisional ? "Provisional" : "—"}
-          </div>
+          <Link
+            href="/rankings/coaches"
+            className="pr-coach-kpi__link"
+            title="Ranking among eligible Rugby365 coaches."
+          >
+            <div className="pr-coach-kpi__label">World Rank</div>
+            <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
+              {r.worldRank != null ? `#${r.worldRank}` : "—"}
+            </div>
+            <div className="pr-coach-kpi__sub">
+              {r.rankedOutOf != null ? `Out of ${r.rankedOutOf}` : r.provisional ? "Provisional" : "—"}
+            </div>
+          </Link>
         </div>
-        <div className="pr-coach-kpi__cell">
-          <div className="pr-coach-kpi__label">Career Win Rate</div>
-          <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
-            {cr.winRate != null ? `${cr.winRate}%` : "—"}
+        {r.competitionRank != null ? (
+          <div className="pr-coach-kpi__cell">
+            <div className="pr-coach-kpi__label">{r.competitionRankLabel ?? "Competition Rank"}</div>
+            <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
+              #{r.competitionRank}
+            </div>
+            <div className="pr-coach-kpi__sub">
+              {r.competitionRankedOutOf != null
+                ? `of ${r.competitionRankedOutOf}${r.competitionRankSub ? ` · ${r.competitionRankSub}` : ""}`
+                : r.competitionRankSub ?? "—"}
+            </div>
           </div>
-          <div className="pr-coach-kpi__sub">
-            {cr.wins > 0 ? `${cr.wins} Wins` : cr.played > 0 ? `${cr.played} Matches` : "—"}
-          </div>
-        </div>
+        ) : null}
         <div className="pr-coach-kpi__cell">
-          <div className="pr-coach-kpi__label">Power Index</div>
-          <div className="pr-coach-kpi__value pr-coach-kpi__value--green">{dash(r.powerIndex)}</div>
-          <div className="pr-coach-kpi__sub">Out of 100</div>
+          <Link
+            href={`/coaches/${profile.slug}/power-index`}
+            className="pr-coach-kpi__link"
+            title="Current coaching strength based mainly on recent performances."
+          >
+            <div className="pr-coach-kpi__label">Power Index</div>
+            <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
+              {r.powerIndex != null ? Math.round(r.powerIndex) : "—"}
+            </div>
+            <div className="pr-coach-kpi__sub">Current strength · /100</div>
+          </Link>
         </div>
         <div className="pr-coach-kpi__cell">
           <div className="pr-coach-kpi__label">Momentum</div>
@@ -300,13 +377,13 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           >
             {r.momentum == null ? "—" : r.momentum > 0 ? `↑ +${r.momentum}` : r.momentum < 0 ? `↓ ${r.momentum}` : "— 0"}
           </div>
-          <div className="pr-coach-kpi__sub">vs last cycle</div>
+          <div className="pr-coach-kpi__sub">Power Index vs last</div>
         </div>
         <div className="pr-coach-kpi__cell">
           <div className="pr-coach-kpi__label">Current Form</div>
           <div className="pr-coach-form">
-            {cr.form.length ? (
-              cr.form.map((f, i) => (
+            {formResults.length ? (
+              formResults.map((f, i) => (
                 <span key={`${f}-${i}`} className={f.toLowerCase()}>
                   {f}
                 </span>
@@ -315,14 +392,21 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
               <span style={{ color: "var(--cp-muted)" }}>—</span>
             )}
           </div>
-          <div className="pr-coach-kpi__sub">Last {Math.max(cr.form.length, 8)} Matches</div>
+          <div className="pr-coach-kpi__sub">Last {Math.max(formResults.length, 8)} Matches</div>
+        </div>
+        <div className="pr-coach-kpi__cell">
+          <div className="pr-coach-kpi__label">Career Win Rate</div>
+          <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
+            {cr.winRate != null ? `${cr.winRate}%` : "—"}
+          </div>
+          <div className="pr-coach-kpi__sub">
+            {cr.wins > 0 ? `${cr.wins} Wins` : cr.played > 0 ? `${cr.played} Matches` : "—"}
+          </div>
         </div>
         <div className="pr-coach-kpi__cell">
           <div className="pr-coach-kpi__label">Major Honours</div>
           <div className="pr-coach-kpi__value">
-            {profile.majorHonoursGrouped
-              .filter((g) => g.kind === "honour" && (g.honourLevel === "major" || g.honourLevel === "domestic_major"))
-              .reduce((s, g) => s + g.count, 0) || profile.majorHonoursGrouped.reduce((s, g) => s + (g.kind === "honour" ? g.count : 0), 0) || "—"}
+            {profile.majorHonoursCount > 0 ? profile.majorHonoursCount : "—"}
           </div>
           <div className="pr-coach-kpi__sub">
             <Link href={`/coaches/${profile.slug}/honours`}>See all</Link>
@@ -331,161 +415,188 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
       </div>
 
       <div className="pr-coach-row pr-coach-row--3">
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill">
           <div className="pr-coach-card__head">
             <h2>Coach Intelligence</h2>
             <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/stats`}>
               View full breakdown
             </Link>
           </div>
-          <div className="pr-coach-intel__cols">
-            <span>Metric</span>
-            <span>Rating</span>
-            <span>World Rank</span>
-          </div>
-          {r.metrics.map((m) => (
-            <div className="pr-coach-intel__row" key={m.key}>
-              <div className="pr-coach-intel__name">{m.label}</div>
-              <div className="pr-coach-intel__barwrap">
-                <div className="pr-coach-intel__bar">
-                  <i
-                    className={bandClass(m.score)}
-                    style={{ width: `${m.score != null ? Math.max(2, m.score) : 0}%` }}
-                  />
-                </div>
-                <div className="pr-coach-intel__score">{dash(m.score != null ? Math.round(m.score) : null)}</div>
-              </div>
-              <div className="pr-coach-intel__rank">
-                {m.worldRank != null ? `#${m.worldRank}` : "—"}
-              </div>
+          <div className="pr-coach-card__body pr-coach-intel">
+            <div className="pr-coach-intel__cols">
+              <span>Metric</span>
+              <span>Rating</span>
+              <span>World Rank</span>
             </div>
-          ))}
+            <div className="pr-coach-intel__list">
+              {(r.intelligence?.length ? r.intelligence : r.metrics).map((m) => (
+                <div className="pr-coach-intel__row" key={m.key}>
+                  <div className="pr-coach-intel__name">{m.label}</div>
+                  <div className="pr-coach-intel__barwrap">
+                    <div className="pr-coach-intel__bar">
+                      <i
+                        className={bandClass(m.score)}
+                        style={{ width: `${m.score != null ? Math.max(2, m.score) : 0}%` }}
+                      />
+                    </div>
+                    <div className="pr-coach-intel__score">{dash(m.score != null ? Math.round(m.score) : null)}</div>
+                  </div>
+                  <div className="pr-coach-intel__rank">
+                    {m.worldRank != null ? `#${m.worldRank}` : "—"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill">
           <div className="pr-coach-card__head">
             <h2>Career Record</h2>
             <span className="pr-coach-card__link">(All Competitions)</span>
           </div>
-          {cr.partial ? <p className="pr-coach-empty">Partial record — verified Rugby365 matches only.</p> : null}
-          <div className="pr-coach-record__pwdl">
-            <div>
-              <span>P</span>
-              <strong>{cr.played}</strong>
-            </div>
-            <div>
-              <span className="w">W</span>
-              <strong className="w">{cr.wins}</strong>
-            </div>
-            <div>
-              <span>D</span>
-              <strong>{cr.draws}</strong>
-            </div>
-            <div>
-              <span className="l">L</span>
-              <strong className="l">{cr.losses}</strong>
-            </div>
-          </div>
-          <div className="pr-coach-record__mid">
-            <div>
-              <div className="pr-coach-kpi__label" style={{ textAlign: "center" }}>
-                Win Rate
-              </div>
-              <div
-                className="pr-coach-donut"
-                style={{ ["--pct" as string]: cr.winRate ?? 0 }}
-              >
-                <div className="pr-coach-donut__inner">{cr.winRate != null ? `${cr.winRate}%` : "—"}</div>
-              </div>
-            </div>
-            <div className="pr-coach-record__pts">
+          <div className="pr-coach-card__body pr-coach-record">
+            {cr.partial ? (
+              <p className="pr-coach-empty" title="Historical coverage incomplete.">
+                {cr.played} verified matches
+              </p>
+            ) : (
+              <p className="pr-coach-empty">{cr.played} verified matches</p>
+            )}
+            <div className="pr-coach-record__pwdl">
               <div>
-                <span>Points For</span>
-                <strong>{cr.pointsFor.toLocaleString()}</strong>
+                <span>P</span>
+                <strong>{cr.played}</strong>
               </div>
               <div>
-                <span>Points Against</span>
-                <strong>{cr.pointsAgainst.toLocaleString()}</strong>
+                <span className="w">W</span>
+                <strong className="w">{cr.wins}</strong>
+              </div>
+              <div>
+                <span>D</span>
+                <strong>{cr.draws}</strong>
+              </div>
+              <div>
+                <span className="l">L</span>
+                <strong className="l">{cr.losses}</strong>
               </div>
             </div>
-          </div>
-          <div className="pr-coach-record__avgs">
-            <div>
-              <span>Points For / Game</span>
-              <strong>{dash(cr.pointsForPerGame)}</strong>
+            <div className="pr-coach-record__mid">
+              <div className="pr-coach-record__winrate">
+                <div className="pr-coach-kpi__label" style={{ textAlign: "center" }}>
+                  Win Rate
+                </div>
+                <div
+                  className="pr-coach-donut"
+                  style={{ ["--pct" as string]: cr.winRate ?? 0 }}
+                >
+                  <div className="pr-coach-donut__inner">{cr.winRate != null ? `${cr.winRate}%` : "—"}</div>
+                </div>
+              </div>
+              <div className="pr-coach-record__pts">
+                <div>
+                  <span>Points For</span>
+                  <strong>{cr.pointsFor.toLocaleString()}</strong>
+                </div>
+                <div>
+                  <span>Points Against</span>
+                  <strong>{cr.pointsAgainst.toLocaleString()}</strong>
+                </div>
+              </div>
             </div>
-            <div>
-              <span>Points Against / Game</span>
-              <strong>{dash(cr.pointsAgainstPerGame)}</strong>
+            <div className="pr-coach-record__avgs">
+              <div>
+                <span>Points For / Game</span>
+                <strong>{dash(cr.pointsForPerGame)}</strong>
+              </div>
+              <div>
+                <span>Points Against / Game</span>
+                <strong>{dash(cr.pointsAgainstPerGame)}</strong>
+              </div>
             </div>
-          </div>
-          <div className="pr-coach-record__bottom">
-            <div>
-              <span>Biggest Win</span>
-              <strong>
-                {cr.biggestWin ? `${cr.biggestWin.forScore} - ${cr.biggestWin.againstScore}` : "—"}
-              </strong>
-            </div>
-            <div>
-              <span>Biggest Loss</span>
-              <strong>
-                {cr.biggestLoss ? `${cr.biggestLoss.forScore} - ${cr.biggestLoss.againstScore}` : "—"}
-              </strong>
-            </div>
-            <div>
-              <span>Longest Win Streak</span>
-              <strong>{cr.longestWinStreak || "—"}</strong>
+            <div className="pr-coach-record__bottom">
+              <div>
+                <span>Biggest Win</span>
+                <strong>
+                  {cr.biggestWin ? `${cr.biggestWin.forScore} - ${cr.biggestWin.againstScore}` : "—"}
+                </strong>
+              </div>
+              <div>
+                <span>Biggest Loss</span>
+                <strong>
+                  {cr.biggestLoss ? `${cr.biggestLoss.forScore} - ${cr.biggestLoss.againstScore}` : "—"}
+                </strong>
+              </div>
+              <div>
+                <span>Longest Win Streak</span>
+                <strong>{cr.longestWinStreak || "—"}</strong>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill">
           <div className="pr-coach-card__head">
-            <h2>Power Index</h2>
-            <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/stats`}>
+            <h2>POWER INDEX</h2>
+            <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/power-index`}>
               View breakdown &gt;
             </Link>
           </div>
-          <div className="pr-coach-power__ring" style={{ ["--pct" as string]: r.powerIndex ?? 0 }}>
-            <div className="pr-coach-power__ring-inner">
-              <strong>{dash(r.powerIndex != null ? Math.round(r.powerIndex) : null)}</strong>
-              <span>Out of 100</span>
+          <div className="pr-coach-card__body pr-coach-power">
+            <div className="pr-coach-power__ring" aria-label={`Power Index ${r.powerIndex != null ? Math.round(r.powerIndex) : "unavailable"} out of 100`}>
+              <svg className="pr-coach-power__svg" viewBox="0 0 120 120" aria-hidden="true">
+                <circle className="pr-coach-power__track" cx="60" cy="60" r="54" />
+                <circle
+                  className="pr-coach-power__progress"
+                  cx="60"
+                  cy="60"
+                  r="54"
+                  style={{
+                    strokeDasharray: `${ringCircumference}`,
+                    strokeDashoffset: `${ringCircumference * (1 - powerPct / 100)}`,
+                  }}
+                />
+              </svg>
+              <div className="pr-coach-power__ring-inner">
+                <strong>{dash(r.powerIndex != null ? Math.round(r.powerIndex) : null)}</strong>
+                <span>OUT OF 100</span>
+              </div>
             </div>
-          </div>
-          <div className="pr-coach-power__cols">
-            <div>
-              {powerLeft.map((key) => {
-                const m = metricMap.get(key);
-                return (
-                  <div className="pr-coach-power__metric" key={key}>
-                    <span className="label">
-                      <i className={`pr-coach-power__dot ${bandClass(m?.score ?? null)}`} />
-                      {m?.label ?? key}
-                    </span>
-                    <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
-                  </div>
-                );
-              })}
-            </div>
-            <div>
-              {powerRight.map((key) => {
-                const m = metricMap.get(key);
-                const label =
-                  key === "game_management"
-                    ? "Game Mgmt"
-                    : key === "player_development"
-                      ? "Player Dev."
-                      : m?.label ?? key;
-                return (
-                  <div className="pr-coach-power__metric" key={key}>
-                    <span className="label">
-                      <i className={`pr-coach-power__dot ${bandClass(m?.score ?? null)}`} />
-                      {label}
-                    </span>
-                    <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
-                  </div>
-                );
-              })}
+            <div className="pr-coach-power__cols">
+              <div>
+                {powerLeft.map((key) => {
+                  const m = metricMap.get(key);
+                  return (
+                    <div className="pr-coach-power__metric" key={key}>
+                      <span className="label">
+                        <i className={`pr-coach-power__dot ${powerBandClass(m?.score ?? null)}`} />
+                        {m?.label ?? key}
+                      </span>
+                      <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+              <div>
+                {powerRight.map((key) => {
+                  const m = metricMap.get(key);
+                  const label =
+                    key === "game_management"
+                      ? "Game Mgmt"
+                      : key === "player_development"
+                        ? "Player Dev."
+                        : m?.label ?? key;
+                  return (
+                    <div className="pr-coach-power__metric" key={key}>
+                      <span className="label">
+                        <i className={`pr-coach-power__dot ${powerBandClass(m?.score ?? null)}`} />
+                        {label}
+                      </span>
+                      <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
@@ -507,23 +618,43 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
                 {profile.timeline.map((n) => (
                   <div
                     key={n.id}
-                    className={`pr-coach-timeline__node${n.isCurrent ? " is-current" : ""}`}
+                    className={`pr-coach-timeline__node${n.isCurrent ? " is-current" : ""}${
+                      n.careerType === "technical" ? " is-technical" : ""
+                    }`}
                   >
                     <div className="pr-coach-timeline__year">{n.year || "—"}</div>
                     <div
                       className={`pr-coach-timeline__dot ${
-                        n.careerType === "player" ? "" : "coach"
+                        n.careerType === "player"
+                          ? "player"
+                          : n.careerType === "technical"
+                            ? "technical"
+                            : "coach"
                       }`}
                     />
-                    {n.crestUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="pr-coach-timeline__crest" src={n.crestUrl} alt="" />
-                    ) : (
-                      <div className="pr-coach-timeline__crest" />
-                    )}
+                    <div className="pr-coach-timeline__stem" aria-hidden />
+                    <div className="pr-coach-timeline__crest-wrap">
+                      <CareerTimelineBadge
+                        teamName={n.teamName}
+                        crestUrl={n.crestUrl}
+                        kind={careerBadgeKindFromTimeline({
+                          careerType: n.careerType,
+                          role: n.role,
+                        })}
+                        isCurrent={n.isCurrent}
+                        roleMarker={
+                          n.role.toLowerCase().includes("director")
+                            ? "DoR"
+                            : n.role.toLowerCase() === "head coach"
+                              ? "HC"
+                              : null
+                        }
+                        title={`${n.teamName} · ${n.role} · ${n.yearsLabel}`}
+                      />
+                    </div>
                     <div className="pr-coach-timeline__meta">{n.yearsLabel}</div>
                     <div className="pr-coach-timeline__role">{n.role}</div>
-                    <div className="pr-coach-timeline__meta">{n.teamName}</div>
+                    <div className="pr-coach-timeline__team">{n.teamName}</div>
                   </div>
                 ))}
               </div>
@@ -531,7 +662,7 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           )}
         </section>
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-honours-card">
           <div className="pr-coach-card__head">
             <h2>Major Honours</h2>
             <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/honours`}>
@@ -541,12 +672,26 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           {profile.majorHonoursGrouped.length === 0 ? (
             <p className="pr-coach-empty">No major honours yet.</p>
           ) : (
-            <div className="pr-coach-honours">
+            <div
+              className="pr-coach-honours"
+              data-count={Math.min(profile.majorHonoursGrouped.length, 4)}
+            >
               {profile.majorHonoursGrouped.map((h) => (
                 <div className="pr-coach-honours__tile" key={h.key}>
-                  <div className="pr-coach-honours__icon">{h.kind === "award" ? "🏅" : "🏆"}</div>
+                  <div className="pr-coach-honours__icon" aria-hidden>
+                    {h.kind === "award" ? (
+                      <HonourAwardIcon size={28} variant="world" />
+                    ) : (
+                      <HonourTrophyIcon
+                        size={28}
+                        variant={h.honourLevel === "major" ? "major" : "domestic"}
+                      />
+                    )}
+                  </div>
                   <div className="pr-coach-honours__count">{h.count}</div>
-                  <div className="pr-coach-honours__label">{h.label}</div>
+                  <div className="pr-coach-honours__label">
+                    {h.label.replace(/^THE\s+/i, "")}
+                  </div>
                 </div>
               ))}
             </div>
@@ -558,69 +703,8 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
         <CoachPlayingCareer profile={profile} />
 
         <div className="pr-coach-stack">
-          <section className="pr-coach-card">
-            <div className="pr-coach-card__head">
-              <h2>Awards</h2>
-              <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/honours`}>
-                View all awards &gt;
-              </Link>
-            </div>
-            {profile.awards.length === 0 ? (
-              <p className="pr-coach-empty">No individual awards recorded.</p>
-            ) : (
-              profile.awards.slice(0, 4).map((a) => (
-                <div className="pr-coach-award-row" key={a.id}>
-                  <span>{a.year ?? "—"}</span>
-                  <span>
-                    {[a.awardingBody, a.awardName].filter(Boolean).join(" ")}
-                  </span>
-                  <span className="pr-coach-tag">{(a.result || "winner").toUpperCase()}</span>
-                </div>
-              ))
-            )}
-          </section>
-          <section className="pr-coach-card">
-            <div className="pr-coach-card__head">
-              <h2>Medal Record</h2>
-              <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/honours`}>
-                View all medals &gt;
-              </Link>
-            </div>
-            {profile.medals.length === 0 ? (
-              <p className="pr-coach-empty">No medal record yet.</p>
-            ) : (
-              <>
-                {["player", "coach"].map((role) => {
-                  const rows = profile.medals.filter((m) => m.roleType === role);
-                  if (!rows.length) return null;
-                  return (
-                    <div key={role}>
-                      <div className="pr-coach-kpi__label" style={{ margin: "0.35rem 0" }}>
-                        As {role}
-                      </div>
-                      {rows.map((m) => (
-                        <div className="pr-coach-medal-row" key={m.id}>
-                          <span>{m.year ?? "—"}</span>
-                          <span>
-                            {m.competitionName} · {m.finish}
-                          </span>
-                          <span>
-                            {m.medalType === "gold"
-                              ? "🥇"
-                              : m.medalType === "silver"
-                                ? "🥈"
-                                : m.medalType === "bronze"
-                                  ? "🥉"
-                                  : ""}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </section>
+          <CoachAwardsCard slug={profile.slug} awards={profile.publicAwards} />
+          <CoachMedalRecordCard slug={profile.slug} medals={profile.publicMedals} />
         </div>
 
         <section className="pr-coach-card pr-coach-impact">
@@ -630,33 +714,38 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
               View impact analysis &gt;
             </Link>
           </div>
-          <div className="pr-coach-card__link" style={{ marginBottom: "0.65rem" }}>
-            {profile.impact.baselineLabel}
-          </div>
+          <div className="pr-coach-impact__baseline">{profile.impact.baselineLabel}</div>
           {!profile.impact.enoughData ? (
-            <p className="pr-coach-empty">Not enough data yet.</p>
+            <p className="pr-coach-empty">
+              Not enough before/under tenure data yet for a Coach Impact comparison.
+            </p>
           ) : (
-            <table>
+            <table className="pr-coach-impact__table">
               <thead>
                 <tr>
-                  <th />
-                  <th>Before</th>
-                  <th>Under Coach</th>
-                  <th>Change</th>
+                  <th scope="col">Metric</th>
+                  <th scope="col">Before</th>
+                  <th scope="col">{profile.impact.underLabel}</th>
+                  <th scope="col">Change</th>
                 </tr>
               </thead>
               <tbody>
                 {profile.impact.rows.map((row) => (
-                  <tr key={row.metric}>
+                  <tr key={row.key ?? row.metric}>
                     <td>{row.metric}</td>
                     <td>{dash(row.before)}</td>
-                    <td className={row.improved ? "up" : undefined}>{dash(row.under)}</td>
-                    <td className={row.improved === true ? "up" : row.improved === false ? "down" : undefined}>
-                      {row.change == null
-                        ? "—"
-                        : typeof row.change === "number"
-                          ? `${row.change > 0 ? "+" : ""}${row.change}`
-                          : row.change}
+                    <td>{dash(row.under)}</td>
+                    <td
+                      className={
+                        row.improved === true ? "up" : row.improved === false ? "down" : undefined
+                      }
+                    >
+                      {row.changeLabel ??
+                        (row.change == null
+                          ? "—"
+                          : typeof row.change === "number"
+                            ? `${row.change > 0 ? "+" : ""}${row.change}`
+                            : row.change)}
                     </td>
                   </tr>
                 ))}
@@ -667,49 +756,203 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
       </div>
 
       <div className="pr-coach-row pr-coach-row--3">
-        <section className="pr-coach-card">
-          <div className="pr-coach-card__head">
-            <h2>Rating Trends</h2>
-            <span className="pr-coach-card__link">Last 24</span>
-          </div>
-          {historyPoints.length < 2 ? (
-            <p className="pr-coach-empty">Insufficient rating history.</p>
-          ) : (
-            <div className="pr-coach-chart">
-              <svg viewBox="0 0 300 120" preserveAspectRatio="none">
-                <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" />
-              </svg>
-            </div>
-          )}
-        </section>
+        <CoachRatingTrendsCard slug={profile.slug} initial={profile.ratingTrends} compact />
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill pr-coach-selection-stability">
           <div className="pr-coach-card__head">
             <h2>Selection Stability</h2>
             <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/stats`}>
               View full breakdown &gt;
             </Link>
           </div>
-          <p className="pr-coach-empty">
-            Insufficient verified lineup change data for a stability score.
-          </p>
+          {!profile.selectionStability.enoughData ? (
+            <p className="pr-coach-empty">
+              {profile.selectionStability.message ??
+                "INSUFFICIENT SELECTION STABILITY DATA"}
+            </p>
+          ) : (
+            <div className="pr-coach-selection-stability__body">
+              <div
+                className="pr-coach-selection-stability__ring"
+                aria-label={`Selection Stability ${profile.selectionStability.stabilityScore ?? "unavailable"} out of 100`}
+              >
+                <svg className="pr-coach-power__svg" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle className="pr-coach-power__track" cx="60" cy="60" r="54" />
+                  <circle
+                    className="pr-coach-power__progress"
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    style={{
+                      strokeDasharray: `${ringCircumference}`,
+                      strokeDashoffset: `${ringCircumference * (1 - (profile.selectionStability.stabilityScore ?? 0) / 100)}`,
+                    }}
+                  />
+                </svg>
+                <div className="pr-coach-selection-stability__ring-inner">
+                  <strong>
+                    {profile.selectionStability.stabilityScore != null
+                      ? Math.round(profile.selectionStability.stabilityScore)
+                      : "—"}
+                  </strong>
+                  <span>STABILITY</span>
+                  <span>SCORE</span>
+                </div>
+              </div>
+              <dl className="pr-coach-selection-stability__metrics">
+                <div>
+                  <dt>Players Used</dt>
+                  <dd>{profile.selectionStability.playersUsed}</dd>
+                </div>
+                <div>
+                  <dt>Avg Changes / Match</dt>
+                  <dd>{profile.selectionStability.avgStartingXvChanges ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt>Unchanged XV %</dt>
+                  <dd>
+                    {profile.selectionStability.unchangedXvPct != null
+                      ? `${profile.selectionStability.unchangedXvPct}%`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Debutants</dt>
+                  <dd>{profile.selectionStability.debutants}</dd>
+                </div>
+                {profile.selectionStability.avgStartingXvAge != null ? (
+                  <div>
+                    <dt>Avg Starting XV Age</dt>
+                    <dd>{profile.selectionStability.avgStartingXvAge}</dd>
+                  </div>
+                ) : null}
+                {profile.selectionStability.avgBenchAge != null ? (
+                  <div>
+                    <dt>Avg Bench Age</dt>
+                    <dd>{profile.selectionStability.avgBenchAge}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </div>
+          )}
         </section>
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill pr-coach-player-dev">
           <div className="pr-coach-card__head">
             <h2>Player Development</h2>
             <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/stats`}>
               Top 5 Most Improved &gt;
             </Link>
           </div>
-          <p className="pr-coach-empty">
-            Insufficient historical player ratings under this coach.
-          </p>
+          {!profile.playerDevelopment.enoughData ? (
+            <p className="pr-coach-empty">
+              {profile.playerDevelopment.message ??
+                "INSUFFICIENT PLAYER DEVELOPMENT DATA"}
+            </p>
+          ) : (
+            <div className="pr-coach-player-dev__list">
+              <div className="pr-coach-player-dev__cols" aria-hidden>
+                <span />
+                <span />
+                <span title="Appearances under this coach">APPS</span>
+                <span title="Rating change under coach (current − baseline)">CHG</span>
+                <span title="Recent form trend">TREND</span>
+              </div>
+              {profile.playerDevelopment.mostImproved.map((row) => {
+                const change = row.displayedChange ?? row.delta ?? 0;
+                const href = row.playerSlug ? `/players/${row.playerSlug}` : undefined;
+                const trendSymbol =
+                  row.trend === "up" ? "↑" : row.trend === "down" ? "↓" : "—";
+                const inner = (
+                  <>
+                    {row.playerImageUrl ? (
+                      <CoachProfileAssetImage
+                        src={row.playerImageUrl}
+                        className="pr-coach-player-dev__photo"
+                        width={28}
+                        height={28}
+                        fallbackClassName="pr-coach-player-dev__photo-fallback"
+                      />
+                    ) : (
+                      <span className="pr-coach-player-dev__photo-fallback" aria-hidden />
+                    )}
+                    <span className="pr-coach-player-dev__name">{row.playerName}</span>
+                    <span className="pr-coach-player-dev__apps">{row.appearances}</span>
+                    <span
+                      className={`pr-coach-player-dev__change${
+                        change > 0 ? " is-up" : change < 0 ? " is-down" : ""
+                      }`}
+                    >
+                      {change > 0 ? "+" : ""}
+                      {change.toFixed(1)}
+                    </span>
+                    <span
+                      className={`pr-coach-player-dev__trend is-${row.trend ?? "stable"}`}
+                      aria-label={
+                        row.trend === "up"
+                          ? "Improving recently"
+                          : row.trend === "down"
+                            ? "Declining recently"
+                            : "Stable recently"
+                      }
+                    >
+                      {trendSymbol}
+                    </span>
+                    <span className="pr-coach-player-dev__tip" aria-hidden>
+                      <span className="pr-coach-player-dev__tip-name">{row.playerName}</span>
+                      {row.position ? (
+                        <span className="pr-coach-player-dev__tip-pos">{row.position}</span>
+                      ) : null}
+                      <span>Apps under coach · {row.appearances}</span>
+                      <span>
+                        Baseline · {row.baselineRating != null ? row.baselineRating.toFixed(1) : "—"}
+                      </span>
+                      <span>
+                        Current · {row.currentRating != null ? row.currentRating.toFixed(1) : "—"}
+                      </span>
+                      <span>
+                        Change · {change > 0 ? "+" : ""}
+                        {change.toFixed(1)}
+                      </span>
+                      <span>
+                        Recent trend · {trendSymbol}
+                        {row.trendDelta != null
+                          ? ` ${row.trendDelta > 0 ? "+" : ""}${row.trendDelta}`
+                          : ""}
+                      </span>
+                      <span>Debut under coach · {row.debutGiven ? "Yes" : "No"}</span>
+                      <span>
+                        Career high under coach · {row.careerHighUnderCoach ? "Yes" : "No"}
+                      </span>
+                      <span>Confidence · {row.confidence ?? "—"}</span>
+                      {href ? (
+                        <span className="pr-coach-player-dev__tip-cta">View Player Profile &gt;</span>
+                      ) : null}
+                    </span>
+                  </>
+                );
+                return href ? (
+                  <Link
+                    key={row.playerId}
+                    href={href}
+                    className="pr-coach-player-dev__row"
+                    aria-label={`${row.playerName} player profile`}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div key={row.playerId} className="pr-coach-player-dev__row">
+                    {inner}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 
       <div className="pr-coach-row pr-coach-row--3">
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill pr-coach-recent-results">
           <div className="pr-coach-card__head">
             <h2>Recent Results</h2>
             <Link className="pr-coach-card__link" href={`/coaches/${profile.slug}/matches`}>
@@ -719,99 +962,278 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           {profile.recentMatches.length === 0 ? (
             <p className="pr-coach-empty">No recent matches linked.</p>
           ) : (
-            profile.recentMatches.map((m) => {
-              const team = m.side === "home" ? m.homeTeamName : m.awayTeamName;
-              const opp = m.side === "home" ? m.awayTeamName : m.homeTeamName;
-              return (
-                <Link key={m.id} href={`/matches/${m.slug}`} className="pr-coach-result-row">
-                  <span>{formatPublicKickoff(m.kickoffAt)}</span>
-                  <span>{team ?? "—"}</span>
-                  <span>
-                    {m.homeScore} - {m.awayScore}
-                  </span>
-                  <span className="opp">{opp ?? "—"}</span>
-                  <span className={`pr-coach-form`}>
-                    {m.result ? <span className={m.result.toLowerCase()}>{m.result}</span> : "—"}
-                  </span>
-                </Link>
-              );
-            })
+            <div className="pr-coach-recent-results__list">
+              {profile.recentMatches.map((m) => {
+                const kickoff = formatCoachResultKickoff(m.kickoffAt);
+                const href = m.href;
+                const inner = (
+                  <>
+                    <time className="pr-coach-recent-row__date" dateTime={m.kickoffAt ?? undefined}>
+                      <span className="pr-coach-recent-row__date-full">
+                        {formatCoachResultDate(m.kickoffAt)}
+                      </span>
+                      <span className="pr-coach-recent-row__date-short">
+                        {formatCoachResultDateMobile(m.kickoffAt)}
+                      </span>
+                    </time>
+                    <span className="pr-coach-recent-row__opp">
+                      {m.opponentCrestUrl ? (
+                        <CoachProfileAssetImage
+                          src={m.opponentCrestUrl}
+                          className="pr-coach-recent-row__crest"
+                          width={22}
+                          height={22}
+                          fallbackClassName="pr-coach-recent-row__crest-fallback"
+                        />
+                      ) : (
+                        <span className="pr-coach-recent-row__crest-fallback" aria-hidden />
+                      )}
+                      <span className="pr-coach-recent-row__opp-name">
+                        {m.opponentName ?? "—"}
+                      </span>
+                      <span className="pr-coach-recent-row__ha-mobile" aria-hidden>
+                        {m.venueType}
+                      </span>
+                    </span>
+                    <span
+                      className="pr-coach-recent-row__ha"
+                      title={
+                        m.venueType === "H" ? "Home" : m.venueType === "A" ? "Away" : "Neutral"
+                      }
+                    >
+                      {m.venueType ?? "—"}
+                    </span>
+                    <span className="pr-coach-recent-row__score">
+                      {m.pointsFor != null && m.pointsAgainst != null
+                        ? `${m.pointsFor}–${m.pointsAgainst}`
+                        : "—"}
+                    </span>
+                    <span
+                      className={`pr-coach-recent-row__badge ${
+                        m.result ? `is-${m.result.toLowerCase()}` : ""
+                      }`}
+                    >
+                      {m.result ?? "—"}
+                    </span>
+                    <span className="pr-coach-recent-row__tip" aria-hidden>
+                      {m.competitionName ? (
+                        <span className="pr-coach-recent-row__tip-comp">{m.competitionName}</span>
+                      ) : null}
+                      <span className="pr-coach-recent-row__tip-date">
+                        {formatCoachResultDetailDate(m.kickoffAt)}
+                        {kickoff ? ` · ${kickoff}` : ""}
+                      </span>
+                      <span className="pr-coach-recent-row__tip-scoreline">
+                        {m.homeTeamName ?? "Home"} {m.homeScore}–{m.awayScore}{" "}
+                        {m.awayTeamName ?? "Away"}
+                      </span>
+                      {m.venueName ? (
+                        <span className="pr-coach-recent-row__tip-venue">Venue · {m.venueName}</span>
+                      ) : null}
+                      <span className="pr-coach-recent-row__tip-coach">
+                        {profile.displayName}
+                        {profile.currentRole?.roleLabel
+                          ? ` · ${profile.currentRole.roleLabel}`
+                          : ""}
+                      </span>
+                      {href ? (
+                        <span className="pr-coach-recent-row__tip-cta">View Match Centre &gt;</span>
+                      ) : null}
+                    </span>
+                  </>
+                );
+                return href ? (
+                  <Link
+                    key={m.id}
+                    href={href}
+                    className="pr-coach-recent-row"
+                    aria-label={`Match centre: ${m.opponentName ?? "match"}`}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div key={m.id} className="pr-coach-recent-row">
+                    {inner}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </section>
 
-        <section className="pr-coach-card pr-coach-upcoming">
+        <section className="pr-coach-card pr-coach-card--fill pr-coach-upcoming">
           <div className="pr-coach-card__head">
             <h2>Upcoming Match</h2>
           </div>
           {!profile.upcomingMatch ? (
             <p className="pr-coach-empty">No upcoming match</p>
           ) : (
-            <>
-              <div className="pr-coach-upcoming__comp">{profile.upcomingMatch.competitionName}</div>
+            <div className="pr-coach-upcoming__panel">
+              {profile.upcomingMatch.competitionName ? (
+                <div className="pr-coach-upcoming__comp">{profile.upcomingMatch.competitionName}</div>
+              ) : null}
               <div className="pr-coach-upcoming__teams">
-                <div>
+                <div className="pr-coach-upcoming__side">
                   {profile.upcomingMatch.homeTeamCrestUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.upcomingMatch.homeTeamCrestUrl} alt="" />
-                  ) : null}
-                  <div>{profile.upcomingMatch.homeTeamName}</div>
+                    <img
+                      src={profile.upcomingMatch.homeTeamCrestUrl}
+                      alt=""
+                      width={56}
+                      height={56}
+                    />
+                  ) : (
+                    <span className="pr-coach-upcoming__crest-fallback" aria-hidden />
+                  )}
+                  <div className="pr-coach-upcoming__team-name">
+                    {profile.upcomingMatch.homeTeamName ?? "TBC"}
+                  </div>
                 </div>
-                <div>VS</div>
-                <div>
+                <div className="pr-coach-upcoming__vs">VS</div>
+                <div className="pr-coach-upcoming__side">
                   {profile.upcomingMatch.awayTeamCrestUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.upcomingMatch.awayTeamCrestUrl} alt="" />
-                  ) : null}
-                  <div>{profile.upcomingMatch.awayTeamName}</div>
+                    <img
+                      src={profile.upcomingMatch.awayTeamCrestUrl}
+                      alt=""
+                      width={56}
+                      height={56}
+                    />
+                  ) : (
+                    <span className="pr-coach-upcoming__crest-fallback" aria-hidden />
+                  )}
+                  <div className="pr-coach-upcoming__team-name">
+                    {profile.upcomingMatch.awayTeamName ?? "TBC"}
+                  </div>
                 </div>
               </div>
-              <div>{formatPublicKickoff(profile.upcomingMatch.kickoffAt)}</div>
-              <div className="pr-coach-empty">{profile.upcomingMatch.venueName ?? ""}</div>
-              <Link className="pr-coach-upcoming__cta" href={`/matches/${profile.upcomingMatch.slug}`}>
+              {(() => {
+                const kickoff = profile.upcomingMatch!.kickoffAt
+                  ? new Date(profile.upcomingMatch!.kickoffAt)
+                  : null;
+                const valid = kickoff && !Number.isNaN(kickoff.getTime());
+                const dateLabel = valid
+                  ? kickoff.toLocaleDateString("en-GB", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "Date TBC";
+                const timeLabel = valid
+                  ? kickoff.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZoneName: "short",
+                    })
+                  : null;
+                return (
+                  <div className="pr-coach-upcoming__meta">
+                    <div className="pr-coach-upcoming__date">{dateLabel}</div>
+                    {timeLabel ? <div className="pr-coach-upcoming__time">{timeLabel}</div> : null}
+                    {profile.upcomingMatch!.venueName ? (
+                      <div className="pr-coach-upcoming__venue">{profile.upcomingMatch!.venueName}</div>
+                    ) : null}
+                  </div>
+                );
+              })()}
+              <Link
+                className="pr-coach-upcoming__cta"
+                href={profile.upcomingMatch.href ?? `/matches/${profile.upcomingMatch.slug}`}
+              >
                 Match Centre
               </Link>
-            </>
+            </div>
           )}
         </section>
 
-        <section className="pr-coach-card">
+        <section className="pr-coach-card pr-coach-card--fill pr-coach-world-rankings">
           <div className="pr-coach-card__head">
             <h2>World Rankings (Coaches)</h2>
-            <Link className="pr-coach-card__link" href="/coaches/rankings">
+            <Link className="pr-coach-card__link" href="/rankings/coaches">
               View full rankings &gt;
             </Link>
           </div>
           {profile.worldRankings.length === 0 ? (
-            <p className="pr-coach-empty">Rankings will appear after rating snapshots are calculated.</p>
+            <p className="pr-coach-empty">
+              Rankings appear once eligible coaches have a published Rugby365 Coach Rating.
+            </p>
           ) : (
-            profile.worldRankings.map((row) => (
-              <Link
-                key={row.coachId}
-                href={`/coaches/${row.slug}`}
-                className="pr-coach-rank-row"
-                style={
-                  row.coachId === profile.id
-                    ? { background: "rgba(34,197,94,0.08)", borderRadius: 6, padding: "0.4rem" }
-                    : undefined
-                }
-              >
-                <strong>{row.rank}</strong>
-                {row.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="pr-coach-avatar" src={row.imageUrl} alt="" />
-                ) : (
-                  <span className="pr-coach-avatar" />
-                )}
-                <span>
-                  {row.name}
-                  <div className="pr-coach-empty">{row.nationality ?? ""}</div>
-                </span>
-                <strong>{row.rating.toFixed(1)}</strong>
-                <span style={{ color: row.movement && row.movement > 0 ? "var(--cp-green)" : undefined }}>
-                  {row.movement == null || row.movement === 0 ? "—" : row.movement > 0 ? "↑" : "↓"}
-                </span>
-              </Link>
-            ))
+            (() => {
+              const top5 = profile.worldRankings.slice(0, 5);
+              const self = profile.worldRankings.find((r) => r.coachId === profile.id);
+              const selfOutside = self && self.rank > 5 ? self : null;
+              const rows = selfOutside ? [...top5, selfOutside] : top5;
+              return (
+                <div className="pr-coach-world-rankings__list">
+                  {rows.map((row, idx) => {
+                    const isSelf = row.coachId === profile.id;
+                    const showEllipsis = Boolean(selfOutside && idx === top5.length);
+                    const change = row.rankChange;
+                    return (
+                      <div key={`${row.coachId}-${row.rank}`}>
+                        {showEllipsis ? (
+                          <div className="pr-coach-world-rankings__ellipsis" aria-hidden>
+                            …
+                          </div>
+                        ) : null}
+                        <Link
+                          href={`/coaches/${row.slug}`}
+                          className={`pr-coach-world-rankings__row${isSelf ? " is-self" : ""}`}
+                          aria-label={`${row.name} coach profile`}
+                        >
+                          <span className="pr-coach-world-rankings__rank">{row.rank}</span>
+                          {row.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              className="pr-coach-world-rankings__img"
+                              src={row.imageUrl}
+                              alt=""
+                            />
+                          ) : (
+                            <span className="pr-coach-world-rankings__img pr-coach-world-rankings__img--empty" />
+                          )}
+                          <span className="pr-coach-world-rankings__identity">
+                            <span className="pr-coach-world-rankings__name">{row.name}</span>
+                            <span className="pr-coach-world-rankings__team">
+                              {row.currentTeamName ?? "—"}
+                            </span>
+                          </span>
+                          <span className="pr-coach-world-rankings__rating">
+                            {row.rating.toFixed(1)}
+                          </span>
+                          <span
+                            className={`pr-coach-world-rankings__move${
+                              change != null && change > 0
+                                ? " is-up"
+                                : change != null && change < 0
+                                  ? " is-down"
+                                  : ""
+                            }`}
+                            title={
+                              change == null
+                                ? "No previous ranking snapshot"
+                                : change === 0
+                                  ? "Unchanged"
+                                  : change > 0
+                                    ? `Up ${change}`
+                                    : `Down ${Math.abs(change)}`
+                            }
+                          >
+                            {change == null || change === 0
+                              ? "—"
+                              : change > 0
+                                ? `↑${change > 1 ? change : ""}`
+                                : `↓${Math.abs(change) > 1 ? Math.abs(change) : ""}`}
+                          </span>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()
           )}
         </section>
       </div>
@@ -821,7 +1243,10 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           Rugby365 Coach Rating {r.modelVersion} · Power Index {r.powerIndexVersion}. Calculated from
           verified match data where available.
         </span>
-        <span>Confidence: {r.dataConfidence}</span>
+        <span title="Based on match, team-stat, player-rating, and historical ranking coverage">
+          Confidence: {r.dataConfidence}
+          {typeof r.ratingConfidencePct === "number" ? ` (${r.ratingConfidencePct}%)` : ""}
+        </span>
       </footer>
     </article>
   );

@@ -108,6 +108,8 @@ export async function upsertTeamMatchStat(input: {
   externalMatchId: string;
   stats: ParsedTeamMatchStats;
   sourceProvider?: string;
+  /** Bulk importers set true and emit one cascade at the end. */
+  skipCascade?: boolean;
 }) {
   const db = getDb();
   const sourceProvider = input.sourceProvider ?? "sdms";
@@ -151,10 +153,38 @@ export async function upsertTeamMatchStat(input: {
       .set(values)
       .where(eq(teamMatchStats.id, existing.id))
       .returning();
+    try {
+      if (!input.skipCascade) {
+        const { cascadeFixtureDataChange } = await import("./data-change-event-service");
+        await cascadeFixtureDataChange({
+          fixtureId: input.fixtureId,
+          eventType: "TEAM_STATS_UPDATED",
+          source: sourceProvider,
+          importMethod: "LIVE_FEED",
+          processNow: false,
+        });
+      }
+    } catch {
+      // ignore
+    }
     return { row: updated!, created: false };
   }
 
   const [created] = await db.insert(teamMatchStats).values(values).returning();
+  try {
+    if (!input.skipCascade) {
+      const { cascadeFixtureDataChange } = await import("./data-change-event-service");
+      await cascadeFixtureDataChange({
+        fixtureId: input.fixtureId,
+        eventType: "TEAM_STATS_UPDATED",
+        source: sourceProvider,
+        importMethod: "LIVE_FEED",
+        processNow: false,
+      });
+    }
+  } catch {
+    // ignore
+  }
   return { row: created!, created: true };
 }
 

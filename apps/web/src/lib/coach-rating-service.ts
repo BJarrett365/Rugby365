@@ -1,68 +1,88 @@
 /**
  * Coach Rating + Power Index engines (coach-rating-v1 / coach-power-v1).
- * Metrics are derived from eligible career matches; insufficient data yields nulls.
+ * Intelligence metrics come from CoachIntelligenceEngine (coach-intelligence-v1).
  */
 
-import { desc, eq } from "drizzle-orm";
-import { coachMatchRatings, coachRatingHistory, coachRatingSnapshots, coaches } from "@rugby365/db";
+import { and, desc, eq, inArray, isNotNull, lt } from "drizzle-orm";
+import {
+  coachHonours,
+  coachImages,
+  coachMatchRatings,
+  coachRatingHistory,
+  coachRatingSnapshots,
+  coaches,
+  teamCoachingStaff,
+  teams,
+} from "@rugby365/db";
 import { getDb } from "./db";
 import {
   computeCareerRecord,
+  getCoachImpact,
   loadCoachEligibleMatches,
   type CoachEligibleMatch,
 } from "./coach-career-record-service";
+import {
+  applyMetricWorldRanks,
+  calculateCoachIntelligence,
+  intelligenceToLegacyMetrics,
+  COACH_INTELLIGENCE_METRICS,
+  COACH_INTELLIGENCE_VERSION,
+  type CoachIntelligenceMetric,
+  type CoachMetricKey,
+  type CoachMetricScore,
+} from "./coach-intelligence-engine";
+import {
+  assertIntelligencePowerIndexConsistency,
+  computeCoachPowerIndex,
+  COACH_POWER_VERSION,
+  POWER_INDEX_WEIGHTS_V1,
+  type CoachPowerIndexResult,
+} from "./coach-power-index-engine";
+import {
+  computeCoachRating,
+  COACH_RATING_VERSION,
+  COACH_RATING_WEIGHTS_V1,
+  WORLD_RANK_MIN_CONFIDENCE,
+  WORLD_RANK_MIN_COVERAGE,
+  WORLD_RANK_MIN_MATCHES,
+  type CoachRatingResult,
+} from "./coach-rating-engine";
+import { getCompetitionCoachRank } from "./coach-competition-rank";
 
-export const COACH_RATING_VERSION = "coach-rating-v1";
-export const COACH_POWER_VERSION = "coach-power-v1";
-export const MIN_MATCHES_FOR_RANK = 10;
+export { COACH_RATING_VERSION };
+export { COACH_POWER_VERSION };
+export const MIN_MATCHES_FOR_RANK = WORLD_RANK_MIN_MATCHES;
 
-export const COACH_INTELLIGENCE_METRICS = [
-  "results",
-  "attack",
-  "defence",
-  "set_piece",
-  "breakdown",
-  "kicking",
-  "discipline",
-  "selection",
-  "game_management",
-  "bench_impact",
-  "player_development",
-  "squad_depth",
-  "big_match_performance",
-  "experience",
-  "current_form",
-] as const;
-
-export type CoachMetricKey = (typeof COACH_INTELLIGENCE_METRICS)[number];
-
-export type CoachMetricScore = {
-  key: CoachMetricKey;
-  label: string;
-  score: number | null;
-  worldRank: number | null;
-  raw: Record<string, number | string | null>;
+export {
+  COACH_INTELLIGENCE_METRICS,
+  COACH_INTELLIGENCE_VERSION,
+  type CoachIntelligenceMetric,
+  type CoachMetricKey,
+  type CoachMetricScore,
+  type CoachPowerIndexResult,
+  type CoachRatingResult,
+  COACH_RATING_WEIGHTS_V1,
 };
 
 export type CoachPowerWeights = Record<string, number>;
 
-/** Central Power Index weights (sum ≈ 100). Experience kept low. */
-export const POWER_INDEX_WEIGHTS: CoachPowerWeights = {
-  results: 18,
-  opponent_strength: 10,
-  attack: 8,
-  defence: 8,
-  set_piece: 6,
-  breakdown: 5,
-  kicking: 5,
-  discipline: 5,
-  selection: 7,
-  game_management: 8,
-  player_development: 5,
-  big_match_performance: 5,
-  experience: 3,
-  current_form: 7,
-};
+/** @deprecated Use POWER_INDEX_WEIGHTS_V1 from coach-power-index-engine (canonical). */
+export const POWER_INDEX_WEIGHTS: CoachPowerWeights = { ...POWER_INDEX_WEIGHTS_V1 };
+
+export {
+  POWER_INDEX_WEIGHTS_V1,
+  POWER_INDEX_DISPLAY_LEFT,
+  POWER_INDEX_DISPLAY_RIGHT,
+  computeCoachPowerIndex,
+  assertIntelligencePowerIndexConsistency,
+} from "./coach-power-index-engine";
+
+export {
+  computeCoachRating,
+  WORLD_RANK_MIN_MATCHES,
+  WORLD_RANK_MIN_COVERAGE,
+  WORLD_RANK_MIN_CONFIDENCE,
+} from "./coach-rating-engine";
 
 const LABELS: Record<CoachMetricKey, string> = {
   results: "Results",
@@ -95,10 +115,15 @@ function scoreBandColor(score: number | null): string {
   return "red";
 }
 
-export { scoreBandColor };
+export { scoreBandColor, LABELS };
 
-function recentWeightedWinRate(matches: CoachEligibleMatch[]): number | null {
-  if (!matches.length) return null;
+/** @deprecated Prefer calculateCoachIntelligence — kept for tests/simple fallbacks. */
+export function computeCoachMetrics(matches: CoachEligibleMatch[]): CoachMetricScore[] {
+  const record = computeCareerRecord(matches);
+  const recent = matches.slice(-8);
+  const recentWr = recent.length
+    ? (recent.filter((m) => m.result === "W").length / recent.length) * 100
+    : null;
   const last = matches.slice(-20);
   let weightSum = 0;
   let scoreSum = 0;
@@ -108,32 +133,20 @@ function recentWeightedWinRate(matches: CoachEligibleMatch[]): number | null {
     weightSum += w;
     scoreSum += m.result === "W" ? w : m.result === "D" ? w * 0.35 : 0;
   });
-  return weightSum > 0 ? (scoreSum / weightSum) * 100 : null;
-}
-
-export function computeCoachMetrics(matches: CoachEligibleMatch[]): CoachMetricScore[] {
-  const record = computeCareerRecord(matches);
-  const recent = matches.slice(-8);
-  const recentWr = recent.length
-    ? (recent.filter((m) => m.result === "W").length / recent.length) * 100
-    : null;
-  const weighted = recentWeightedWinRate(matches);
+  const weighted = weightSum > 0 ? (scoreSum / weightSum) * 100 : null;
   const pf = record.pointsForPerGame;
   const pa = record.pointsAgainstPerGame;
-
   const results =
     weighted != null ? clamp(50 + (weighted - 50) * 0.9) : record.winRate != null ? clamp(record.winRate) : null;
   const attack = pf != null ? clamp(40 + pf * 1.8) : null;
   const defence = pa != null ? clamp(100 - pa * 2.2) : null;
   const currentForm = recentWr != null ? clamp(recentWr) : null;
   const experience = clamp(Math.min(95, 40 + Math.log10(Math.max(1, record.played)) * 28));
-
   const close = matches.filter((m) => Math.abs(m.margin) <= 7);
   const closeWr = close.length
     ? (close.filter((m) => m.result === "W").length / close.length) * 100
     : null;
   const gameMgmt = closeWr != null ? clamp(closeWr) : results;
-
   const mk = (
     key: CoachMetricKey,
     score: number | null,
@@ -145,12 +158,11 @@ export function computeCoachMetrics(matches: CoachEligibleMatch[]): CoachMetricS
     worldRank: null,
     raw,
   });
-
   return [
     mk("results", results, { winRate: record.winRateExact, played: record.played }),
     mk("attack", attack, { pointsPerGame: pf }),
     mk("defence", defence, { pointsAgainstPerGame: pa }),
-    mk("set_piece", null, { note: "Insufficient verified set-piece data" }),
+    mk("set_piece", null, { note: "Use calculateCoachIntelligence" }),
     mk("breakdown", null),
     mk("kicking", null),
     mk("discipline", null),
@@ -165,182 +177,552 @@ export function computeCoachMetrics(matches: CoachEligibleMatch[]): CoachMetricS
   ];
 }
 
+/**
+ * Legacy adapter: builds Power Index from metric scores.
+ * Prefer `computeCoachPowerIndex(intelligence)` — single source of truth.
+ */
 export function computePowerIndex(metrics: CoachMetricScore[]): {
   score: number | null;
   contributions: Array<{ key: string; weight: number; score: number; contribution: number }>;
   reweighted: boolean;
+  detail: CoachPowerIndexResult;
 } {
-  const available: Array<{ key: string; weight: number; score: number }> = [];
-  for (const [key, weight] of Object.entries(POWER_INDEX_WEIGHTS)) {
-    const m = metrics.find((x) => x.key === key || (key === "opponent_strength" && x.key === "results"));
-    if (key === "opponent_strength") {
-      // fold into results until opponent rankings at match date are available
-      continue;
-    }
-    if (m?.score != null) available.push({ key, weight, score: m.score });
-  }
-
-  // redistribute opponent_strength weight into results if present
-  const results = available.find((a) => a.key === "results");
-  if (results) results.weight += POWER_INDEX_WEIGHTS.opponent_strength ?? 0;
-
-  if (!available.length) return { score: null, contributions: [], reweighted: false };
-
-  const weightSum = available.reduce((s, a) => s + a.weight, 0);
-  const reweighted = weightSum !== 100;
-  const contributions = available.map((a) => {
-    const w = (a.weight / weightSum) * 100;
-    return {
-      key: a.key,
-      weight: Math.round(w * 10) / 10,
-      score: a.score,
-      contribution: Math.round(((a.score * w) / 100) * 100) / 100,
-    };
-  });
-  const score = contributions.reduce((s, c) => s + c.contribution, 0);
-  return { score: Math.round(score * 10) / 10, contributions, reweighted };
+  const minimal: CoachIntelligenceMetric[] = metrics.map((m) => ({
+    key: m.key as CoachMetricKey,
+    label: m.label,
+    score: m.score,
+    worldRank: m.worldRank,
+    raw: m.raw ?? {},
+    confidence: 80,
+    dataCoverage: m.score != null ? 100 : 0,
+    sampleSize: 12,
+    status: m.score != null ? "PARTIAL" : "INSUFFICIENT",
+    trend: null,
+    period: "adapter",
+    components: {},
+    availableInputs: m.score != null ? ["legacy_metric"] : [],
+    missingInputs: m.score != null ? [] : ["legacy_metric"],
+    modelVersion: COACH_INTELLIGENCE_VERSION,
+    calculatedAt: new Date().toISOString(),
+  }));
+  const detail = computeCoachPowerIndex(minimal);
+  return {
+    score: detail.score,
+    contributions: detail.contributions.map((c) => ({
+      key: c.key,
+      weight: c.weight,
+      score: c.score,
+      contribution: c.contribution,
+    })),
+    reweighted: detail.reweighted,
+    detail,
+  };
 }
 
+/**
+ * Legacy overall blend — prefer computeCoachRating (coach-rating-v1).
+ * Kept for unit tests / adapters.
+ */
 export function computeOverallRating(
   metrics: CoachMetricScore[],
   powerIndex: number | null,
   careerWinRate: number | null,
 ): number | null {
-  const scores = metrics.map((m) => m.score).filter((s): s is number => s != null);
-  if (!scores.length && powerIndex == null && careerWinRate == null) return null;
-  const metricAvg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-  const parts = [
-    metricAvg != null ? { v: metricAvg, w: 0.45 } : null,
-    powerIndex != null ? { v: powerIndex, w: 0.35 } : null,
-    careerWinRate != null ? { v: careerWinRate, w: 0.2 } : null,
-  ].filter(Boolean) as Array<{ v: number; w: number }>;
-  const wSum = parts.reduce((s, p) => s + p.w, 0);
-  if (!wSum) return null;
-  return Math.round(parts.reduce((s, p) => s + (p.v * p.w) / wSum, 0) * 10) / 10;
+  const result = computeCoachRating({
+    powerIndex,
+    intelligence: metrics.map((m) => ({
+      key: m.key as CoachMetricKey,
+      label: m.label,
+      score: m.score,
+      worldRank: m.worldRank,
+      raw: m.raw ?? {},
+      confidence: 80,
+      dataCoverage: m.score != null ? 100 : 0,
+      sampleSize: 12,
+      status: m.score != null ? "PARTIAL" : "INSUFFICIENT",
+      trend: null,
+      period: "adapter",
+      components: {},
+      availableInputs: m.score != null ? ["legacy"] : [],
+      missingInputs: m.score != null ? [] : ["legacy"],
+      modelVersion: COACH_INTELLIGENCE_VERSION,
+      calculatedAt: new Date().toISOString(),
+    })),
+    careerWinRate,
+    matches: [],
+    impact: null,
+    honours: [],
+  });
+  return result.score;
 }
 
 export type CoachRatingBundle = {
   overallRating: number | null;
+  previousOverallRating: number | null;
+  overallRatingChange: number | null;
+  /** Full Coach Rating engine output. */
+  coachRatingDetail: CoachRatingResult | null;
   powerIndex: number | null;
+  previousPowerIndex: number | null;
+  powerIndexChange: number | null;
+  /** Full Power Index engine output (weights, modifiers, coverage). */
+  powerIndexDetail: CoachPowerIndexResult | null;
+  /** INTELLIGENCE SCORE MISMATCH flags when PI ≠ Intelligence. */
+  powerIndexMismatches: Array<{
+    key: string;
+    intelligenceScore: number;
+    powerIndexScore: number;
+  }>;
   worldRank: number | null;
+  previousWorldRank: number | null;
+  worldRankChange: number | null;
   rankedOutOf: number | null;
+  /** Competition-scoped rank (e.g. Currie Cup Premier 2026). */
+  competitionRank: number | null;
+  competitionRankedOutOf: number | null;
+  competitionRankLabel: string | null;
+  competitionRankSub: string | null;
+  /** Momentum from Power Index movement (previous snapshot → current). */
   momentum: number | null;
   metrics: CoachMetricScore[];
+  /** Full Coach Intelligence engine output (confidence, coverage, components). */
+  intelligence: CoachIntelligenceMetric[];
+  intelligenceModelVersion: string;
   powerContributions: Array<{ key: string; weight: number; score: number; contribution: number }>;
   modelVersion: string;
   powerIndexVersion: string;
   dataConfidence: "high" | "medium" | "low" | "none";
+  /** 0–100 from match / team-stat / player-rating / ranking coverage. */
+  ratingConfidencePct: number;
+  ratingConfidenceInputs: {
+    matchCoverage: number;
+    teamStatCoverage: number;
+    playerRatingCoverage: number;
+    historicalRankingCoverage: number;
+  };
   matchCount: number;
   provisional: boolean;
 };
 
-export async function calculateCoachRatingBundle(coachId: string): Promise<CoachRatingBundle> {
-  const matches = await loadCoachEligibleMatches(coachId, { primaryOnly: true });
+export async function calculateCoachRatingBundle(
+  coachId: string,
+  options: { asOfDate?: Date | null } = {},
+): Promise<CoachRatingBundle> {
+  const matches = await loadCoachEligibleMatches(coachId, {
+    primaryOnly: true,
+    asOfDate: options.asOfDate ?? null,
+  });
   const record = computeCareerRecord(matches);
-  const metrics = computeCoachMetrics(matches);
-  const power = computePowerIndex(metrics);
-  const overall = computeOverallRating(metrics, power.score, record.winRateExact);
-  const provisional = matches.length < MIN_MATCHES_FOR_RANK;
 
-  let dataConfidence: CoachRatingBundle["dataConfidence"] = "none";
-  if (matches.length >= 20) dataConfidence = "high";
-  else if (matches.length >= 10) dataConfidence = "medium";
-  else if (matches.length > 0) dataConfidence = "low";
+  const intelligenceBundle = await calculateCoachIntelligence(coachId, {
+    asOfDate: options.asOfDate ?? null,
+  });
 
-  // World rank among coaches with a stored snapshot or live calculation among recent raters
   const db = getDb();
   const peerSnapshots = await db
     .select({
       coachId: coachRatingSnapshots.coachId,
       overallRating: coachRatingSnapshots.overallRating,
+      metrics: coachRatingSnapshots.metrics,
     })
     .from(coachRatingSnapshots)
     .orderBy(desc(coachRatingSnapshots.calculatedAt))
-    .limit(500);
+    .limit(800);
 
-  const bestByCoach = new Map<string, number>();
+  const peerMetricScores: Array<{
+    coachId: string;
+    metrics: Array<{ key: string; score: number | null; confidence?: number; sampleSize?: number }>;
+  }> = [];
+  const seenPeers = new Set<string>();
   for (const row of peerSnapshots) {
-    if (row.overallRating == null) continue;
-    if (!bestByCoach.has(row.coachId)) bestByCoach.set(row.coachId, row.overallRating);
+    if (seenPeers.has(row.coachId)) continue;
+    seenPeers.add(row.coachId);
+    const payload = row.metrics as {
+      intelligence?: CoachIntelligenceMetric[];
+      metrics?: CoachMetricScore[];
+    } | null;
+    const list = payload?.intelligence ?? payload?.metrics ?? [];
+    peerMetricScores.push({
+      coachId: row.coachId,
+      metrics: list.map((m) => ({
+        key: m.key,
+        score: m.score,
+        confidence: "confidence" in m ? (m as CoachIntelligenceMetric).confidence : 80,
+        sampleSize: "sampleSize" in m ? (m as CoachIntelligenceMetric).sampleSize : 20,
+      })),
+    });
   }
-  if (overall != null) bestByCoach.set(coachId, overall);
 
-  const ranked = [...bestByCoach.entries()]
-    .filter(([, r]) => r != null)
-    .sort((a, b) => b[1] - a[1]);
-  const idx = ranked.findIndex(([id]) => id === coachId);
-  const worldRank = !provisional && overall != null && idx >= 0 ? idx + 1 : null;
+  const intelligence = applyMetricWorldRanks(
+    intelligenceBundle.metrics,
+    peerMetricScores,
+    coachId,
+  );
+  const metrics = intelligenceToLegacyMetrics(intelligence);
+  const powerDetail = computeCoachPowerIndex(intelligence, {
+    matchesUsed: intelligenceBundle.matchesUsed,
+  });
+  const powerMismatches = assertIntelligencePowerIndexConsistency(intelligence, powerDetail);
+  const power = {
+    score: powerDetail.score,
+    contributions: powerDetail.contributions.map((c) => ({
+      key: c.key,
+      weight: c.weight,
+      score: c.score,
+      contribution: c.contribution,
+    })),
+    reweighted: powerDetail.reweighted,
+  };
 
-  // Momentum from last two history points if present
-  const history = await db
-    .select()
-    .from(coachRatingHistory)
-    .where(eq(coachRatingHistory.coachId, coachId))
-    .orderBy(desc(coachRatingHistory.calculatedAt))
-    .limit(2);
-  let momentum: number | null = null;
-  if (history.length >= 2 && history[0].rating != null && history[1].rating != null) {
-    momentum = Math.round((history[0].rating - history[1].rating) * 10) / 10;
-  } else if (power.score != null && overall != null) {
-    // fallback: small signal from form vs career
-    const form = metrics.find((m) => m.key === "current_form")?.score;
-    if (form != null && record.winRateExact != null) {
-      momentum = Math.round((form - record.winRateExact) / 10);
-    }
+  const { getCoachDataCoverage, computeRatingConfidencePct } = await import("./coach-recalc-service");
+  const coverage = await getCoachDataCoverage(coachId).catch(() => null);
+  const ratingConfidenceInputs = coverage?.ratingConfidenceInputs ?? {
+    matchCoverage: matches.length > 0 ? 100 : 0,
+    teamStatCoverage: 0,
+    playerRatingCoverage: 0,
+    historicalRankingCoverage: 0,
+  };
+  const ratingConfidencePct =
+    coverage?.ratingConfidencePct ?? computeRatingConfidencePct(ratingConfidenceInputs);
+
+  const [impact, honourRows] = await Promise.all([
+    getCoachImpact(coachId).catch(() => null),
+    db
+      .select({
+        honourLevel: coachHonours.honourLevel,
+        achievementType: coachHonours.achievementType,
+        roleType: coachHonours.roleType,
+        year: coachHonours.year,
+      })
+      .from(coachHonours)
+      .where(eq(coachHonours.coachId, coachId))
+      .limit(200),
+  ]);
+
+  const coachRatingDetail = computeCoachRating({
+    powerIndex: power.score,
+    intelligence,
+    careerWinRate: record.winRateExact,
+    matches,
+    impact,
+    honours: honourRows,
+    matchesUsed: matches.length,
+    ratingConfidencePct,
+  });
+  const overall = coachRatingDetail.score;
+  const provisional = !coachRatingDetail.eligibleForWorldRank;
+
+  let dataConfidence: CoachRatingBundle["dataConfidence"] = "none";
+  if (ratingConfidencePct >= 80 && matches.length >= 20) dataConfidence = "high";
+  else if (ratingConfidencePct >= 55 && matches.length >= 10) dataConfidence = "medium";
+  else if (matches.length > 0) dataConfidence = "low";
+
+  /** World Rank from Rugby365 Coach Rating — eligible peers only. */
+  const eligiblePeers: Array<{ coachId: string; rating: number }> = [];
+  const seenEligible = new Set<string>();
+  for (const row of peerSnapshots) {
+    if (row.overallRating == null || seenEligible.has(row.coachId)) continue;
+    const payload = row.metrics as { coachRating?: CoachRatingResult } | null;
+    const peerEligible =
+      payload?.coachRating?.eligibleForWorldRank === true ||
+      payload?.coachRating == null; // legacy snapshots
+    if (!peerEligible) continue;
+    seenEligible.add(row.coachId);
+    eligiblePeers.push({ coachId: row.coachId, rating: row.overallRating });
   }
+  if (overall != null && coachRatingDetail.eligibleForWorldRank) {
+    const existing = eligiblePeers.find((p) => p.coachId === coachId);
+    if (existing) existing.rating = overall;
+    else eligiblePeers.push({ coachId, rating: overall });
+  }
+
+  const ranked = eligiblePeers.sort((a, b) => b.rating - a.rating);
+  const idx = ranked.findIndex((p) => p.coachId === coachId);
+  const worldRank =
+    coachRatingDetail.eligibleForWorldRank && overall != null && idx >= 0 ? idx + 1 : null;
+
+  const priorSnaps = await db
+    .select({
+      powerIndex: coachRatingSnapshots.powerIndex,
+      overallRating: coachRatingSnapshots.overallRating,
+      worldRank: coachRatingSnapshots.worldRank,
+      calculatedAt: coachRatingSnapshots.calculatedAt,
+    })
+    .from(coachRatingSnapshots)
+    .where(eq(coachRatingSnapshots.coachId, coachId))
+    .orderBy(desc(coachRatingSnapshots.calculatedAt))
+    .limit(1);
+  const previousPowerIndex = priorSnaps[0]?.powerIndex ?? null;
+  const previousOverallRating = priorSnaps[0]?.overallRating ?? null;
+  const previousWorldRank = priorSnaps[0]?.worldRank ?? null;
+  const powerIndexChange =
+    power.score != null && previousPowerIndex != null
+      ? Math.round((power.score - previousPowerIndex) * 10) / 10
+      : null;
+  const overallRatingChange =
+    overall != null && previousOverallRating != null
+      ? Math.round((overall - previousOverallRating) * 10) / 10
+      : null;
+  const worldRankChange =
+    worldRank != null && previousWorldRank != null ? previousWorldRank - worldRank : null;
+  /** Momentum is Power Index movement — not an independent rating. */
+  const momentum = powerIndexChange;
+
+  const competition = await getCompetitionCoachRank(coachId).catch(() => null);
 
   return {
     overallRating: overall,
+    previousOverallRating,
+    overallRatingChange,
+    coachRatingDetail,
     powerIndex: power.score,
+    previousPowerIndex,
+    powerIndexChange,
+    powerIndexDetail: powerDetail,
+    powerIndexMismatches: powerMismatches,
     worldRank,
+    previousWorldRank,
+    worldRankChange,
     rankedOutOf: ranked.length || null,
+    competitionRank: competition?.rank ?? null,
+    competitionRankedOutOf: competition?.rankedOutOf ?? null,
+    competitionRankLabel: competition?.label ?? null,
+    competitionRankSub: competition?.sub ?? null,
     momentum,
     metrics,
+    intelligence,
+    intelligenceModelVersion: COACH_INTELLIGENCE_VERSION,
     powerContributions: power.contributions,
     modelVersion: COACH_RATING_VERSION,
     powerIndexVersion: COACH_POWER_VERSION,
     dataConfidence,
+    ratingConfidencePct,
+    ratingConfidenceInputs,
     matchCount: matches.length,
     provisional,
   };
 }
 
-export async function persistCoachRatingSnapshot(coachId: string): Promise<CoachRatingBundle> {
-  const bundle = await calculateCoachRatingBundle(coachId);
+export type PersistCoachRatingOptions = {
+  /** When set, rating is calculated as-of this match kickoff (inclusive). */
+  asOfDate?: Date | null;
+  fixtureId?: string | null;
+  /** live | backfilled | recalculated */
+  snapshotType?: "live" | "backfilled" | "recalculated";
+  match?: {
+    teamId?: string | null;
+    opponentId?: string | null;
+    competitionId?: string | null;
+    matchDate?: Date | null;
+    homeAwayNeutral?: "home" | "away" | "neutral" | null;
+    result?: "W" | "D" | "L" | null;
+    scoreFor?: number | null;
+    scoreAgainst?: number | null;
+    competitionName?: string | null;
+    teamName?: string | null;
+    opponentName?: string | null;
+    fixtureSlug?: string | null;
+    majorMatchLabel?: string | null;
+  } | null;
+  /** Skip writing coach_rating_history (snapshots only). */
+  skipHistory?: boolean;
+};
+
+export function detectMajorMatchLabel(competitionName: string | null | undefined): string | null {
+  if (!competitionName) return null;
+  const c = competitionName.toLowerCase();
+  if (c.includes("world cup") && c.includes("final")) return "Rugby World Cup Final";
+  if (c.includes("world cup") && (c.includes("semi") || c.includes("sf"))) {
+    return "Rugby World Cup Semi-final";
+  }
+  if (c.includes("world cup")) return "Rugby World Cup";
+  if (c.includes("nations championship") && c.includes("final")) {
+    return "Nations Championship Final";
+  }
+  if ((c.includes("championship") || c.includes("premiership") || c.includes("currie")) && c.includes("final")) {
+    return "Final";
+  }
+  if (c.includes("semi") && c.includes("final")) return "Semi-final";
+  return null;
+}
+
+export async function persistCoachRatingSnapshot(
+  coachId: string,
+  options: PersistCoachRatingOptions = {},
+): Promise<CoachRatingBundle> {
+  const snapshotType = options.snapshotType ?? (options.fixtureId ? "live" : "recalculated");
+  const bundle = await calculateCoachRatingBundle(coachId, {
+    asOfDate: options.asOfDate ?? null,
+  });
   const db = getDb();
   await db.insert(coachRatingSnapshots).values({
     coachId,
+    fixtureId: options.fixtureId ?? null,
     overallRating: bundle.overallRating,
     powerIndex: bundle.powerIndex,
     worldRank: bundle.worldRank,
     momentum: bundle.momentum,
     metrics: {
       metrics: bundle.metrics,
+      intelligence: bundle.intelligence,
+      intelligenceModelVersion: bundle.intelligenceModelVersion,
       contributions: bundle.powerContributions,
+      powerIndex: bundle.powerIndexDetail,
+      previousPowerIndex: bundle.previousPowerIndex,
+      powerIndexChange: bundle.powerIndexChange,
+      powerIndexMismatches: bundle.powerIndexMismatches,
+      coachRating: bundle.coachRatingDetail,
+      previousOverallRating: bundle.previousOverallRating,
+      overallRatingChange: bundle.overallRatingChange,
+      previousWorldRank: bundle.previousWorldRank,
+      worldRankChange: bundle.worldRankChange,
+      competitionRank: bundle.competitionRank,
+      competitionRankedOutOf: bundle.competitionRankedOutOf,
+      competitionRankLabel: bundle.competitionRankLabel,
+      competitionRankSub: bundle.competitionRankSub,
+      ratingConfidencePct: bundle.ratingConfidencePct,
+      ratingConfidenceInputs: bundle.ratingConfidenceInputs,
+      snapshotType,
     },
     modelVersion: bundle.modelVersion,
     powerIndexVersion: bundle.powerIndexVersion,
     dataConfidence: bundle.dataConfidence,
   });
 
-  if (bundle.overallRating != null) {
-    const [prev] = await db
-      .select()
-      .from(coachRatingHistory)
-      .where(eq(coachRatingHistory.coachId, coachId))
-      .orderBy(desc(coachRatingHistory.calculatedAt))
-      .limit(1);
-    await db.insert(coachRatingHistory).values({
-      coachId,
-      rating: bundle.overallRating,
-      previousRating: prev?.rating ?? null,
-      change:
-        prev?.rating != null
-          ? Math.round((bundle.overallRating - prev.rating) * 10) / 10
-          : null,
-      worldRank: bundle.worldRank,
-      modelVersion: bundle.modelVersion,
+  if (!options.skipHistory && bundle.overallRating != null) {
+    const match = options.match ?? null;
+    const fixtureId = options.fixtureId ?? null;
+    const matchDate = match?.matchDate ?? options.asOfDate ?? null;
+
+    // Match-linked history: previous point is the prior completed match, not a background recalc.
+    let prev: (typeof coachRatingHistory.$inferSelect) | undefined;
+    if (fixtureId && matchDate) {
+      const [priorMatch] = await db
+        .select()
+        .from(coachRatingHistory)
+        .where(
+          and(
+            eq(coachRatingHistory.coachId, coachId),
+            isNotNull(coachRatingHistory.fixtureId),
+            lt(coachRatingHistory.matchDate, matchDate),
+          ),
+        )
+        .orderBy(desc(coachRatingHistory.matchDate), desc(coachRatingHistory.calculatedAt))
+        .limit(1);
+      prev = priorMatch;
+    }
+
+    const previousRating = prev?.rating ?? null;
+    const previousPowerIndex = prev?.powerIndex ?? null;
+    const change =
+      previousRating != null
+        ? Math.round((bundle.overallRating - previousRating) * 10) / 10
+        : null;
+    const powerIndexChange =
+      bundle.powerIndex != null && previousPowerIndex != null
+        ? Math.round((bundle.powerIndex - previousPowerIndex) * 10) / 10
+        : null;
+
+    const prevCoachRating = (
+      prev?.metrics as { coachRating?: CoachRatingResult } | null | undefined
+    )?.coachRating;
+    const prevContribs = prevCoachRating?.contributions ?? [];
+    const currContribs = bundle.coachRatingDetail?.contributions ?? [];
+    const contributionDeltas = currContribs.map((c) => {
+      const prior = prevContribs.find((x) => x.key === c.key);
+      const delta =
+        prior != null
+          ? Math.round((c.contribution - prior.contribution) * 100) / 100
+          : c.contribution;
+      return {
+        key: c.key,
+        label: c.label,
+        weight: c.weight,
+        score: c.score,
+        contribution: delta,
+      };
     });
+
+    const prevIntel = Array.isArray(prev?.intelligence)
+      ? (prev!.intelligence as Array<{ key: string; score: number | null }>)
+      : [];
+    const intelligenceRows = bundle.intelligence.map((m) => {
+      const prior = prevIntel.find((x) => x.key === m.key);
+      return {
+        key: m.key,
+        label: m.label,
+        score: m.score,
+        previousScore: prior?.score ?? null,
+        confidence: m.confidence,
+        dataCoverage: m.dataCoverage,
+      };
+    });
+
+    const row = {
+      coachId,
+      fixtureId,
+      snapshotType,
+      rating: bundle.overallRating,
+      previousRating,
+      change,
+      worldRank: bundle.worldRank,
+      teamId: match?.teamId ?? null,
+      opponentId: match?.opponentId ?? null,
+      competitionId: match?.competitionId ?? null,
+      matchDate: matchDate ?? new Date(),
+      homeAwayNeutral: match?.homeAwayNeutral ?? null,
+      result: match?.result ?? null,
+      scoreFor: match?.scoreFor ?? null,
+      scoreAgainst: match?.scoreAgainst ?? null,
+      powerIndex: bundle.powerIndex,
+      powerIndexChange,
+      opponentRating: null as number | null,
+      opponentRank: null as number | null,
+      confidence: bundle.ratingConfidencePct,
+      coverage: bundle.matchCount,
+      dataConfidence: bundle.dataConfidence,
+      modelVersion: bundle.modelVersion,
+      powerIndexVersion: bundle.powerIndexVersion,
+      intelligenceModelVersion: bundle.intelligenceModelVersion,
+      contributions: contributionDeltas,
+      intelligence: intelligenceRows,
+      metrics: {
+        ratingConfidenceInputs: bundle.ratingConfidenceInputs,
+        coachRating: bundle.coachRatingDetail,
+      },
+      majorMatchLabel:
+        match?.majorMatchLabel ?? detectMajorMatchLabel(match?.competitionName) ?? null,
+      competitionName: match?.competitionName ?? null,
+      teamName: match?.teamName ?? null,
+      opponentName: match?.opponentName ?? null,
+      fixtureSlug: match?.fixtureSlug ?? null,
+      calculatedAt: new Date(),
+    };
+
+    if (fixtureId) {
+      const [existing] = await db
+        .select({ id: coachRatingHistory.id })
+        .from(coachRatingHistory)
+        .where(
+          and(eq(coachRatingHistory.coachId, coachId), eq(coachRatingHistory.fixtureId, fixtureId)),
+        )
+        .limit(1);
+      if (existing) {
+        await db
+          .update(coachRatingHistory)
+          .set(row)
+          .where(eq(coachRatingHistory.id, existing.id));
+      } else {
+        await db.insert(coachRatingHistory).values(row);
+      }
+    } else {
+      // Background recalcs — keep an audit trail but mark as recalculated
+      await db.insert(coachRatingHistory).values({
+        ...row,
+        snapshotType: "recalculated",
+        matchDate: null,
+      });
+    }
   }
 
   return bundle;
@@ -352,19 +734,137 @@ export async function listCoachWorldRankings(limit = 5): Promise<
     coachId: string;
     name: string;
     slug: string;
+    /** @deprecated Prefer currentTeamName — nationality is not the ranking display field. */
     nationality: string | null;
+    currentTeamName: string | null;
     imageUrl: string | null;
     rating: number;
+    powerIndex: number | null;
+    winRate: number | null;
+    bigMatch: number | null;
+    playerDevelopment: number | null;
+    /** Rank positions gained (positive) / lost (negative) vs previous ranking snapshot. */
+    rankChange: number | null;
+    previousRank: number | null;
+    /** @deprecated Use rankChange — previously incorrectly mapped Power Index momentum. */
     movement: number | null;
+    confidence: number | null;
+    coverage: number | null;
+    matchesUsed: number | null;
   }>
 > {
+  const rows = await listLatestEligibleCoachSnapshots();
+  return rows
+    .filter(isEligibleForWorldRank)
+    .sort((a, b) => {
+      const diff = (b.overallRating ?? 0) - (a.overallRating ?? 0);
+      if (diff !== 0) return diff;
+      return a.coachId.localeCompare(b.coachId);
+    })
+    .slice(0, limit)
+    .map((s, i) => toLeaderboardRow(s, i + 1));
+}
+
+/**
+ * Active coaches ordered by current Power Index (current strength).
+ * Separate from World Rankings (overall Coach Rating quality).
+ */
+export async function listCoachPowerIndexRankings(limit = 100): Promise<
+  Array<{
+    rank: number;
+    coachId: string;
+    name: string;
+    slug: string;
+    nationality: string | null;
+    currentTeamName: string | null;
+    imageUrl: string | null;
+    powerIndex: number;
+    powerIndexChange: number | null;
+    rating: number | null;
+    results: number | null;
+    attack: number | null;
+    defence: number | null;
+    setPiece: number | null;
+    selection: number | null;
+    currentForm: number | null;
+    confidence: number | null;
+    matchesUsed: number | null;
+  }>
+> {
+  const rows = await listLatestEligibleCoachSnapshots();
+  const withPi = rows
+    .filter((s) => s.powerIndex != null)
+    .sort((a, b) => {
+      const diff = (b.powerIndex ?? 0) - (a.powerIndex ?? 0);
+      if (diff !== 0) return diff;
+      return a.coachId.localeCompare(b.coachId);
+    })
+    .slice(0, limit);
+
+  return withPi.map((s, i) => {
+    const payload = s.metrics as {
+      powerIndex?: CoachPowerIndexResult;
+      powerIndexChange?: number | null;
+      intelligence?: Array<{ key: string; score: number | null }>;
+      coachRating?: CoachRatingResult;
+      ratingConfidencePct?: number;
+    } | null;
+    const intel = payload?.intelligence ?? [];
+    const scoreOf = (key: string) => {
+      const m = intel.find((x) => x.key === key);
+      return m?.score != null ? Math.round(m.score) : null;
+    };
+    const piDetail = payload?.powerIndex;
+    return {
+      rank: i + 1,
+      coachId: s.coachId,
+      name: s.name,
+      slug: s.slug,
+      nationality: s.nationality,
+      currentTeamName: s.currentTeamName,
+      imageUrl: s.imageUrl,
+      powerIndex: Math.round(s.powerIndex!),
+      powerIndexChange:
+        typeof payload?.powerIndexChange === "number" ? payload.powerIndexChange : s.momentum,
+      rating: s.overallRating,
+      results: scoreOf("results"),
+      attack: scoreOf("attack"),
+      defence: scoreOf("defence"),
+      setPiece: scoreOf("set_piece"),
+      selection: scoreOf("selection"),
+      currentForm: scoreOf("current_form"),
+      confidence: piDetail?.confidence ?? payload?.coachRating?.confidence ?? payload?.ratingConfidencePct ?? null,
+      matchesUsed: piDetail?.matchesUsed ?? payload?.coachRating?.matchesUsed ?? null,
+    };
+  });
+}
+
+type SnapshotRow = {
+  coachId: string;
+  overallRating: number | null;
+  powerIndex: number | null;
+  worldRank: number | null;
+  momentum: number | null;
+  metrics: unknown;
+  calculatedAt: Date;
+  name: string;
+  slug: string;
+  nationality: string | null;
+  imageUrl: string | null;
+  currentTeamName: string | null;
+  previousWorldRank: number | null;
+};
+
+async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
   const db = getDb();
-  // latest snapshot per coach via distinct-on pattern
   const snaps = await db
     .select({
       coachId: coachRatingSnapshots.coachId,
       overallRating: coachRatingSnapshots.overallRating,
+      powerIndex: coachRatingSnapshots.powerIndex,
+      worldRank: coachRatingSnapshots.worldRank,
       momentum: coachRatingSnapshots.momentum,
+      metrics: coachRatingSnapshots.metrics,
       calculatedAt: coachRatingSnapshots.calculatedAt,
       name: coaches.name,
       slug: coaches.slug,
@@ -374,27 +874,131 @@ export async function listCoachWorldRankings(limit = 5): Promise<
     .from(coachRatingSnapshots)
     .innerJoin(coaches, eq(coachRatingSnapshots.coachId, coaches.id))
     .orderBy(desc(coachRatingSnapshots.calculatedAt))
-    .limit(400);
+    .limit(800);
 
   const best = new Map<string, (typeof snaps)[number]>();
+  const previousByCoach = new Map<string, (typeof snaps)[number]>();
   for (const s of snaps) {
-    if (s.overallRating == null) continue;
-    if (!best.has(s.coachId)) best.set(s.coachId, s);
+    if (s.overallRating == null && s.powerIndex == null) continue;
+    if (!best.has(s.coachId)) {
+      best.set(s.coachId, s);
+      continue;
+    }
+    if (!previousByCoach.has(s.coachId)) previousByCoach.set(s.coachId, s);
+  }
+
+  const activeRows = await db
+    .select({
+      coachId: teamCoachingStaff.coachId,
+      teamName: teams.name,
+      teamDisplayName: teamCoachingStaff.teamDisplayName,
+      isPrimary: teamCoachingStaff.isPrimaryCoach,
+      role: teamCoachingStaff.role,
+    })
+    .from(teamCoachingStaff)
+    .innerJoin(teams, eq(teamCoachingStaff.teamId, teams.id))
+    .where(eq(teamCoachingStaff.isCurrent, true));
+
+  const teamByCoach = new Map<string, string>();
+  const preferred = [...activeRows].sort((a, b) => {
+    if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1;
+    if (a.role === "head_coach" && b.role !== "head_coach") return -1;
+    if (b.role === "head_coach" && a.role !== "head_coach") return 1;
+    return 0;
+  });
+  for (const r of preferred) {
+    if (!teamByCoach.has(r.coachId)) {
+      teamByCoach.set(r.coachId, r.teamDisplayName || r.teamName);
+    }
+  }
+
+  const coachIds = [...best.keys()];
+  const gallery =
+    coachIds.length > 0
+      ? await db
+          .select({
+            coachId: coachImages.coachId,
+            imageUrl: coachImages.imageUrl,
+            role: coachImages.role,
+            status: coachImages.status,
+            isPublic: coachImages.isPublic,
+          })
+          .from(coachImages)
+          .where(inArray(coachImages.coachId, coachIds))
+      : [];
+  const galleryByCoach = new Map<string, string>();
+  const gallerySorted = [...gallery].sort((a, b) => {
+    const score = (g: (typeof gallery)[number]) =>
+      (g.status === "approved" ? 4 : g.status === "candidate" ? 1 : 0) +
+      (g.role === "primary" || g.role === "profile" ? 2 : 0) +
+      (g.isPublic ? 1 : 0);
+    return score(b) - score(a);
+  });
+  for (const g of gallerySorted) {
+    if (!galleryByCoach.has(g.coachId)) galleryByCoach.set(g.coachId, g.imageUrl);
   }
 
   return [...best.values()]
-    .sort((a, b) => (b.overallRating ?? 0) - (a.overallRating ?? 0))
-    .slice(0, limit)
-    .map((s, i) => ({
-      rank: i + 1,
-      coachId: s.coachId,
-      name: s.name,
-      slug: s.slug,
-      nationality: s.nationality,
-      imageUrl: s.imageUrl,
-      rating: s.overallRating!,
-      movement: s.momentum,
-    }));
+    .filter((s) => teamByCoach.has(s.coachId))
+    .map((s) => {
+      const prevSnap = previousByCoach.get(s.coachId);
+      return {
+        ...s,
+        imageUrl: s.imageUrl || galleryByCoach.get(s.coachId) || null,
+        currentTeamName: teamByCoach.get(s.coachId) ?? null,
+        previousWorldRank:
+          prevSnap?.worldRank != null && prevSnap.worldRank > 0 ? prevSnap.worldRank : null,
+      };
+    });
+}
+
+function isEligibleForWorldRank(s: SnapshotRow): boolean {
+  if (s.overallRating == null) return false;
+  const payload = s.metrics as { coachRating?: CoachRatingResult } | null;
+  if (payload?.coachRating) return Boolean(payload.coachRating.eligibleForWorldRank);
+  return false;
+}
+
+function toLeaderboardRow(s: SnapshotRow, rank: number) {
+  const payload = s.metrics as {
+    coachRating?: CoachRatingResult;
+    powerIndex?: CoachPowerIndexResult;
+    intelligence?: Array<{ key: string; score: number | null }>;
+    ratingConfidencePct?: number;
+  } | null;
+  const cr = payload?.coachRating;
+  const intel = payload?.intelligence ?? [];
+  const scoreOf = (key: string) => {
+    const m = intel.find((x) => x.key === key);
+    return m?.score != null ? Math.round(m.score) : null;
+  };
+  const contribScore = (key: string) => {
+    const c = cr?.contributions?.find((x) => x.key === key);
+    return c != null ? Math.round(c.score) : null;
+  };
+  const previousRank = s.previousWorldRank;
+  const rankChange = previousRank != null ? previousRank - rank : null;
+
+  return {
+    rank,
+    coachId: s.coachId,
+    name: s.name,
+    slug: s.slug,
+    nationality: s.nationality,
+    currentTeamName: s.currentTeamName,
+    imageUrl: s.imageUrl,
+    rating: s.overallRating!,
+    powerIndex: s.powerIndex != null ? Math.round(s.powerIndex) : null,
+    winRate: contribScore("career_results") ?? scoreOf("results"),
+    bigMatch: contribScore("big_match_performance") ?? scoreOf("big_match_performance"),
+    playerDevelopment: contribScore("player_development") ?? scoreOf("player_development"),
+    rankChange,
+    previousRank,
+    movement: rankChange,
+    confidence: cr?.confidence ?? payload?.ratingConfidencePct ?? null,
+    coverage: cr?.weightedCoverage ?? null,
+    matchesUsed: cr?.matchesUsed ?? null,
+  };
 }
 
 /** Average of stored match ratings when present — feeds experience/results. */

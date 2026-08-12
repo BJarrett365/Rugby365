@@ -12,6 +12,8 @@ import {
 describe("coach types", () => {
   it("normalizes common coaching role labels", () => {
     expect(normalizeCoachingRole("Head Coach")).toBe("head_coach");
+    expect(normalizeCoachingRole("Head of Rugby")).toBe("head_of_rugby");
+    expect(normalizeCoachingRole("Chief of Rugby Operations")).toBe("head_of_rugby");
     expect(normalizeCoachingRole("Director of Rugby")).toBe("director_of_rugby");
     expect(normalizeCoachingRole("S&C Coach")).toBe("strength_conditioning_coach");
     expect(normalizeCoachingRole("Defence Coach")).toBe("defence_coach");

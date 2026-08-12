@@ -1,6 +1,11 @@
 export const COACHING_ROLES = [
   "head_coach",
+  "head_of_rugby",
+  "coach",
+  "assistant_coach",
   "director_of_rugby",
+  "technical_adviser",
+  "technical_specialist",
   "attack_coach",
   "defence_coach",
   "forwards_coach",
@@ -9,6 +14,7 @@ export const COACHING_ROLES = [
   "kicking_coach",
   "skills_coach",
   "strength_conditioning_coach",
+  "consultant",
   "analyst",
   "team_manager",
   "medical_lead",
@@ -19,7 +25,12 @@ export type CoachingRole = (typeof COACHING_ROLES)[number];
 
 export const COACHING_ROLE_LABELS: Record<CoachingRole, string> = {
   head_coach: "Head Coach",
+  head_of_rugby: "Head of Rugby",
+  coach: "Coach",
+  assistant_coach: "Assistant Coach",
   director_of_rugby: "Director of Rugby",
+  technical_adviser: "Technical Adviser",
+  technical_specialist: "Technical Specialist",
   attack_coach: "Attack Coach",
   defence_coach: "Defence Coach",
   forwards_coach: "Forwards Coach",
@@ -28,6 +39,7 @@ export const COACHING_ROLE_LABELS: Record<CoachingRole, string> = {
   kicking_coach: "Kicking Coach",
   skills_coach: "Skills Coach",
   strength_conditioning_coach: "S&C Coach",
+  consultant: "Consultant",
   analyst: "Analyst",
   team_manager: "Team Manager",
   medical_lead: "Medical Lead",
@@ -43,7 +55,19 @@ export function normalizeCoachingRole(role: string): CoachingRole {
   if ((COACHING_ROLES as readonly string[]).includes(normalized)) {
     return normalized as CoachingRole;
   }
+  if (normalized.includes("technical") && normalized.includes("advis")) return "technical_adviser";
+  if (normalized.includes("technical") && normalized.includes("special")) {
+    return "technical_specialist";
+  }
   if (normalized.includes("head") && normalized.includes("coach")) return "head_coach";
+  if (
+    (normalized.includes("head") && normalized.includes("rugby")) ||
+    (normalized.includes("chief") && normalized.includes("rugby"))
+  ) {
+    return "head_of_rugby";
+  }
+  if (normalized.includes("assistant")) return "assistant_coach";
+  if (normalized.includes("consultant")) return "consultant";
   if (normalized.includes("director")) return "director_of_rugby";
   if (normalized.includes("attack")) return "attack_coach";
   if (normalized.includes("defen")) return "defence_coach";
@@ -58,6 +82,7 @@ export function normalizeCoachingRole(role: string): CoachingRole {
   if (normalized.includes("analyst")) return "analyst";
   if (normalized.includes("manager")) return "team_manager";
   if (normalized.includes("medical")) return "medical_lead";
+  if (normalized === "coach" || normalized === "coaching") return "coach";
   return "other";
 }
 

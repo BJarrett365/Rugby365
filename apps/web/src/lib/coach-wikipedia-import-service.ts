@@ -33,6 +33,7 @@ import {
   loadCmsTeamsForCoachAssignment,
 } from "./coach-team-resolve-service";
 import { namesLikelyMatch } from "./player-profile-enrichment-service";
+import { normalizeCoachingRole } from "./coach-types";
 
 type CoachTeamResolver = ReturnType<typeof buildCoachTeamResolver>;
 import { getWikimediaEnterpriseAccessToken } from "./wikimedia-enterprise-client";
@@ -337,13 +338,19 @@ async function upsertAssignmentsFromArchive(
     const result = await upsertCoachingStaffAssignment({
       coachId,
       teamId: team.id,
-      role: stint.teamName.toLowerCase().includes("national") ? "head_coach" : "head_coach",
+      role: stint.roleHint?.trim() || "head_coach",
+      careerType: (() => {
+        const hint = (stint.roleHint || "").toLowerCase();
+        if (hint.includes("director")) return "management";
+        if (hint.includes("technical")) return "technical";
+        return "coach";
+      })(),
       startDate: yearToStartDate(stint.startYear),
       endDate: yearToEndDate(stint.endYear),
       isCurrent: isLinkedTeam ? isCurrent : isCurrent && !options?.linkTeamId,
-      bioSummary: `${stint.yearsLabel} · ${stint.teamName}`,
+      bioSummary: `${stint.yearsLabel} · ${stint.teamName}${stint.roleHint ? ` (${stint.roleHint})` : ""}`,
       sourceUrl: archive.wikipediaUrl,
-      importKey: `wikipedia:${coachId}:${team.id}:${stint.sortOrder ?? stint.yearsLabel}`,
+      importKey: `wikipedia:${coachId}:${team.id}:${stint.sortOrder ?? stint.yearsLabel}:${normalizeCoachingRole(stint.roleHint?.trim() || "head_coach")}`,
     });
 
     if (result.created) assignmentsCreated += 1;

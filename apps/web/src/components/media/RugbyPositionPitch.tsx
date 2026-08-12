@@ -1,4 +1,6 @@
-/** Rugby Union XV pitch markers for main / secondary positions. */
+/** Rugby Union XV pitch markers with Primary / Secondary / Utility / Rare classification. */
+
+import type { PositionClass } from "@/lib/player-position-usage-service";
 
 const XV_POSITIONS: Array<{
   number: number;
@@ -37,7 +39,6 @@ function matchPosition(value: string | null | undefined): number[] {
       hits.push(pos.number);
     }
   }
-  // Prefer specific lock #4 when only "lock"
   if (n === "lock" || n === "second row") return [4, 5];
   if (n === "flanker") return [6, 7];
   if (n === "prop") return [1, 3];
@@ -46,28 +47,80 @@ function matchPosition(value: string | null | undefined): number[] {
   return hits;
 }
 
+export type PitchPositionHighlight = {
+  position: string;
+  classification: PositionClass;
+  number?: number | null;
+  usagePercent?: number;
+  appearances?: number;
+  starts?: number;
+  minutes?: number | null;
+  averageMatchRating?: number | null;
+  positionRating?: number | null;
+  lastPlayed?: string | null;
+  statsHref?: string | null;
+};
+
+function classTone(c: PositionClass): "primary" | "secondary" | "utility" | "rare" {
+  if (c === "PRIMARY") return "primary";
+  if (c === "SECONDARY") return "secondary";
+  if (c === "UTILITY") return "utility";
+  return "rare";
+}
+
 export function RugbyPositionPitch({
   mainPosition,
   otherPositions = [],
+  highlights,
   compact = false,
   summary,
+  showLegend = false,
 }: {
   mainPosition: string | null;
   otherPositions?: string[];
+  /** When set, colours markers by usage classification (preferred). */
+  highlights?: PitchPositionHighlight[];
   compact?: boolean;
   summary?: string | null;
+  showLegend?: boolean;
 }) {
-  const main = new Set(matchPosition(mainPosition));
-  const secondary = new Set(otherPositions.flatMap((p) => matchPosition(p)));
-  for (const n of main) secondary.delete(n);
+  const classByNumber = new Map<number, PositionClass>();
+  const detailByNumber = new Map<number, PitchPositionHighlight>();
+
+  if (highlights?.length) {
+    for (const h of highlights) {
+      const nums =
+        h.number != null && h.number >= 1 && h.number <= 15
+          ? [h.number]
+          : matchPosition(h.position);
+      for (const n of nums) {
+        const existing = classByNumber.get(n);
+        const rank = { PRIMARY: 4, SECONDARY: 3, UTILITY: 2, RARE: 1 } as const;
+        if (!existing || rank[h.classification] > rank[existing]) {
+          classByNumber.set(n, h.classification);
+          detailByNumber.set(n, h);
+        }
+      }
+    }
+  } else {
+    const main = new Set(matchPosition(mainPosition));
+    const secondary = new Set(otherPositions.flatMap((p) => matchPosition(p)));
+    for (const n of main) {
+      secondary.delete(n);
+      classByNumber.set(n, "PRIMARY");
+    }
+    for (const n of secondary) classByNumber.set(n, "SECONDARY");
+  }
 
   const textSummary =
     summary ||
-    (mainPosition
-      ? `Main position ${mainPosition}${
-          otherPositions.length ? `, also ${otherPositions.join(", ")}` : ""
-        }.`
-      : "Position map unavailable.");
+    (highlights?.length
+      ? `Positions played: ${highlights.map((h) => h.position).join(", ")}.`
+      : mainPosition
+        ? `Main position ${mainPosition}${
+            otherPositions.length ? `, also ${otherPositions.join(", ")}` : ""
+          }.`
+        : "Position map unavailable.");
 
   return (
     <figure className={`pr-rugby-pitch${compact ? " pr-rugby-pitch--compact" : ""}`}>
@@ -82,21 +135,36 @@ export function RugbyPositionPitch({
         <line x1="2" y1="22" x2="98" y2="22" className="pr-rugby-pitch__line" />
         <line x1="2" y1="78" x2="98" y2="78" className="pr-rugby-pitch__line" />
         {XV_POSITIONS.map((pos) => {
-          const isMain = main.has(pos.number);
-          const isSecondary = secondary.has(pos.number);
-          const r = isMain ? 4.2 : isSecondary ? 3.2 : 2.2;
+          const cls = classByNumber.get(pos.number);
+          const played = Boolean(cls);
+          const tone = cls ? classTone(cls) : null;
+          const detail = detailByNumber.get(pos.number);
+          const r = played ? (cls === "PRIMARY" ? 4.2 : cls === "SECONDARY" ? 3.6 : 3.0) : 2.2;
+          const title = detail
+            ? [
+                detail.position,
+                detail.usagePercent != null ? `${detail.usagePercent}%` : null,
+                detail.appearances != null ? `${detail.appearances} apps` : null,
+                detail.starts != null ? `${detail.starts} starts` : null,
+                detail.minutes != null ? `${detail.minutes} mins` : null,
+                detail.averageMatchRating != null
+                  ? `avg ${detail.averageMatchRating.toFixed(1)}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : pos.label;
           return (
             <g key={pos.number}>
+              <title>{title}</title>
               <circle
                 cx={pos.x}
                 cy={pos.y}
                 r={r}
                 className={
-                  isMain
-                    ? "pr-rugby-pitch__dot pr-rugby-pitch__dot--main"
-                    : isSecondary
-                      ? "pr-rugby-pitch__dot pr-rugby-pitch__dot--secondary"
-                      : "pr-rugby-pitch__dot"
+                  played && tone
+                    ? `pr-rugby-pitch__dot pr-rugby-pitch__dot--${tone}`
+                    : "pr-rugby-pitch__dot"
                 }
               />
               <text
@@ -112,7 +180,27 @@ export function RugbyPositionPitch({
           );
         })}
       </svg>
-      <figcaption className="pr-rugby-pitch__caption">{textSummary}</figcaption>
+      {showLegend ? (
+        <ul className="pr-rugby-pitch__legend" aria-label="Position classification">
+          <li>
+            <span className="pr-rugby-pitch__legend-dot pr-rugby-pitch__legend-dot--primary" />
+            Primary
+          </li>
+          <li>
+            <span className="pr-rugby-pitch__legend-dot pr-rugby-pitch__legend-dot--secondary" />
+            Secondary
+          </li>
+          <li>
+            <span className="pr-rugby-pitch__legend-dot pr-rugby-pitch__legend-dot--utility" />
+            Utility
+          </li>
+          <li>
+            <span className="pr-rugby-pitch__legend-dot pr-rugby-pitch__legend-dot--rare" />
+            Rare
+          </li>
+        </ul>
+      ) : null}
+      <figcaption className="pr-rugby-pitch__caption sr-only">{textSummary}</figcaption>
     </figure>
   );
 }

@@ -1,0 +1,514 @@
+/**
+ * Populate Rassie Erasmus structured playing + coaching career from Wikipedia
+ * (https://en.wikipedia.org/wiki/Rassie_Erasmus) as verified CMS rows.
+ *
+ * Does not invent roles/dates — mirrors the Wikipedia career tables.
+ * Overlapping roles are preserved as separate rows.
+ *
+ * Usage:
+ *   npx tsx --require ./scripts/stub-server-only.cjs scripts/populate-rassie-career-history.ts
+ */
+import { eq, sql } from "drizzle-orm";
+import { coaches, coachPlayingStints, teamCoachingStaff, teams } from "@rugby365/db";
+import { getDb } from "../apps/web/src/lib/db";
+
+const COACH_ID = "dbe4562a-7255-42c4-bb70-653153c4da3c";
+const SOURCE = "https://en.wikipedia.org/wiki/Rassie_Erasmus";
+const SOURCE_PROVIDER = "wikipedia";
+
+type TeamSpec = {
+  slug: string;
+  name: string;
+  shortName: string;
+  teamType: string;
+  countryName: string;
+  imageFromSlug?: string;
+};
+
+const TEAM_SPECS: TeamSpec[] = [
+  {
+    slug: "free-state",
+    name: "Free State",
+    shortName: "FS",
+    teamType: "provincial",
+    countryName: "South Africa",
+    imageFromSlug: "cheetahs-x7jq3161",
+  },
+  {
+    slug: "free-state-cheetahs",
+    name: "Free State Cheetahs",
+    shortName: "FSC",
+    teamType: "provincial",
+    countryName: "South Africa",
+    imageFromSlug: "cheetahs-x7jq3161",
+  },
+  {
+    slug: "cats",
+    name: "Cats",
+    shortName: "CAT",
+    teamType: "franchise",
+    countryName: "South Africa",
+    imageFromSlug: "lions-k76kd1jy",
+  },
+  {
+    slug: "stormers",
+    name: "Stormers",
+    shortName: "STO",
+    teamType: "franchise",
+    countryName: "South Africa",
+    imageFromSlug: "dhl-stormers-xxiii-pd9ry3j8",
+  },
+];
+
+async function ensureTeams(db: ReturnType<typeof getDb>) {
+  const existing = await db.select().from(teams);
+  const bySlug = new Map(existing.map((t) => [t.slug, t]));
+  const imageBySlug = new Map(
+    existing.map((t) => [t.slug, t.imageUrl?.trim() || null] as const),
+  );
+
+  for (const spec of TEAM_SPECS) {
+    const found = bySlug.get(spec.slug);
+    const imageUrl = spec.imageFromSlug
+      ? imageBySlug.get(spec.imageFromSlug) ?? null
+      : null;
+    if (found) {
+      if (!found.imageUrl?.trim() && imageUrl) {
+        await db
+          .update(teams)
+          .set({ imageUrl })
+          .where(eq(teams.id, found.id));
+        found.imageUrl = imageUrl;
+      }
+      continue;
+    }
+    const [created] = await db
+      .insert(teams)
+      .values({
+        slug: spec.slug,
+        name: spec.name,
+        shortName: spec.shortName,
+        teamType: spec.teamType,
+        countryName: spec.countryName,
+        hemisphere: "south",
+        region: "Africa",
+        sourceProvider: "manual",
+        imageUrl,
+      })
+      .returning();
+    bySlug.set(spec.slug, created!);
+    console.log("created team", spec.name, created!.id);
+  }
+
+  // Prefer canonical Stormers crest for the DHL XXIII alias row if empty (already has image).
+  return bySlug;
+}
+
+function teamId(bySlug: Map<string, typeof teams.$inferSelect>, slug: string): string {
+  const t = bySlug.get(slug);
+  if (!t) throw new Error(`Missing team slug ${slug}`);
+  return t.id;
+}
+
+async function upsertPlaying(
+  db: ReturnType<typeof getDb>,
+  row: {
+    importKey: string;
+    teamType: string;
+    startYear: number;
+    endYear: number | null;
+    yearsLabel: string;
+    teamName: string;
+    teamId: string | null;
+    apps?: number | null;
+    points?: number | null;
+    country?: string | null;
+    showOnOverview: boolean;
+    sortOrder: number;
+  },
+) {
+  const [existing] = await db
+    .select()
+    .from(coachPlayingStints)
+    .where(
+      sql`${coachPlayingStints.coachId} = ${COACH_ID}
+        AND ${coachPlayingStints.sourceUrl} = ${`${SOURCE}#${row.importKey}`}`,
+    )
+    .limit(1);
+
+  const payload = {
+    coachId: COACH_ID,
+    teamType: row.teamType,
+    startYear: row.startYear,
+    endYear: row.endYear,
+    yearsLabel: row.yearsLabel,
+    teamName: row.teamName,
+    teamId: row.teamId,
+    apps: row.apps ?? null,
+    points: row.points ?? null,
+    country: row.country ?? "South Africa",
+    sortOrder: row.sortOrder,
+    sourceProvider: SOURCE_PROVIDER,
+    sourceUrl: `${SOURCE}#${row.importKey}`,
+    verifiedAt: new Date(),
+    showOnOverview: row.showOnOverview,
+    updatedAt: new Date(),
+  };
+
+  if (existing) {
+    await db
+      .update(coachPlayingStints)
+      .set(payload)
+      .where(eq(coachPlayingStints.id, existing.id));
+    return { id: existing.id, created: false };
+  }
+
+  const [created] = await db.insert(coachPlayingStints).values(payload).returning();
+  return { id: created!.id, created: true };
+}
+
+async function upsertAssignment(
+  db: ReturnType<typeof getDb>,
+  row: {
+    importKey: string;
+    teamId: string;
+    role: string;
+    careerType: string;
+    startDate: string;
+    endDate: string | null;
+    isCurrent: boolean;
+    isPrimaryCoach: boolean;
+    showOnOverview: boolean;
+    notes: string;
+    eligibleForCareerRecord?: boolean;
+  },
+) {
+  const [existing] = await db
+    .select()
+    .from(teamCoachingStaff)
+    .where(eq(teamCoachingStaff.importKey, row.importKey))
+    .limit(1);
+
+  const payload = {
+    coachId: COACH_ID,
+    teamId: row.teamId,
+    role: row.role,
+    careerType: row.careerType,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    isCurrent: row.isCurrent,
+    isPrimaryCoach: row.isPrimaryCoach,
+    eligibleForCareerRecord: row.eligibleForCareerRecord ?? true,
+    showOnOverview: row.showOnOverview,
+    notes: row.notes,
+    sourceUrl: SOURCE,
+    confidence: "high",
+    verifiedAt: new Date(),
+    importKey: row.importKey,
+    updatedAt: new Date(),
+  };
+
+  if (existing) {
+    await db
+      .update(teamCoachingStaff)
+      .set(payload)
+      .where(eq(teamCoachingStaff.id, existing.id));
+    return { id: existing.id, created: false };
+  }
+
+  const [created] = await db.insert(teamCoachingStaff).values(payload).returning();
+  return { id: created!.id, created: true };
+}
+
+async function main() {
+  const db = getDb();
+  const [coach] = await db.select().from(coaches).where(eq(coaches.id, COACH_ID)).limit(1);
+  if (!coach) throw new Error("Rassie coach row not found");
+
+  const bySlug = await ensureTeams(db);
+  // Merge already-known teams into map
+  for (const t of await db.select().from(teams)) {
+    bySlug.set(t.slug, t);
+  }
+
+  const SA = teamId(bySlug, "south-africa");
+  const FREE_STATE = teamId(bySlug, "free-state");
+  const FSC = teamId(bySlug, "free-state-cheetahs");
+  const CHEETAHS = teamId(bySlug, "cheetahs-x7jq3161");
+  const LIONS = teamId(bySlug, "lions-k76kd1jy");
+  const CATS = teamId(bySlug, "cats");
+  const STORMERS = teamId(bySlug, "stormers");
+  const WP = teamId(bySlug, "western-province");
+  const MUNSTER = teamId(bySlug, "munster-m46vomjz");
+  const BARBS = teamId(bySlug, "barbarians");
+
+  // Keep existing international stint, retarget source + overview
+  await db
+    .update(coachPlayingStints)
+    .set({
+      showOnOverview: true,
+      teamId: SA,
+      teamName: "South Africa",
+      teamType: "international",
+      startYear: 1997,
+      endYear: 2001,
+      yearsLabel: "1997–2001",
+      apps: 36,
+      points: 35,
+      sourceProvider: SOURCE_PROVIDER,
+      sourceUrl: `${SOURCE}#playing-international`,
+      verifiedAt: new Date(),
+      sortOrder: 50,
+      updatedAt: new Date(),
+    })
+    .where(eq(coachPlayingStints.id, "0da77ca5-b75f-4221-9c7f-cf69da36d195"));
+
+  const playing = [
+    {
+      importKey: "playing-free-state",
+      teamType: "provincial",
+      startYear: 1994,
+      endYear: 2003,
+      yearsLabel: "1994–98, 2001–03",
+      teamName: "Free State",
+      teamId: FREE_STATE,
+      apps: 112,
+      showOnOverview: true, // overview key journey: Player Free State / Cats / Stormers era start
+      sortOrder: 10,
+    },
+    {
+      importKey: "playing-golden-lions",
+      teamType: "provincial",
+      startYear: 1998,
+      endYear: 2000,
+      yearsLabel: "1998–2000",
+      teamName: "Golden Lions",
+      teamId: LIONS,
+      apps: 7,
+      showOnOverview: false,
+      sortOrder: 20,
+    },
+    {
+      importKey: "playing-free-state-super",
+      teamType: "franchise",
+      startYear: 1997,
+      endYear: 1997,
+      yearsLabel: "1997",
+      teamName: "Free State",
+      teamId: FREE_STATE,
+      apps: 7,
+      points: 10,
+      showOnOverview: false,
+      sortOrder: 30,
+    },
+    {
+      importKey: "playing-cats",
+      teamType: "franchise",
+      startYear: 1998,
+      endYear: 2001,
+      yearsLabel: "1998–2001",
+      teamName: "Cats",
+      teamId: CATS,
+      apps: 46,
+      points: 45,
+      showOnOverview: false,
+      sortOrder: 40,
+    },
+    {
+      importKey: "playing-stormers",
+      teamType: "franchise",
+      startYear: 2003,
+      endYear: 2003,
+      yearsLabel: "2003",
+      teamName: "Stormers",
+      teamId: STORMERS,
+      apps: 4,
+      showOnOverview: false,
+      sortOrder: 45,
+    },
+  ] as const;
+
+  for (const p of playing) {
+    const r = await upsertPlaying(db, { ...p, country: "South Africa" });
+    console.log("playing", p.importKey, r.created ? "created" : "updated");
+  }
+
+  // Existing SA coaching rows — keep overlaps; flag for overview
+  await db
+    .update(teamCoachingStaff)
+    .set({
+      showOnOverview: true,
+      sourceUrl: SOURCE,
+      confidence: "high",
+      verifiedAt: new Date(),
+      importKey: "wikipedia:rassie:sa:dor:2017-2024",
+      notes: "Director of Rugby (Wikipedia 2017–2024). Overlaps 2018–19 Head Coach.",
+      eligibleForCareerRecord: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(teamCoachingStaff.id, "572a333a-61f0-4fff-b75c-df48b5414783"));
+
+  await db
+    .update(teamCoachingStaff)
+    .set({
+      showOnOverview: true,
+      sourceUrl: SOURCE,
+      confidence: "high",
+      verifiedAt: new Date(),
+      importKey: "wikipedia:rassie:sa:hc:2018-2019",
+      notes: "First Springboks head-coach appointment (March 2018–2019). Overlaps DoR.",
+      updatedAt: new Date(),
+    })
+    .where(eq(teamCoachingStaff.id, "2c1f92f7-4b6c-4cc3-b921-4b70f1a552bb"));
+
+  await db
+    .update(teamCoachingStaff)
+    .set({
+      showOnOverview: true,
+      sourceUrl: SOURCE,
+      confidence: "high",
+      verifiedAt: new Date(),
+      importKey: "wikipedia:rassie:sa:hc:2024-",
+      updatedAt: new Date(),
+    })
+    .where(eq(teamCoachingStaff.id, "bc768aca-0b64-4c46-a53a-aeb84f01dc81"));
+
+  const coaching = [
+    {
+      importKey: "wikipedia:rassie:fsc:coach:2004-2006",
+      teamId: FSC,
+      role: "head_coach",
+      careerType: "coach",
+      startDate: "2004-01-01",
+      endDate: "2006-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes: "Free State Cheetahs — Wikipedia coaching table 2004–2006.",
+    },
+    {
+      importKey: "wikipedia:rassie:cheetahs:coach:2006-2007",
+      teamId: CHEETAHS,
+      role: "coach",
+      careerType: "coach",
+      startDate: "2006-01-01",
+      endDate: "2007-06-30",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: false,
+      notes: "Cheetahs (Super Rugby) — Wikipedia coaching table 2006–2007. Role: Coach.",
+    },
+    {
+      importKey: "wikipedia:rassie:sa:tech-adviser:2007",
+      teamId: SA,
+      role: "technical_adviser",
+      careerType: "technical",
+      startDate: "2007-01-01",
+      endDate: "2007-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes: "South Africa (Technical Adviser) — Wikipedia coaching table 2007.",
+      eligibleForCareerRecord: false,
+    },
+    {
+      importKey: "wikipedia:rassie:wp:coach:2007-2010",
+      teamId: WP,
+      role: "director_of_rugby",
+      careerType: "coach",
+      startDate: "2007-01-01",
+      endDate: "2010-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes:
+        "Western Province — Wikipedia prose: director of rugby from 2007. Overlaps Stormers 2008–2011.",
+    },
+    {
+      importKey: "wikipedia:rassie:stormers:coach:2008-2011",
+      teamId: STORMERS,
+      role: "head_coach",
+      careerType: "coach",
+      startDate: "2008-01-01",
+      endDate: "2011-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes: "Stormers — Wikipedia prose: head coach from 2008. Overlaps Western Province.",
+    },
+    {
+      importKey: "wikipedia:rassie:sa:tech-specialist:2011",
+      teamId: SA,
+      role: "technical_specialist",
+      careerType: "technical",
+      startDate: "2011-01-01",
+      endDate: "2011-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes: "South Africa (Technical Specialist) — Wikipedia coaching table 2011 / RWC.",
+      eligibleForCareerRecord: false,
+    },
+    {
+      importKey: "wikipedia:rassie:munster:dor:2016-2017",
+      teamId: MUNSTER,
+      role: "director_of_rugby",
+      careerType: "management",
+      startDate: "2016-07-01",
+      endDate: "2017-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      notes:
+        "Munster Director of Rugby (Wikipedia + Munster appointment). Also covered HC duties after Anthony Foley’s death — stored role: Director of Rugby.",
+      eligibleForCareerRecord: true,
+    },
+    {
+      importKey: "wikipedia:rassie:barbarians:coach:2018",
+      teamId: BARBS,
+      role: "coach",
+      careerType: "coach",
+      startDate: "2018-01-01",
+      endDate: "2018-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: false, // Full History only — invitational one-off
+      notes: "Barbarians — Wikipedia coaching table 2018. Overview: Full History only.",
+      eligibleForCareerRecord: false,
+    },
+  ] as const;
+
+  for (const c of coaching) {
+    const r = await upsertAssignment(db, c);
+    console.log("coach", c.importKey, r.created ? "created" : "updated");
+  }
+
+  const stints = await db
+    .select()
+    .from(coachPlayingStints)
+    .where(eq(coachPlayingStints.coachId, COACH_ID));
+  const assignments = await db
+    .select()
+    .from(teamCoachingStaff)
+    .where(eq(teamCoachingStaff.coachId, COACH_ID));
+
+  console.log(
+    JSON.stringify(
+      {
+        playingCount: stints.length,
+        playingOverview: stints.filter((s) => s.showOnOverview).map((s) => s.yearsLabel + " " + s.teamName),
+        coachingCount: assignments.length,
+        coachingOverview: assignments
+          .filter((a) => a.showOnOverview || a.isCurrent)
+          .map((a) => `${a.startDate} ${a.role}`),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

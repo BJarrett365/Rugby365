@@ -2,24 +2,68 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/shell/PageHeader";
+import { useEffect, useMemo, useState } from "react";
+import { CoachCmsFieldLabel } from "@/components/admin/CoachCmsFieldLabel";
+import { CoachCmsDataCoveragePanel } from "@/components/admin/CoachCmsDataCoveragePanel";
+import { CoachCmsIntelligencePanel } from "@/components/admin/CoachCmsIntelligencePanel";
+import { CoachCmsPowerIndexPanel } from "@/components/admin/CoachCmsPowerIndexPanel";
+import { CoachCmsRatingPanel } from "@/components/admin/CoachCmsRatingPanel";
+import { CoachCmsOpenAiProfileCheckPanel } from "@/components/admin/CoachCmsOpenAiProfileCheckPanel";
+import {
+  CoachCmsSourceReviewPanel,
+  type CoachSourceReviewRow,
+} from "@/components/admin/CoachCmsSourceReviewPanel";
+import { CoachCmsWorkflowHeader } from "@/components/admin/CoachCmsWorkflowHeader";
 import { PersonIntelligencePanel } from "@/components/admin/PersonIntelligencePanel";
 import { CoachTeamAssignmentSection } from "@/components/admin/CoachTeamAssignmentSection";
 import { CoachImagesPanel } from "@/components/admin/CoachImagesPanel";
+import { CoachCmsAchievementsPanel } from "@/components/admin/CoachCmsAchievementsPanel";
 import type { CoachingStaffRow } from "@/lib/coach-admin-service";
+import { computeCoachCmsCompleteness } from "@/lib/coach-cms-completeness";
+import type { CoachDataCoverage } from "@/lib/coach-recalc-service";
+import type {
+  CoachProfileCheckReport,
+  CoachProfileCheckScope,
+  CoachProfileFinding,
+} from "@/lib/coach-openai-profile-check-service";
 import { rugbyPassCoachUrl } from "@rugby365/import-sdk";
 
-type TabId = "overview" | "history" | "honours" | "stats";
+type TabId =
+  | "overview"
+  | "playing"
+  | "coaching"
+  | "history"
+  | "matches"
+  | "stats"
+  | "honours"
+  | "tactics"
+  | "selection"
+  | "players"
+  | "ratings"
+  | "rankings"
+  | "images"
+  | "sources"
+  | "ai"
+  | "audit";
+
+type HonourSubTab = "coach" | "player" | "awards" | "medals";
 
 type PlayingStint = {
   id: string;
   yearsLabel: string;
   teamName: string;
+  teamDisplayName?: string | null;
   teamType: string;
+  careerType?: string | null;
+  competitionLevel?: string | null;
+  teamId?: string | null;
   apps: number | null;
+  starts?: number | null;
   points: number | null;
   position: string | null;
+  showOnOverview?: boolean;
+  recordStatus?: string | null;
+  sourceUrl?: string | null;
 };
 
 type HonourRow = {
@@ -51,9 +95,28 @@ type MedalRow = {
 
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: "overview", label: "Overview" },
+  { id: "playing", label: "Playing Career" },
+  { id: "coaching", label: "Coaching Career" },
   { id: "history", label: "History" },
+  { id: "matches", label: "Matches" },
+  { id: "stats", label: "Stats" },
   { id: "honours", label: "Honours & Awards" },
-  { id: "stats", label: "Stats/Ratings" },
+  { id: "tactics", label: "Tactics" },
+  { id: "selection", label: "Selection" },
+  { id: "players", label: "Players" },
+  { id: "ratings", label: "Ratings" },
+  { id: "rankings", label: "Rankings" },
+  { id: "images", label: "Images" },
+  { id: "sources", label: "Sources" },
+  { id: "ai", label: "AI & Data" },
+  { id: "audit", label: "Audit History" },
+];
+
+const HONOUR_SUBTABS: Array<{ id: HonourSubTab; label: string }> = [
+  { id: "coach", label: "Coach Honours" },
+  { id: "player", label: "Player Honours" },
+  { id: "awards", label: "Awards" },
+  { id: "medals", label: "Medals" },
 ];
 
 const emptyValues = {
@@ -100,6 +163,7 @@ export default function EditCoachPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("overview");
+  const [honourSubTab, setHonourSubTab] = useState<HonourSubTab>("coach");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -109,13 +173,35 @@ export default function EditCoachPage() {
   const [honours, setHonours] = useState<HonourRow[]>([]);
   const [awards, setAwards] = useState<AwardRow[]>([]);
   const [medals, setMedals] = useState<MedalRow[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [lastDataCheck, setLastDataCheck] = useState<string | null>(null);
+  const [lastRatingAt, setLastRatingAt] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState("");
+  const [reviewSummary, setReviewSummary] = useState<string | null>(null);
+  const [reviewRows, setReviewRows] = useState<CoachSourceReviewRow[]>([]);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [ratingDiff, setRatingDiff] = useState<{
+    before: number | null;
+    after: number | null;
+    change: number | null;
+  } | null>(null);
+  const [dataCoverage, setDataCoverage] = useState<CoachDataCoverage | null>(null);
+  const [coverageBusy, setCoverageBusy] = useState("");
+  const [openaiReport, setOpenaiReport] = useState<CoachProfileCheckReport | null>(null);
+  const [openaiLastChecked, setOpenaiLastChecked] = useState<string | null>(null);
+  const [openaiBusy, setOpenaiBusy] = useState(false);
   const [stintForm, setStintForm] = useState({
     yearsLabel: "",
     teamName: "",
+    teamDisplayName: "",
     teamType: "provincial",
+    careerType: "provincial_player",
+    competitionLevel: "provincial",
+    teamId: "",
     apps: "",
     points: "",
     position: "",
+    sourceUrl: "",
   });
   const [honourForm, setHonourForm] = useState({
     year: "",
@@ -146,6 +232,8 @@ export default function EditCoachPage() {
   const [rugbypassImporting, setRugbypassImporting] = useState(false);
   const [rugbypassImportError, setRugbypassImportError] = useState("");
   const [wikipediaImporting, setWikipediaImporting] = useState(false);
+  const [careerChecking, setCareerChecking] = useState(false);
+  const [careerCheckSummary, setCareerCheckSummary] = useState<string>("");
   const [wikipediaImportError, setWikipediaImportError] = useState("");
   const [wikiHonourPreview, setWikiHonourPreview] = useState<{
     proposed: Array<{
@@ -167,15 +255,72 @@ export default function EditCoachPage() {
   } | null>(null);
   const [wikiHonoursBusy, setWikiHonoursBusy] = useState(false);
 
+  const currentAssignment = useMemo(
+    () => assignments.find((a) => a.isCurrent) ?? null,
+    [assignments],
+  );
+
+  const completeness = useMemo(
+    () =>
+      computeCoachCmsCompleteness({
+        publishStatus: values.publishStatus,
+        isPublic: values.isPublic,
+        name: values.name,
+        knownAs: values.knownAs,
+        birthDate: values.birthDate,
+        placeOfBirth: values.placeOfBirth,
+        nationality: values.nationality,
+        heightCm: values.heightCm,
+        imageUrl: values.imageUrl,
+        bioSummary: values.bioSummary,
+        wikipediaUrl: values.wikipediaUrl,
+        appointedOn: values.appointedOn,
+        contractExpiresOn: values.contractExpiresOn,
+        preferredSystem: values.preferredSystem,
+        coachingStyle: values.coachingStyle,
+        lastVerifiedAt: values.lastVerifiedAt,
+        playingStintCount: playingStints.length,
+        assignmentCount: assignments.length,
+        currentAssignment: Boolean(currentAssignment),
+        overviewCareerCount:
+          playingStints.filter((s) => s.showOnOverview).length +
+          assignments.filter((a) => a.showOnOverview || a.isCurrent).length,
+        needsReviewCareerCount:
+          playingStints.filter((s) => s.recordStatus === "needs_review").length +
+          assignments.filter((a) => a.recordStatus === "needs_review").length,
+        missingCrestCount: assignments.filter((a) => a.missingCrest).length,
+        honourCount: honours.length,
+        awardCount: awards.length,
+        hasCareerRecord: Boolean(careerRecord),
+        hasRating: Boolean(ratings) || Boolean(impact),
+      }),
+    [
+      values,
+      playingStints,
+      assignments,
+      currentAssignment,
+      honours.length,
+      awards.length,
+      careerRecord,
+      ratings,
+      impact,
+    ],
+  );
+
   useEffect(() => {
     reload().catch(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
-    if (tab === "history" || tab === "honours") {
+    if (
+      tab === "history" ||
+      tab === "honours" ||
+      tab === "playing" ||
+      tab === "coaching"
+    ) {
       loadNested().catch(() => undefined);
     }
-    if (tab === "stats") {
+    if (tab === "stats" || tab === "ratings" || tab === "matches" || tab === "rankings") {
       loadStats().catch(() => undefined);
     }
   }, [tab, id]);
@@ -225,12 +370,68 @@ export default function EditCoachPage() {
         socialLinkedin: d.socialAccounts?.linkedin ?? "",
         socialWebsite: d.socialAccounts?.website ?? "",
       });
+      setLastUpdated(
+        d.coach.updatedAt ? String(d.coach.updatedAt) : d.coach.lastVerifiedAt ? String(d.coach.lastVerifiedAt) : null,
+      );
       if (!rugbypassUrl) {
         setRugbypassUrl(rugbyPassCoachUrl(String(d.coach.slug ?? "")));
       }
     }
     setAssignments(d.assignments ?? []);
+    await loadNested().catch(() => undefined);
+    await loadDataCoverage().catch(() => undefined);
+    await loadOpenaiHistory().catch(() => undefined);
     setLoading(false);
+  }
+
+  async function loadDataCoverage() {
+    const res = await fetch(`/api/admin/coaches/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "data-coverage" }),
+    });
+    const data = await res.json();
+    if (res.ok) setDataCoverage(data.coverage ?? null);
+  }
+
+  async function loadOpenaiHistory() {
+    const res = await fetch(`/api/admin/coaches/${id}/openai-profile-check`);
+    const data = await res.json();
+    if (!res.ok) return;
+    setOpenaiLastChecked(data.lastChecked ?? null);
+    const latest = data.history?.[0];
+    if (latest?.report) setOpenaiReport(latest.report as CoachProfileCheckReport);
+  }
+
+  async function runOpenaiProfileCheck(scope: CoachProfileCheckScope = "full") {
+    setOpenaiBusy(true);
+    setBusyAction("openai");
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/coaches/${id}/openai-profile-check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "OpenAI profile check failed");
+        return;
+      }
+      setOpenaiReport(data.report ?? null);
+      setOpenaiLastChecked(data.report?.checkedAt ?? new Date().toISOString());
+    } finally {
+      setOpenaiBusy(false);
+      setBusyAction("");
+    }
+  }
+
+  function dismissOpenaiFinding(finding: CoachProfileFinding) {
+    setOpenaiReport((prev) =>
+      prev
+        ? { ...prev, findings: prev.findings.filter((f) => f.id !== finding.id) }
+        : prev,
+    );
   }
 
   async function loadNested() {
@@ -258,7 +459,7 @@ export default function EditCoachPage() {
           : "",
       }));
     }
-    const [careerRes, impactRes] = await Promise.all([
+    const [careerRes, impactRes, intelRes] = await Promise.all([
       fetch(`/api/admin/coaches/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -269,10 +470,15 @@ export default function EditCoachPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "recalculate-impact" }),
       }).then((r) => r.json()),
+      fetch(`/api/admin/coaches/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "coach-intelligence" }),
+      }).then((r) => r.json()),
     ]);
     setCareerRecord(careerRes.careerRecord ?? null);
     setImpact(impactRes.impact ?? null);
-    setRatings(null);
+    setRatings(intelRes.ratings ?? null);
   }
 
   async function applyDetail(detail: { coach?: Record<string, unknown>; socialAccounts?: Record<string, string | null> }) {
@@ -368,6 +574,183 @@ export default function EditCoachPage() {
     if (data.detail) await applyDetail(data.detail);
     else await reload();
     setWikipediaImporting(false);
+  }
+
+  async function checkCareerData() {
+    setCareerChecking(true);
+    setBusyAction("check");
+    setCareerCheckSummary("");
+    setWikipediaImportError("");
+    const [profileRes, careerRes] = await Promise.all([
+      fetch(`/api/admin/coaches/${id}/profile-check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "full" }),
+      }),
+      fetch(`/api/admin/coaches/${id}/check-career`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "wikipedia" }),
+      }),
+    ]);
+    const profileData = await profileRes.json();
+    const careerData = await careerRes.json();
+    setLastDataCheck(new Date().toISOString());
+
+    if (!profileRes.ok && !careerRes.ok) {
+      setWikipediaImportError(
+        String(careerData.error ?? profileData.error ?? "Check data failed"),
+      );
+      setCareerChecking(false);
+      setBusyAction("");
+      return;
+    }
+
+    const careerRows: CoachSourceReviewRow[] = (careerData.rows ??
+      []) as CoachSourceReviewRow[];
+    const profileRows: CoachSourceReviewRow[] = (profileData.rows ?? []) as CoachSourceReviewRow[];
+    const rows = [...careerRows, ...profileRows.filter((r) => r.status !== "complete")];
+    setReviewRows(rows);
+
+    const s = careerData.summary ?? {};
+    const ps = profileData.summary ?? {};
+    const summary = [
+      careerRes.ok
+        ? `Career: playing ${s.playingFound ?? 0} (missing ${s.playingMissing ?? 0}) · coaching ${s.coachingFound ?? 0} (missing ${s.coachingMissing ?? 0})`
+        : `Career check skipped: ${careerData.error ?? "failed"}`,
+      profileRes.ok
+        ? `Profile inventory: ${ps.complete ?? 0} complete · ${ps.partial ?? 0} partial · ${ps.missing ?? 0} missing`
+        : null,
+      "Nothing auto-publishes — Accept to create needs_review rows.",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    setReviewSummary(summary);
+    setCareerCheckSummary(summary);
+    setCareerChecking(false);
+    setBusyAction("");
+  }
+
+  async function findMissingData() {
+    setBusyAction("missing");
+    setWikipediaImportError("");
+    const [profileRes, careerRes] = await Promise.all([
+      fetch(`/api/admin/coaches/${id}/profile-check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "missing" }),
+      }),
+      fetch(`/api/admin/coaches/${id}/check-career`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "wikipedia" }),
+      }),
+    ]);
+    const profileData = await profileRes.json();
+    const careerData = await careerRes.json();
+    setLastDataCheck(new Date().toISOString());
+
+    const missingCareer: CoachSourceReviewRow[] = (
+      (careerData.rows ?? []) as CoachSourceReviewRow[]
+    ).filter((r) => r.status === "missing");
+    const profileRows = (profileData.rows ?? []) as CoachSourceReviewRow[];
+    setReviewRows([...missingCareer, ...profileRows]);
+    setReviewSummary(
+      `Find missing: ${profileRows.length} incomplete profile fields · ${missingCareer.length} missing career rows from Wikipedia. Trusted complete fields were not re-queried.`,
+    );
+    setBusyAction("");
+  }
+
+  async function publishProfile() {
+    setBusyAction("publish");
+    setError("");
+    const res = await fetch(`/api/admin/coaches/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isPublic: true,
+        publishStatus: "published",
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Publish failed");
+      setBusyAction("");
+      return;
+    }
+    setValues((v) => ({ ...v, isPublic: true, publishStatus: "published" }));
+    setBusyAction("");
+  }
+
+  async function refreshStatsFromHeader() {
+    setBusyAction("stats");
+    await loadStats();
+    setBusyAction("");
+    setTab("stats");
+  }
+
+  async function recalculateRatingFromHeader() {
+    setBusyAction("rating");
+    const before =
+      typeof ratings?.coachRating === "number"
+        ? (ratings.coachRating as number)
+        : typeof impact?.coachRating === "number"
+          ? (impact.coachRating as number)
+          : null;
+    const res = await fetch(`/api/admin/coaches/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "recalculate-ratings" }),
+    });
+    const data = await res.json();
+    setBusyAction("");
+    if (!res.ok) {
+      alert(data.error ?? "Recalculate rating failed");
+      return;
+    }
+    setRatings(data.ratings ?? null);
+    const after =
+      typeof data.ratings?.coachRating === "number"
+        ? data.ratings.coachRating
+        : typeof data.ratings?.overall === "number"
+          ? data.ratings.overall
+          : null;
+    setRatingDiff({
+      before,
+      after,
+      change: before != null && after != null ? Number((after - before).toFixed(1)) : null,
+    });
+    setLastRatingAt(new Date().toISOString());
+    setTab("ratings");
+  }
+
+  async function acceptReviewRow(row: CoachSourceReviewRow) {
+    if (row.kind !== "playing" && row.kind !== "coaching") {
+      alert("Accept is available for career rows. Edit profile fields on Overview.");
+      return;
+    }
+    setReviewBusy(true);
+    const res = await fetch(`/api/admin/coaches/${id}/accept-career`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind: row.kind,
+        foundValue: row.foundValue,
+        sourceUrl: row.source,
+      }),
+    });
+    const data = await res.json();
+    setReviewBusy(false);
+    if (!res.ok) {
+      alert(data.message ?? data.error ?? "Accept failed");
+      return;
+    }
+    await reload();
+    setReviewRows((rows) => rows.filter((r) => r !== row));
+  }
+
+  function dismissReviewRow(row: CoachSourceReviewRow, index: number) {
+    setReviewRows((rows) => rows.filter((_, i) => i !== index));
   }
 
   async function previewWikipediaHonours() {
@@ -489,26 +872,47 @@ export default function EditCoachPage() {
       body: JSON.stringify({
         yearsLabel: stintForm.yearsLabel,
         teamName: stintForm.teamName,
+        teamDisplayName: stintForm.teamDisplayName || null,
         teamType: stintForm.teamType,
+        careerType: stintForm.careerType,
+        competitionLevel: stintForm.competitionLevel || null,
+        teamId: stintForm.teamId || null,
         apps: stintForm.apps || null,
         points: stintForm.points || null,
         position: stintForm.position || null,
+        sourceUrl: stintForm.sourceUrl || null,
+        showOnOverview: false,
+        recordStatus: "needs_review",
       }),
     });
     if (res.ok) {
       setStintForm({
         yearsLabel: "",
         teamName: "",
+        teamDisplayName: "",
         teamType: "provincial",
+        careerType: "provincial_player",
+        competitionLevel: "provincial",
+        teamId: "",
         apps: "",
         points: "",
         position: "",
+        sourceUrl: "",
       });
       await loadNested();
     } else {
       const data = await res.json();
       alert(data.error ?? "Failed to add stint");
     }
+  }
+
+  async function patchPlayingStint(stintId: string, patch: Record<string, unknown>) {
+    await fetch(`/api/admin/coaches/${id}/playing-stints`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: stintId, ...patch }),
+    });
+    await reload();
   }
 
   async function deleteNested(path: string, rowId: string) {
@@ -523,6 +927,7 @@ export default function EditCoachPage() {
 
   async function addHonour(e: React.FormEvent) {
     e.preventDefault();
+    const roleType = honourSubTab === "player" ? "player" : "coach";
     const res = await fetch(`/api/admin/coaches/${id}/honours`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -532,7 +937,7 @@ export default function EditCoachPage() {
         teamName: honourForm.teamName || null,
         achievementType: honourForm.achievementType,
         honourLevel: honourForm.honourLevel,
-        roleType: honourForm.roleType,
+        roleType,
       }),
     });
     if (res.ok) {
@@ -542,7 +947,7 @@ export default function EditCoachPage() {
         teamName: "",
         achievementType: "winner",
         honourLevel: "secondary",
-        roleType: "coach",
+        roleType,
       });
       await loadNested();
     } else {
@@ -639,24 +1044,161 @@ export default function EditCoachPage() {
 
   if (loading) return <p className="text-zinc-500 text-sm">Loading…</p>;
 
+  function goTab(next: string) {
+    if (TABS.some((t) => t.id === next)) setTab(next as TabId);
+  }
+
+  const coachHonours = honours.filter((h) => h.roleType === "coach");
+  const playerHonours = honours.filter((h) => h.roleType === "player");
+
   return (
     <>
-      <PageHeader
-        eyebrow="CMS"
-        title="Edit coach"
-        actions={
-          values.slug ? (
-            <Link
-              href={`/coaches/${values.slug}?preview=1`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cms-btn cms-btn--secondary"
-            >
-              Preview public profile
-            </Link>
-          ) : null
-        }
+      <CoachCmsWorkflowHeader
+        coachName={values.name}
+        currentTeam={currentAssignment?.teamName ?? null}
+        currentRole={currentAssignment?.roleLabel ?? null}
+        slug={values.slug || null}
+        publishStatus={values.publishStatus}
+        completeness={completeness}
+        lastUpdated={lastUpdated}
+        lastVerifiedAt={values.lastVerifiedAt || null}
+        lastDataCheck={lastDataCheck}
+        lastRatingAt={lastRatingAt}
+        saving={saving}
+        busyAction={busyAction}
+        onSave={() => {
+          const form = document.getElementById("coach-cms-form") as HTMLFormElement | null;
+          form?.requestSubmit();
+        }}
+        onPublish={() => void publishProfile()}
+        onCheckData={() => void checkCareerData()}
+        onFindMissing={() => void findMissingData()}
+        onRefreshStats={() => void refreshStatsFromHeader()}
+        onRecalculateRating={() => void recalculateRatingFromHeader()}
+        onOpenAiProfileCheck={() => void runOpenaiProfileCheck("full")}
+        onTab={goTab}
       />
+
+      <CoachCmsOpenAiProfileCheckPanel
+        coachId={id}
+        lastChecked={openaiLastChecked}
+        report={openaiReport}
+        busy={openaiBusy}
+        onRun={(scope) => void runOpenaiProfileCheck(scope)}
+        onAcceptFinding={(finding) => {
+          if (finding.field === "playingHistory" || finding.field.includes("career")) {
+            setTab("playing");
+            void findMissingData();
+          } else if (finding.field === "honours" || finding.field === "awards") {
+            setTab("honours");
+          } else if (finding.recommendedAction === "RECALCULATE") {
+            void recalculateRatingFromHeader();
+          } else if (finding.recommendedAction === "LINK EXISTING CREST") {
+            setTab("coaching");
+          } else {
+            setTab("overview");
+          }
+          dismissOpenaiFinding(finding);
+        }}
+        onDismissFinding={dismissOpenaiFinding}
+        onSafeAction={(action) => {
+          if (action === "recalculate") void recalculateRatingFromHeader();
+          if (action === "refresh-links") {
+            void (async () => {
+              setCoverageBusy("links");
+              await fetch(`/api/admin/coaches/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "refresh-match-links" }),
+              });
+              setCoverageBusy("");
+              await loadDataCoverage();
+            })();
+          }
+          if (action === "refresh-wikipedia") void importFromWikipedia();
+          if (action === "refresh-rugbypass") void importFromRugbyPass();
+        }}
+      />
+
+      <CoachCmsSourceReviewPanel
+        title="Check data / source review"
+        summary={reviewSummary}
+        rows={reviewRows}
+        busy={reviewBusy}
+        onAccept={(row) => void acceptReviewRow(row)}
+        onKeepCurrent={(row, index) => dismissReviewRow(row, index)}
+        onIgnore={(row, index) => dismissReviewRow(row, index)}
+        onFlag={(row, index) => {
+          alert(`Flagged for later: ${row.kind} (${row.status})`);
+          dismissReviewRow(row, index);
+        }}
+      />
+
+      <CoachCmsDataCoveragePanel
+        coachId={id}
+        coverage={dataCoverage}
+        busy={coverageBusy || busyAction}
+        onReloadCoverage={() => void loadDataCoverage()}
+        onRefreshLinks={async () => {
+          setCoverageBusy("links");
+          await fetch(`/api/admin/coaches/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "refresh-match-links" }),
+          });
+          setCoverageBusy("");
+          await loadDataCoverage();
+        }}
+        onRecalcStats={async () => {
+          setCoverageBusy("stats");
+          await loadStats();
+          setCoverageBusy("");
+          await loadDataCoverage();
+          setTab("stats");
+        }}
+        onRecalcRating={() => void recalculateRatingFromHeader()}
+        onRecalcAll={async () => {
+          setCoverageBusy("all");
+          const res = await fetch(`/api/admin/coaches/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "recalculate-all" }),
+          });
+          const data = await res.json();
+          setCoverageBusy("");
+          if (!res.ok) {
+            alert(data.error ?? "Recalculate all failed");
+            return;
+          }
+          if (data.coverage) setDataCoverage(data.coverage);
+          else await loadDataCoverage();
+          await reload();
+        }}
+      />
+
+      {ratingDiff ? (
+        <div className="cms-card mb-4 border border-zinc-700">
+          <h3 className="font-semibold m-0 mb-2">Rating recalculation</h3>
+          <div className="grid gap-2 sm:grid-cols-3 text-sm">
+            <div>
+              <div className="text-zinc-500 text-xs">Before</div>
+              <div className="text-zinc-100">{ratingDiff.before ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-zinc-500 text-xs">New</div>
+              <div className="text-zinc-100">{ratingDiff.after ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-zinc-500 text-xs">Change</div>
+              <div className="text-emerald-300">
+                {ratingDiff.change == null
+                  ? "—"
+                  : `${ratingDiff.change > 0 ? "+" : ""}${ratingDiff.change}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2 mb-4">
         {TABS.map((item) => (
@@ -733,7 +1275,46 @@ export default function EditCoachPage() {
               >
                 {wikipediaImporting ? "Refreshing…" : "Refresh from Wikipedia"}
               </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary shrink-0"
+                disabled={careerChecking}
+                onClick={() => void checkCareerData()}
+              >
+                {careerChecking ? "Checking…" : "Check career data"}
+              </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary shrink-0"
+                disabled={careerChecking}
+                onClick={() => void checkCareerData()}
+              >
+                Check Wikipedia
+              </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary shrink-0"
+                disabled
+                title="Coming next — Planet Rugby / SDMS role verification"
+              >
+                Check Planet Rugby
+              </button>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary shrink-0"
+                disabled
+                title="Coming next — RugbyPass coach career verify"
+              >
+                Check RugbyPass
+              </button>
             </div>
+            <p className="text-xs text-zinc-600 mt-2 mb-0">
+              Source review is read-only. Accept rows in History after review — verified data is never
+              auto-overwritten.
+            </p>
+            {careerCheckSummary ? (
+              <p className="text-emerald-400/90 text-sm mt-2 m-0">{careerCheckSummary}</p>
+            ) : null}
             {values.wikipediaUrl ? (
               <a
                 href={values.wikipediaUrl}
@@ -776,11 +1357,11 @@ export default function EditCoachPage() {
                 .catch(() => undefined);
             }}
           />
-          <form onSubmit={submit} className="cms-card space-y-4 max-w-3xl mb-4">
+          <form id="coach-cms-form" onSubmit={submit} className="cms-card space-y-4 max-w-3xl mb-4">
             {error && <p className="text-red-400 text-sm m-0">{error}</p>}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-sm text-zinc-400">Name</span>
+                <CoachCmsFieldLabel label="Name" kind="editorial" />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.name}
@@ -789,7 +1370,7 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Slug</span>
+                <CoachCmsFieldLabel label="Slug" kind="editorial" />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.slug}
@@ -798,7 +1379,7 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Known as</span>
+                <CoachCmsFieldLabel label="Known as" kind="editorial" />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.knownAs}
@@ -806,7 +1387,13 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Full name</span>
+                <CoachCmsFieldLabel
+                  label="Full name"
+                  kind="verified"
+                  source={values.wikipediaUrl || values.sourceUrl || "cms"}
+                  lastChecked={values.lastVerifiedAt || null}
+                  confidence={values.fullName ? "high" : "low"}
+                />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.fullName}
@@ -816,7 +1403,13 @@ export default function EditCoachPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-sm text-zinc-400">Nationality</span>
+                <CoachCmsFieldLabel
+                  label="Nationality"
+                  kind="verified"
+                  source={values.wikipediaUrl || "cms"}
+                  lastChecked={values.lastVerifiedAt || null}
+                  confidence={values.nationality ? "high" : "low"}
+                />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.nationality}
@@ -832,7 +1425,13 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Date of birth</span>
+                <CoachCmsFieldLabel
+                  label="Date of birth"
+                  kind="verified"
+                  source={values.wikipediaUrl || "cms"}
+                  lastChecked={values.lastVerifiedAt || null}
+                  confidence={values.birthDate ? "high" : "low"}
+                />
                 <input
                   type="date"
                   className="cms-input w-full mt-1"
@@ -841,7 +1440,13 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Height (cm)</span>
+                <CoachCmsFieldLabel
+                  label="Height (cm)"
+                  kind="verified"
+                  source={values.wikipediaUrl || "cms"}
+                  lastChecked={values.lastVerifiedAt || null}
+                  confidence={values.heightCm ? "medium" : "low"}
+                />
                 <input
                   type="number"
                   className="cms-input w-full mt-1"
@@ -850,7 +1455,13 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Place of birth</span>
+                <CoachCmsFieldLabel
+                  label="Place of birth"
+                  kind="verified"
+                  source={values.wikipediaUrl || "cms"}
+                  lastChecked={values.lastVerifiedAt || null}
+                  confidence={values.placeOfBirth ? "medium" : "low"}
+                />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.placeOfBirth}
@@ -918,7 +1529,7 @@ export default function EditCoachPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm text-zinc-400">Preferred system</span>
+                <CoachCmsFieldLabel label="Preferred system" kind="editorial" />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.preferredSystem}
@@ -937,7 +1548,7 @@ export default function EditCoachPage() {
                 </select>
               </label>
               <label className="block sm:col-span-2">
-                <span className="text-sm text-zinc-400">Coaching style</span>
+                <CoachCmsFieldLabel label="Coaching style" kind="editorial" />
                 <input
                   className="cms-input w-full mt-1"
                   value={values.coachingStyle}
@@ -968,7 +1579,7 @@ export default function EditCoachPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm text-zinc-400">Bio summary</span>
+              <CoachCmsFieldLabel label="Bio summary" kind="editorial" />
               <textarea
                 className="cms-input w-full mt-1"
                 rows={4}
@@ -1121,42 +1732,132 @@ export default function EditCoachPage() {
               </button>
             </div>
           </form>
-
-          <CoachTeamAssignmentSection
-            coachId={id}
-            assignments={assignments}
-            onChanged={() => reload()}
-          />
         </>
       )}
 
-      {tab === "history" && (
+      {(tab === "history" || tab === "playing" || tab === "coaching") && (
         <div className="space-y-4 max-w-3xl">
+          {(tab === "history" || tab === "playing") && (
           <div className="cms-card">
-            <h3 className="font-semibold m-0 mb-3">Playing stints</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 className="font-semibold m-0">Playing career</h3>
+                <p className="text-xs text-zinc-500 m-0 mt-1">
+                  Structured stints drive the public Playing Career card. Timeline summary rows use
+                  competition level <code>timeline_summary</code> and stay out of the table.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="cms-btn cms-btn--secondary text-xs"
+                  disabled={Boolean(busyAction) || openaiBusy}
+                  onClick={() => void runOpenaiProfileCheck("career")}
+                >
+                  {openaiBusy ? "Checking…" : "Check playing career with OpenAI"}
+                </button>
+                <button
+                  type="button"
+                  className="cms-btn cms-btn--secondary text-xs"
+                  disabled={Boolean(busyAction)}
+                  onClick={() => void findMissingData()}
+                >
+                  Find missing career
+                </button>
+              </div>
+            </div>
             {playingStints.length === 0 ? (
               <p className="text-sm text-zinc-500">No playing stints yet.</p>
             ) : (
               <ul className="space-y-2 mb-4 list-none p-0 m-0">
-                {playingStints.map((s) => (
-                  <li
-                    key={s.id}
-                    className="flex flex-wrap items-center justify-between gap-2 text-sm border-b border-zinc-800 pb-2"
-                  >
-                    <span>
-                      {s.yearsLabel} · {s.teamName} ({s.teamType})
-                      {s.position ? ` · ${s.position}` : ""}
-                      {s.apps != null ? ` · ${s.apps} apps` : ""}
-                    </span>
-                    <button
-                      type="button"
-                      className="cms-btn cms-btn--secondary text-xs text-red-400"
-                      onClick={() => deleteNested("playing-stints", s.id)}
+                {playingStints.map((s) => {
+                  const intl = s.teamType === "international";
+                  return (
+                    <li
+                      key={s.id}
+                      className="flex flex-wrap items-start justify-between gap-2 text-sm border-b border-zinc-800 pb-3"
                     >
-                      Delete
-                    </button>
-                  </li>
-                ))}
+                      <div className="min-w-0 space-y-1">
+                        <div>
+                          <span className="font-medium text-zinc-100">
+                            {s.yearsLabel} · {s.teamDisplayName || s.teamName}
+                          </span>
+                          <span className="ml-2 text-[10px] uppercase text-zinc-500">
+                            {s.teamType}
+                            {s.competitionLevel ? ` · ${s.competitionLevel}` : ""}
+                          </span>
+                          {s.recordStatus ? (
+                            <span className="ml-2 text-[10px] uppercase text-zinc-500">
+                              {s.recordStatus}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="text-xs text-zinc-400">
+                          Apps {s.apps ?? "—"} · Points {s.points ?? "—"}
+                          {s.position ? ` · ${s.position}` : ""}
+                          {!s.teamId ? (
+                            <span className="text-amber-400"> · missing team link</span>
+                          ) : null}
+                          {intl && s.apps != null ? (
+                            <span className="block mt-1 text-zinc-500">
+                              VERIFIED CAREER TOTAL {s.apps}
+                              {" · "}
+                              DATABASE COVERAGE — / {s.apps} (historic match backfill)
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <span className="flex flex-wrap items-center gap-2">
+                        <label className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(s.showOnOverview)}
+                            onChange={(e) =>
+                              void patchPlayingStint(s.id, { showOnOverview: e.target.checked })
+                            }
+                          />
+                          Timeline
+                        </label>
+                        <button
+                          type="button"
+                          className="cms-btn cms-btn--secondary text-xs"
+                          onClick={() =>
+                            void patchPlayingStint(s.id, { recordStatus: "verified" })
+                          }
+                        >
+                          Verify
+                        </button>
+                        <button
+                          type="button"
+                          className="cms-btn cms-btn--secondary text-xs"
+                          onClick={() => {
+                            const teamId = window.prompt("Link team UUID", s.teamId ?? "");
+                            if (teamId != null) void patchPlayingStint(s.id, { teamId: teamId || null });
+                          }}
+                        >
+                          Link team
+                        </button>
+                        <button
+                          type="button"
+                          className="cms-btn cms-btn--secondary text-xs"
+                          onClick={() => {
+                            const url = window.prompt("Source URL", s.sourceUrl ?? "");
+                            if (url != null) void patchPlayingStint(s.id, { sourceUrl: url || null });
+                          }}
+                        >
+                          Source
+                        </button>
+                        <button
+                          type="button"
+                          className="cms-btn cms-btn--secondary text-xs text-red-400"
+                          onClick={() => deleteNested("playing-stints", s.id)}
+                        >
+                          Delete
+                        </button>
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
             <form onSubmit={addStint} className="grid gap-3 sm:grid-cols-3">
@@ -1174,16 +1875,54 @@ export default function EditCoachPage() {
                 onChange={(e) => setStintForm((f) => ({ ...f, teamName: e.target.value }))}
                 required
               />
+              <input
+                className="cms-input"
+                placeholder="Display name (e.g. Free State (SR))"
+                value={stintForm.teamDisplayName}
+                onChange={(e) => setStintForm((f) => ({ ...f, teamDisplayName: e.target.value }))}
+              />
               <select
                 className="cms-input"
                 value={stintForm.teamType}
-                onChange={(e) => setStintForm((f) => ({ ...f, teamType: e.target.value }))}
+                onChange={(e) => {
+                  const teamType = e.target.value;
+                  setStintForm((f) => ({
+                    ...f,
+                    teamType,
+                    careerType:
+                      teamType === "franchise"
+                        ? "super_rugby_player"
+                        : teamType === "international"
+                          ? "international_player"
+                          : teamType === "club"
+                            ? "club_player"
+                            : "provincial_player",
+                    competitionLevel:
+                      teamType === "franchise"
+                        ? "super_rugby"
+                        : teamType === "international"
+                          ? "international"
+                          : teamType,
+                  }));
+                }}
               >
-                <option value="provincial">provincial</option>
-                <option value="franchise">franchise</option>
-                <option value="club">club</option>
-                <option value="international">international</option>
+                <option value="provincial">PROVINCIAL</option>
+                <option value="franchise">SUPER RUGBY</option>
+                <option value="club">CLUB</option>
+                <option value="international">INTERNATIONAL</option>
               </select>
+              <input
+                className="cms-input"
+                placeholder="Team ID (UUID)"
+                value={stintForm.teamId}
+                onChange={(e) => setStintForm((f) => ({ ...f, teamId: e.target.value }))}
+              />
+              <input
+                className="cms-input"
+                placeholder="Source URL"
+                value={stintForm.sourceUrl}
+                onChange={(e) => setStintForm((f) => ({ ...f, sourceUrl: e.target.value }))}
+              />
               <input
                 className="cms-input"
                 placeholder="Apps"
@@ -1203,24 +1942,38 @@ export default function EditCoachPage() {
                 onChange={(e) => setStintForm((f) => ({ ...f, position: e.target.value }))}
               />
               <button type="submit" className="cms-btn cms-btn--primary sm:col-span-3">
-                Add playing stint
+                Add career record
               </button>
             </form>
           </div>
+          )}
 
+          {(tab === "history" || tab === "coaching") && (
           <div className="cms-card">
-            <h3 className="font-semibold m-0 mb-3">Coaching assignments</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h3 className="font-semibold m-0">Coaching career</h3>
+              <button
+                type="button"
+                className="cms-btn cms-btn--secondary text-xs"
+                disabled={Boolean(busyAction)}
+                onClick={() => void findMissingData()}
+              >
+                Find missing career
+              </button>
+            </div>
             <CoachTeamAssignmentSection
               coachId={id}
               assignments={assignments}
               onChanged={() => reload()}
             />
           </div>
+          )}
         </div>
       )}
 
       {tab === "honours" && (
         <div className="space-y-4 max-w-3xl">
+          <CoachCmsAchievementsPanel coachId={id} />
           <div className="cms-card">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <h3 className="font-semibold m-0">Wikipedia honours preview</h3>
@@ -1268,13 +2021,29 @@ export default function EditCoachPage() {
             ) : null}
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            {HONOUR_SUBTABS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`cms-btn ${honourSubTab === item.id ? "cms-btn--primary" : "cms-btn--secondary"}`}
+                onClick={() => setHonourSubTab(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {(honourSubTab === "coach" || honourSubTab === "player") && (
           <div className="cms-card">
-            <h3 className="font-semibold m-0 mb-3">Honours</h3>
-            {honours.length === 0 ? (
+            <h3 className="font-semibold m-0 mb-3">
+              {honourSubTab === "coach" ? "Coach honours" : "Player honours"}
+            </h3>
+            {(honourSubTab === "coach" ? coachHonours : playerHonours).length === 0 ? (
               <p className="text-sm text-zinc-500">No honours yet.</p>
             ) : (
               <ul className="space-y-2 mb-4 list-none p-0 m-0">
-                {honours.map((h) => (
+                {(honourSubTab === "coach" ? coachHonours : playerHonours).map((h) => (
                   <li
                     key={h.id}
                     className="flex flex-wrap items-center justify-between gap-2 text-sm border-b border-zinc-800 pb-2"
@@ -1333,20 +2102,14 @@ export default function EditCoachPage() {
                 <option value="secondary">secondary</option>
                 <option value="series">series</option>
               </select>
-              <select
-                className="cms-input"
-                value={honourForm.roleType}
-                onChange={(e) => setHonourForm((f) => ({ ...f, roleType: e.target.value }))}
-              >
-                <option value="coach">coach</option>
-                <option value="player">player</option>
-              </select>
               <button type="submit" className="cms-btn cms-btn--primary sm:col-span-3">
                 Add honour
               </button>
             </form>
           </div>
+          )}
 
+          {honourSubTab === "awards" && (
           <div className="cms-card">
             <h3 className="font-semibold m-0 mb-3">Awards</h3>
             {awards.length === 0 ? (
@@ -1408,7 +2171,9 @@ export default function EditCoachPage() {
               </button>
             </form>
           </div>
+          )}
 
+          {honourSubTab === "medals" && (
           <div className="cms-card">
             <h3 className="font-semibold m-0 mb-3">Medals</h3>
             {medals.length === 0 ? (
@@ -1476,13 +2241,31 @@ export default function EditCoachPage() {
               </button>
             </form>
           </div>
+          )}
         </div>
       )}
 
-      {tab === "stats" && (
+      {tab === "stats" || tab === "ratings" || tab === "matches" || tab === "rankings" ? (
         <div className="space-y-4 max-w-3xl">
+          {tab === "matches" ? (
+            <p className="text-sm text-zinc-500 cms-card">
+              Match list is derived from Rugby365 fixtures and lineups. Use Refresh stats after
+              completed matches — editors do not maintain match rows manually.
+            </p>
+          ) : null}
+          {tab === "rankings" ? (
+            <p className="text-sm text-zinc-500 cms-card">
+              Rankings update when ratings are recalculated. Use Recalculate rating in the header.
+            </p>
+          ) : null}
           <div className="cms-card space-y-3">
-            <h3 className="font-semibold m-0">Career record metadata</h3>
+            <h3 className="font-semibold m-0 flex items-center gap-2">
+              {tab === "ratings" ? "Ratings" : "Career record / stats"}
+              <CoachCmsFieldLabel label="Auto calculated" kind="auto" />
+            </h3>
+            <p className="text-sm text-zinc-500 m-0">
+              Stats are refreshed from matches, scores, and lineups — not edited by hand.
+            </p>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -1545,6 +2328,137 @@ export default function EditCoachPage() {
                 {statsBusy === "recalculate-impact" ? "Loading…" : "Recalculate impact"}
               </button>
             </div>
+            <CoachCmsIntelligencePanel
+              metrics={
+                Array.isArray((ratings as { intelligence?: unknown } | null)?.intelligence)
+                  ? ((ratings as { intelligence: import("@/lib/coach-intelligence-engine").CoachIntelligenceMetric[] })
+                      .intelligence)
+                  : null
+              }
+              modelVersion={
+                typeof (ratings as { intelligenceModelVersion?: unknown } | null)
+                  ?.intelligenceModelVersion === "string"
+                  ? String(
+                      (ratings as { intelligenceModelVersion: string }).intelligenceModelVersion,
+                    )
+                  : "coach-intelligence-v1"
+              }
+              busy={statsBusy === "recalculate-ratings"}
+              onRecalculate={() => void runStatsAction("recalculate-ratings")}
+            />
+            <CoachCmsPowerIndexPanel
+              publicSlug={values.slug || null}
+              powerIndex={
+                typeof (ratings as { powerIndex?: unknown } | null)?.powerIndex === "number"
+                  ? (ratings as { powerIndex: number }).powerIndex
+                  : null
+              }
+              previousPowerIndex={
+                typeof (ratings as { previousPowerIndex?: unknown } | null)?.previousPowerIndex ===
+                "number"
+                  ? (ratings as { previousPowerIndex: number }).previousPowerIndex
+                  : null
+              }
+              powerIndexChange={
+                typeof (ratings as { powerIndexChange?: unknown } | null)?.powerIndexChange ===
+                "number"
+                  ? (ratings as { powerIndexChange: number }).powerIndexChange
+                  : null
+              }
+              detail={
+                (ratings as { powerIndexDetail?: import("@/lib/coach-power-index-engine").CoachPowerIndexResult | null } | null)
+                  ?.powerIndexDetail ?? null
+              }
+              mismatches={
+                Array.isArray(
+                  (ratings as { powerIndexMismatches?: unknown } | null)?.powerIndexMismatches,
+                )
+                  ? (ratings as {
+                      powerIndexMismatches: Array<{
+                        key: string;
+                        intelligenceScore: number;
+                        powerIndexScore: number;
+                      }>;
+                    }).powerIndexMismatches
+                  : null
+              }
+              modelVersion={
+                typeof (ratings as { powerIndexVersion?: unknown } | null)?.powerIndexVersion ===
+                "string"
+                  ? String((ratings as { powerIndexVersion: string }).powerIndexVersion)
+                  : "coach-power-v1"
+              }
+              lastCalculated={
+                typeof (ratings as { powerIndexDetail?: { calculatedAt?: string } } | null)
+                  ?.powerIndexDetail?.calculatedAt === "string"
+                  ? (ratings as { powerIndexDetail: { calculatedAt: string } }).powerIndexDetail
+                      .calculatedAt
+                  : null
+              }
+              busy={statsBusy === "recalculate-ratings"}
+              onRecalculate={() => void runStatsAction("recalculate-ratings")}
+            />
+            <CoachCmsRatingPanel
+              publicSlug={values.slug || null}
+              overallRating={
+                typeof (ratings as { overallRating?: unknown } | null)?.overallRating === "number"
+                  ? (ratings as { overallRating: number }).overallRating
+                  : null
+              }
+              previousOverallRating={
+                typeof (ratings as { previousOverallRating?: unknown } | null)
+                  ?.previousOverallRating === "number"
+                  ? (ratings as { previousOverallRating: number }).previousOverallRating
+                  : null
+              }
+              overallRatingChange={
+                typeof (ratings as { overallRatingChange?: unknown } | null)
+                  ?.overallRatingChange === "number"
+                  ? (ratings as { overallRatingChange: number }).overallRatingChange
+                  : null
+              }
+              detail={
+                (ratings as {
+                  coachRatingDetail?: import("@/lib/coach-rating-engine").CoachRatingResult | null;
+                } | null)?.coachRatingDetail ?? null
+              }
+              worldRank={
+                typeof (ratings as { worldRank?: unknown } | null)?.worldRank === "number"
+                  ? (ratings as { worldRank: number }).worldRank
+                  : null
+              }
+              previousWorldRank={
+                typeof (ratings as { previousWorldRank?: unknown } | null)?.previousWorldRank ===
+                "number"
+                  ? (ratings as { previousWorldRank: number }).previousWorldRank
+                  : null
+              }
+              worldRankChange={
+                typeof (ratings as { worldRankChange?: unknown } | null)?.worldRankChange ===
+                "number"
+                  ? (ratings as { worldRankChange: number }).worldRankChange
+                  : null
+              }
+              rankedOutOf={
+                typeof (ratings as { rankedOutOf?: unknown } | null)?.rankedOutOf === "number"
+                  ? (ratings as { rankedOutOf: number }).rankedOutOf
+                  : null
+              }
+              modelVersion={
+                typeof (ratings as { modelVersion?: unknown } | null)?.modelVersion === "string"
+                  ? String((ratings as { modelVersion: string }).modelVersion)
+                  : "coach-rating-v1"
+              }
+              lastCalculated={
+                typeof (ratings as { coachRatingDetail?: { calculatedAt?: string } } | null)
+                  ?.coachRatingDetail?.calculatedAt === "string"
+                  ? (ratings as { coachRatingDetail: { calculatedAt: string } }).coachRatingDetail
+                      .calculatedAt
+                  : null
+              }
+              busy={statsBusy === "recalculate-ratings"}
+              onRecalculate={() => void runStatsAction("recalculate-ratings")}
+            />
             {careerRecord ? (
               <div>
                 <h4 className="text-sm font-semibold m-0 mb-2">Career record</h4>
@@ -1573,7 +2487,113 @@ export default function EditCoachPage() {
             ) : null}
           </div>
         </div>
-      )}
+      ) : null}
+
+      {tab === "images" ? (
+        <div className="max-w-3xl">
+          <CoachImagesPanel
+            coachId={id}
+            coachName={values.name || undefined}
+            currentImageUrl={values.imageUrl || null}
+            onPrimaryChanged={(imageUrl) =>
+              setValues((v) => ({ ...v, imageUrl: imageUrl ?? "" }))
+            }
+          />
+        </div>
+      ) : null}
+
+      {tab === "tactics" ? (
+        <div className="cms-card max-w-3xl space-y-3">
+          <h3 className="font-semibold m-0">Tactics</h3>
+          <label className="block">
+            <CoachCmsFieldLabel label="Preferred system" kind="editorial" />
+            <input
+              className="cms-input w-full mt-1"
+              value={values.preferredSystem}
+              onChange={(e) => setValues((v) => ({ ...v, preferredSystem: e.target.value }))}
+            />
+          </label>
+          <label className="block">
+            <CoachCmsFieldLabel label="Coaching style" kind="editorial" />
+            <input
+              className="cms-input w-full mt-1"
+              value={values.coachingStyle}
+              onChange={(e) => setValues((v) => ({ ...v, coachingStyle: e.target.value }))}
+            />
+          </label>
+          <button
+            type="button"
+            className="cms-btn cms-btn--primary"
+            onClick={() => {
+              const form = document.getElementById("coach-cms-form") as HTMLFormElement | null;
+              form?.requestSubmit();
+            }}
+          >
+            Save tactics
+          </button>
+        </div>
+      ) : null}
+
+      {tab === "sources" ? (
+        <div className="cms-card max-w-3xl space-y-3">
+          <h3 className="font-semibold m-0">Sources</h3>
+          <label className="block">
+            <span className="text-sm text-zinc-400">Wikipedia URL</span>
+            <input
+              className="cms-input w-full mt-1"
+              value={values.wikipediaUrl}
+              onChange={(e) => setValues((v) => ({ ...v, wikipediaUrl: e.target.value }))}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-zinc-400">Wikidata ID</span>
+            <input
+              className="cms-input w-full mt-1"
+              value={values.wikidataId}
+              onChange={(e) => setValues((v) => ({ ...v, wikidataId: e.target.value }))}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-zinc-400">Source URL</span>
+            <input
+              className="cms-input w-full mt-1"
+              value={values.sourceUrl}
+              onChange={(e) => setValues((v) => ({ ...v, sourceUrl: e.target.value }))}
+            />
+          </label>
+          <p className="text-sm text-zinc-500 m-0">
+            Use Check data / Find missing data in the header. External research never auto-publishes.
+          </p>
+        </div>
+      ) : null}
+
+      {tab === "ai" ? (
+        <div className="max-w-3xl">
+          <PersonIntelligencePanel
+            roleType="coach"
+            roleEntityId={id}
+            intelligenceUrl={`/api/admin/coaches/${id}/intelligence`}
+            onApplied={() => void reload()}
+          />
+        </div>
+      ) : null}
+
+      {tab === "selection" || tab === "players" || tab === "audit" ? (
+        <div className="cms-card max-w-3xl">
+          <h3 className="font-semibold m-0 mb-2">
+            {tab === "selection"
+              ? "Selection"
+              : tab === "players"
+                ? "Players"
+                : "Audit history"}
+          </h3>
+          <p className="text-sm text-zinc-500 m-0">
+            {tab === "audit"
+              ? "Field-level audit (old/new value, editor, date, source, reason) will appear here. Career, appointments, honours, images, and rating overrides are priority."
+              : "Auto-calculated from lineups and match data. No manual maintenance — refreshes after completed matches."}
+          </p>
+        </div>
+      ) : null}
     </>
   );
 }

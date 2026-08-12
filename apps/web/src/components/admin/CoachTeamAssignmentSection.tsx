@@ -111,6 +111,32 @@ export function CoachTeamAssignmentSection({
     }
   }
 
+  async function toggleOverview(assignmentId: string, showOnOverview: boolean) {
+    const res = await fetch(`/api/admin/coaching-staff/${assignmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ showOnOverview }),
+    });
+    if (res.ok) await onChanged();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Failed to update overview flag");
+    }
+  }
+
+  async function setRecordStatus(assignmentId: string, recordStatus: string) {
+    const res = await fetch(`/api/admin/coaching-staff/${assignmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recordStatus }),
+    });
+    if (res.ok) await onChanged();
+    else {
+      const data = await res.json();
+      alert(data.error ?? "Failed to update record status");
+    }
+  }
+
   return (
     <div className="cms-card overflow-x-auto mb-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-4">
@@ -137,21 +163,60 @@ export function CoachTeamAssignmentSection({
             <tr className="text-left text-zinc-500 border-b border-zinc-800">
               <th className="py-2 pr-3">Team</th>
               <th className="py-2 pr-3">Role</th>
-              <th className="py-2 pr-3">Season</th>
               <th className="py-2 pr-3">Dates</th>
+              <th className="py-2 pr-3">Overview</th>
               <th className="py-2 pr-3">Status</th>
+              <th className="py-2 pr-3">Crest</th>
+              <th className="py-2 pr-3">Current</th>
               <th className="py-2 pr-3" />
             </tr>
           </thead>
           <tbody>
             {assignments.map((row) => (
               <tr key={row.id} className="border-b border-zinc-800/60">
-                <td className="py-2 pr-3 text-emerald-400">{row.teamName}</td>
-                <td className="py-2 pr-3 text-zinc-400">{row.roleLabel}</td>
-                <td className="py-2 pr-3 text-zinc-500">{row.seasonLabel ?? "—"}</td>
+                <td className="py-2 pr-3 text-emerald-400">
+                  {row.teamDisplayName || row.teamName}
+                  {row.overviewLabel ? (
+                    <div className="text-[10px] text-zinc-500">Overview: {row.overviewLabel}</div>
+                  ) : null}
+                </td>
+                <td className="py-2 pr-3 text-zinc-400">
+                  {row.roleLabel}
+                  <div className="text-[10px] text-zinc-600 uppercase">{row.careerType}</div>
+                </td>
                 <td className="py-2 pr-3 text-zinc-500 whitespace-nowrap">
                   {row.startDate ?? "—"}
                   {row.endDate ? ` → ${row.endDate}` : row.isCurrent ? " → present" : ""}
+                </td>
+                <td className="py-2 pr-3">
+                  <label className="inline-flex items-center gap-1.5 text-xs text-zinc-400">
+                    <input
+                      type="checkbox"
+                      checked={row.showOnOverview || row.isCurrent}
+                      onChange={(e) => toggleOverview(row.id, e.target.checked)}
+                    />
+                    Show
+                  </label>
+                </td>
+                <td className="py-2 pr-3 text-xs uppercase tracking-wide">
+                  <select
+                    className="cms-select text-xs py-1"
+                    value={row.recordStatus || "needs_review"}
+                    onChange={(e) => setRecordStatus(row.id, e.target.value)}
+                  >
+                    <option value="verified">Verified</option>
+                    <option value="editor_approved">Editor approved</option>
+                    <option value="found">Found</option>
+                    <option value="conflict">Conflict</option>
+                    <option value="needs_review">Needs review</option>
+                  </select>
+                </td>
+                <td className="py-2 pr-3 text-xs">
+                  {row.missingCrest ? (
+                    <span className="text-amber-400 font-semibold">MISSING CREST</span>
+                  ) : (
+                    <span className="text-zinc-600">OK</span>
+                  )}
                 </td>
                 <td className="py-2 pr-3 text-zinc-500">{row.isCurrent ? "Current" : "Past"}</td>
                 <td className="py-2 pr-3 text-right">

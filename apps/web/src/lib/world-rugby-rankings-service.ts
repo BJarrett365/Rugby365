@@ -85,6 +85,13 @@ export async function syncAllWorldRugbyRankings(): Promise<
   return results;
 }
 
+/** Upsert a rankings payload as a dated snapshot (current or historic). */
+export async function upsertWorldRugbyRankingsForDate(
+  payload: WorldRugbyRankingsPayload,
+): Promise<{ rowsUpserted: number; effectiveDate: string }> {
+  return upsertWorldRugbyRankings(payload);
+}
+
 async function upsertWorldRugbyRankings(
   payload: WorldRugbyRankingsPayload,
 ): Promise<{ rowsUpserted: number; effectiveDate: string }> {
@@ -98,10 +105,17 @@ async function upsertWorldRugbyRankings(
     .values({
       category: payload.category,
       effectiveDate: payload.effectiveDate,
+      sourceProvider: WORLD_RUGBY_PROVIDER,
+      sourceUrl,
+      notes: null,
     })
     .onConflictDoUpdate({
-      target: [worldRankingSnapshots.category, worldRankingSnapshots.effectiveDate],
-      set: { createdAt: syncedAt },
+      target: [
+        worldRankingSnapshots.category,
+        worldRankingSnapshots.effectiveDate,
+        worldRankingSnapshots.sourceProvider,
+      ],
+      set: { createdAt: syncedAt, sourceUrl },
     })
     .returning();
 

@@ -74,6 +74,42 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ ok: true, ratings });
     }
 
+    if (body.action === "coach-intelligence") {
+      const { calculateCoachRatingBundle } = await import("@/lib/coach-rating-service");
+      const ratings = await calculateCoachRatingBundle(id);
+      return NextResponse.json({
+        ok: true,
+        intelligence: ratings.intelligence,
+        intelligenceModelVersion: ratings.intelligenceModelVersion,
+        metrics: ratings.metrics,
+        overallRating: ratings.overallRating,
+        powerIndex: ratings.powerIndex,
+        ratings,
+      });
+    }
+
+    if (body.action === "refresh-match-links") {
+      const { refreshCoachMatchLinks } = await import("@/lib/coach-match-link-service");
+      const links = await refreshCoachMatchLinks(id, { overwrite: true });
+      return NextResponse.json({ ok: true, links });
+    }
+
+    if (body.action === "recalculate-all" || body.action === "backfill-coach-data") {
+      const { recalculateCoach } = await import("@/lib/coach-recalc-service");
+      const result = await recalculateCoach(id, {
+        refreshLinks: true,
+        persistRatings: true,
+        overwriteLinks: true,
+      });
+      return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (body.action === "data-coverage") {
+      const { getCoachDataCoverage } = await import("@/lib/coach-recalc-service");
+      const coverage = await getCoachDataCoverage(id);
+      return NextResponse.json({ ok: true, coverage });
+    }
+
     if (body.action === "recalculate-impact") {
       const { getCoachImpact } = await import("@/lib/coach-career-record-service");
       const impact = await getCoachImpact(id);

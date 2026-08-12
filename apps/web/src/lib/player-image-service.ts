@@ -5,6 +5,7 @@
 
 import { and, desc, eq, ne } from "drizzle-orm";
 import { playerImages, players, playerTransfers, teams } from "@rugby365/db";
+import { randomUUID } from "crypto";
 import { getDb } from "./db";
 import {
   canonicalizePlanetRugbyImageUrl,
@@ -13,6 +14,7 @@ import {
 } from "./planet-rugby-image-utils";
 import { canAutoApproveImageConfidence } from "./planet-rugby-image-match";
 import { searchPlanetRugbyPlayerImages } from "./planet-rugby-image-search-service";
+import { uploadPlayerImageBytesToSupabase } from "./supabase-live-service";
 
 export type PlayerImageRole =
   | "primary"
@@ -550,6 +552,95 @@ export type RegisterAiCartoonAvatarInput = {
   setPrimary?: boolean;
   updatedBy?: string | null;
 };
+
+/**
+ * Upload bytes to Supabase and set as the player's approved primary profile image.
+ */
+export async function uploadPlayerPrimaryImage(input: {
+  playerId: string;
+  bytes: Buffer;
+  contentType: string;
+  fileName?: string | null;
+  credit?: string | null;
+}) {
+  const db = getDb();
+  const [player] = await db.select().from(players).where(eq(players.id, input.playerId)).limit(1);
+  if (!player) throw new Error("Player not found");
+  if (input.bytes.byteLength > 12 * 1024 * 1024) {
+    throw new Error("Image too large (max 12MB)");
+  }
+
+  const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  const contentType =
+    input.contentType.toLowerCase() === "image/jpg"
+      ? "image/jpeg"
+      : input.contentType.toLowerCase();
+  if (!allowed.has(contentType)) {
+    throw new Error("File must be an image (JPEG, PNG, WebP, or GIF)");
+  }
+
+  const imageId = randomUUID();
+  const ext = contentType.includes("webp")
+    ? "webp"
+    : contentType.includes("jpeg")
+      ? "jpg"
+      : contentType.includes("gif")
+        ? "gif"
+        : "png";
+
+  const uploaded = await uploadPlayerImageBytesToSupabase({
+    playerId: input.playerId,
+    imageId,
+    bytes: input.bytes,
+    contentType,
+    ext,
+  });
+  if (!uploaded.publicUrl) {
+    throw new Error(uploaded.error || "Failed to upload player image");
+  }
+
+  const ts = now();
+  await db
+    .update(playerImages)
+    .set({ role: "gallery", updatedAt: ts })
+    .where(and(eq(playerImages.playerId, input.playerId), eq(playerImages.role, "primary")));
+
+  const [row] = await db
+    .insert(playerImages)
+    .values({
+      id: imageId,
+      playerId: input.playerId,
+      imageUrl: uploaded.publicUrl,
+      canonicalUrl: uploaded.publicUrl,
+      sourceProvider: "cms_upload",
+      caption: input.fileName ?? null,
+      altText: player.name,
+      credit: input.credit ?? null,
+      imageType: "action",
+      role: "primary",
+      confidence: "high",
+      confidenceScore: 100,
+      status: "approved",
+      isPublic: true,
+      approvedAt: ts,
+      discoveredAt: ts,
+      updatedAt: ts,
+      updatedBy: "admin",
+    })
+    .returning();
+
+  await db
+    .update(players)
+    .set({
+      imageUrl: uploaded.publicUrl,
+      primaryImageId: imageId,
+      primaryImageApprovedAt: ts,
+      profileUpdatedAt: ts,
+    })
+    .where(eq(players.id, input.playerId));
+
+  return row;
+}
 
 /**
  * Register an AI-generated cartoon avatar in player_images (does not create players).

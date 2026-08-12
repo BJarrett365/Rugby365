@@ -1,14 +1,24 @@
 /**
- * Coach Career Record — calculated from Rugby365 fixtures linked to a coach.
- * Default eligibility: primary / head-coach style roles only when tenure metadata exists;
- * otherwise all fixtures where the coach is home/away coach.
+ * Coach Career Record — calculated from Rugby365 fixtures during eligible tenures.
+ * Source of truth: team + role eligibility + start/end dates (not manual coach-match rows).
  */
 
-import { and, asc, desc, eq, lte, or } from "drizzle-orm";
-import { fixtures, teams } from "@rugby365/db";
+import { and, asc, desc, eq, gte, inArray, lte, or } from "drizzle-orm";
+import { fixtures, teamMatchStats, teams } from "@rugby365/db";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "./db";
-import { getCoachDetail } from "./coach-admin-service";
+import { getCoachDetail, type CoachingStaffRow } from "./coach-admin-service";
+import { isRoleEligibleForCareerRecord } from "./coach-role-eligibility";
+import { getCoachPerspectiveResult } from "./coach-perspective-result";
+import { getTeamRankingAtDate } from "./world-rugby-rankings-at-date";
+import {
+  COACH_IMPACT_VERSION,
+  formatImpactChange,
+  formatImpactValue,
+  impactConfidenceBand,
+  impactMetricDef,
+  type ImpactMetricKey,
+} from "./coach-impact-engine";
 
 const COMPLETED = new Set(["completed", "finished", "result", "full_time", "ft"]);
 
@@ -28,12 +38,17 @@ export type CoachEligibleMatch = {
   competitionName: string | null;
   teamId: string | null;
   teamName: string | null;
+  opponentTeamId: string | null;
   opponentName: string | null;
   forScore: number;
   againstScore: number;
   result: "W" | "D" | "L";
   margin: number;
   side: "home" | "away";
+  venueType: "H" | "A" | "N";
+  tenureId?: string | null;
+  /** Audit flags from getCoachPerspectiveResult. */
+  dataIssues?: string[];
 };
 
 export type CoachCareerRecord = {
@@ -69,6 +84,32 @@ function outcome(forScore: number, againstScore: number): "W" | "D" | "L" {
   return "D";
 }
 
+function resolveCoachTeamIdForRow(
+  m: {
+    homeTeamId: string | null;
+    awayTeamId: string | null;
+    homeCoachId: string | null;
+    awayCoachId: string | null;
+  },
+  coachId: string,
+  tenure: CoachingStaffRow | null,
+): string | null {
+  if (tenure?.teamId) return tenure.teamId;
+  if (m.homeCoachId === coachId && m.homeTeamId) return m.homeTeamId;
+  if (m.awayCoachId === coachId && m.awayTeamId) return m.awayTeamId;
+  return null;
+}
+
+function eligibleTenures(assignments: CoachingStaffRow[]): CoachingStaffRow[] {
+  return assignments.filter((a) =>
+    isRoleEligibleForCareerRecord({
+      role: a.role,
+      eligibleForCareerRecord: a.eligibleForCareerRecord,
+      isPrimaryCoach: a.isPrimaryCoach,
+    }),
+  );
+}
+
 export async function loadCoachEligibleMatches(
   coachId: string,
   options: {
@@ -77,65 +118,186 @@ export async function loadCoachEligibleMatches(
     competitionName?: string;
     primaryOnly?: boolean;
     limit?: number;
+    /** Prefer FK links only (legacy). Default false = tenure-window query. */
+    fixtureCoachFkOnly?: boolean;
+    /** Inclusive cutoff — only matches with kickoffAt <= asOfDate. */
+    asOfDate?: Date | null;
   } = {},
 ): Promise<CoachEligibleMatch[]> {
   const db = getDb();
   const detail = await getCoachDetail(coachId);
-  const primaryOnly = options.primaryOnly !== false;
+  if (!detail) return [];
 
-  const eligibleTeamIds = new Set<string>();
-  if (detail) {
-    for (const a of detail.assignments) {
-      const roleOk =
-        !primaryOnly ||
-        a.role === "head_coach" ||
-        a.isCurrent ||
-        // legacy rows without primary flag: include head_coach-like labels
-        a.roleLabel.toLowerCase().includes("head");
-      // CoachingStaffRow may not have new fields until mapped — treat all current head roles eligible
-      if (roleOk) eligibleTeamIds.add(a.teamId);
-    }
+  const tenures = eligibleTenures(detail.assignments);
+  if (options.primaryOnly === false) {
+    // include all assignments when explicitly requested
   }
 
   const homeTeams = alias(teams, "career_home");
   const awayTeams = alias(teams, "career_away");
 
-  const rows = await db
-    .select({
-      id: fixtures.id,
-      slug: fixtures.slug,
-      kickoffAt: fixtures.kickoffAt,
-      status: fixtures.status,
-      competitionName: fixtures.competitionName,
-      homeTeamId: fixtures.homeTeamId,
-      awayTeamId: fixtures.awayTeamId,
-      homeTeamName: homeTeams.name,
-      awayTeamName: awayTeams.name,
-      homeScore: fixtures.homeScore,
-      awayScore: fixtures.awayScore,
-      homeCoachId: fixtures.homeCoachId,
-      awayCoachId: fixtures.awayCoachId,
-    })
-    .from(fixtures)
-    .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
-    .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
-    .where(or(eq(fixtures.homeCoachId, coachId), eq(fixtures.awayCoachId, coachId)))
-    .orderBy(asc(fixtures.kickoffAt));
+  if (options.fixtureCoachFkOnly) {
+    const rows = await db
+      .select({
+        id: fixtures.id,
+        slug: fixtures.slug,
+        kickoffAt: fixtures.kickoffAt,
+        status: fixtures.status,
+        competitionName: fixtures.competitionName,
+        homeTeamId: fixtures.homeTeamId,
+        awayTeamId: fixtures.awayTeamId,
+        homeTeamName: homeTeams.name,
+        awayTeamName: awayTeams.name,
+        homeScore: fixtures.homeScore,
+        awayScore: fixtures.awayScore,
+        homeCoachId: fixtures.homeCoachId,
+        awayCoachId: fixtures.awayCoachId,
+        isNeutralVenue: fixtures.isNeutralVenue,
+      })
+      .from(fixtures)
+      .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
+      .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
+      .where(or(eq(fixtures.homeCoachId, coachId), eq(fixtures.awayCoachId, coachId)))
+      .orderBy(asc(fixtures.kickoffAt));
 
+    let fkOut = mapCompletedRows(rows, coachId, options, detail, null);
+    if (options.asOfDate) {
+      const cut = options.asOfDate.getTime();
+      fkOut = fkOut.filter((m) => (m.kickoffAt?.getTime() ?? 0) <= cut);
+    }
+    if (options.limit && options.limit > 0) fkOut = fkOut.slice(-options.limit);
+    return fkOut;
+  }
+
+  const byId = new Map<string, CoachEligibleMatch>();
+
+  for (const tenure of tenures) {
+    if (options.filter === "current_team") {
+      const current = detail.assignments.find((a) => a.isCurrent);
+      if (!current || tenure.teamId !== current.teamId) continue;
+    }
+    if (options.teamId && tenure.teamId !== options.teamId) continue;
+    if (!tenure.startDate && !tenure.isCurrent) continue;
+
+    const from = tenure.startDate ? new Date(`${tenure.startDate}T00:00:00.000Z`) : new Date(0);
+    const to = tenure.endDate ? new Date(`${tenure.endDate}T23:59:59.999Z`) : null;
+
+    const dateConds = [gte(fixtures.kickoffAt, from)];
+    if (to) dateConds.push(lte(fixtures.kickoffAt, to));
+
+    const rows = await db
+      .select({
+        id: fixtures.id,
+        slug: fixtures.slug,
+        kickoffAt: fixtures.kickoffAt,
+        status: fixtures.status,
+        competitionName: fixtures.competitionName,
+        homeTeamId: fixtures.homeTeamId,
+        awayTeamId: fixtures.awayTeamId,
+        homeTeamName: homeTeams.name,
+        awayTeamName: awayTeams.name,
+        homeScore: fixtures.homeScore,
+        awayScore: fixtures.awayScore,
+        homeCoachId: fixtures.homeCoachId,
+        awayCoachId: fixtures.awayCoachId,
+      })
+      .from(fixtures)
+      .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
+      .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
+      .where(
+        and(
+          or(eq(fixtures.homeTeamId, tenure.teamId), eq(fixtures.awayTeamId, tenure.teamId)),
+          ...dateConds,
+        ),
+      )
+      .orderBy(asc(fixtures.kickoffAt));
+
+    for (const m of mapCompletedRows(rows, coachId, options, detail, tenure)) {
+      // Keep first tenure match; head_coach windows shouldn't double-count
+      if (!byId.has(m.id)) byId.set(m.id, m);
+    }
+  }
+
+  let out = [...byId.values()].sort(
+    (a, b) => (a.kickoffAt?.getTime() ?? 0) - (b.kickoffAt?.getTime() ?? 0),
+  );
+  if (options.asOfDate) {
+    const cut = options.asOfDate.getTime();
+    out = out.filter((m) => (m.kickoffAt?.getTime() ?? 0) <= cut);
+  }
+  if (options.limit && options.limit > 0) out = out.slice(-options.limit);
+  return out;
+}
+
+function mapCompletedRows(
+  rows: Array<{
+    id: string;
+    slug: string;
+    kickoffAt: Date | null;
+    status: string | null;
+    competitionName: string | null;
+    homeTeamId: string | null;
+    awayTeamId: string | null;
+    homeTeamName: string | null;
+    awayTeamName: string | null;
+    homeScore: number | null;
+    awayScore: number | null;
+    homeCoachId: string | null;
+    awayCoachId: string | null;
+    isNeutralVenue?: boolean | null;
+  }>,
+  coachId: string,
+  options: {
+    filter?: CoachCareerFilter;
+    teamId?: string;
+    competitionName?: string;
+  },
+  detail: NonNullable<Awaited<ReturnType<typeof getCoachDetail>>>,
+  tenure: CoachingStaffRow | null,
+): CoachEligibleMatch[] {
   const out: CoachEligibleMatch[] = [];
   for (const m of rows) {
     if (!isCompletedStatus(m.status)) continue;
     if (m.homeScore == null || m.awayScore == null) continue;
 
-    const side: "home" | "away" = m.homeCoachId === coachId ? "home" : "away";
-    const teamId = side === "home" ? m.homeTeamId : m.awayTeamId;
-    const teamName = side === "home" ? m.homeTeamName : m.awayTeamName;
-    const opponentName = side === "home" ? m.awayTeamName : m.homeTeamName;
-    const forScore = side === "home" ? m.homeScore : m.awayScore;
-    const againstScore = side === "home" ? m.awayScore : m.homeScore;
+    const coachTeamId =
+      tenure?.teamId ??
+      (m.homeCoachId === coachId
+        ? m.homeTeamId
+        : m.awayCoachId === coachId
+          ? m.awayTeamId
+          : null);
+
+    const perspective = getCoachPerspectiveResult(
+      {
+        homeTeamId: m.homeTeamId,
+        awayTeamId: m.awayTeamId,
+        homeTeamName: m.homeTeamName,
+        awayTeamName: m.awayTeamName,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        isNeutralVenue: m.isNeutralVenue ?? false,
+        competitionName: m.competitionName,
+        kickoffAt: m.kickoffAt,
+      },
+      coachTeamId,
+    );
+
+    if (
+      perspective.pointsFor == null ||
+      perspective.pointsAgainst == null ||
+      perspective.result == null
+    ) {
+      continue;
+    }
+
+    const teamId = perspective.coachTeamId;
+    const side: "home" | "away" = perspective.venueType === "A" ? "away" : "home";
+    const forScore = perspective.pointsFor;
+    const againstScore = perspective.pointsAgainst;
 
     if (options.teamId && teamId !== options.teamId) continue;
-    if (options.filter === "current_team" && detail) {
+    if (options.filter === "current_team") {
       const current = detail.assignments.find((a) => a.isCurrent);
       if (!current || teamId !== current.teamId) continue;
     }
@@ -151,17 +313,19 @@ export async function loadCoachEligibleMatches(
       kickoffAt: m.kickoffAt,
       competitionName: m.competitionName,
       teamId,
-      teamName,
-      opponentName,
+      teamName: perspective.coachTeamName,
+      opponentTeamId: perspective.opponentTeamId,
+      opponentName: perspective.opponentName,
       forScore,
       againstScore,
-      result: outcome(forScore, againstScore),
+      result: perspective.result,
       margin: forScore - againstScore,
       side,
+      venueType: perspective.venueType ?? (side === "home" ? "H" : "A"),
+      tenureId: tenure?.id ?? null,
+      dataIssues: perspective.dataIssues.length ? perspective.dataIssues : undefined,
     });
   }
-
-  if (options.limit && options.limit > 0) return out.slice(-options.limit);
   return out;
 }
 
@@ -178,8 +342,6 @@ export function computeCareerRecord(
   let biggestLoss: CoachEligibleMatch | null = null;
   let longestWinStreak = 0;
   let streak = 0;
-  let currentWinStreak = 0;
-  let trailing = true;
 
   for (const m of matches) {
     pointsFor += m.forScore;
@@ -188,24 +350,18 @@ export function computeCareerRecord(
       wins += 1;
       streak += 1;
       longestWinStreak = Math.max(longestWinStreak, streak);
-      if (trailing) currentWinStreak += 1;
       if (!biggestWin || m.margin > biggestWin.margin) biggestWin = m;
     } else if (m.result === "D") {
       draws += 1;
       streak = 0;
-      trailing = false;
-      currentWinStreak = 0;
     } else {
       losses += 1;
       streak = 0;
-      trailing = false;
-      currentWinStreak = 0;
       if (!biggestLoss || m.margin < biggestLoss.margin) biggestLoss = m;
     }
   }
 
-  // recompute current streak from end
-  currentWinStreak = 0;
+  let currentWinStreak = 0;
   for (let i = matches.length - 1; i >= 0; i--) {
     if (matches[i].result === "W") currentWinStreak += 1;
     else break;
@@ -231,7 +387,7 @@ export function computeCareerRecord(
     longestWinStreak,
     currentWinStreak,
     form,
-    partial: Boolean(meta.partial),
+    partial: Boolean(meta.partial) || (played > 0 && played < 40),
     notes: meta.notes ?? null,
     reconciled: played === wins + draws + losses,
   };
@@ -244,26 +400,37 @@ export async function getCoachCareerRecord(
   const detail = await getCoachDetail(coachId);
   const matches = await loadCoachEligibleMatches(coachId, { filter, primaryOnly: true });
   return computeCareerRecord(matches, {
-    partial: detail?.coach.careerRecordPartial ?? false,
+    partial: detail?.coach.careerRecordPartial ?? matches.length > 0,
     notes: detail?.coach.careerRecordNotes ?? null,
   });
 }
 
 export type CoachImpactRow = {
+  key: ImpactMetricKey | string;
   metric: string;
   before: number | string | null;
   under: number | string | null;
+  /** Signed numeric change for engines (win rate = percentage points; rank = places gained). */
   change: number | string | null;
+  /** Public display label e.g. "+23 pts", "▲ 6 places". */
+  changeLabel: string | null;
   improved: boolean | null;
+  confidencePct: number | null;
 };
 
 export type CoachImpactResult = {
+  modelVersion: string;
   baselineLabel: string;
+  underLabel: string;
   beforeCount: number;
   underCount: number;
   rows: CoachImpactRow[];
   confidence: "high" | "medium" | "low" | "none";
+  confidencePct: number;
   enoughData: boolean;
+  tenureStart: string | null;
+  teamId: string | null;
+  teamName: string | null;
 };
 
 function avg(nums: number[]): number | null {
@@ -276,6 +443,53 @@ function winRateOf(matches: CoachEligibleMatch[]): number | null {
   return (matches.filter((m) => m.result === "W").length / matches.length) * 100;
 }
 
+async function avgTriesPerGame(
+  teamId: string,
+  fixtureIds: string[],
+): Promise<{ avg: number | null; coveragePct: number }> {
+  if (!fixtureIds.length) return { avg: null, coveragePct: 0 };
+  const db = getDb();
+  const rows = await db
+    .select({
+      fixtureId: teamMatchStats.fixtureId,
+      tries: teamMatchStats.tries,
+    })
+    .from(teamMatchStats)
+    .where(and(eq(teamMatchStats.teamId, teamId), inArray(teamMatchStats.fixtureId, fixtureIds)));
+  const byFx = new Map<string, number>();
+  for (const r of rows) {
+    if (!byFx.has(r.fixtureId)) byFx.set(r.fixtureId, r.tries ?? 0);
+  }
+  const coveragePct = Math.round((byFx.size / fixtureIds.length) * 100);
+  if (byFx.size < Math.min(5, fixtureIds.length)) {
+    return { avg: null, coveragePct };
+  }
+  return {
+    avg: avg([...byFx.values()]),
+    coveragePct,
+  };
+}
+
+function buildImpactRow(
+  key: ImpactMetricKey,
+  beforeRaw: number | null,
+  underRaw: number | null,
+  confidencePct: number | null,
+): CoachImpactRow {
+  const def = impactMetricDef(key);
+  const formatted = formatImpactChange(def, beforeRaw, underRaw);
+  return {
+    key,
+    metric: def.label,
+    before: formatImpactValue(def.format, beforeRaw),
+    under: formatImpactValue(def.format, underRaw),
+    change: formatted.raw,
+    changeLabel: formatted.label,
+    improved: formatted.improved,
+    confidencePct,
+  };
+}
+
 export async function getCoachImpact(
   coachId: string,
   options: { beforeN?: number; underMode?: "tenure" | "first_n"; underN?: number } = {},
@@ -284,21 +498,31 @@ export async function getCoachImpact(
   const underN = options.underN ?? 20;
   const detail = await getCoachDetail(coachId);
   const current = detail?.assignments.find((a) => a.isCurrent);
-  const all = await loadCoachEligibleMatches(coachId, { primaryOnly: true });
+  const all = await loadCoachEligibleMatches(coachId, {
+    primaryOnly: true,
+    filter: "current_team",
+  });
+
+  const empty = (label: string): CoachImpactResult => ({
+    modelVersion: COACH_IMPACT_VERSION,
+    baselineLabel: label,
+    underLabel: "Under Coach",
+    beforeCount: 0,
+    underCount: 0,
+    rows: [],
+    confidence: "none",
+    confidencePct: 0,
+    enoughData: false,
+    tenureStart: current?.startDate ?? null,
+    teamId: current?.teamId ?? null,
+    teamName: current?.teamName ?? null,
+  });
 
   if (!current?.startDate || all.length === 0) {
-    return {
-      baselineLabel: `vs Before Appointment (Prev ${beforeN} Matches)`,
-      beforeCount: 0,
-      underCount: 0,
-      rows: [],
-      confidence: "none",
-      enoughData: false,
-    };
+    return empty(`vs Before Appointment (Prev ${beforeN} Matches)`);
   }
 
-  const start = new Date(current.startDate);
-  // Team matches before appointment: need team fixtures not necessarily with this coach
+  const start = new Date(`${current.startDate}T00:00:00.000Z`);
   const db = getDb();
   const homeTeams = alias(teams, "impact_home");
   const awayTeams = alias(teams, "impact_away");
@@ -324,15 +548,34 @@ export async function getCoachImpact(
       ),
     )
     .orderBy(desc(fixtures.kickoffAt))
-    .limit(beforeN * 2);
+    .limit(beforeN * 3);
 
   const beforeMatches: CoachEligibleMatch[] = [];
   for (const m of teamFixtures) {
     if (!isCompletedStatus(m.status)) continue;
     if (m.homeScore == null || m.awayScore == null) continue;
-    const side: "home" | "away" = m.homeTeamId === current.teamId ? "home" : "away";
-    const forScore = side === "home" ? m.homeScore : m.awayScore;
-    const againstScore = side === "home" ? m.awayScore : m.homeScore;
+    // Exclude appointment-day match from baseline (belongs under coach if linked)
+    if (m.kickoffAt && m.kickoffAt.getTime() >= start.getTime()) continue;
+    const perspective = getCoachPerspectiveResult(
+      {
+        homeTeamId: m.homeTeamId,
+        awayTeamId: m.awayTeamId,
+        homeTeamName: m.homeTeamName,
+        awayTeamName: m.awayTeamName,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        kickoffAt: m.kickoffAt,
+      },
+      current.teamId,
+    );
+    if (
+      perspective.pointsFor == null ||
+      perspective.pointsAgainst == null ||
+      perspective.result == null
+    ) {
+      continue;
+    }
+    const side: "home" | "away" = perspective.venueType === "A" ? "away" : "home";
     beforeMatches.push({
       id: m.id,
       slug: "",
@@ -340,12 +583,14 @@ export async function getCoachImpact(
       competitionName: null,
       teamId: current.teamId,
       teamName: current.teamName,
-      opponentName: side === "home" ? m.awayTeamName : m.homeTeamName,
-      forScore,
-      againstScore,
-      result: outcome(forScore, againstScore),
-      margin: forScore - againstScore,
+      opponentTeamId: perspective.opponentTeamId,
+      opponentName: perspective.opponentName,
+      forScore: perspective.pointsFor,
+      againstScore: perspective.pointsAgainst,
+      result: perspective.result,
+      margin: perspective.pointsFor - perspective.pointsAgainst,
       side,
+      venueType: perspective.venueType ?? (side === "home" ? "H" : "A"),
     });
     if (beforeMatches.length >= beforeN) break;
   }
@@ -354,9 +599,6 @@ export async function getCoachImpact(
   let under = all.filter((m) => m.teamId === current.teamId);
   if (options.underMode === "first_n") under = under.slice(0, underN);
 
-  const enough =
-    beforeMatches.length >= Math.min(10, beforeN) && under.length >= Math.min(10, underN);
-
   const beforeWr = winRateOf(beforeMatches);
   const underWr = winRateOf(under);
   const beforePf = avg(beforeMatches.map((m) => m.forScore));
@@ -364,49 +606,70 @@ export async function getCoachImpact(
   const beforePa = avg(beforeMatches.map((m) => m.againstScore));
   const underPa = avg(under.map((m) => m.againstScore));
 
-  const row = (
-    metric: string,
-    before: number | null,
-    after: number | null,
-    invert = false,
-    digits = 1,
-  ): CoachImpactRow => {
-    if (before == null || after == null) {
-      return { metric, before: null, under: null, change: null, improved: null };
-    }
-    const change = after - before;
-    const improved = invert ? change < 0 : change > 0;
-    return {
-      metric,
-      before: Number(before.toFixed(digits)),
-      under: Number(after.toFixed(digits)),
-      change: Number(change.toFixed(digits)),
-      improved: change === 0 ? null : improved,
-    };
-  };
+  const [beforeTries, underTries, beforeRank, underRank] = await Promise.all([
+    avgTriesPerGame(
+      current.teamId,
+      beforeMatches.map((m) => m.id),
+    ),
+    avgTriesPerGame(
+      current.teamId,
+      under.map((m) => m.id),
+    ),
+    getTeamRankingAtDate({ teamId: current.teamId, asOf: start }).catch(() => null),
+    getTeamRankingAtDate({
+      teamId: current.teamId,
+      asOf: under.at(-1)?.kickoffAt ?? new Date(),
+    }).catch(() => null),
+  ]);
 
-  return {
-    baselineLabel: `vs Before Appointment (Prev ${beforeN} Matches)`,
+  const triesCoveragePct = Math.round(
+    ((beforeTries.coveragePct ?? 0) + (underTries.coveragePct ?? 0)) / 2,
+  );
+  const band = impactConfidenceBand({
     beforeCount: beforeMatches.length,
     underCount: under.length,
-    rows: [
-      {
-        metric: "Win Rate",
-        before: beforeWr != null ? Math.round(beforeWr) : null,
-        under: underWr != null ? Math.round(underWr) : null,
-        change:
-          beforeWr != null && underWr != null ? Math.round(underWr - beforeWr) : null,
-        improved:
-          beforeWr != null && underWr != null
-            ? underWr === beforeWr
-              ? null
-              : underWr > beforeWr
-            : null,
-      },
-      row("Points / Game", beforePf, underPf, false, 1),
-      row("Points Against / Game", beforePa, underPa, true, 1),
-    ],
-    confidence: enough ? (beforeMatches.length >= 20 && under.length >= 20 ? "high" : "medium") : "low",
-    enoughData: enough,
+    rankingCoverage: Boolean(beforeRank && underRank),
+    triesCoveragePct,
+  });
+
+  const rows: CoachImpactRow[] = [
+    buildImpactRow("win_rate", beforeWr, underWr, band.confidencePct),
+    buildImpactRow(
+      "world_rank",
+      beforeRank?.position ?? null,
+      underRank?.position ?? null,
+      beforeRank && underRank ? band.confidencePct : Math.min(band.confidencePct, 50),
+    ),
+    buildImpactRow("points_per_game", beforePf, underPf, band.confidencePct),
+    buildImpactRow("points_against_per_game", beforePa, underPa, band.confidencePct),
+    buildImpactRow(
+      "tries_per_game",
+      beforeTries.avg,
+      underTries.avg,
+      Math.min(band.confidencePct, 40 + Math.round(triesCoveragePct * 0.4)),
+    ),
+  ].filter((r) => r.before != null || r.under != null);
+
+  const surname =
+    (detail?.coach.fullName || detail?.coach.name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .at(-1) ?? "Coach";
+  const underLabel = `Under ${surname}`;
+
+  return {
+    modelVersion: COACH_IMPACT_VERSION,
+    baselineLabel: `vs Before Appointment (Prev ${beforeN} Matches)`,
+    underLabel,
+    beforeCount: beforeMatches.length,
+    underCount: under.length,
+    rows,
+    confidence: band.confidence,
+    confidencePct: band.confidencePct,
+    enoughData: band.enoughData,
+    tenureStart: current.startDate,
+    teamId: current.teamId,
+    teamName: current.teamName,
   };
 }

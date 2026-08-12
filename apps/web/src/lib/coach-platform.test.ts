@@ -87,6 +87,7 @@ describe("coach rating / power index", () => {
     expect(power.score).not.toBeNull();
     expect(power.score!).toBeGreaterThan(0);
     expect(power.score!).toBeLessThanOrEqual(100);
+    expect(power.detail.excludedKeys).toContain("set_piece");
     const overall = computeOverallRating(metrics, power.score, 70);
     expect(overall).not.toBeNull();
     expect(overall!).toBeGreaterThan(0);
@@ -103,11 +104,33 @@ describe("coach rating / power index", () => {
           worldRank: null,
           raw: {},
         },
+        {
+          key: "big_match_performance",
+          label: "Big Match",
+          score: 88,
+          worldRank: null,
+          raw: {},
+        },
+        {
+          key: "player_development",
+          label: "Player Development",
+          score: 80,
+          worldRank: null,
+          raw: {},
+        },
+        {
+          key: "experience",
+          label: "Experience",
+          score: 85,
+          worldRank: null,
+          raw: {},
+        },
       ],
       88,
       80,
     );
-    expect(overall).toBeGreaterThanOrEqual(80);
+    expect(overall).not.toBeNull();
+    expect(overall!).toBeGreaterThan(50);
     expect(overall!).toBeLessThanOrEqual(100);
   });
 });

@@ -185,6 +185,8 @@ export async function enrichFixtureFromSdmsMatch(
     replaceEvents?: boolean;
     /** Skip SDMS attack/defend/kicking/errors/carries import (events-only repair). */
     skipPerformanceStats?: boolean;
+    /** Override SDMS HTTP timeout (default 20s). Use a shorter budget from page self-heal. */
+    timeoutMs?: number;
   } = {},
 ): Promise<PlanetRugbyMatchImportResult> {
   const fixture = await getFixtureById(fixtureId);
@@ -193,10 +195,11 @@ export async function enrichFixtureFromSdmsMatch(
     throw new Error("Fixture must have home and away teams before SDMS enrich.");
   }
 
+  const fetchOpts = options.timeoutMs != null ? { timeoutMs: options.timeoutMs } : undefined;
   const [detail, lineupsRaw, previousMeetings] = await Promise.all([
-    fetchSdmsMatchDetail(matchId),
-    fetchSdmsLineups(matchId),
-    fetchSdmsPreviousMeetings(matchId),
+    fetchSdmsMatchDetail(matchId, fetchOpts),
+    fetchSdmsLineups(matchId, fetchOpts),
+    fetchSdmsPreviousMeetings(matchId, fetchOpts),
   ]);
   if (!detail) throw new Error(`SDMS match detail not found: ${matchId}`);
 
@@ -356,26 +359,30 @@ export async function enrichFixtureFromSdmsMatch(
   if (options.skipPerformanceStats !== true) {
     try {
       const { importMatchPerformanceStats } = await import("./planet-rugby-player-stats-import-service");
-      const statsResult = await importMatchPerformanceStats(fixtureId, matchId);
+      const statsResult = await importMatchPerformanceStats(fixtureId, matchId, {
+        timeoutMs: options.timeoutMs,
+      });
       playerStatsImported = statsResult.playersProcessed;
     } catch {
       /* performance stats optional when SDMS feed unavailable */
     }
   }
 
-  try {
-    const { refreshActivatedNarrativeCommentary } = await import(
-      "./match-narrative-live-refresh"
-    );
-    await refreshActivatedNarrativeCommentary(fixtureId, {
-      force: true,
-      syncProvider: false,
-    });
-  } catch (error) {
-    console.warn(
-      `[planet-rugby] narrative refresh failed for ${fixtureId}:`,
-      error instanceof Error ? error.message : error,
-    );
+  if (options.timeoutMs == null) {
+    try {
+      const { refreshActivatedNarrativeCommentary } = await import(
+        "./match-narrative-live-refresh"
+      );
+      await refreshActivatedNarrativeCommentary(fixtureId, {
+        force: true,
+        syncProvider: false,
+      });
+    } catch (error) {
+      console.warn(
+        `[planet-rugby] narrative refresh failed for ${fixtureId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
 
   return {

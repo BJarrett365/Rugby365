@@ -407,6 +407,35 @@ export async function enrichRugbyDataMatch(
     result.errors.push(error instanceof Error ? error.message : String(error));
   }
 
+  if (
+    result.detailUpdated ||
+    result.eventsImported ||
+    result.lineupPlayers ||
+    result.teamStats ||
+    result.playerStats
+  ) {
+    try {
+      const { cascadeFixtureDataChange } = await import("./data-change-event-service");
+      const eventType =
+        result.lineupPlayers && !result.teamStats && !result.playerStats
+          ? "LINEUP_UPDATED"
+          : result.teamStats
+            ? "TEAM_STATS_UPDATED"
+            : result.playerStats
+              ? "PLAYER_STATS_UPDATED"
+              : "MATCH_UPDATED";
+      await cascadeFixtureDataChange({
+        fixtureId: fixture.id,
+        eventType,
+        source: "rugby_data",
+        importMethod: "LIVE_FEED",
+        processNow: false,
+      });
+    } catch {
+      // Stale marking is best-effort.
+    }
+  }
+
   return result;
 }
 

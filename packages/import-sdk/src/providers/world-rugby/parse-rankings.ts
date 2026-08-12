@@ -33,8 +33,11 @@ export type RawWorldRugbyRankingsResponse = {
 export function worldRugbyRankingsUrl(
   category: WorldRugbyRankingCategory,
   language = "en",
+  date?: string,
 ): string {
-  return `https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/${category}?language=${language}`;
+  const params = new URLSearchParams({ language });
+  if (date) params.set("date", date.slice(0, 10));
+  return `https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/${category}?${params.toString()}`;
 }
 
 export function parseWorldRugbyRankings(

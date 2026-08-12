@@ -13,6 +13,7 @@ import {
   type SdmsMatchPlayerStats,
   type SdmsMatchStatsBundle,
 } from "@rugby365/import-sdk";
+import { after } from "next/server";
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import {
   competitions,
@@ -32,6 +33,7 @@ import { buildMatchEntityContext, type MatchEntityContext } from "./entity-looku
 import { findFixtureBySdmsMatchId, getFixtureById } from "./fixture-admin-service";
 import { resolveReferee } from "./entity-admin-service";
 import {
+  ensureMissingFixtureStaffMatchRatings,
   listStaffMatchRatingsForFixture,
   type StaffMatchRatingDisplay,
 } from "./staff-match-rating-service";
@@ -52,7 +54,9 @@ import {
 import { syncFixtureLiveStateFromSdms } from "./fixture-live-score-sync";
 import { isLiveFixtureStatus } from "./table-lab/live-table-service";
 import {
-  calculateAndPersistFixtureMatchRatings,
+  attachCareerAndFormToLineupRatings,
+  ensureMissingFixturePlayerCareerRatings,
+  ensureMissingFixturePlayerMatchRatings,
   listMatchRatingsForFixture,
   type FixtureMatchRatingsBundle,
   type MatchRatingDisplay,
@@ -112,6 +116,45 @@ export type MatchStaffLink = {
   slug: string;
   rating: StaffMatchRatingDisplay | null;
 };
+
+const MATCH_ENSURE_BUDGET_MS = 800;
+const matchSelfHealInflight = new Set<string>();
+
+function raceWithBudget<T>(work: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    work.catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
+/**
+ * SDMS enrich + sequential career ratings are too heavy for Match Centre RSC.
+ * Run them after the response so the page reads existing DB rows quickly.
+ */
+function scheduleMatchDataSelfHeal(fixtureId: string, matchId: string): void {
+  if (matchSelfHealInflight.has(fixtureId)) return;
+  matchSelfHealInflight.add(fixtureId);
+  const work = async () => {
+    try {
+      await ensureMissingFixturePlayerMatchRatings(fixtureId, { matchId });
+      await ensureMissingFixturePlayerCareerRatings(fixtureId);
+    } catch (error) {
+      console.warn(
+        `[match-detail] background self-heal failed for ${fixtureId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    } finally {
+      matchSelfHealInflight.delete(fixtureId);
+    }
+  };
+  try {
+    after(() => {
+      void work();
+    });
+  } catch {
+    void work();
+  }
+}
 
 export type MatchVenueLink = {
   id: string;
@@ -436,7 +479,27 @@ export async function getMatchDetailForPage(
     ? listFixtureSquadPlayerIds(cmsFixtureRow.id)
     : Promise.resolve([] as string[]);
   const ratingsPromise = cmsFixtureRow
-    ? listMatchRatingsForFixture(cmsFixtureRow.id).catch(
+    ? (async () => {
+        if (isFixtureRatingsPublished(cmsFixtureRow.status)) {
+          // Cheap DB-only ensure (no SDMS). Full enrich + career calc run after the response
+          // only when this fixture still has gaps.
+          const ensureResult = await raceWithBudget(
+            ensureMissingFixturePlayerMatchRatings(cmsFixtureRow.id, {
+              matchId,
+              allowSdmsEnrich: false,
+            }),
+            MATCH_ENSURE_BUDGET_MS,
+          );
+          if (
+            ensureResult == null ||
+            ensureResult.triggered ||
+            ensureResult.needsSdmsEnrich
+          ) {
+            scheduleMatchDataSelfHeal(cmsFixtureRow.id, matchId);
+          }
+        }
+        return listMatchRatingsForFixture(cmsFixtureRow.id);
+      })().catch(
         () =>
           ({
             fixtureId: cmsFixtureRow.id,
@@ -467,9 +530,17 @@ export async function getMatchDetailForPage(
     await coachesPromise;
     return getFixtureById(cmsFixtureRow.id);
   })();
-  const staffPromise = cmsFixtureRow
-    ? listStaffMatchRatingsForFixture(cmsFixtureRow.id)
-    : Promise.resolve(null);
+  // Wait for coach links, then fill any missing staff ratings (coach linked after
+  // the first ratings pass used to leave header ratings blank).
+  const staffPromise = (async () => {
+    if (!cmsFixtureRow) return null;
+    await coachesPromise;
+    await raceWithBudget(
+      ensureMissingFixtureStaffMatchRatings(cmsFixtureRow.id),
+      MATCH_ENSURE_BUDGET_MS,
+    );
+    return listStaffMatchRatingsForFixture(cmsFixtureRow.id);
+  })();
   const tableContextPromise = resolveMatchTableContext(detail, cmsFixtureRow);
   const bonusPromise = cmsFixtureRow
     ? getFixtureBonusPoints(cmsFixtureRow.id).catch(() => null)
@@ -607,18 +678,6 @@ export async function getMatchDetailForPage(
   let ratingsBundle: FixtureMatchRatingsBundle = ratingsListed;
   const fixtureStatus = cmsFixtureRow?.status ?? detail.status ?? "";
   const ratingsPublished = isFixtureRatingsPublished(fixtureStatus);
-
-  if (cmsFixtureRow && ratingsPublished && ratingsBundle.ratings.length === 0) {
-    try {
-      await Promise.race([
-        calculateAndPersistFixtureMatchRatings(cmsFixtureRow.id),
-        new Promise<void>((resolve) => setTimeout(resolve, 2_000)),
-      ]);
-      ratingsBundle = await listMatchRatingsForFixture(cmsFixtureRow.id);
-    } catch {
-      /* keep empty */
-    }
-  }
   __mark("ratings");
 
   const rugby365PotmName = ratingsPublished
@@ -665,7 +724,15 @@ export async function getMatchDetailForPage(
     ? (potmSlugById.get(officialPotmPlayerId) ?? null)
     : null;
 
-  const matchRatings: MatchRatingDisplay[] = ratingsPublished ? ratingsBundle.ratings : [];
+  let matchRatings: MatchRatingDisplay[] = ratingsPublished ? ratingsBundle.ratings : [];
+  if (ratingsPublished && cmsFixtureRow) {
+    const playerLinks = Object.values(entities.playersByExternalId);
+    try {
+      matchRatings = await attachCareerAndFormToLineupRatings(matchRatings, playerLinks);
+    } catch {
+      // Career/form fallback is best-effort for lineup display.
+    }
+  }
 
   let fixtureWithStaff = fixtureLoaded;
   let staffBundle = staffLoaded;

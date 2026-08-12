@@ -3,6 +3,7 @@
 @import "../styles/pr-public-match-centre.css";
 @import "../styles/team-of-week.css";
 @import "../styles/pr-coach-profile.css";
+@import "../styles/pr-player-profile.css";
 
 /* ─── Surface design tokens ─── */
 :root {

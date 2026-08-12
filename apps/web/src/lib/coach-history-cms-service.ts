@@ -39,10 +39,13 @@ export async function createCoachPlayingStint(
   coachId: string,
   input: {
     teamType?: string;
+    careerType?: string;
+    competitionLevel?: string | null;
     startYear?: number | string | null;
     endYear?: number | string | null;
     yearsLabel: string;
     teamName: string;
+    teamDisplayName?: string | null;
     teamId?: string | null;
     competitionId?: string | null;
     country?: string | null;
@@ -54,7 +57,9 @@ export async function createCoachPlayingStint(
     captain?: boolean;
     sortOrder?: number;
     sourceUrl?: string | null;
+    sourceProvider?: string | null;
     showOnOverview?: boolean;
+    recordStatus?: string;
   },
 ) {
   const yearsLabel = input.yearsLabel.trim();
@@ -62,16 +67,30 @@ export async function createCoachPlayingStint(
   if (!yearsLabel) throw new Error("yearsLabel is required");
   if (!teamName) throw new Error("teamName is required");
 
+  const teamType = trimOrNull(input.teamType) ?? "provincial";
+  const careerType =
+    trimOrNull(input.careerType) ??
+    (teamType === "franchise"
+      ? "super_rugby_player"
+      : teamType === "international"
+        ? "international_player"
+        : teamType === "club"
+          ? "club_player"
+          : "provincial_player");
+
   const db = getDb();
   const [row] = await db
     .insert(coachPlayingStints)
     .values({
       coachId,
-      teamType: trimOrNull(input.teamType) ?? "provincial",
+      teamType,
+      careerType,
+      competitionLevel: trimOrNull(input.competitionLevel),
       startYear: optInt(input.startYear),
       endYear: optInt(input.endYear),
       yearsLabel,
       teamName,
+      teamDisplayName: trimOrNull(input.teamDisplayName),
       teamId: input.teamId || null,
       competitionId: input.competitionId || null,
       country: trimOrNull(input.country),
@@ -83,7 +102,13 @@ export async function createCoachPlayingStint(
       captain: input.captain ?? false,
       sortOrder: input.sortOrder ?? 0,
       sourceUrl: trimOrNull(input.sourceUrl),
-      showOnOverview: input.showOnOverview ?? true,
+      sourceProvider: trimOrNull(input.sourceProvider) ?? "manual",
+      showOnOverview: input.showOnOverview ?? false,
+      recordStatus: trimOrNull(input.recordStatus) ?? "needs_review",
+      verifiedAt:
+        input.recordStatus === "verified" || input.recordStatus === "editor_approved"
+          ? new Date()
+          : null,
     })
     .returning();
   return row!;
@@ -96,6 +121,84 @@ export async function deleteCoachPlayingStint(stintId: string, coachId: string) 
     .where(and(eq(coachPlayingStints.id, stintId), eq(coachPlayingStints.coachId, coachId)))
     .returning({ id: coachPlayingStints.id });
   return deleted.length > 0;
+}
+
+export async function updateCoachPlayingStint(
+  stintId: string,
+  coachId: string,
+  input: Partial<{
+    teamType: string;
+    startYear: number | string | null;
+    endYear: number | string | null;
+    yearsLabel: string;
+    teamName: string;
+    teamId: string | null;
+    apps: number | string | null;
+    starts: number | string | null;
+    points: number | string | null;
+    tries: number | string | null;
+    position: string | null;
+    showOnOverview: boolean;
+    sourceUrl: string | null;
+    recordStatus: string;
+    overviewLabel: string | null;
+    teamDisplayName: string | null;
+    careerType: string;
+    competitionLevel: string | null;
+    sortOrder: number;
+  }>,
+) {
+  const db = getDb();
+  const [existing] = await db
+    .select()
+    .from(coachPlayingStints)
+    .where(and(eq(coachPlayingStints.id, stintId), eq(coachPlayingStints.coachId, coachId)))
+    .limit(1);
+  if (!existing) return null;
+
+  const [row] = await db
+    .update(coachPlayingStints)
+    .set({
+      ...(input.teamType !== undefined ? { teamType: trimOrNull(input.teamType) ?? existing.teamType } : {}),
+      ...(input.startYear !== undefined ? { startYear: optInt(input.startYear) } : {}),
+      ...(input.endYear !== undefined ? { endYear: optInt(input.endYear) } : {}),
+      ...(input.yearsLabel !== undefined ? { yearsLabel: input.yearsLabel.trim() || existing.yearsLabel } : {}),
+      ...(input.teamName !== undefined ? { teamName: input.teamName.trim() || existing.teamName } : {}),
+      ...(input.teamId !== undefined ? { teamId: input.teamId || null } : {}),
+      ...(input.apps !== undefined ? { apps: optInt(input.apps) } : {}),
+      ...(input.starts !== undefined ? { starts: optInt(input.starts) } : {}),
+      ...(input.points !== undefined ? { points: optInt(input.points) } : {}),
+      ...(input.tries !== undefined ? { tries: optInt(input.tries) } : {}),
+      ...(input.position !== undefined ? { position: trimOrNull(input.position) } : {}),
+      ...(input.showOnOverview !== undefined ? { showOnOverview: input.showOnOverview } : {}),
+      ...(input.sourceUrl !== undefined ? { sourceUrl: trimOrNull(input.sourceUrl) } : {}),
+      ...(input.recordStatus !== undefined
+        ? {
+            recordStatus: input.recordStatus.trim() || "needs_review",
+            verifiedAt:
+              input.recordStatus === "verified" || input.recordStatus === "editor_approved"
+                ? existing.verifiedAt ?? new Date()
+                : existing.verifiedAt,
+          }
+        : {}),
+      ...(input.overviewLabel !== undefined
+        ? { overviewLabel: trimOrNull(input.overviewLabel) }
+        : {}),
+      ...(input.teamDisplayName !== undefined
+        ? { teamDisplayName: trimOrNull(input.teamDisplayName) }
+        : {}),
+      ...(input.careerType !== undefined
+        ? { careerType: trimOrNull(input.careerType) ?? existing.careerType }
+        : {}),
+      ...(input.competitionLevel !== undefined
+        ? { competitionLevel: trimOrNull(input.competitionLevel) }
+        : {}),
+      ...(input.sortOrder !== undefined ? { sortOrder: optInt(input.sortOrder) ?? existing.sortOrder } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(coachPlayingStints.id, stintId))
+    .returning();
+  return row!;
 }
 
 /* ── Honours ────────────────────────────────────────────────── */

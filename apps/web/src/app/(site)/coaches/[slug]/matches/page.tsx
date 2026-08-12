@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CoachPublicSubNav } from "@/components/coaches/CoachPublicSubNav";
+import { formatCoachResultDate } from "@/lib/coach-perspective-result";
 import { formatPublicKickoff, isPreviewParam } from "@/lib/public-entity-profile-utils";
 import { getPublicCoachProfile } from "@/lib/public-coach-profile-service";
 
@@ -35,7 +36,10 @@ export default async function CoachMatchesPage({ params, searchParams }: PagePro
             <div className="pr-coach-card__head">
               <h2>Upcoming</h2>
             </div>
-            <Link href={`/matches/${profile.upcomingMatch.slug}`} className="pr-coach-result-row">
+            <Link
+              href={profile.upcomingMatch.href ?? `/matches/${profile.upcomingMatch.slug}`}
+              className="pr-coach-result-row"
+            >
               <span>
                 {profile.upcomingMatch.homeTeamName} vs {profile.upcomingMatch.awayTeamName}
               </span>
@@ -56,19 +60,68 @@ export default async function CoachMatchesPage({ params, searchParams }: PagePro
           {profile.recentMatches.length === 0 ? (
             <p className="pr-coach-empty">No recent matches.</p>
           ) : (
-            <div>
-              {profile.recentMatches.map((m) => (
-                <Link key={m.id} href={`/matches/${m.slug}`} className="pr-coach-result-row">
-                  <span>
-                    {m.homeTeamName} {m.homeScore}–{m.awayScore} {m.awayTeamName}
-                    {m.result ? ` (${m.result})` : ""}
+            <div className="pr-coach-recent-results__list">
+              {profile.recentMatches.map((m) =>
+                m.href ? (
+                <Link key={m.id} href={m.href} className="pr-coach-recent-row">
+                  <time className="pr-coach-recent-row__date" dateTime={m.kickoffAt ?? undefined}>
+                    {formatCoachResultDate(m.kickoffAt)}
+                  </time>
+                  <span className="pr-coach-recent-row__opp">
+                    {m.opponentCrestUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.opponentCrestUrl}
+                        alt=""
+                        className="pr-coach-recent-row__crest"
+                        width={22}
+                        height={22}
+                      />
+                    ) : (
+                      <span className="pr-coach-recent-row__crest-fallback" aria-hidden />
+                    )}
+                    <span className="pr-coach-recent-row__opp-name">
+                      {m.coachTeamName && m.opponentName
+                        ? `${m.coachTeamName} → ${m.opponentName}`
+                        : (m.opponentName ?? "—")}
+                    </span>
                   </span>
-                  <span>
-                    {formatPublicKickoff(m.kickoffAt) ?? ""}
-                    {m.competitionName ? ` · ${m.competitionName}` : ""}
+                  <span className="pr-coach-recent-row__ha">{m.venueType}</span>
+                  <span className="pr-coach-recent-row__score">
+                    {m.pointsFor}–{m.pointsAgainst}
+                  </span>
+                  <span
+                    className={`pr-coach-recent-row__badge ${
+                      m.result ? `is-${m.result.toLowerCase()}` : ""
+                    }`}
+                  >
+                    {m.result ?? "—"}
                   </span>
                 </Link>
-              ))}
+                ) : (
+                  <div key={m.id} className="pr-coach-recent-row">
+                    <time className="pr-coach-recent-row__date" dateTime={m.kickoffAt ?? undefined}>
+                      {formatCoachResultDate(m.kickoffAt)}
+                    </time>
+                    <span className="pr-coach-recent-row__opp">
+                      <span className="pr-coach-recent-row__opp-name">
+                        {m.opponentName ?? "—"}
+                      </span>
+                    </span>
+                    <span className="pr-coach-recent-row__ha">{m.venueType}</span>
+                    <span className="pr-coach-recent-row__score">
+                      {m.pointsFor}–{m.pointsAgainst}
+                    </span>
+                    <span
+                      className={`pr-coach-recent-row__badge ${
+                        m.result ? `is-${m.result.toLowerCase()}` : ""
+                      }`}
+                    >
+                      {m.result ?? "—"}
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
           )}
         </section>

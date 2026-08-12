@@ -13,11 +13,16 @@ export default async function WorldRankingsPage() {
       <PageHeader
         eyebrow="International"
         title="World Rankings"
-        description="Official World Rugby men’s and women’s team rankings. Competition player, coach and referee rankings live on each tournament page."
+        description="Official World Rugby men’s and women’s team rankings. Player rankings live at /rankings/players. Competition player, coach and referee rankings live on each tournament page."
         actions={
-          <Link href="/competitions" className="cms-btn cms-btn--secondary">
-            Competitions
-          </Link>
+          <>
+            <Link href="/rankings/players" className="cms-btn cms-btn--secondary">
+              Player rankings
+            </Link>
+            <Link href="/competitions" className="cms-btn cms-btn--secondary">
+              Competitions
+            </Link>
+          </>
         }
       />
 

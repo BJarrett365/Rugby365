@@ -27,5 +27,8 @@ describe("parseWorldRugbyRankings", () => {
     expect(worldRugbyRankingsUrl("wru")).toBe(
       "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en",
     );
+    expect(worldRugbyRankingsUrl("mru", "en", "2021-10-01")).toBe(
+      "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en&date=2021-10-01",
+    );
   });
 });
