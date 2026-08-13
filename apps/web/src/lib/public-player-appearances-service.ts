@@ -23,6 +23,10 @@ import {
   formatSeasonRangeLabel,
   seasonSlugFromStartYear,
 } from "./season-label-utils";
+import {
+  isUnknownStandingsTeamName,
+  resolveTeamNamesFromFixtureSlug,
+} from "./table-lab/standings-fixture-dedupe";
 
 export type PublicAppearanceRow = {
   fixtureId: string;
@@ -206,6 +210,7 @@ export async function loadPlayerAppearances(
   const ratingByFixture = new Map(ratingRows.map((r) => [r.fixtureId, r]));
   const teamNameById = new Map<string, string>();
   for (const t of [...opponentHome, ...opponentAway]) teamNameById.set(t.id, t.name);
+  for (const r of rows) teamNameById.set(r.teamId, r.teamName);
 
   const intlTeamId = options.internationalTeamId ?? null;
   const view = options.view ?? "domestic";
@@ -238,8 +243,29 @@ export async function loadPlayerAppearances(
       awayScore: r.awayScore,
     });
 
-    const opponentId =
-      homeAway === "home" ? r.awayTeamId : homeAway === "away" ? r.homeTeamId : null;
+    const homeRaw =
+      (r.homeTeamId ? teamNameById.get(r.homeTeamId) : null) ??
+      (r.teamId === r.homeTeamId ? r.teamName : "Unknown");
+    const awayRaw =
+      (r.awayTeamId ? teamNameById.get(r.awayTeamId) : null) ??
+      (r.teamId === r.awayTeamId ? r.teamName : "Unknown");
+    const resolvedNames = resolveTeamNamesFromFixtureSlug(r.fixtureSlug, homeRaw, awayRaw);
+
+    let teamName = r.teamName;
+    let opponentName: string | null =
+      homeAway === "home"
+        ? resolvedNames.awayName
+        : homeAway === "away"
+          ? resolvedNames.homeName
+          : null;
+
+    if (homeAway === "home") teamName = resolvedNames.homeName;
+    else if (homeAway === "away") teamName = resolvedNames.awayName;
+
+    // Never surface orphan placeholders on the public profile.
+    if (isUnknownStandingsTeamName(teamName)) teamName = r.teamName;
+    if (opponentName && isUnknownStandingsTeamName(opponentName)) opponentName = null;
+
     const perf = perfByFixture.get(r.fixtureId);
     const rating = ratingByFixture.get(r.fixtureId);
     const role = (r.squadRole ?? "").toLowerCase();
@@ -262,8 +288,8 @@ export async function loadPlayerAppearances(
       competitionSlug: r.competitionSlug,
       competitionType,
       teamId: r.teamId,
-      teamName: r.teamName,
-      opponentName: opponentId ? teamNameById.get(opponentId) ?? null : null,
+      teamName,
+      opponentName,
       homeAway,
       homeScore: r.homeScore,
       awayScore: r.awayScore,

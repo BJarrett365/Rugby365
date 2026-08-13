@@ -161,6 +161,14 @@ const TEAM_DEDUP_BASE_ALIASES: Record<string, string> = {
   "british lions": "british irish lions",
   "british and irish lions": "british irish lions",
   "british & irish lions": "british irish lions",
+  // International nicknames for TRC / nations tables. Bare "pumas" stays the
+  // SA club; Argentina is matched via "los pumas" / country name.
+  "all blacks": "new zealand",
+  "new zealand (all blacks)": "new zealand",
+  springboks: "south africa",
+  "south africa springboks": "south africa",
+  wallabies: "australia",
+  "los pumas": "argentina",
 };
 
 /** Base club/country label with age/gender tier markers removed for duplicate matching. */
@@ -169,6 +177,8 @@ export function teamDedupBaseName(name: string): string {
   normalized = normalized.replace(/^t=/i, "").trim();
   normalized = normalized
     .replace(/\s*\[\d+\]\s*$/g, "") // Wikipedia cite leftovers: "Clermont [2]"
+    .replace(/\{\{[^}]+\}\}/g, " ")
+    .replace(/[|_]/g, " ")
     .replace(/\s*\(asst\.\)/gi, "")
     .replace(/\s*\(loan\)/gi, "")
     .replace(/\s*\(forwards\)/gi, "")
@@ -186,7 +196,9 @@ export function teamDedupBaseName(name: string): string {
     .replace(/\s+/g, " ")
     .trim();
   const lower = normalized.toLowerCase();
-  return TEAM_DEDUP_BASE_ALIASES[lower] ?? lower;
+  if (TEAM_DEDUP_BASE_ALIASES[lower]) return TEAM_DEDUP_BASE_ALIASES[lower]!;
+  if (/\bzaf\b/.test(lower)) return "south africa";
+  return lower;
 }
 
 /** Duplicate teams must share base name and tier — Women/U18/U20 never merge with senior sides. */

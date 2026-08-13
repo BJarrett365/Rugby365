@@ -49,7 +49,7 @@ export const SUPABASE_SYNC_TABLES: SyncTableSpec[] = [
   { name: "fixtures", onConflict: "id", batchSize: 200, nullify: ["rugby365_potm_player_id"] },
   { name: "standing_rows", onConflict: "id" },
   { name: "fixture_players", onConflict: "id", batchSize: 400 },
-  { name: "match_events", onConflict: "id", batchSize: 400 },
+  { name: "match_events", onConflict: "id", batchSize: 100 },
   { name: "team_match_stats", onConflict: "id" },
   { name: "player_match_performance_stats", onConflict: "id", batchSize: 300 },
   { name: "player_season_stats", onConflict: "id" },
@@ -231,6 +231,7 @@ const NULLIFY_UNIQUE_COLUMNS = [
   "planet_rugby_slug",
   "rugbypass_slug",
   "rugbypass_player_id",
+  "wikidata_id",
 ] as const;
 
 type UniqueColumn = (typeof RENAME_UNIQUE_COLUMNS)[number] | (typeof NULLIFY_UNIQUE_COLUMNS)[number];
@@ -345,17 +346,81 @@ async function parkPayloadUniqueKeys(
   return null;
 }
 
+/**
+ * Composite unique keys that can collide when local/remote ids diverge.
+ * Delete remote rows that share the key but not the same primary id.
+ */
+const COMPOSITE_UNIQUE_KEYS: Record<string, string[]> = {
+  standing_rows: ["season_id", "team_id", "view"],
+  fixture_players: ["fixture_id", "player_id"],
+  player_match_performance_stats: ["fixture_id", "player_id"],
+  player_match_ratings: ["fixture_id", "player_id"],
+  player_season_stats: ["player_id", "season_id", "team_id"],
+  player_team_memberships: ["player_id", "team_id", "season_id"],
+};
+
+function dedupeByCompositeKey(
+  payload: Record<string, unknown>[],
+  keyCols: string[],
+): Record<string, unknown>[] {
+  const map = new Map<string, Record<string, unknown>>();
+  for (const row of payload) {
+    const key = keyCols.map((col) => String(row[col] ?? "")).join("\u0001");
+    map.set(key, row); // keep last
+  }
+  return [...map.values()];
+}
+
+async function resolveCompositeUniqueCollisions(
+  table: string,
+  payload: Record<string, unknown>[],
+): Promise<string | null> {
+  const keyCols = COMPOSITE_UNIQUE_KEYS[table];
+  if (!keyCols?.length || !payload.length) return null;
+
+  const supabase = await getSupabaseServerClient("service");
+  const anchor = keyCols[0]!;
+  const anchorValues = [
+    ...new Set(
+      payload
+        .map((row) => row[anchor])
+        .filter((value): value is string => typeof value === "string"),
+    ),
+  ];
+  if (!anchorValues.length) return null;
+
+  // Wipe remote rows for these anchor keys, then upsert local ids cleanly.
+  // Avoids pagination misses on conflict lookups (Supabase caps select pages).
+  for (const chunk of chunkValues(anchorValues, 40)) {
+    const deleted = await supabase.from(table).delete().in(anchor, chunk);
+    if (deleted.error) {
+      if (
+        /Could not find the table|schema cache|column .* does not exist/i.test(
+          deleted.error.message,
+        )
+      ) {
+        return null;
+      }
+      return deleted.error.message;
+    }
+  }
+  return null;
+}
+
 async function upsertPayload(
   table: string,
   onConflict: string,
   payload: Record<string, unknown>[],
 ): Promise<{ error: string | null; count: number }> {
+  const keyCols = COMPOSITE_UNIQUE_KEYS[table];
+  const rows = keyCols?.length ? dedupeByCompositeKey(payload, keyCols) : payload;
+
   const supabase = await getSupabaseServerClient("service");
-  const { error, count } = await supabase.from(table).upsert(payload, {
+  const { error, count } = await supabase.from(table).upsert(rows, {
     onConflict,
     count: "exact",
   });
-  if (!error) return { error: null, count: count ?? payload.length };
+  if (!error) return { error: null, count: count ?? rows.length };
 
   const isUnique =
     /duplicate key value violates unique constraint/i.test(error.message) ||
@@ -363,15 +428,15 @@ async function upsertPayload(
   if (!isUnique) return { error: error.message, count: 0 };
 
   // Unique swap / missed collision: park, re-resolve, then row-by-row.
-  const parkError = await parkPayloadUniqueKeys(table, payload);
+  const parkError = await parkPayloadUniqueKeys(table, rows);
   if (parkError) return { error: parkError, count: 0 };
-  for (const column of payloadColumns(payload)) {
-    const collisionError = await resolveUniqueCollisions(table, payload, column);
+  for (const column of payloadColumns(rows)) {
+    const collisionError = await resolveUniqueCollisions(table, rows, column);
     if (collisionError) return { error: collisionError, count: 0 };
   }
 
   let ok = 0;
-  for (const row of payload) {
+  for (const row of rows) {
     for (const column of payloadColumns([row])) {
       const collisionError = await resolveUniqueCollisions(table, [row], column);
       if (collisionError) return { error: collisionError, count: ok };
@@ -381,6 +446,21 @@ async function upsertPayload(
     ok += single.count ?? 1;
   }
   return { error: null, count: ok };
+}
+
+async function clearRemoteCompositeAnchors(table: string): Promise<string | null> {
+  const keyCols = COMPOSITE_UNIQUE_KEYS[table];
+  if (!keyCols?.length) return null;
+  const anchor = keyCols[0]!;
+  const db = getDb();
+  const local = asRows<Record<string, unknown>>(
+    await db.execute(
+      sql.raw(
+        `SELECT DISTINCT "${anchor}" AS "${anchor}" FROM "${table}" WHERE "${anchor}" IS NOT NULL`,
+      ),
+    ),
+  );
+  return resolveCompositeUniqueCollisions(table, local);
 }
 
 async function syncOneTable(spec: SyncTableSpec): Promise<SupabaseTableSyncResult> {
@@ -397,6 +477,18 @@ async function syncOneTable(spec: SyncTableSpec): Promise<SupabaseTableSyncResul
   const batchSize = spec.batchSize ?? 250;
   let upserted = 0;
   let offset = 0;
+
+  // For composite-unique tables, clear conflicting remote anchors once up front.
+  const clearError = await clearRemoteCompositeAnchors(spec.name);
+  if (clearError) {
+    return {
+      table: spec.name,
+      localCount,
+      upserted: 0,
+      skipped: false,
+      error: clearError,
+    };
+  }
 
   while (offset < localCount) {
     const batch = await fetchLocalBatch(spec.name, offset, batchSize);
@@ -529,4 +621,368 @@ export async function getSupabaseMappedTableCounts(): Promise<
     });
   }
   return out;
+}
+
+const localColumnCache = new Map<string, Set<string>>();
+
+async function getLocalColumns(table: string): Promise<Set<string>> {
+  if (localColumnCache.has(table)) return localColumnCache.get(table)!;
+  const db = getDb();
+  const rows = asRows<{ column_name: string }>(
+    await db.execute(
+      sql.raw(
+        `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '${table}'`,
+      ),
+    ),
+  );
+  const cols = new Set(rows.map((r) => r.column_name));
+  localColumnCache.set(table, cols);
+  return cols;
+}
+
+async function countRemoteRows(table: string): Promise<{ count: number; error?: string }> {
+  const supabase = await getSupabaseServerClient("service");
+  const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true });
+  if (error) return { count: 0, error: error.message };
+  return { count: count ?? 0 };
+}
+
+async function fetchRemoteBatch(
+  table: string,
+  offset: number,
+  limit: number,
+  orderColumn: string,
+): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
+  const supabase = await getSupabaseServerClient("service");
+  const orderBy = orderColumn.split(",")[0]?.trim() || "id";
+  const { data, error } = await supabase
+    .from(table)
+    .select("*")
+    .order(orderBy, { ascending: true })
+    .range(offset, offset + limit - 1);
+  if (error) return { rows: [], error: error.message };
+  return { rows: (data ?? []) as Record<string, unknown>[] };
+}
+
+function sqlLiteral(value: unknown): string {
+  if (value === null || value === undefined) return "NULL";
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return "NULL";
+    return String(value);
+  }
+  if (typeof value === "bigint") return String(value);
+  if (value instanceof Date) return `'${value.toISOString().replace(/'/g, "''")}'`;
+  if (typeof value === "object") {
+    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
+  }
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+/**
+ * Free local unique columns that collide with incoming Supabase rows (different id).
+ */
+async function resolveLocalUniqueCollisions(
+  table: string,
+  payload: Record<string, unknown>[],
+  column: UniqueColumn,
+): Promise<string | null> {
+  const values = [
+    ...new Set(
+      payload
+        .map((row) => row[column])
+        .filter((value): value is string => typeof value === "string"),
+    ),
+  ];
+  if (!values.length) return null;
+
+  const localColumns = await getLocalColumns(table);
+  if (!localColumns.has(column) || !localColumns.has("id")) return null;
+
+  const db = getDb();
+  const rename = (RENAME_UNIQUE_COLUMNS as readonly string[]).includes(column);
+
+  for (const chunk of chunkValues(values, 80)) {
+    const inList = chunk.map((v) => sqlLiteral(v)).join(",");
+    const existing = asRows<Record<string, unknown>>(
+      await db.execute(
+        sql.raw(
+          `SELECT id, "${column}" FROM "${table}" WHERE "${column}" IN (${inList})`,
+        ),
+      ),
+    );
+
+    for (const local of existing) {
+      const localValue = local[column];
+      if (typeof localValue !== "string") continue;
+      const remote = payload.find((row) => row[column] === localValue);
+      if (!remote || typeof remote.id !== "string") continue;
+      if (remote.id === local.id) continue;
+
+      if (rename) {
+        const base = localValue.length > 0 ? localValue : "empty";
+        const legacy = `${base}__legacy__${String(local.id).replace(/-/g, "").slice(0, 8)}`;
+        await db.execute(
+          sql.raw(
+            `UPDATE "${table}" SET "${column}" = ${sqlLiteral(legacy)} WHERE id = ${sqlLiteral(local.id)}`,
+          ),
+        );
+      } else {
+        await db.execute(
+          sql.raw(
+            `UPDATE "${table}" SET "${column}" = NULL WHERE id = ${sqlLiteral(local.id)}`,
+          ),
+        );
+      }
+    }
+  }
+  return null;
+}
+
+async function upsertLocalPayload(
+  table: string,
+  onConflict: string,
+  payload: Record<string, unknown>[],
+): Promise<{ error: string | null; count: number }> {
+  if (!payload.length) return { error: null, count: 0 };
+
+  const localColumns = await getLocalColumns(table);
+  if (!localColumns.size) {
+    return { error: `Local table "${table}" not found`, count: 0 };
+  }
+
+  const conflictCols = onConflict.split(",").map((c) => c.trim()).filter(Boolean);
+  for (const col of conflictCols) {
+    if (!localColumns.has(col)) {
+      return { error: `Local table missing onConflict column "${col}"`, count: 0 };
+    }
+  }
+
+  // Align columns to intersection of payload + local schema.
+  const columns = Object.keys(payload[0] ?? {}).filter((c) => localColumns.has(c));
+  if (!columns.length) {
+    return { error: "No overlapping columns with local schema", count: 0 };
+  }
+
+  // Deduplicate by primary conflict key (keep last).
+  const primary = conflictCols[0]!;
+  const deduped = new Map<string, Record<string, unknown>>();
+  for (const row of payload) {
+    const key = row[primary];
+    const mapKey = key == null ? `__null__${deduped.size}` : String(key);
+    deduped.set(mapKey, row);
+  }
+  const uniquePayload = [...deduped.values()];
+
+  for (const column of payloadColumns(uniquePayload)) {
+    if (!localColumns.has(column)) continue;
+    const collisionError = await resolveLocalUniqueCollisions(table, uniquePayload, column);
+    if (collisionError) return { error: collisionError, count: 0 };
+  }
+
+  const db = getDb();
+  const colList = columns.map((c) => `"${c}"`).join(", ");
+  const conflictList = conflictCols.map((c) => `"${c}"`).join(", ");
+  const updateSet = columns
+    .filter((c) => !conflictCols.includes(c))
+    .map((c) => `"${c}" = EXCLUDED."${c}"`)
+    .join(", ");
+
+  async function insertRows(rows: Record<string, unknown>[]): Promise<string | null> {
+    if (!rows.length) return null;
+    const valuesSql = rows
+      .map((row) => `(${columns.map((c) => sqlLiteral(row[c])).join(", ")})`)
+      .join(",\n");
+    const sqlText =
+      updateSet.length > 0
+        ? `INSERT INTO "${table}" (${colList}) VALUES ${valuesSql}
+           ON CONFLICT (${conflictList}) DO UPDATE SET ${updateSet}`
+        : `INSERT INTO "${table}" (${colList}) VALUES ${valuesSql}
+           ON CONFLICT (${conflictList}) DO NOTHING`;
+    try {
+      await db.execute(sql.raw(sqlText));
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : "Local upsert failed";
+    }
+  }
+
+  let ok = 0;
+  for (const chunk of chunkValues(uniquePayload, 50)) {
+    const batchError = await insertRows(chunk);
+    if (!batchError) {
+      ok += chunk.length;
+      continue;
+    }
+
+    // Unique / FK / encoding issues: resolve again and fall back to row-by-row.
+    for (const column of payloadColumns(chunk)) {
+      if (!localColumns.has(column)) continue;
+      await resolveLocalUniqueCollisions(table, chunk, column);
+    }
+
+    for (const row of chunk) {
+      for (const column of payloadColumns([row])) {
+        if (!localColumns.has(column)) continue;
+        await resolveLocalUniqueCollisions(table, [row], column);
+      }
+      const rowError = await insertRows([row]);
+      if (rowError) {
+        // FK missing: null out known team FKs and retry once.
+        const fkRetry = { ...row };
+        let changed = false;
+        for (const fk of ["club_team_id", "international_team_id", "home_venue_id", "primary_image_id", "badge_image_id"]) {
+          if (fk in fkRetry && fkRetry[fk] != null) {
+            fkRetry[fk] = null;
+            changed = true;
+          }
+        }
+        if (changed) {
+          const retryError = await insertRows([fkRetry]);
+          if (!retryError) {
+            ok += 1;
+            continue;
+          }
+          console.warn(`[pull] ${table}: skipped row ${String(row[primary] ?? "?")}: ${retryError}`);
+          continue;
+        }
+        console.warn(`[pull] ${table}: skipped row ${String(row[primary] ?? "?")}: ${rowError}`);
+        continue;
+      }
+      ok += 1;
+    }
+  }
+  return { error: null, count: ok };
+}
+
+async function syncOneTableFromSupabase(spec: SyncTableSpec): Promise<SupabaseTableSyncResult> {
+  if (spec.skip) {
+    return { table: spec.name, localCount: 0, upserted: 0, skipped: true };
+  }
+
+  const remote = await countRemoteRows(spec.name);
+  if (remote.error) {
+    return {
+      table: spec.name,
+      localCount: 0,
+      upserted: 0,
+      skipped: false,
+      error: remote.error,
+    };
+  }
+  if (remote.count === 0) {
+    return { table: spec.name, localCount: 0, upserted: 0, skipped: false };
+  }
+
+  const batchSize = spec.batchSize ?? 250;
+  let upserted = 0;
+  let offset = 0;
+
+  while (offset < remote.count) {
+    const batch = await fetchRemoteBatch(spec.name, offset, batchSize, spec.onConflict);
+    if (batch.error) {
+      return {
+        table: spec.name,
+        localCount: remote.count,
+        upserted,
+        skipped: false,
+        error: batch.error,
+      };
+    }
+    if (!batch.rows.length) break;
+
+    const payload = batch.rows.map((row) => serializeRow(row, spec.nullify));
+    const upsertResult = await upsertLocalPayload(spec.name, spec.onConflict, payload);
+    if (upsertResult.error) {
+      return {
+        table: spec.name,
+        localCount: remote.count,
+        upserted,
+        skipped: false,
+        error: upsertResult.error,
+      };
+    }
+
+    upserted += upsertResult.count;
+    offset += batch.rows.length;
+  }
+
+  return {
+    table: spec.name,
+    localCount: remote.count,
+    upserted,
+    skipped: false,
+  };
+}
+
+/**
+ * Pull mapped tables from Supabase into primary Postgres (FK-safe order).
+ * Upserts by primary key / onConflict; parks local unique collisions when needed.
+ */
+export async function syncAllDataFromSupabase(options?: {
+  tables?: string[];
+  onProgress?: (result: SupabaseTableSyncResult, index: number, total: number) => void;
+}): Promise<SupabaseFullSyncResult> {
+  const startedAt = new Date().toISOString();
+  const wanted = options?.tables?.length
+    ? new Set(options.tables.map((t) => t.trim()).filter(Boolean))
+    : null;
+
+  // Large event/stat tables can exceed default Postgres statement_timeout on upsert.
+  try {
+    await getDb().execute(sql.raw(`SET statement_timeout = '180s'`));
+  } catch {
+    /* ignore */
+  }
+
+  const specs = SUPABASE_SYNC_TABLES.filter((spec) => !wanted || wanted.has(spec.name));
+  const tables: SupabaseTableSyncResult[] = [];
+  const errors: string[] = [];
+  let totalUpserted = 0;
+
+  for (const [index, spec] of specs.entries()) {
+    try {
+      const result = await syncOneTableFromSupabase(spec);
+      tables.push(result);
+      totalUpserted += result.upserted;
+      if (result.error) {
+        // Missing remote tables are expected on partial projects — continue.
+        const missing =
+          /Could not find the table/i.test(result.error) ||
+          /relation .* does not exist/i.test(result.error) ||
+          /schema cache/i.test(result.error);
+        if (missing) {
+          result.skipped = true;
+          options?.onProgress?.(result, index, specs.length);
+          continue;
+        }
+        errors.push(`${spec.name}: ${result.error}`);
+        options?.onProgress?.(result, index, specs.length);
+        break;
+      }
+      options?.onProgress?.(result, index, specs.length);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Pull failed";
+      const result: SupabaseTableSyncResult = {
+        table: spec.name,
+        localCount: 0,
+        upserted: 0,
+        skipped: false,
+        error: message,
+      };
+      tables.push(result);
+      errors.push(`${spec.name}: ${message}`);
+      options?.onProgress?.(result, index, specs.length);
+      break;
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    tables,
+    totalUpserted,
+    errors,
+  };
 }

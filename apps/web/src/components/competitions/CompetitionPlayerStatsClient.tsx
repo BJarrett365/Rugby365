@@ -41,7 +41,9 @@ function LeaderboardCard({
       </header>
 
       {board.entries.length === 0 ? (
-        <p className="stat-board__empty">No data yet for this leaderboard.</p>
+        <p className="stat-board__empty">
+          {board.emptyMessage ?? "No data available for this season."}
+        </p>
       ) : (
         <ol className="stat-board__list">
           {visible.map((entry) => (
@@ -100,6 +102,7 @@ export function CompetitionPlayerStatsClient({
   initialHemisphere?: HemisphereFilter;
 }) {
   const [data, setData] = useState<CompetitionPlayerStatsPayload | null>(null);
+  const [seasons, setSeasons] = useState<CompetitionPlayerStatsPayload["seasons"]>([]);
   const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
   const [hemisphere, setHemisphere] = useState<HemisphereFilter>(initialHemisphere);
   const [showAdditional, setShowAdditional] = useState(true);
@@ -122,13 +125,25 @@ export function CompetitionPlayerStatsClient({
       return;
     }
     setData(json);
-    if (!seasonLabel && json.season?.label) setSeasonLabel(json.season.label);
+    if (json.seasons?.length) setSeasons(json.seasons);
+    if (json.season?.label && json.season.label !== seasonLabel) {
+      setSeasonLabel(json.season.label);
+    }
     const advancedPrimaryEmpty = (json.boards ?? [])
       .filter((b) => ["tacklesCompleted", "metresCarried", "carries"].includes(b.metric))
       .every((b) => b.entries.length === 0);
     const additionalHasData = (json.additionalBoards ?? []).some((b) => b.entries.length > 0);
     if (advancedPrimaryEmpty && additionalHasData) setShowAdditional(true);
     setLoading(false);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (json.season?.label) url.searchParams.set("season", json.season.label);
+      else url.searchParams.delete("season");
+      if (hemisphere !== "all") url.searchParams.set("hemisphere", hemisphere);
+      else url.searchParams.delete("hemisphere");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    }
   }, [slug, seasonLabel, hemisphere]);
 
   useEffect(() => {
@@ -146,6 +161,17 @@ export function CompetitionPlayerStatsClient({
       return next;
     });
   }
+
+  const seasonGroups = (() => {
+    const groups = new Map<string, CompetitionPlayerStatsPayload["seasons"]>();
+    for (const season of seasons) {
+      const key = season.eraGroup ?? season.era ?? "Seasons";
+      const list = groups.get(key) ?? [];
+      list.push(season);
+      groups.set(key, list);
+    }
+    return [...groups.entries()];
+  })();
 
   return (
     <div className="competition-stats">
@@ -179,12 +205,23 @@ export function CompetitionPlayerStatsClient({
             className="cms-input w-full"
             value={seasonLabel}
             onChange={(e) => setSeasonLabel(e.target.value)}
-            disabled={!data?.seasons?.length}
+            disabled={!seasons.length}
           >
-            {!data?.seasons?.length ? (
+            {!seasons.length ? (
               <option value="">No seasons</option>
+            ) : seasonGroups.length > 1 ? (
+              seasonGroups.map(([groupLabel, groupSeasons]) => (
+                <optgroup key={groupLabel} label={groupLabel}>
+                  {groupSeasons.map((season) => (
+                    <option key={season.id} value={season.label}>
+                      {season.displayLabel ?? season.label}
+                      {season.isActive ? " (active)" : ""}
+                    </option>
+                  ))}
+                </optgroup>
+              ))
             ) : (
-              data.seasons.map((season) => (
+              seasons.map((season) => (
                 <option key={season.id} value={season.label}>
                   {season.displayLabel ?? season.label}
                   {season.isActive ? " (active)" : ""}
@@ -198,9 +235,12 @@ export function CompetitionPlayerStatsClient({
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <p className="text-sm text-zinc-500 m-0">
           {data?.competition.name ?? slug}
+          {data?.season?.era ? ` · ${data.season.era}` : ""}
           {data?.season?.label ? ` · ${data.season.label}` : ""}
           {data
-            ? ` · ${data.coverage.playerCount} players · ${data.coverage.rowCount} match rows`
+            ? ` · ${data.coverage.playerCount} players · ${data.coverage.rowCount} ${
+                data.coverage.source === "season_stats" ? "season rows" : "match rows"
+              }`
             : ""}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -272,8 +312,9 @@ export function CompetitionPlayerStatsClient({
 
           {data && data.coverage.rowCount === 0 ? (
             <p className="text-sm text-amber-400 mt-4">
-              No player match stats imported for this season yet. Enrich finished matches from Planet
-              Rugby / SDMS to populate these boards.
+              No player statistics are available for this season yet. Historical seasons without
+              imported season/match stats show empty leaderboards rather than falling back to another
+              year.
             </p>
           ) : null}
         </>

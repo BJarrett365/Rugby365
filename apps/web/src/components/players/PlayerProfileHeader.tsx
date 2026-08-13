@@ -138,9 +138,7 @@ export function PlayerProfileHeader({
           </div>
           <div>
             <span className="pr-player-profile-header__icon-val">
-              {formatStatValue(
-                profile.titleCounts.top14 || profile.titleCounts.premiership || null,
-              )}
+              {formatStatValue(profile.titleCounts.leagueTitles || null)}
             </span>
             <span className="pr-player-profile-header__icon-label">League titles</span>
           </div>

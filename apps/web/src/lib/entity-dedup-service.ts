@@ -563,6 +563,7 @@ export async function mergePlayerRecords(
   }
 }
 
+/** Merge duplicate team rows into a canonical team, rewiring related records. */
 export async function mergeTeamRecords(
   canonicalId: string,
   duplicateIds: string[],

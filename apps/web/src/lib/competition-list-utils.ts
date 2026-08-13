@@ -30,6 +30,7 @@ export function competitionPickerScore(row: CompetitionPickerRow): number {
   if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(row.slug) && !/-[a-f0-9]{6,}$/i.test(row.slug) && !/-\d+$/.test(row.slug)) {
     score += 25;
   }
+  if (row.slug.includes("__legacy__")) score -= 500;
   return score;
 }
 

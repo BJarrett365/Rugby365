@@ -471,6 +471,8 @@ export const playerCareerStints = pgTable(
     teamName: text("team_name").notNull(),
     teamId: uuid("team_id").references(() => teams.id),
     apps: integer("apps"),
+    /** Optional tries total for the stint (e.g. Wikipedia international try records). */
+    tries: integer("tries"),
     points: integer("points"),
     sortOrder: integer("sort_order").notNull().default(0),
     sourceProvider: text("source_provider").notNull().default("wikipedia"),
