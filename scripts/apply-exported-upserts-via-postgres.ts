@@ -29,9 +29,14 @@ async function main() {
     .map((s) => s.trim())
     .filter((s) => s && !s.startsWith("--"));
 
-  for (const statement of statements) {
-    await sql.unsafe(statement.endsWith(";") ? statement : `${statement};`);
-    console.log("OK chunk", statement.slice(0, 60).replace(/\s+/g, " "));
+  await sql.unsafe("SET session_replication_role = replica;");
+  try {
+    for (const statement of statements) {
+      await sql.unsafe(statement.endsWith(";") ? statement : `${statement};`);
+      console.log("OK chunk", statement.slice(0, 60).replace(/\s+/g, " "));
+    }
+  } finally {
+    await sql.unsafe("SET session_replication_role = DEFAULT;");
   }
   await sql.end();
   console.log("Applied", file);

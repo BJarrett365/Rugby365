@@ -115,7 +115,19 @@ export function PlayerValueTimelineCard({
         </div>
         <div>
           <span>Avg. Growth</span>
-          <strong>{summary.avgGrowthLabel}</strong>
+          <strong
+            className={
+              summary.avgGrowthPaPct == null
+                ? ""
+                : summary.avgGrowthPaPct > 0
+                  ? "is-up"
+                  : summary.avgGrowthPaPct < 0
+                    ? "is-down"
+                    : "is-stable"
+            }
+          >
+            {summary.avgGrowthLabel}
+          </strong>
         </div>
         <div>
           <span>Trend</span>

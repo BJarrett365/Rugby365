@@ -181,9 +181,44 @@ export const venues = pgTable(
     sourceProvider: text("source_provider").notNull().default("manual"),
     wikipediaUrl: text("wikipedia_url"),
     wikidataId: text("wikidata_id"),
+    /** dedicated_rugby | multi_sport | occasional_rugby | historic_rugby */
+    venueType: text("venue_type"),
+    /** Model rating when published — never backfilled from editorial. */
+    r365VenueRating: real("r365_venue_rating"),
+    /** Verified rugby-configuration capacity (falls back to capacity in product). */
+    rugbyCapacity: integer("rugby_capacity"),
+    openedYear: integer("opened_year"),
+    surface: text("surface"),
+    imageUrl: text("image_url"),
     archiveSyncedAt: timestamp("archive_synced_at", { withTimezone: true }),
   },
   (table) => [uniqueIndex("venues_slug_unique").on(table.slug)],
+);
+
+export const venueEditorialRankings = pgTable(
+  "venue_editorial_rankings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    /** Product category key — best, atmosphere, fortress, etc. */
+    category: text("category").notNull(),
+    editorialRank: integer("editorial_rank").notNull(),
+    editorialReason: text("editorial_reason"),
+    editorialUpdatedAt: timestamp("editorial_updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    isPublished: boolean("is_published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("venue_editorial_rankings_venue_category_unique").on(
+      table.venueId,
+      table.category,
+    ),
+    index("venue_editorial_rankings_category_idx").on(table.category),
+  ],
 );
 
 export const players = pgTable(
@@ -2105,6 +2140,7 @@ export const playerRankingHistory = pgTable(
     metricKey: text("metric_key").notNull(),
     positionKey: text("position_key"),
     nationKey: text("nation_key"),
+    clubKey: text("club_key"),
     competitionKey: text("competition_key"),
     rank: integer("rank"),
     pool: integer("pool").notNull().default(0),
@@ -2122,6 +2158,46 @@ export const playerRankingHistory = pgTable(
       table.scope,
       table.metricKey,
       table.isCurrent,
+    ),
+    index("player_ranking_history_club_key_idx").on(table.clubKey),
+  ],
+);
+
+/**
+ * Board-level ranking snapshots for /rankings/players filter combinations.
+ * Pages read is_current; rebuild marks prior rows is_current=false.
+ */
+export const playerRankingBoardSnapshots = pgTable(
+  "player_ranking_board_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    mode: text("mode").notNull().default("current"),
+    filterKey: text("filter_key").notNull(),
+    positionKey: text("position_key"),
+    nationKey: text("nation_key"),
+    clubKey: text("club_key"),
+    competitionKey: text("competition_key"),
+    eraKey: text("era_key"),
+    topN: integer("top_n").notNull().default(10),
+    modelVersion: text("model_version").notNull().default("player-rank-current-v1"),
+    pool: integer("pool").notNull().default(0),
+    title: text("title").notNull().default("WORLD TOP 10 PLAYERS"),
+    payload: jsonb("payload").notNull().default({}),
+    eligibilityNote: text("eligibility_note"),
+    status: text("status").notNull().default("ready"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_ranking_board_snapshots_filter_current_idx").on(
+      table.filterKey,
+      table.isCurrent,
+    ),
+    index("player_ranking_board_snapshots_mode_current_idx").on(
+      table.mode,
+      table.isCurrent,
+      table.calculatedAt,
     ),
   ],
 );

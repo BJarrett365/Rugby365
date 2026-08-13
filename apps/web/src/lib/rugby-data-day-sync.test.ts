@@ -49,6 +49,8 @@ describe("rugby-data-day-sync helpers", () => {
     expect(rugbyDataStatusToFixtureStatus("inprogress")).toBe("live");
     expect(rugbyDataEventTypeToMatchEvent("Try")).toBe("try");
     expect(rugbyDataEventTypeToMatchEvent("Missed conversion")).toBe("conversion_missed");
+    expect(rugbyDataEventTypeToMatchEvent("Missed penalty")).toBe("penalty_missed");
+    expect(rugbyDataEventTypeToMatchEvent("Missed drop goal")).toBe("drop_goal_missed");
     expect(rugbyDataEventTypeToMatchEvent("Yellow card")).toBe("yellow_card");
   });
 

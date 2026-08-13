@@ -1,9 +1,15 @@
 /**
  * Central position-group config for Player Intelligence / Performance Radar.
  * Determines radar axes, weights, peer rules, and sample thresholds.
+ * Also owns the canonical rugby-position → 3×3 passing-zone mapping (not React).
  */
 
 import type { PlayerIntelKey } from "./player-intelligence-engine";
+import {
+  normalizePositionFamily,
+  type RadarPositionFamily,
+} from "./player-radar-positions";
+import type { PitchZoneKey } from "./public-player-spatial-stats-types";
 
 export type IntelligencePositionGroup =
   | "fly_half"
@@ -324,6 +330,22 @@ export function canDrawRadarPolygon(
   return countValidRadarMetrics(metrics) >= minRequired;
 }
 
+/** Compact competition tags for radar legends (URC, Prem, etc.). */
+function shortPeerCompetitionLabel(name: string): string {
+  const lower = name.trim().toLowerCase();
+  if (!lower) return name;
+  if (lower.includes("united rugby")) return "URC";
+  if (lower.includes("premiership")) return "Prem";
+  if (lower.includes("top 14") || lower.includes("top14")) return "Top 14";
+  if (lower.includes("currie cup")) return "Currie Cup";
+  if (lower.includes("super rugby")) return "Super Rugby";
+  if (lower.includes("champions cup")) return "Champions Cup";
+  if (lower.includes("challenge cup")) return "Challenge Cup";
+  if (lower.includes("six nations")) return "Six Nations";
+  if (lower.includes("rugby championship")) return "TRC";
+  return name.trim();
+}
+
 export function formatPeerAverageLabel(input: {
   peerLabel: string;
   competitionName?: string | null;
@@ -333,6 +355,119 @@ export function formatPeerAverageLabel(input: {
   if (input.source === "static") return `${base} (Global)`;
   if (input.source === "global") return `${base} (Global)`;
   if (input.source === "international") return `${base} (International)`;
-  if (input.competitionName) return `${base} (${input.competitionName})`;
+  if (input.competitionName) {
+    return `${base} (${shortPeerCompetitionLabel(input.competitionName)})`;
+  }
   return `${base} (Global)`;
+}
+
+export type PassingZoneWeight = { key: PitchZoneKey; weight: number };
+
+/**
+ * Canonical rugby position → 3×3 passing channel.
+ * Bulk stays in the position's natural channel — not a mock spread (e.g. 6/15/25/11).
+ * Adjacent splits are only used when the side of the pitch is unknown (wide wing).
+ */
+export const PASSING_PITCH_ZONE_WEIGHTS: Partial<
+  Record<RadarPositionFamily, readonly PassingZoneWeight[]>
+> = {
+  fly_half: [{ key: "middle_centre", weight: 1 }],
+  scrum_half: [{ key: "middle_centre", weight: 1 }],
+  inside_centre: [{ key: "middle_centre", weight: 1 }],
+  outside_centre: [{ key: "middle_right", weight: 1 }],
+  centre: [{ key: "middle_centre", weight: 1 }],
+  left_wing: [{ key: "attacking_left", weight: 1 }],
+  right_wing: [{ key: "attacking_right", weight: 1 }],
+  wing: [
+    { key: "attacking_left", weight: 0.5 },
+    { key: "attacking_right", weight: 0.5 },
+  ],
+  full_back: [{ key: "defensive_centre", weight: 1 }],
+  number_eight: [{ key: "middle_centre", weight: 1 }],
+  blindside_flanker: [{ key: "middle_centre", weight: 1 }],
+  openside_flanker: [{ key: "middle_centre", weight: 1 }],
+  flanker: [{ key: "middle_centre", weight: 1 }],
+  lock: [{ key: "middle_centre", weight: 1 }],
+  loosehead_prop: [{ key: "defensive_centre", weight: 1 }],
+  tighthead_prop: [{ key: "defensive_centre", weight: 1 }],
+  prop: [{ key: "defensive_centre", weight: 1 }],
+  hooker: [{ key: "defensive_centre", weight: 1 }],
+};
+
+function familyFromAppearance(
+  positionName: string | null | undefined,
+  jerseyNumber: number | null | undefined,
+): RadarPositionFamily {
+  const fromName = normalizePositionFamily(positionName);
+  if (fromName !== "unknown") return fromName;
+  if (jerseyNumber != null && jerseyNumber >= 1 && jerseyNumber <= 15) {
+    return normalizePositionFamily(String(jerseyNumber));
+  }
+  return "unknown";
+}
+
+/**
+ * Map a match/primary position (+ optional 1–15 jersey) onto passing-zone weights.
+ * Returns null when the position cannot be resolved — callers must exclude those passes.
+ */
+export function resolvePassingPitchZoneWeights(
+  positionName: string | null | undefined,
+  jerseyNumber?: number | null,
+): PassingZoneWeight[] | null {
+  const raw = (positionName ?? "").toLowerCase();
+  const family = familyFromAppearance(positionName, jerseyNumber);
+  if (family === "unknown") return null;
+
+  if (family === "flanker" || family === "blindside_flanker" || family === "openside_flanker") {
+    if (/\bleft\b/.test(raw)) return [{ key: "middle_left", weight: 1 }];
+    if (/\bright\b/.test(raw)) return [{ key: "middle_right", weight: 1 }];
+  }
+
+  const mapped = PASSING_PITCH_ZONE_WEIGHTS[family];
+  return mapped ? [...mapped] : null;
+}
+
+/** Bench / unnamed match roles should fall back to primary position, not jersey 16–23. */
+export function isUsableMatchPosition(positionName: string | null | undefined): boolean {
+  const n = (positionName ?? "").toLowerCase().replace(/[_-]+/g, " ").trim();
+  if (!n) return false;
+  if (
+    n.includes("replacement") ||
+    n.includes("bench") ||
+    n.includes("reserve") ||
+    n.includes("substitute") ||
+    n.includes("sub ") ||
+    n === "sub"
+  ) {
+    return false;
+  }
+  return normalizePositionFamily(positionName) !== "unknown";
+}
+
+/**
+ * Match lineup position, else starting jersey 1–15, else primary profile position.
+ * Never silently treats an unmapped role as centre.
+ */
+export function resolveAppearancePassingPosition(input: {
+  matchPositionName: string | null | undefined;
+  jerseyNumber: number | null | undefined;
+  primaryPositionName: string | null | undefined;
+}): { positionName: string | null; jerseyNumber: number | null } {
+  if (isUsableMatchPosition(input.matchPositionName)) {
+    return {
+      positionName: input.matchPositionName ?? null,
+      jerseyNumber: input.jerseyNumber ?? null,
+    };
+  }
+  const jersey = input.jerseyNumber ?? null;
+  if (jersey != null && jersey >= 1 && jersey <= 15) {
+    return {
+      positionName: null,
+      jerseyNumber: jersey,
+    };
+  }
+  return {
+    positionName: input.primaryPositionName ?? null,
+    jerseyNumber: null,
+  };
 }

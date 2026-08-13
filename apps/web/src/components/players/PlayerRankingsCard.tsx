@@ -171,7 +171,7 @@ export function PlayerRankingsCard({ rankings }: { rankings: PublicPlayerRanking
               {building.eligibleWithMinMatches} · Preferred pool: {building.preferredPool}+
             </p>
           ) : null}
-          <Link className="pr-player-v2__card-link" href="/rankings/players?scope=global&metric=overall">
+          <Link className="pr-player-v2__card-link" href="/rankings/players?mode=current">
             View Global Rankings &gt;
           </Link>
         </div>
@@ -181,7 +181,7 @@ export function PlayerRankingsCard({ rankings }: { rankings: PublicPlayerRanking
           <p className="pr-player-v2__rank-building-reason">
             Not enough eligible players for this scope yet.
           </p>
-          <Link className="pr-player-v2__card-link" href="/rankings/players?scope=global&metric=overall">
+          <Link className="pr-player-v2__card-link" href="/rankings/players?mode=current">
             View Global Rankings &gt;
           </Link>
         </div>

@@ -87,12 +87,13 @@ export function R365TimeSeriesChart({
     yTicks ??
     Array.from({ length: 5 }, (_, i) => yMin + (ySpan * i) / 4).map((v) => Math.round(v));
 
-  const w = 340;
-  const h = yearValueLabels ? 168 : 148;
-  const marginLeft = 36;
-  const marginRight = 8;
-  const marginTop = 8;
-  const marginBottom = yearValueLabels ? 40 : 26;
+  const w = 360;
+  /* Taller plot so profile widgets match mock density (not sparse under flex stretch). */
+  const h = yearValueLabels ? 220 : 210;
+  const marginLeft = 40;
+  const marginRight = 10;
+  const marginTop = 12;
+  const marginBottom = yearValueLabels ? 44 : 30;
   const plotX = marginLeft;
   const plotY = marginTop;
   const plotW = w - marginLeft - marginRight;

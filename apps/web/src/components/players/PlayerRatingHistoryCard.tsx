@@ -110,7 +110,7 @@ export function PlayerRatingHistoryCard({
         yMax={RATING_HISTORY_Y_MAX}
         yTicks={yTicks}
         formatY={(v) => String(v)}
-        showArea={false}
+        showArea
         emptyState={summary.emptyState}
         emptyHelper={summary.emptyHelper}
         ariaLabel="Overall rating history"
@@ -136,7 +136,7 @@ export function PlayerRatingHistoryCard({
         </div>
         <div>
           <span>Updated</span>
-          <strong>{summary.updatedLabel}</strong>
+          <strong title={summary.updatedLabel}>{summary.updatedLabel}</strong>
         </div>
       </div>
     </div>

@@ -493,7 +493,7 @@ export function PublicPlayerOverviewV2({ overview }: { overview: PublicPlayerOve
         </div>
 
         {/* ── Value Timeline | Performance Radar | Rating History ── */}
-        <div className="pr-player-v2__row--3 pr-player-v2__row--widgets">
+        <div className="pr-player-v2__row--3 pr-player-v2__row--widgets pr-player-v2__row--analytics">
           <PlayerValueTimelineCard
             slug={overview.slug}
             displayPoints={overview.valueTimeline.displayPoints}

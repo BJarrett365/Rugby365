@@ -95,6 +95,7 @@ export function PlayerPerformanceRadarCard({
         drawPolygon={drawPolygon}
         emptyState={emptyState}
         emptyHelper={emptyHelper}
+        size={240}
         className="pr-player-v2__widget-radar"
       />
 

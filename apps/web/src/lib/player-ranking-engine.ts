@@ -8,22 +8,71 @@ import {
   RANKING_PREFERRED_ELIGIBLE,
 } from "./player-rating-presentation";
 
+/** Profile card / legacy metric cohort model. */
 export const PLAYER_RANKING_MODEL = "player-ranking-v1";
+
+/** Public CURRENT board model (persisted snapshots). */
+export const PLAYER_RANK_CURRENT_MODEL = "player-rank-current-v1";
+
+/** Public ALL-TIME board model (separate methodology — not live yet). */
+export const PLAYER_RANK_ALLTIME_MODEL = "player-rank-alltime-v1";
 
 export const RANKING_ACTIVE_MONTHS = 18;
 
-/** Central position groups for POSITION-tab cohorts. */
+/**
+ * Central CURRENT eligibility — never hardcode thresholds in UI.
+ * Prefer rolling minutes/appearances; fall back to rating dataPoints when sample missing.
+ */
+export const PLAYER_RANKING_ELIGIBILITY = {
+  rollingMonths: 12,
+  minMinutes: 500,
+  minAppearances: 8,
+  /** When minutes/apps unavailable, require this many rating data points. */
+  fallbackMinDataPoints: RANKING_MIN_ELIGIBLE,
+  /** Serve persisted boards younger than this without rebuild. */
+  snapshotMaxAgeHours: 168,
+  /** Injury/inactivity decay hooks (weeks) — applied in rebuild jobs later. */
+  decayGraceWeeks: 6,
+  decaySoftWeeks: 12,
+} as const;
+
+export const PLAYER_RANKING_TOP_OPTIONS = [10, 25, 50, 100] as const;
+
+export type PlayerRankingMode = "current" | "alltime";
+
+export const ALLTIME_ERA_OPTIONS = [
+  { key: "all", label: "All Eras" },
+  { key: "2020s", label: "2020s" },
+  { key: "2010s", label: "2010s" },
+  { key: "2000s", label: "2000s" },
+  { key: "1990s", label: "1990s" },
+  { key: "1980s", label: "1980s" },
+] as const;
+
+/** Central position groups for POSITION-tab cohorts + public boards. */
 export const RANKING_POSITION_GROUPS = [
   { key: "loosehead_prop", label: "Loosehead Prop", match: /loosehead|lh prop|\b1\b/i },
   { key: "hooker", label: "Hooker", match: /hooker|\b2\b/i },
   { key: "tighthead_prop", label: "Tighthead Prop", match: /tighthead|th prop|\b3\b/i },
   { key: "lock", label: "Lock", match: /lock|second.?row|\b4\b|\b5\b/i },
-  { key: "back_row", label: "Back Row", match: /flank|blindside|openside|number.?eight|no\.?\s*8|back.?row|\b6\b|\b7\b|\b8\b/i },
+  { key: "flanker", label: "Flanker", match: /flank|blindside|openside|\b6\b|\b7\b/i },
+  { key: "number_eight", label: "No.8", match: /number.?eight|no\.?\s*8|\b8\b/i },
+  {
+    key: "back_row",
+    label: "Back Row",
+    match: /back.?row/i,
+  },
   { key: "scrum_half", label: "Scrum-Half", match: /scrum|half.?back|\b9\b/i },
   { key: "fly_half", label: "Fly-Half", match: /fly|out.?half|first.?five|\b10\b/i },
-  { key: "centre", label: "Centre", match: /centre|center|midfield|\b12\b|\b13\b/i },
+  { key: "inside_centre", label: "Inside Centre", match: /inside.?centre|inside.?center|\b12\b/i },
+  {
+    key: "outside_centre",
+    label: "Outside Centre",
+    match: /outside.?centre|outside.?center|\b13\b/i,
+  },
+  { key: "centre", label: "Centre", match: /centre|center|midfield/i },
   { key: "wing", label: "Wing", match: /wing|\b11\b|\b14\b/i },
-  { key: "fullback", label: "Fullback", match: /full.?back|\b15\b/i },
+  { key: "fullback", label: "Fullback", match: /full.?back|full-back|\b15\b/i },
 ] as const;
 
 export type RankingPositionGroupKey = (typeof RANKING_POSITION_GROUPS)[number]["key"];
@@ -114,10 +163,17 @@ const FRONT_ROW_KEYS = new Set<RankingPositionGroupKey>([
   "hooker",
   "tighthead_prop",
   "lock",
+  "flanker",
+  "number_eight",
   "back_row",
 ]);
 
 const HALFBACK_KEYS = new Set<RankingPositionGroupKey>(["scrum_half", "fly_half"]);
+
+/** Public filter list (excludes coarse fallback groups). */
+export const PUBLIC_RANKING_POSITION_FILTERS = RANKING_POSITION_GROUPS.filter(
+  (g) => g.key !== "back_row" && g.key !== "centre",
+);
 
 /**
  * Metric strip for GLOBAL / COMPETITION intelligence rows.
@@ -347,15 +403,211 @@ export function rankingHref(filters: {
   nation?: string | null;
   position?: string | null;
   competition?: string | null;
+  mode?: PlayerRankingMode | null;
+  club?: string | null;
+  top?: number | null;
+  era?: string | null;
 }): string {
   const params = new URLSearchParams();
+  if (filters.mode && filters.mode !== "current") params.set("mode", filters.mode);
   if (filters.metric) params.set("metric", filters.metric);
   if (filters.scope) params.set("scope", filters.scope);
   if (filters.nation) params.set("nation", filters.nation);
   if (filters.position) params.set("position", filters.position);
   if (filters.competition) params.set("competition", filters.competition);
+  if (filters.club) params.set("club", filters.club);
+  if (filters.top && filters.top !== 10) params.set("top", String(filters.top));
+  if (filters.era && filters.era !== "all") params.set("era", filters.era);
   const q = params.toString();
   return q ? `/rankings/players?${q}` : "/rankings/players";
+}
+
+export type PlayerRankingBoardFilters = {
+  mode: PlayerRankingMode;
+  position: string | null;
+  nation: string | null;
+  club: string | null;
+  competition: string | null;
+  top: number;
+  era: string | null;
+};
+
+export function normalizeRankingTop(raw: string | number | null | undefined): number {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (PLAYER_RANKING_TOP_OPTIONS.includes(n as (typeof PLAYER_RANKING_TOP_OPTIONS)[number])) {
+    return n;
+  }
+  return 10;
+}
+
+/** Stable key for board snapshots — one current row per filter combination. */
+export function buildRankingFilterKey(filters: PlayerRankingBoardFilters): string {
+  const parts = [
+    filters.mode,
+    `pos:${filters.position?.trim().toLowerCase() || "all"}`,
+    `nat:${filters.nation?.trim().toLowerCase() || "all"}`,
+    `club:${filters.club?.trim().toLowerCase() || "all"}`,
+    `comp:${filters.competition?.trim().toLowerCase() || "all"}`,
+    `top:${normalizeRankingTop(filters.top)}`,
+    `era:${filters.mode === "alltime" ? filters.era?.trim().toLowerCase() || "all" : "na"}`,
+  ];
+  return parts.join("|");
+}
+
+export function buildPlayerRankingsTitle(input: {
+  mode: PlayerRankingMode;
+  top: number;
+  positionLabel: string | null;
+  nationLabel: string | null;
+  clubLabel: string | null;
+  competitionLabel: string | null;
+}): string {
+  const top = normalizeRankingTop(input.top);
+  const pos = input.positionLabel ? pluralizePositionLabel(input.positionLabel).toUpperCase() : null;
+
+  if (input.mode === "alltime") {
+    if (pos && input.nationLabel) {
+      return `GREATEST ${input.nationLabel.toUpperCase()} ${pos} OF ALL TIME`;
+    }
+    if (pos) return `GREATEST ${pos} OF ALL TIME`;
+    if (input.nationLabel) return `GREATEST ${input.nationLabel.toUpperCase()} PLAYERS OF ALL TIME`;
+    if (input.clubLabel) return `GREATEST ${input.clubLabel.toUpperCase()} PLAYERS OF ALL TIME`;
+    return "GREATEST PLAYERS OF ALL TIME";
+  }
+
+  const subject = pos ?? "PLAYERS";
+  if (input.clubLabel) {
+    return `${input.clubLabel.toUpperCase()} TOP ${top} ${subject}`;
+  }
+  if (input.competitionLabel && pos) {
+    return `${shortCompetitionLabel(input.competitionLabel).toUpperCase()} TOP ${top} ${pos}`;
+  }
+  if (input.competitionLabel) {
+    return `${shortCompetitionLabel(input.competitionLabel).toUpperCase()} TOP ${top} PLAYERS`;
+  }
+  if (input.nationLabel && pos) {
+    return `${input.nationLabel.toUpperCase()} TOP ${top} ${pos}`;
+  }
+  if (input.nationLabel) {
+    return `${input.nationLabel.toUpperCase()} TOP ${top} PLAYERS`;
+  }
+  if (pos) return `WORLD TOP ${top} ${pos}`;
+  return `WORLD TOP ${top} PLAYERS`;
+}
+
+export function isEligibleForCurrentRanking(input: {
+  minutes12m: number | null;
+  appearances12m: number | null;
+  dataPoints: number;
+  careerStatus: string | null | undefined;
+}): { eligible: boolean; provisional: boolean; reason: string } {
+  const status = (input.careerStatus ?? "active").toLowerCase();
+  if (status === "retired" || status === "inactive" || status === "deceased") {
+    return { eligible: false, provisional: false, reason: "Not active" };
+  }
+
+  const mins = input.minutes12m;
+  const apps = input.appearances12m;
+  const cfg = PLAYER_RANKING_ELIGIBILITY;
+
+  if (mins != null || apps != null) {
+    const okMins = (mins ?? 0) >= cfg.minMinutes;
+    const okApps = (apps ?? 0) >= cfg.minAppearances;
+    if (okMins || okApps) {
+      const thin =
+        (mins != null && mins < cfg.minMinutes * 1.5) &&
+        (apps != null && apps < cfg.minAppearances * 1.5);
+      return {
+        eligible: true,
+        provisional: Boolean(thin),
+        reason: okMins
+          ? `${mins} minutes in ${cfg.rollingMonths} months`
+          : `${apps} appearances in ${cfg.rollingMonths} months`,
+      };
+    }
+    // Have sample but below threshold → ineligible (not provisional #1)
+    if ((mins ?? 0) > 0 || (apps ?? 0) > 0) {
+      return {
+        eligible: false,
+        provisional: true,
+        reason: `Below eligibility (${cfg.minMinutes}+ mins or ${cfg.minAppearances}+ apps)`,
+      };
+    }
+  }
+
+  // Fallback when minutes/apps unknown
+  if (input.dataPoints >= cfg.fallbackMinDataPoints) {
+    return {
+      eligible: true,
+      provisional: input.dataPoints < RANKING_PREFERRED_ELIGIBLE,
+      reason: `Fallback eligibility via ${input.dataPoints} rating data points`,
+    };
+  }
+
+  return { eligible: false, provisional: true, reason: "Insufficient sample" };
+}
+
+/**
+ * Position Ranking Score /100 — position views prefer this over raw OVR.
+ * Overall boards use cross-position OVR separately.
+ */
+export function computePositionRankingScore(input: {
+  positionGroup: RankingPositionGroupKey | null | undefined;
+  overall: number | null;
+  attack: number | null;
+  defence: number | null;
+  playmaking: number | null;
+  kicking: number | null;
+  gameManagement: number | null;
+  physical?: number | null;
+  form: number | null;
+}): number | null {
+  const dims: Array<number | null> = [];
+  const g = input.positionGroup;
+  if (g && FRONT_ROW_KEYS.has(g)) {
+    dims.push(input.defence, input.attack, input.gameManagement, input.form, input.physical ?? null);
+  } else if (g && HALFBACK_KEYS.has(g)) {
+    dims.push(
+      input.playmaking,
+      input.kicking,
+      input.gameManagement,
+      input.attack,
+      input.defence,
+      input.form,
+    );
+  } else {
+    dims.push(input.attack, input.playmaking, input.defence, input.kicking, input.form);
+  }
+  const vals = dims.filter((n): n is number => n != null && Number.isFinite(n));
+  if (vals.length === 0) {
+    return input.overall != null && Number.isFinite(input.overall) ? input.overall : null;
+  }
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return Math.round(avg * 10) / 10;
+}
+
+export function parseLastFiveFormBlocks(
+  raw: unknown,
+): Array<{ rating: number; band: "elite" | "strong" | "solid" | "muted" | "poor" }> {
+  const arr = Array.isArray(raw) ? raw : [];
+  const out: Array<{ rating: number; band: "elite" | "strong" | "solid" | "muted" | "poor" }> = [];
+  for (const item of arr.slice(0, 5)) {
+    const n = typeof item === "number" ? item : Number(item);
+    if (!Number.isFinite(n)) continue;
+    const rating = n > 10 ? n / 10 : n;
+    const band =
+      rating >= 9
+        ? "elite"
+        : rating >= 8
+          ? "strong"
+          : rating >= 7
+            ? "solid"
+            : rating >= 6
+              ? "muted"
+              : "poor";
+    out.push({ rating: Math.round(rating * 10) / 10, band });
+  }
+  return out;
 }
 
 export function buildRankingHoverTitle(row: RankingRowPresentation): string {

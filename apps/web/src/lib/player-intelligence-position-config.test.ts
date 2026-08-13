@@ -5,7 +5,9 @@ import {
   countValidRadarMetrics,
   formatPeerAverageLabel,
   getPositionIntelligenceConfig,
+  resolveAppearancePassingPosition,
   resolveIntelligencePositionGroup,
+  resolvePassingPitchZoneWeights,
 } from "./player-intelligence-position-config";
 
 describe("player-intelligence-position-config", () => {
@@ -82,8 +84,59 @@ describe("player-intelligence-position-config", () => {
     expect(
       formatPeerAverageLabel({
         peerLabel: "Fly-Half",
+        competitionName: "United Rugby Championship",
+        source: "cohort",
+      }),
+    ).toBe("Avg Fly-Half (URC)");
+    expect(
+      formatPeerAverageLabel({
+        peerLabel: "Fly-Half",
         source: "static",
       }),
     ).toBe("Avg Fly-Half (Global)");
+  });
+});
+
+describe("passing pitch zone weights", () => {
+  it("puts fly-half (and jersey 10) in middle centre", () => {
+    expect(resolvePassingPitchZoneWeights("Fly-Half")).toEqual([
+      { key: "middle_centre", weight: 1 },
+    ]);
+    expect(resolvePassingPitchZoneWeights(null, 10)).toEqual([
+      { key: "middle_centre", weight: 1 },
+    ]);
+  });
+
+  it("maps wings by side and splits unknown-side wing wide", () => {
+    expect(resolvePassingPitchZoneWeights("Left Wing")).toEqual([
+      { key: "attacking_left", weight: 1 },
+    ]);
+    expect(resolvePassingPitchZoneWeights("Wing")).toEqual([
+      { key: "attacking_left", weight: 0.5 },
+      { key: "attacking_right", weight: 0.5 },
+    ]);
+  });
+
+  it("returns null for unknown position instead of dumping into centre", () => {
+    expect(resolvePassingPitchZoneWeights("Replacement", 22)).toBeNull();
+    expect(resolvePassingPitchZoneWeights(null, null)).toBeNull();
+  });
+
+  it("falls back from bench role to jersey 1–15 then primary", () => {
+    expect(
+      resolveAppearancePassingPosition({
+        matchPositionName: "Replacement",
+        jerseyNumber: 10,
+        primaryPositionName: "Full-Back",
+      }),
+    ).toEqual({ positionName: null, jerseyNumber: 10 });
+    expect(resolvePassingPitchZoneWeights(null, 10)?.[0]?.key).toBe("middle_centre");
+    expect(
+      resolveAppearancePassingPosition({
+        matchPositionName: "Replacement",
+        jerseyNumber: 22,
+        primaryPositionName: "Fly-Half",
+      }),
+    ).toEqual({ positionName: "Fly-Half", jerseyNumber: null });
   });
 });

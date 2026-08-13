@@ -28,12 +28,50 @@ export type R365RadarChartProps = {
 
 const CHART_GREEN = "#54b989";
 const CHART_BLUE = "#5b8fd9";
+const MIN_PEER_POINTS = 3;
 
 function polar(cx: number, cy: number, r: number, angle: number) {
   return {
     x: cx + Math.cos(angle) * r,
     y: cy + Math.sin(angle) * r,
   };
+}
+
+function AxisLabelText({
+  label,
+  x,
+  y,
+  anchor,
+  className,
+}: {
+  label: string;
+  x: number;
+  y: number;
+  anchor: "start" | "middle" | "end";
+  className: string;
+}) {
+  const words = label.trim().split(/\s+/);
+  const wrap = words.length >= 2 && label.length > 10;
+  if (!wrap) {
+    return (
+      <text x={x} y={y} textAnchor={anchor} dominantBaseline="middle" className={className}>
+        {label}
+      </text>
+    );
+  }
+  const mid = Math.ceil(words.length / 2);
+  const line1 = words.slice(0, mid).join(" ");
+  const line2 = words.slice(mid).join(" ");
+  return (
+    <text textAnchor={anchor} dominantBaseline="middle" className={className}>
+      <tspan x={x} y={y - 5}>
+        {line1}
+      </tspan>
+      <tspan x={x} y={y + 5}>
+        {line2}
+      </tspan>
+    </text>
+  );
 }
 
 /**
@@ -48,32 +86,40 @@ export function R365RadarChart({
   emptyHelper = null,
   showScoreLabels = true,
   className,
-  size = 280,
+  size = 300,
 }: R365RadarChartProps) {
   const uid = useId().replace(/:/g, "");
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const n = axes.length;
   const cx = size / 2;
   const cy = size / 2;
-  const radius = size * 0.32;
-  const labelR = radius + 28;
+  // Leave room for axis labels + scores inside the frame (avoids "Playmaki" clipping).
+  const radius = size * 0.275;
+  const labelR = radius + 40;
+  const padX = 28;
+  const padY = 12;
 
   const axisAngles = useMemo(
-    () => axes.map((_, i) => (Math.PI * 2 * i) / n - Math.PI / 2),
+    () => axes.map((_, i) => (Math.PI * 2 * i) / Math.max(n, 1) - Math.PI / 2),
     [axes, n],
   );
 
   const ringScales = [0.25, 0.5, 0.75, 1];
 
   const playerSeries = series.find((s) => !s.dashed) ?? series[0] ?? null;
+  const plotSeries = series.filter((s) => {
+    const defined = s.values.filter((v) => v != null && Number.isFinite(v)).length;
+    return defined >= MIN_PEER_POINTS || !s.dashed;
+  });
 
   return (
     <div className={`r365-radar ${className ?? ""}`.trim()}>
       <svg
-        viewBox={`0 0 ${size} ${size}`}
+        viewBox={`${-padX} ${-padY} ${size + padX * 2} ${size + padY * 2}`}
         className="r365-radar__svg"
         role="img"
         aria-label="Performance radar"
+        overflow="visible"
       >
         {ringScales.map((scale) => (
           <polygon
@@ -103,7 +149,7 @@ export function R365RadarChart({
         })}
 
         {drawPolygon
-          ? series.map((s) => {
+          ? plotSeries.map((s) => {
               const pts = axisAngles.map((angle, i) => {
                 const v = s.values[i];
                 if (v == null || !Number.isFinite(v)) return null;
@@ -111,7 +157,7 @@ export function R365RadarChart({
                 return polar(cx, cy, radius * pct, angle);
               });
               const defined = pts.filter(Boolean) as Array<{ x: number; y: number }>;
-              if (defined.length < 3) return null;
+              if (defined.length < MIN_PEER_POINTS) return null;
               // Only connect consecutive defined points; if any null, draw open polyline segments.
               const hasGap = pts.some((p) => p == null);
               const pathD = hasGap
@@ -170,21 +216,20 @@ export function R365RadarChart({
           const score = playerSeries?.values[i] ?? null;
           const anchor =
             Math.abs(Math.cos(angle)) < 0.2 ? "middle" : Math.cos(angle) > 0 ? "start" : "end";
+          const labelY = score != null && showScoreLabels ? lp.y - 9 : lp.y;
           return (
             <g key={`label-${axis.key}`}>
-              <text
+              <AxisLabelText
+                label={axis.label}
                 x={lp.x}
-                y={score != null && showScoreLabels ? lp.y - 8 : lp.y}
-                textAnchor={anchor}
-                dominantBaseline="middle"
+                y={labelY}
+                anchor={anchor}
                 className="r365-radar__label"
-              >
-                {axis.label}
-              </text>
+              />
               {showScoreLabels && score != null ? (
                 <text
                   x={lp.x}
-                  y={lp.y + 8}
+                  y={lp.y + 10}
                   textAnchor={anchor}
                   dominantBaseline="middle"
                   className="r365-radar__score"
@@ -196,7 +241,7 @@ export function R365RadarChart({
               ) : showScoreLabels ? (
                 <text
                   x={lp.x}
-                  y={lp.y + 8}
+                  y={lp.y + 10}
                   textAnchor={anchor}
                   dominantBaseline="middle"
                   className="r365-radar__score r365-radar__score--empty"
@@ -209,9 +254,9 @@ export function R365RadarChart({
         })}
       </svg>
 
-      {series.length > 0 ? (
+      {plotSeries.length > 0 ? (
         <div className="r365-radar__legend">
-          {series.map((s) => (
+          {plotSeries.map((s) => (
             <div key={s.id} className="r365-radar__legend-item">
               <span
                 className={`r365-radar__legend-swatch${s.dashed ? " r365-radar__legend-swatch--dashed" : ""}`}
@@ -258,17 +303,21 @@ export function buildR365RadarSeriesFromMetrics(input: {
   };
   const out = [player];
   if (input.peerScores && input.peerLabel) {
-    out.push({
-      id: "peer",
-      label: input.peerLabel,
-      values: input.metrics.map((m) => {
-        const v = input.peerScores?.[m.key];
-        return v == null || !Number.isFinite(v) ? null : v;
-      }),
-      color: CHART_BLUE,
-      dashed: true,
-      fillOpacity: 0,
+    const values = input.metrics.map((m) => {
+      const v = input.peerScores?.[m.key];
+      return v == null || !Number.isFinite(v) ? null : v;
     });
+    const defined = values.filter((v) => v != null).length;
+    if (defined >= MIN_PEER_POINTS) {
+      out.push({
+        id: "peer",
+        label: input.peerLabel,
+        values,
+        color: CHART_BLUE,
+        dashed: true,
+        fillOpacity: 0,
+      });
+    }
   }
   return out;
 }

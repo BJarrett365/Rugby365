@@ -1088,10 +1088,21 @@ export async function getPublicPlayerOverviewV2(
   const positionFamily = resolvePlayerPositionFamily(profile.positionName);
   const cohortRadarBenchmark =
     positionFamily === "fly_half" ? await resolveFlyHalfRadarBenchmark(db, playerId) : null;
+  // Cohort averages often miss playmaking / kicking dims — need ≥3 spokes to draw peer hexagon.
+  const cohortFilled =
+    cohortRadarBenchmark == null
+      ? 0
+      : (["attack", "playmaking", "kicking", "gameManagement", "defence", "physical"] as const).filter(
+          (k) => cohortRadarBenchmark[k] != null && Number.isFinite(cohortRadarBenchmark[k]),
+        ).length;
   const radarBenchmark =
-    cohortRadarBenchmark ?? (positionFamily === "fly_half" ? STATIC_FLY_HALF_BENCHMARK : null);
+    cohortFilled >= 3
+      ? cohortRadarBenchmark
+      : positionFamily === "fly_half"
+        ? STATIC_FLY_HALF_BENCHMARK
+        : null;
   const radarBenchmarkSource: "cohort" | "static" | null =
-    cohortRadarBenchmark != null ? "cohort" : radarBenchmark != null ? "static" : null;
+    cohortFilled >= 3 ? "cohort" : radarBenchmark != null ? "static" : null;
 
   const intelligenceContributions = buildIntelligenceContributions(intelligence);
 

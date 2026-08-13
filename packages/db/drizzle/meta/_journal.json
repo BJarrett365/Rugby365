@@ -575,6 +575,20 @@
       "when": 1788000000000,
       "tag": "0081_player_form_history",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1788100000000,
+      "tag": "0082_player_ranking_board_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1788200000000,
+      "tag": "0083_venue_editorial_rankings",
+      "breakpoints": true
     }
   ]
 }

@@ -108,10 +108,11 @@ export function rugbyDataEventTypeToMatchEvent(type: string | null | undefined):
   const t = (type ?? "").trim().toLowerCase();
   if (!t) return null;
   if (t === "try") return "try";
-  if (t === "conversion") return "conversion";
   if (t.includes("missed conversion")) return "conversion_missed";
-  if (t === "penalty" || t === "penalty goal" || t.includes("penalty goal")) return "penalty_goal";
+  if (t === "conversion") return "conversion";
   if (t.includes("missed penalty")) return "penalty_missed";
+  if (t === "penalty" || t === "penalty goal" || t.includes("penalty goal")) return "penalty_goal";
+  if (t.includes("missed drop")) return "drop_goal_missed";
   if (t.includes("drop")) return "drop_goal";
   if (t.includes("yellow")) return "yellow_card";
   if (t.includes("red")) return "red_card";

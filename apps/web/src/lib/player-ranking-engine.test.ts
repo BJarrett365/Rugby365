@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCompetitionBuildingState,
+  buildPlayerRankingsTitle,
+  buildRankingFilterKey,
+  computePositionRankingScore,
   denseRankWithTies,
   formatRankingDisplay,
   intelligenceMetricsForPosition,
+  isEligibleForCurrentRanking,
   pluralizePositionLabel,
   rankPlayerInCohort,
   resolveRankingPoolStatus,
@@ -104,5 +108,102 @@ describe("player-ranking-engine", () => {
   it("pluralizes position labels for competition rows", () => {
     expect(pluralizePositionLabel("Fly-Half")).toBe("Fly-Halves");
     expect(pluralizePositionLabel("Lock")).toBe("Locks");
+  });
+
+  it("builds dynamic board titles from filters", () => {
+    expect(
+      buildPlayerRankingsTitle({
+        mode: "current",
+        top: 10,
+        positionLabel: "Fly-Half",
+        nationLabel: null,
+        clubLabel: null,
+        competitionLabel: null,
+      }),
+    ).toBe("WORLD TOP 10 FLY-HALVES");
+    expect(
+      buildPlayerRankingsTitle({
+        mode: "current",
+        top: 10,
+        positionLabel: "Fly-Half",
+        nationLabel: "South Africa",
+        clubLabel: null,
+        competitionLabel: null,
+      }),
+    ).toBe("SOUTH AFRICA TOP 10 FLY-HALVES");
+    expect(
+      buildPlayerRankingsTitle({
+        mode: "alltime",
+        top: 10,
+        positionLabel: "Fly-Half",
+        nationLabel: null,
+        clubLabel: null,
+        competitionLabel: null,
+      }),
+    ).toBe("GREATEST FLY-HALVES OF ALL TIME");
+  });
+
+  it("uses central eligibility (500 mins OR 8 apps)", () => {
+    expect(
+      isEligibleForCurrentRanking({
+        minutes12m: 520,
+        appearances12m: 4,
+        dataPoints: 2,
+        careerStatus: "active",
+      }).eligible,
+    ).toBe(true);
+    expect(
+      isEligibleForCurrentRanking({
+        minutes12m: 100,
+        appearances12m: 9,
+        dataPoints: 2,
+        careerStatus: "active",
+      }).eligible,
+    ).toBe(true);
+    expect(
+      isEligibleForCurrentRanking({
+        minutes12m: 100,
+        appearances12m: 2,
+        dataPoints: 2,
+        careerStatus: "active",
+      }).eligible,
+    ).toBe(false);
+    expect(
+      isEligibleForCurrentRanking({
+        minutes12m: null,
+        appearances12m: null,
+        dataPoints: 5,
+        careerStatus: "active",
+      }).eligible,
+    ).toBe(true);
+  });
+
+  it("prefers position ranking score composite for position boards", () => {
+    const score = computePositionRankingScore({
+      positionGroup: "fly_half",
+      overall: 80,
+      attack: 90,
+      defence: 70,
+      playmaking: 95,
+      kicking: 92,
+      gameManagement: 88,
+      form: 85,
+    });
+    expect(score).toBeGreaterThan(80);
+    expect(score).toBeLessThan(95);
+  });
+
+  it("builds stable filter keys for snapshots", () => {
+    expect(
+      buildRankingFilterKey({
+        mode: "current",
+        position: "fly_half",
+        nation: "South Africa",
+        club: null,
+        competition: null,
+        top: 10,
+        era: null,
+      }),
+    ).toBe("current|pos:fly_half|nat:south africa|club:all|comp:all|top:10|era:na");
   });
 });

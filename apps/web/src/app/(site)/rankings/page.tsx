@@ -17,7 +17,7 @@ export default async function WorldRankingsPage() {
         actions={
           <>
             <Link href="/rankings/players" className="cms-btn cms-btn--secondary">
-              Player rankings
+              Player Rankings
             </Link>
             <Link href="/competitions" className="cms-btn cms-btn--secondary">
               Competitions
