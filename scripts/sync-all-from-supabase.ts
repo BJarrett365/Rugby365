@@ -1,9 +1,9 @@
 /**
- * Map all primary Postgres data into the configured Supabase project.
+ * Pull all mapped tables from Supabase into local Postgres.
  *
  * Usage:
- *   DATABASE_URL=... npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-to-supabase.ts
- *   npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-to-supabase.ts --tables=teams,players,fixtures
+ *   npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-from-supabase.ts
+ *   npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-from-supabase.ts --tables=teams,players,fixtures
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -34,7 +34,7 @@ loadDotEnv();
 process.env.DATABASE_URL ??= "postgresql://rugby365:rugby365@localhost:5433/rugby365";
 
 async function main() {
-  const { syncAllDataToSupabase } = await import(
+  const { syncAllDataFromSupabase } = await import(
     "../apps/web/src/lib/supabase-full-sync-service"
   );
 
@@ -48,11 +48,11 @@ async function main() {
 
   console.log(
     tables?.length
-      ? `Syncing selected tables to Supabase: ${tables.join(", ")}`
-      : "Syncing all mapped tables to Supabase…",
+      ? `Pulling selected tables from Supabase: ${tables.join(", ")}`
+      : "Pulling all mapped tables from Supabase → local Postgres…",
   );
 
-  const result = await syncAllDataToSupabase({
+  const result = await syncAllDataFromSupabase({
     tables,
     onProgress: (row, index, total) => {
       const label = row.skipped
@@ -74,7 +74,7 @@ async function main() {
         errors: result.errors,
         tables: result.tables.map((t) => ({
           table: t.table,
-          localCount: t.localCount,
+          remoteCount: t.localCount,
           upserted: t.upserted,
           skipped: t.skipped,
           error: t.error,

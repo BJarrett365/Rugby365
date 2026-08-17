@@ -337,20 +337,8 @@ export async function getCompetitionTeamStatsBySlug(
     )
     .orderBy(desc(teamMatchStats.syncedAt));
 
-  const fallbackRows =
-    rows.length > 0
-      ? []
-      : await db
-          .select(selectCols)
-          .from(teamMatchStats)
-          .innerJoin(teams, eq(teamMatchStats.teamId, teams.id))
-          .innerJoin(fixtures, eq(teamMatchStats.fixtureId, fixtures.id))
-          .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
-          .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
-          .where(eq(teamMatchStats.competitionId, competition.id))
-          .orderBy(desc(teamMatchStats.syncedAt));
-
-  const sourceRows = rows.length > 0 ? rows : fallbackRows;
+  // Strict season scope — never fall back to other seasons' team stats.
+  const sourceRows = rows;
 
   function matchIdentity(row: (typeof sourceRows)[number]): string {
     const day = row.kickoffAt ? row.kickoffAt.toISOString().slice(0, 10) : "nodate";

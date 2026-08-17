@@ -130,6 +130,21 @@ export async function PATCH(req: Request) {
       return NextResponse.json(result, { status: result.ok ? 200 : 500 });
     }
 
+    if (body.action === "sync-from") {
+      const tables =
+        typeof body.tables === "string"
+          ? body.tables
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : Array.isArray(body.tables)
+            ? body.tables.map(String)
+            : undefined;
+      const { syncAllDataFromSupabase } = await import("@/lib/supabase-full-sync-service");
+      const result = await syncAllDataFromSupabase({ tables });
+      return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+    }
+
     const projectUrl = typeof body.projectUrl === "string" ? body.projectUrl : undefined;
     const anonKey = typeof body.anonKey === "string" ? body.anonKey : undefined;
     const serviceRoleKey = typeof body.serviceRoleKey === "string" ? body.serviceRoleKey : undefined;

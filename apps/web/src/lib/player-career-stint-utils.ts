@@ -4,6 +4,7 @@ export type CareerStintRow = {
   yearsLabel: string;
   teamName: string;
   apps: number | null;
+  tries?: number | null;
   points: number | null;
 };
 

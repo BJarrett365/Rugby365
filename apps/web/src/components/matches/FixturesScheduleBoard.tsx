@@ -750,24 +750,45 @@ export function FixturesScheduleBoard({
   const matchDateKeys = useMemo(() => datesWithMatches, [datesWithMatches]);
 
   const competitionOptions = useMemo(() => {
-    // Prefer year-scoped CMS comps so RWC etc. stay selectable off-match-days.
-    if (yearCompetitions.length) {
-      return yearCompetitions.map((c) => ({ id: c.id, name: c.name }));
+    // Full catalogue from the schedule API (all competitions), not just today's fixtures.
+    const options = new Map<string, { id: string; name: string; slug: string }>();
+    for (const c of competitions) {
+      if (c.slug.includes("__legacy__")) continue;
+      const name = (c.name || c.slug).trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      const existing = options.get(key);
+      // Prefer shorter, non-suffixed slugs when the same display name appears twice.
+      const prefer =
+        !existing ||
+        (!/-[a-f0-9]{6,}$/i.test(c.slug) && /-[a-f0-9]{6,}$/i.test(existing.slug)) ||
+        (!/-\d+$/.test(c.slug) && /-\d+$/.test(existing.slug)) ||
+        c.slug.length < existing.slug.length;
+      if (prefer) options.set(key, { id: c.id, name, slug: c.slug });
     }
-    // Fallback: unique names from the loaded day (covers early load / empty year query).
-    const options = new Map<string, string>();
+    // Year-scoped CMS comps (RWC etc.) stay selectable on off-match days.
+    for (const c of yearCompetitions) {
+      const name = (c.name || c.slug).trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (!options.has(key)) options.set(key, { id: c.id, name, slug: c.slug });
+    }
+    // Ensure comps that appear on the selected day are still selectable even if
+    // they were missing from the catalogue payload for any reason.
     for (const f of fixtures) {
       const name = competitionDisplayName(f, competitionById);
-      const normalized = name.trim().toLowerCase();
-      if (!options.has(normalized)) {
-        const id = f.competitionId ?? `name:${name}`;
-        options.set(normalized, JSON.stringify({ id, name }));
+      const key = name.trim().toLowerCase();
+      if (!key || options.has(key)) continue;
+      if (f.competitionId) {
+        options.set(key, { id: f.competitionId, name, slug: f.competitionId });
+      } else {
+        options.set(key, { id: `name:${name}`, name, slug: `name:${name}` });
       }
     }
     return [...options.values()]
-      .map((raw) => JSON.parse(raw) as { id: string; name: string })
+      .map(({ id, name }) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [yearCompetitions, fixtures, competitionById]);
+  }, [competitions, yearCompetitions, fixtures, competitionById]);
 
   const filtered = useMemo(() => {
     if (competitionFilter === "all") return fixtures;
