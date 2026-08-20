@@ -41,7 +41,7 @@ export default async function LegendCollectionPage({ params }: PageProps) {
       </nav>
 
       <header className="pr-legends-header">
-        <p className="pr-mc-pr-badge">Planet Rugby Legends</p>
+        <p className="pr-legends-header__eyebrow">Planet Rugby Legends</p>
         <h1>{collection.label}</h1>
         <p className="pr-legends-header__lede">{collection.description}</p>
       </header>

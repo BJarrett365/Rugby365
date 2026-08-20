@@ -21,6 +21,8 @@ export const WikipediaCoachingStintSchema = z.object({
   startYear: z.number().nullable().optional(),
   endYear: z.number().nullable().optional(),
   teamName: z.string(),
+  /** Parsed from parentheses e.g. "South Africa (Technical Adviser)" */
+  roleHint: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
 });
 
@@ -36,9 +38,13 @@ export const WikipediaCoachArchiveSchema = z.object({
   birthDate: z.string().optional(),
   birthPlace: z.string().optional(),
   nationality: z.string().optional(),
+  heightCm: z.number().optional(),
   imageUrl: z.string().optional(),
   bioSummary: z.string().optional(),
   coachingCareer: z.array(WikipediaCoachingStintSchema).optional(),
+  playingCareer: z.array(WikipediaCareerStintSchema).optional(),
+  /** Free-text honour lines from wiki sections — never auto-published. */
+  honourLines: z.array(z.string()).optional(),
   infoboxTemplate: z.string().optional(),
 });
 

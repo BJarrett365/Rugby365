@@ -181,9 +181,44 @@ export const venues = pgTable(
     sourceProvider: text("source_provider").notNull().default("manual"),
     wikipediaUrl: text("wikipedia_url"),
     wikidataId: text("wikidata_id"),
+    /** dedicated_rugby | multi_sport | occasional_rugby | historic_rugby */
+    venueType: text("venue_type"),
+    /** Model rating when published — never backfilled from editorial. */
+    r365VenueRating: real("r365_venue_rating"),
+    /** Verified rugby-configuration capacity (falls back to capacity in product). */
+    rugbyCapacity: integer("rugby_capacity"),
+    openedYear: integer("opened_year"),
+    surface: text("surface"),
+    imageUrl: text("image_url"),
     archiveSyncedAt: timestamp("archive_synced_at", { withTimezone: true }),
   },
   (table) => [uniqueIndex("venues_slug_unique").on(table.slug)],
+);
+
+export const venueEditorialRankings = pgTable(
+  "venue_editorial_rankings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    /** Product category key — best, atmosphere, fortress, etc. */
+    category: text("category").notNull(),
+    editorialRank: integer("editorial_rank").notNull(),
+    editorialReason: text("editorial_reason"),
+    editorialUpdatedAt: timestamp("editorial_updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    isPublished: boolean("is_published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("venue_editorial_rankings_venue_category_unique").on(
+      table.venueId,
+      table.category,
+    ),
+    index("venue_editorial_rankings_category_idx").on(table.category),
+  ],
 );
 
 export const players = pgTable(
@@ -201,8 +236,11 @@ export const players = pgTable(
     clubTeamId: uuid("club_team_id").references(() => teams.id),
     internationalTeamId: uuid("international_team_id").references(() => teams.id),
     fullName: text("full_name"),
+    knownAs: text("known_as"),
     birthDate: date("birth_date"),
     birthPlace: text("birth_place"),
+    birthDateSource: text("birth_date_source"),
+    birthDateVerifiedAt: timestamp("birth_date_verified_at", { withTimezone: true }),
     heightCm: integer("height_cm"),
     weightKg: integer("weight_kg"),
     school: text("school"),
@@ -237,10 +275,17 @@ export const players = pgTable(
     /** CMS override for the structured public intro paragraph. */
     publicIntroOverride: text("public_intro_override"),
     preferredFoot: text("preferred_foot"),
+    secondNationality: text("second_nationality"),
     /** Optional public status override (injured | suspended | unattached | …). */
     statusOverride: text("status_override"),
-    /** Contract end date for public profile (e.g. 2027-06-30 → Jun 2027). */
+    /** Contract start / end for public profile. */
+    contractStartOn: date("contract_start_on"),
     contractExpiresOn: date("contract_expires_on"),
+    contractSource: text("contract_source"),
+    contractVerifiedAt: timestamp("contract_verified_at", { withTimezone: true }),
+    /** Wikipedia / verified career totals — not overwritten by incomplete fixture archive. */
+    verifiedInternationalCaps: integer("verified_international_caps"),
+    verifiedInternationalPoints: integer("verified_international_points"),
     /** Reported / verified annual salary in GBP (nullable = unknown; model estimate used as fallback). */
     reportedSalaryGbp: integer("reported_salary_gbp"),
     salaryAsOf: date("salary_as_of"),
@@ -450,10 +495,30 @@ export const coaches = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     slug: text("slug").notNull().unique(),
     name: text("name").notNull(),
+    knownAs: text("known_as"),
+    fullName: text("full_name"),
     externalProviderId: text("external_provider_id"),
     sourceProvider: text("source_provider").notNull().default("manual"),
     birthDate: date("birth_date"),
+    placeOfBirth: text("place_of_birth"),
+    countryOfBirth: text("country_of_birth"),
     nationality: text("nationality"),
+    secondNationality: text("second_nationality"),
+    heightCm: integer("height_cm"),
+    formerPlayingPositions: text("former_playing_positions"),
+    playingCareerStatus: text("playing_career_status"),
+    coachingCareerStartYear: integer("coaching_career_start_year"),
+    appointedOn: date("appointed_on"),
+    contractExpiresOn: date("contract_expires_on"),
+    preferredSystem: text("preferred_system"),
+    coachingStyle: text("coaching_style"),
+    /**
+     * Provenance for editorial / AI classifications.
+     * verified_fact | rugby365_assessment | unverified
+     * Assessments must never be presented as sourced biographical facts.
+     */
+    preferredSystemProvenance: text("preferred_system_provenance").notNull().default("unverified"),
+    coachingStyleProvenance: text("coaching_style_provenance").notNull().default("unverified"),
     imageUrl: text("image_url"),
     bioSummary: text("bio_summary"),
     wikipediaUrl: text("wikipedia_url"),
@@ -461,6 +526,25 @@ export const coaches = pgTable(
     sourceUrl: text("source_url"),
     notes: text("notes"),
     socialAccounts: jsonb("social_accounts").notNull().default({}),
+    isPublic: boolean("is_public").notNull().default(true),
+    publishStatus: text("publish_status").notNull().default("published"),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    ogImageUrl: text("og_image_url"),
+    profileUpdatedAt: timestamp("profile_updated_at", { withTimezone: true }),
+    lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }),
+    careerRecordPartial: boolean("career_record_partial").notNull().default(false),
+    careerRecordNotes: text("career_record_notes"),
+    /** Editorial ignore / unavailable overrides keyed by `${dataType}:${fixtureId}`. */
+    coverageGapOverrides: jsonb("coverage_gap_overrides").notNull().default({}),
+    /** current | stale | calculating | partial | failed */
+    calcStatus: text("calc_status").notNull().default("current"),
+    calcUpdatedAt: timestamp("calc_updated_at", { withTimezone: true }),
+    calcStaleReason: text("calc_stale_reason"),
+    calcError: text("calc_error"),
+    /** unknown | current | stale | partial | checking */
+    honoursStatus: text("honours_status").notNull().default("unknown"),
+    honoursCheckedAt: timestamp("honours_checked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -468,6 +552,8 @@ export const coaches = pgTable(
     uniqueIndex("coaches_external_provider_id_unique")
       .on(table.externalProviderId)
       .where(sql`${table.externalProviderId} is not null`),
+    index("coaches_publish_status_idx").on(table.publishStatus),
+    index("coaches_calc_status_idx").on(table.calcStatus),
   ],
 );
 
@@ -483,12 +569,26 @@ export const teamCoachingStaff = pgTable(
       .references(() => teams.id, { onDelete: "cascade" }),
     seasonId: uuid("season_id").references(() => competitionSeasons.id, { onDelete: "set null" }),
     role: text("role").notNull(),
+    /** player | coach | management | technical */
+    careerType: text("career_type").notNull().default("coach"),
+    competitionLevel: text("competition_level"),
     startDate: date("start_date"),
     endDate: date("end_date"),
     isCurrent: boolean("is_current").notNull().default(false),
+    isPrimaryCoach: boolean("is_primary_coach").notNull().default(false),
+    eligibleForCareerRecord: boolean("eligible_for_career_record").notNull().default(true),
+    showOnOverview: boolean("show_on_overview").notNull().default(false),
+    /** verified | editor_approved | found | conflict | needs_review */
+    recordStatus: text("record_status").notNull().default("needs_review"),
+    overviewLabel: text("overview_label"),
+    teamDisplayName: text("team_display_name"),
+    country: text("country"),
     bioSummary: text("bio_summary"),
     notes: text("notes"),
+    editorNotes: text("editor_notes"),
     sourceUrl: text("source_url"),
+    confidence: text("confidence").notNull().default("medium"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     importKey: text("import_key"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -497,6 +597,306 @@ export const teamCoachingStaff = pgTable(
     uniqueIndex("team_coaching_staff_import_key_unique")
       .on(table.importKey)
       .where(sql`${table.importKey} is not null`),
+  ],
+);
+
+export const coachPlayingStints = pgTable(
+  "coach_playing_stints",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    /** provincial | club | franchise | international */
+    teamType: text("team_type").notNull().default("provincial"),
+    /** provincial_player | club_player | super_rugby_player | international_player */
+    careerType: text("career_type").notNull().default("provincial_player"),
+    startYear: integer("start_year"),
+    endYear: integer("end_year"),
+    yearsLabel: text("years_label").notNull(),
+    teamName: text("team_name").notNull(),
+    teamDisplayName: text("team_display_name"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    competitionLevel: text("competition_level"),
+    exactStartDate: date("exact_start_date"),
+    exactEndDate: date("exact_end_date"),
+    country: text("country"),
+    apps: integer("apps"),
+    starts: integer("starts"),
+    points: integer("points"),
+    tries: integer("tries"),
+    position: text("position"),
+    captain: boolean("captain").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    sourceProvider: text("source_provider").notNull().default("manual"),
+    sourceUrl: text("source_url"),
+    confidence: text("confidence").notNull().default("medium"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    /** verified | editor_approved | found | conflict | needs_review */
+    recordStatus: text("record_status").notNull().default("needs_review"),
+    overviewLabel: text("overview_label"),
+    editorNotes: text("editor_notes"),
+    showOnOverview: boolean("show_on_overview").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("coach_playing_stints_coach_idx").on(table.coachId),
+    index("coach_playing_stints_team_type_idx").on(table.teamType),
+  ],
+);
+
+export const coachEducation = pgTable(
+  "coach_education",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    institution: text("institution").notNull(),
+    qualification: text("qualification"),
+    startYear: integer("start_year"),
+    endYear: integer("end_year"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    sourceUrl: text("source_url"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("coach_education_coach_idx").on(table.coachId)],
+);
+
+export const coachHonours = pgTable(
+  "coach_honours",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    /** player | coach */
+    roleType: text("role_type").notNull().default("coach"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    teamName: text("team_name"),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    competitionName: text("competition_name"),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "set null",
+    }),
+    seasonLabel: text("season_label"),
+    year: integer("year"),
+    /** winner | runner_up | third | semi_final | finalist | champion */
+    achievementType: text("achievement_type").notNull().default("winner"),
+    /** major | domestic_major | secondary | series | minor */
+    honourLevel: text("honour_level").notNull().default("secondary"),
+    shared: boolean("shared").notNull().default(false),
+    position: text("position"),
+    finalOpponentId: uuid("final_opponent_id").references(() => teams.id, {
+      onDelete: "set null",
+    }),
+    finalMatchId: uuid("final_match_id"),
+    notes: text("notes"),
+    sourceUrl: text("source_url"),
+    sourceId: text("source_id"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    showOnOverview: boolean("show_on_overview").notNull().default(false),
+    visibility: text("visibility").notNull().default("public"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("coach_honours_coach_idx").on(table.coachId),
+    index("coach_honours_level_idx").on(table.honourLevel),
+    index("coach_honours_role_idx").on(table.roleType),
+  ],
+);
+
+export const coachAwards = pgTable(
+  "coach_awards",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    awardName: text("award_name").notNull(),
+    awardingBody: text("awarding_body"),
+    year: integer("year"),
+    category: text("category"),
+    /** winner | nominee | shortlisted | runner_up */
+    result: text("result").notNull().default("winner"),
+    teamIdAtTime: uuid("team_id_at_time").references(() => teams.id, { onDelete: "set null" }),
+    isMajor: boolean("is_major").notNull().default(false),
+    sourceUrl: text("source_url"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    showOnOverview: boolean("show_on_overview").notNull().default(false),
+    visibility: text("visibility").notNull().default("public"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("coach_awards_coach_idx").on(table.coachId)],
+);
+
+export const coachMedals = pgTable(
+  "coach_medals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    roleType: text("role_type").notNull().default("coach"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    teamName: text("team_name"),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    competitionName: text("competition_name"),
+    year: integer("year"),
+    finish: text("finish").notNull(),
+    /** gold | silver | bronze | none */
+    medalType: text("medal_type").notNull().default("none"),
+    honourId: uuid("honour_id").references(() => coachHonours.id, { onDelete: "set null" }),
+    sourceUrl: text("source_url"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("coach_medals_coach_idx").on(table.coachId)],
+);
+
+export const coachMilestones = pgTable(
+  "coach_milestones",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    milestoneDate: date("milestone_date"),
+    milestoneYear: integer("milestone_year"),
+    milestoneType: text("milestone_type").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    matchId: uuid("match_id"),
+    sourceUrl: text("source_url"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    showOnOverview: boolean("show_on_overview").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("coach_milestones_coach_idx").on(table.coachId)],
+);
+
+export const coachImages = pgTable(
+  "coach_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    imageUrl: text("image_url").notNull(),
+    canonicalUrl: text("canonical_url"),
+    sourceProvider: text("source_provider").notNull().default("manual"),
+    sourcePageUrl: text("source_page_url"),
+    caption: text("caption"),
+    altText: text("alt_text"),
+    credit: text("credit"),
+    imageType: text("image_type").notNull().default("portrait"),
+    role: text("role").notNull().default("gallery"),
+    status: text("status").notNull().default("candidate"),
+    isPublic: boolean("is_public").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("coach_images_coach_idx").on(table.coachId)],
+);
+
+export const coachRatingSnapshots = pgTable(
+  "coach_rating_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    fixtureId: uuid("fixture_id"),
+    overallRating: real("overall_rating"),
+    powerIndex: real("power_index"),
+    worldRank: integer("world_rank"),
+    momentum: real("momentum"),
+    metrics: jsonb("metrics").notNull().default({}),
+    modelVersion: text("model_version").notNull().default("coach-rating-v1"),
+    powerIndexVersion: text("power_index_version").notNull().default("coach-power-v1"),
+    dataConfidence: text("data_confidence").notNull().default("low"),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("coach_rating_snapshots_coach_idx").on(table.coachId),
+    index("coach_rating_snapshots_calc_idx").on(table.calculatedAt),
+  ],
+);
+
+export const coachRatingHistory = pgTable(
+  "coach_rating_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    coachId: uuid("coach_id")
+      .notNull()
+      .references(() => coaches.id, { onDelete: "cascade" }),
+    fixtureId: uuid("fixture_id"),
+    /** live | backfilled | recalculated */
+    snapshotType: text("snapshot_type").notNull().default("recalculated"),
+    rating: real("rating").notNull(),
+    previousRating: real("previous_rating"),
+    change: real("change"),
+    worldRank: integer("world_rank"),
+    teamId: uuid("team_id"),
+    opponentId: uuid("opponent_id"),
+    competitionId: uuid("competition_id"),
+    matchDate: timestamp("match_date", { withTimezone: true }),
+    homeAwayNeutral: text("home_away_neutral"),
+    result: text("result"),
+    scoreFor: integer("score_for"),
+    scoreAgainst: integer("score_against"),
+    powerIndex: real("power_index"),
+    powerIndexChange: real("power_index_change"),
+    opponentRating: real("opponent_rating"),
+    opponentRank: integer("opponent_rank"),
+    confidence: integer("confidence"),
+    coverage: integer("coverage"),
+    dataConfidence: text("data_confidence"),
+    modelVersion: text("model_version").notNull().default("coach-rating-v1"),
+    powerIndexVersion: text("power_index_version"),
+    intelligenceModelVersion: text("intelligence_model_version"),
+    /** Rating contribution deltas / drivers for tooltip WHY IT MOVED. */
+    contributions: jsonb("contributions").notNull().default([]),
+    /** Intelligence metric scores at this point (for full trends overlays). */
+    intelligence: jsonb("intelligence").notNull().default([]),
+    metrics: jsonb("metrics").notNull().default({}),
+    majorMatchLabel: text("major_match_label"),
+    competitionName: text("competition_name"),
+    teamName: text("team_name"),
+    opponentName: text("opponent_name"),
+    fixtureSlug: text("fixture_slug"),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("coach_rating_history_coach_idx").on(table.coachId),
+    index("coach_rating_history_match_date_idx").on(table.coachId, table.matchDate),
+    index("coach_rating_history_snapshot_type_idx").on(table.coachId, table.snapshotType),
+    uniqueIndex("coach_rating_history_coach_fixture_unique")
+      .on(table.coachId, table.fixtureId)
+      .where(sql`${table.fixtureId} is not null`),
   ],
 );
 
@@ -853,18 +1253,24 @@ export const playerTeamMemberships = pgTable(
     teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    seasonId: uuid("season_id")
-      .notNull()
-      .references(() => competitionSeasons.id, { onDelete: "cascade" }),
-    competitionId: uuid("competition_id")
-      .notNull()
-      .references(() => competitions.id, { onDelete: "cascade" }),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "cascade",
+    }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "cascade",
+    }),
+    /** club | provincial | international */
+    membershipType: text("membership_type").notNull().default("club"),
+    isCurrent: boolean("is_current").notNull().default(false),
+    startYear: integer("start_year"),
+    endYear: integer("end_year"),
     startDate: date("start_date"),
     endDate: date("end_date"),
     status: text("status").notNull().default("active"),
     sourceProvider: text("source_provider").notNull().default("manual"),
     sourceUrl: text("source_url"),
     notes: text("notes"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1231,12 +1637,17 @@ export const worldRankingSnapshots = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     category: text("category").notNull(),
     effectiveDate: date("effective_date").notNull(),
+    /** world_rugby | wikipedia | rugby365_calc | manual */
+    sourceProvider: text("source_provider").notNull().default("world_rugby"),
+    sourceUrl: text("source_url"),
+    notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("world_ranking_snapshots_category_effective_unique").on(
+    uniqueIndex("world_ranking_snapshots_category_effective_source_unique").on(
       table.category,
       table.effectiveDate,
+      table.sourceProvider,
     ),
   ],
 );
@@ -1274,6 +1685,169 @@ export const worldRankingRows = pgTable(
       table.worldRugbyTeamId,
     ),
   ],
+);
+
+/** #1 ranking leader reigns (Wikipedia List of rankings leader, etc.). */
+export const worldRankingLeaderSpans = pgTable(
+  "world_ranking_leader_spans",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    category: text("category").notNull(),
+    teamName: text("team_name").notNull(),
+    teamCode: text("team_code"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    weeks: integer("weeks"),
+    totalWeeks: integer("total_weeks"),
+    reignIndex: integer("reign_index"),
+    sourceProvider: text("source_provider").notNull().default("wikipedia"),
+    sourceUrl: text("source_url"),
+    importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("world_ranking_leader_spans_cat_start_team_unique").on(
+      table.category,
+      table.startDate,
+      table.teamName,
+    ),
+    index("world_ranking_leader_spans_category_idx").on(table.category),
+  ],
+);
+
+/** Best/worst ranks and peak/trough rating points per nation. */
+export const worldRankingTeamMilestones = pgTable(
+  "world_ranking_team_milestones",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    category: text("category").notNull(),
+    teamName: text("team_name").notNull(),
+    teamCode: text("team_code"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    /** best_rank | worst_rank | peak_points | trough_points */
+    milestoneType: text("milestone_type").notNull(),
+    rank: integer("rank"),
+    points: real("points"),
+    yearLabel: text("year_label"),
+    achievedOn: date("achieved_on"),
+    sourceProvider: text("source_provider").notNull().default("wikipedia"),
+    sourceUrl: text("source_url"),
+    importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("world_ranking_team_milestones_cat_team_type_unique").on(
+      table.category,
+      table.teamName,
+      table.milestoneType,
+    ),
+    index("world_ranking_team_milestones_category_idx").on(table.category),
+  ],
+);
+
+/** Catalog of reusable personal / appointment awards (not free-text per profile). */
+export const awardDefinitions = pgTable("award_definitions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  shortName: text("short_name"),
+  organisation: text("organisation"),
+  /** personal | appointment | other */
+  awardType: text("award_type").notNull().default("personal"),
+  sport: text("sport").notNull().default("rugby_union"),
+  scope: text("scope"),
+  iconKey: text("icon_key").notNull().default("award_coach"),
+  officialUrl: text("official_url"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Shared achievements for coaches, players, referees, teams.
+ * achievement_type: PERSONAL_AWARD | TEAM_HONOUR | MEDAL | PLACEMENT | APPOINTMENT_HONOUR
+ */
+export const achievements = pgTable(
+  "achievements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    achievementType: text("achievement_type").notNull(),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    competitionName: text("competition_name"),
+    seasonId: uuid("season_id").references(() => competitionSeasons.id, {
+      onDelete: "set null",
+    }),
+    seasonLabel: text("season_label"),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    teamName: text("team_name"),
+    awardDefinitionId: uuid("award_definition_id").references(() => awardDefinitions.id, {
+      onDelete: "set null",
+    }),
+    year: integer("year"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    /** PLAYER | CAPTAIN | COACH | HEAD_COACH | ASSISTANT_COACH | DIRECTOR_OF_RUGBY | … */
+    roleType: text("role_type"),
+    /** WINNER | RUNNER_UP | THIRD_PLACE | SEMI_FINALIST | FINALIST | OTHER */
+    placing: text("placing"),
+    /** GOLD | SILVER | BRONZE | NONE */
+    medalType: text("medal_type").notNull().default("none"),
+    /** MAJOR | CHAMPIONSHIP | CUP | AWARD | PLACEMENT */
+    honourLevel: text("honour_level").notNull().default("cup"),
+    shared: boolean("shared").notNull().default(false),
+    titleOverride: text("title_override"),
+    notes: text("notes"),
+    iconKey: text("icon_key"),
+    showOnOverview: boolean("show_on_overview").notNull().default(false),
+    eligibleForSnapshot: boolean("eligible_for_snapshot").notNull().default(true),
+    visibility: text("visibility").notNull().default("public"),
+    /** verified | review | unverified */
+    verificationStatus: text("verification_status").notNull().default("unverified"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verifiedBy: text("verified_by"),
+    legacySourceTable: text("legacy_source_table"),
+    legacySourceId: uuid("legacy_source_id"),
+    dedupeKey: text("dedupe_key").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("achievements_entity_idx").on(table.entityType, table.entityId),
+    index("achievements_type_idx").on(table.achievementType),
+    index("achievements_competition_idx").on(table.competitionId),
+    index("achievements_verification_idx").on(table.verificationStatus),
+    index("achievements_year_idx").on(table.year),
+    index("achievements_legacy_idx").on(table.legacySourceTable, table.legacySourceId),
+    uniqueIndex("achievements_dedupe_unique").on(
+      table.entityType,
+      table.entityId,
+      table.dedupeKey,
+    ),
+  ],
+);
+
+export const achievementSources = pgTable(
+  "achievement_sources",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    achievementId: uuid("achievement_id")
+      .notNull()
+      .references(() => achievements.id, { onDelete: "cascade" }),
+    sourceType: text("source_type").notNull(),
+    sourceName: text("source_name"),
+    sourceUrl: text("source_url"),
+    checkedAt: timestamp("checked_at", { withTimezone: true }),
+    verificationStatus: text("verification_status").notNull().default("unverified"),
+    rawExcerpt: text("raw_excerpt"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("achievement_sources_achievement_idx").on(table.achievementId)],
 );
 
 export const aiEnrichmentSuggestions = pgTable("ai_enrichment_suggestions", {
@@ -1324,6 +1898,10 @@ export const playerRatings = pgTable("player_ratings", {
   attackRating: real("attack_rating"),
   defenceRating: real("defence_rating"),
   disciplineRating: real("discipline_rating"),
+  kickingRating: real("kicking_rating"),
+  playmakingRating: real("playmaking_rating"),
+  gameManagementRating: real("game_management_rating"),
+  physicalRating: real("physical_rating"),
   ageProfile: text("age_profile"),
   ratingConfidence: real("rating_confidence"),
   ratingExplanation: text("rating_explanation"),
@@ -1338,8 +1916,12 @@ export const playerRatings = pgTable("player_ratings", {
   manualOverrideReason: text("manual_override_reason"),
   calculatedAt: timestamp("calculated_at", { withTimezone: true }),
   dataPoints: integer("data_points").notNull().default(0),
-  /** Career rating model id, e.g. career-v1 */
+  /** Career rating model id, e.g. career-v1 / player-fly-half-v1 */
   modelVersion: text("model_version").notNull().default("career-v1"),
+  intelligenceModelVersion: text("intelligence_model_version"),
+  intelligenceConfidence: integer("intelligence_confidence"),
+  intelligenceCoverage: integer("intelligence_coverage"),
+  intelligence: jsonb("intelligence").notNull().default({}),
   /** Public development timeline chart settings (enabled, averages, min minutes, …). */
   developmentChartSettings: jsonb("development_chart_settings").notNull().default({}),
   developmentSummaryOverride: text("development_summary_override"),
@@ -1351,9 +1933,164 @@ export const playerRatings = pgTable("player_ratings", {
 });
 
 /**
+ * Persisted player rating points for public Rating History graphs.
+ * Separate from match-v1 player_match_ratings (0–10 match scores).
+ */
+export const playerRatingHistory = pgTable(
+  "player_rating_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    fixtureId: uuid("fixture_id").references(() => fixtures.id, { onDelete: "set null" }),
+    teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    matchDate: timestamp("match_date", { withTimezone: true }),
+    /** live | backfilled | recalculated */
+    snapshotType: text("snapshot_type").notNull().default("recalculated"),
+    overallRating: real("overall_rating").notNull(),
+    previousRating: real("previous_rating"),
+    ratingChange: real("rating_change"),
+    attack: real("attack"),
+    defence: real("defence"),
+    kicking: real("kicking"),
+    playmaking: real("playmaking"),
+    gameManagement: real("game_management"),
+    physical: real("physical"),
+    form: real("form"),
+    confidence: integer("confidence"),
+    coverage: integer("coverage"),
+    modelVersion: text("model_version").notNull().default("player-fly-half-v1"),
+    intelligence: jsonb("intelligence").notNull().default({}),
+    metrics: jsonb("metrics").notNull().default({}),
+    majorMatchLabel: text("major_match_label"),
+    competitionName: text("competition_name"),
+    teamName: text("team_name"),
+    opponentName: text("opponent_name"),
+    fixtureSlug: text("fixture_slug"),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_rating_history_player_idx").on(table.playerId),
+    index("player_rating_history_match_date_idx").on(table.playerId, table.matchDate),
+    uniqueIndex("player_rating_history_player_fixture_unique")
+      .on(table.playerId, table.fixtureId)
+      .where(sql`${table.fixtureId} is not null`),
+  ],
+);
+
+/**
  * Rugby365 Player Value snapshots (market / transfer / contract / future).
  * Not a football transfer fee — overall market worth for profile display.
  */
+/**
+ * Time-series market value snapshots for VALUE TREND charts (24 months).
+ * Appended by player-value-history-service — not recomputed on page load.
+ */
+export const playerValueHistory = pgTable(
+  "player_value_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    snapshotDate: timestamp("snapshot_date", { withTimezone: true }).notNull().defaultNow(),
+    estimatedValue: integer("estimated_value").notNull(),
+    currency: text("currency").notNull().default("GBP"),
+    confidence: real("confidence").notNull().default(0.5),
+    coverage: integer("coverage"),
+    overallRating: real("overall_rating"),
+    potentialRating: real("potential_rating"),
+    currentFormScore: real("current_form_score"),
+    clubId: uuid("club_id").references(() => teams.id, { onDelete: "set null" }),
+    competitionId: uuid("competition_id").references(() => competitions.id, {
+      onDelete: "set null",
+    }),
+    contractEndDate: date("contract_end_date"),
+    contractMonthsRemaining: integer("contract_months_remaining"),
+    ageAtSnapshot: integer("age_at_snapshot"),
+    primaryPosition: text("primary_position"),
+    valueScore: real("value_score"),
+    modelVersion: text("model_version").notNull().default("player-value-v1"),
+    /** LIVE | BACKFILLED | RECALCULATED */
+    snapshotType: text("snapshot_type").notNull().default("LIVE"),
+    status: text("status").notNull().default("active"),
+    calculationReason: text("calculation_reason"),
+    factorScores: jsonb("factor_scores").notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_value_history_player_idx").on(table.playerId),
+    index("player_value_history_player_date_idx").on(table.playerId, table.snapshotDate),
+  ],
+);
+
+/**
+ * Rugby365 Value Score snapshots (player-value-score-v1).
+ * Distinct from market value (GBP). Public pages read is_current — never recalc on load.
+ */
+export const playerValueScoreHistory = pgTable(
+  "player_value_score_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    valueScore: real("value_score"),
+    confidence: real("confidence").notNull().default(0),
+    coverage: real("coverage").notNull().default(0),
+    status: text("status").notNull().default("UNDER_REVIEW"),
+    modelVersion: text("model_version").notNull().default("player-value-score-v1"),
+    factorScores: jsonb("factor_scores").notNull().default([]),
+    display: jsonb("display").notNull().default({}),
+    calculationReason: text("calculation_reason"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_value_score_history_player_idx").on(table.playerId),
+    index("player_value_score_history_player_current_idx").on(table.playerId, table.isCurrent),
+    index("player_value_score_history_player_calc_idx").on(table.playerId, table.calculatedAt),
+  ],
+);
+
+/**
+ * Player form score snapshots (player-form-v1).
+ * Public overview may compute live; recalc jobs persist is_current.
+ */
+export const playerFormHistory = pgTable(
+  "player_form_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    formScore: real("form_score"),
+    formLabel: text("form_label"),
+    confidence: real("confidence").notNull().default(0),
+    matchesUsed: integer("matches_used").notNull().default(0),
+    appearancesEligible: integer("appearances_eligible").notNull().default(0),
+    modelVersion: text("model_version").notNull().default("player-form-v1"),
+    resultStrip: jsonb("result_strip").notNull().default([]),
+    components: jsonb("components").notNull().default([]),
+    metrics: jsonb("metrics").notNull().default([]),
+    calculationReason: text("calculation_reason"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_form_history_player_idx").on(table.playerId),
+    index("player_form_history_player_current_idx").on(table.playerId, table.isCurrent),
+    index("player_form_history_player_calc_idx").on(table.playerId, table.calculatedAt),
+  ],
+);
+
 export const playerMarketValues = pgTable(
   "player_market_values",
   {
@@ -1387,6 +2124,83 @@ export const playerMarketValues = pgTable(
   (table) => [
     index("player_market_values_player_idx").on(table.playerId),
     uniqueIndex("player_market_values_player_year_unique").on(table.playerId, table.asOfYear),
+  ],
+);
+
+/**
+ * Persisted player ranking snapshots for movement / history on public rankings.
+ * Written by ranking recalc jobs; public pages read is_current only.
+ */
+export const playerRankingHistory = pgTable(
+  "player_ranking_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    scope: text("scope").notNull().default("global"),
+    metricKey: text("metric_key").notNull(),
+    positionKey: text("position_key"),
+    nationKey: text("nation_key"),
+    clubKey: text("club_key"),
+    competitionKey: text("competition_key"),
+    rank: integer("rank"),
+    pool: integer("pool").notNull().default(0),
+    score: real("score"),
+    status: text("status").notNull().default("pending"),
+    modelVersion: text("model_version").notNull().default("player-ranking-v1"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_ranking_history_player_idx").on(table.playerId),
+    index("player_ranking_history_player_current_idx").on(table.playerId, table.isCurrent),
+    index("player_ranking_history_scope_metric_idx").on(
+      table.scope,
+      table.metricKey,
+      table.isCurrent,
+    ),
+    index("player_ranking_history_club_key_idx").on(table.clubKey),
+  ],
+);
+
+/**
+ * Board-level ranking snapshots for /rankings/players filter combinations.
+ * Pages read is_current; rebuild marks prior rows is_current=false.
+ */
+export const playerRankingBoardSnapshots = pgTable(
+  "player_ranking_board_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    mode: text("mode").notNull().default("current"),
+    filterKey: text("filter_key").notNull(),
+    positionKey: text("position_key"),
+    nationKey: text("nation_key"),
+    clubKey: text("club_key"),
+    competitionKey: text("competition_key"),
+    eraKey: text("era_key"),
+    topN: integer("top_n").notNull().default(10),
+    modelVersion: text("model_version").notNull().default("player-rank-current-v1"),
+    pool: integer("pool").notNull().default(0),
+    title: text("title").notNull().default("WORLD TOP 10 PLAYERS"),
+    payload: jsonb("payload").notNull().default({}),
+    eligibilityNote: text("eligibility_note"),
+    status: text("status").notNull().default("ready"),
+    isCurrent: boolean("is_current").notNull().default(true),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("player_ranking_board_snapshots_filter_current_idx").on(
+      table.filterKey,
+      table.isCurrent,
+    ),
+    index("player_ranking_board_snapshots_mode_current_idx").on(
+      table.mode,
+      table.isCurrent,
+      table.calculatedAt,
+    ),
   ],
 );
 
@@ -2880,5 +3694,62 @@ export const audioCommentaryJobs = pgTable(
   (table) => [
     index("audio_commentary_jobs_status_idx").on(table.status, table.createdAt),
     index("audio_commentary_jobs_fixture_idx").on(table.fixtureId, table.jobType),
+  ],
+);
+
+/**
+ * Domain change events (live match updates + historical backfill).
+ * Consumers mark affected entities STALE on the recalc queue.
+ */
+export const dataChangeEvents = pgTable(
+  "data_change_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventType: text("event_type").notNull(),
+    fixtureId: uuid("fixture_id").references(() => fixtures.id, { onDelete: "set null" }),
+    entityType: text("entity_type"),
+    entityId: uuid("entity_id"),
+    source: text("source").notNull().default("system"),
+    importMethod: text("import_method"),
+    payload: jsonb("payload").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("data_change_events_created_idx").on(table.createdAt),
+    index("data_change_events_fixture_idx").on(table.fixtureId, table.createdAt),
+  ],
+);
+
+/**
+ * Affected-entity recalculation queue.
+ * status: stale | calculating | current | partial | failed
+ */
+export const entityRecalcQueue = pgTable(
+  "entity_recalc_queue",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    status: text("status").notNull().default("stale"),
+    reason: text("reason"),
+    priority: integer("priority").notNull().default(50),
+    lastEventId: uuid("last_event_id").references(() => dataChangeEvents.id, {
+      onDelete: "set null",
+    }),
+    coverage: jsonb("coverage").notNull().default({}),
+    error: text("error"),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    calculatedAt: timestamp("calculated_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("entity_recalc_queue_entity_unique").on(table.entityType, table.entityId),
+    index("entity_recalc_queue_status_priority_idx").on(
+      table.status,
+      table.priority,
+      table.updatedAt,
+    ),
   ],
 );

@@ -6,6 +6,7 @@ import {
   listPlayerImages,
   refreshPlayerPlanetRugbyImages,
   updatePlayerImageMetadata,
+  uploadPlayerPrimaryImage,
   type PlayerImageRole,
 } from "@/lib/player-image-service";
 import {
@@ -55,6 +56,29 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      const file = form.get("file");
+      if (!(file instanceof File)) {
+        return NextResponse.json({ error: "Missing file" }, { status: 400 });
+      }
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const row = await uploadPlayerPrimaryImage({
+        playerId: id,
+        bytes,
+        contentType: file.type || "image/jpeg",
+        fileName: file.name,
+        credit: form.get("credit") ? String(form.get("credit")) : null,
+      });
+      return NextResponse.json({
+        ok: true,
+        image: row,
+        images: await listPlayerImages(id),
+      });
+    }
+
     const body = (await req.json().catch(() => ({}))) as {
       action?: string;
       imageId?: string;

@@ -157,6 +157,21 @@ const TEAM_HEAD_COACH_DEFAULTS: Record<
   // Internationals
   italy: { name: "Gonzalo Quesada", nationality: "Argentina" },
   japan: { name: "Eddie Jones", nationality: "Australia" },
+  argentina: {
+    name: "Felipe Contepomi",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Felipe_Contepomi",
+    nationality: "Argentina",
+  },
+  "south-africa": {
+    name: "Rassie Erasmus",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Rassie_Erasmus",
+    nationality: "South Africa",
+  },
+  springboks: {
+    name: "Rassie Erasmus",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Rassie_Erasmus",
+    nationality: "South Africa",
+  },
   "united-states": { name: "Scott Lawrence", nationality: "United States" },
   usa: { name: "Scott Lawrence", nationality: "United States" },
   samoa: { name: "Mahonri Schwalger", nationality: "Samoa" },
@@ -166,6 +181,11 @@ const TEAM_HEAD_COACH_DEFAULTS: Record<
   chile: { name: "Pablo Lemoine", nationality: "Uruguay" },
   "new-zealand": { name: "Scott Robertson", nationality: "New Zealand" },
   australia: { name: "Joe Schmidt", nationality: "New Zealand" },
+  england: { name: "Steve Borthwick", nationality: "England" },
+  ireland: { name: "Andy Farrell", nationality: "Ireland" },
+  wales: { name: "Steve Tandy", nationality: "Wales" },
+  scotland: { name: "Gregor Townsend", nationality: "Scotland" },
+  france: { name: "Fabien Galthié", nationality: "France" },
 
   // Top 14
   "stade-toulousain": { name: "Ugo Mola", nationality: "France" },

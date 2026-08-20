@@ -364,8 +364,33 @@ async function finalizeSport365Import(
   await linkFixtureEventPlayerIds(fixtureId);
   await syncFixturePlayerStats(fixtureId);
 
+  const { isNarrativeCommentaryActivated } = await import("./match-narrative-live-refresh");
+  const { generateAndPublishMatchNarrativeCommentary } = await import(
+    "./match-narrative-commentary-service"
+  );
+  const { listAudioCommentaryScripts } = await import("./audio-commentary-script-service");
+  const hadNarrative = await isNarrativeCommentaryActivated(fixtureId);
+  const hadAudio =
+    hadNarrative && (await listAudioCommentaryScripts(fixtureId)).length > 0;
+
   await rebuildFixtureCommentary(fixtureId);
   const commentary = await ensureCommentaryForFixture(fixtureId, eventIds, snapshot);
+
+  // Sport365 rebuild clears match_commentary — restore Live Commentary when it was active.
+  if (hadNarrative) {
+    try {
+      await generateAndPublishMatchNarrativeCommentary(fixtureId, {
+        replace: true,
+        generateAudioScripts: hadAudio,
+      });
+    } catch (error) {
+      console.warn(
+        `[sport365] narrative restore failed for ${fixtureId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
   return {
     eventsImported,
     suggestionsGenerated: commentary.eventSuggestions,

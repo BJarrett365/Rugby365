@@ -307,4 +307,26 @@ export async function persistPlayerRating(playerId: string, packet: PlayerBioPac
         updatedAt: new Date(),
       },
     });
+
+  // Persist overall-ability history on material rating writes — never on public page load.
+  if (
+    rating.displayRating != null &&
+    Number.isFinite(rating.displayRating) &&
+    rating.displayRating > 10
+  ) {
+    try {
+      const { ensureCurrentRatingHistorySnapshot } = await import("./player-rating-history-service");
+      await ensureCurrentRatingHistorySnapshot({
+        playerId,
+        overallRating: rating.displayRating,
+        attack: rating.attackRating,
+        defence: rating.defenceRating,
+        form: rating.formScore,
+        confidence: rating.ratingConfidence,
+        modelVersion: "player-rating-v1",
+      });
+    } catch {
+      // History is best-effort — player_ratings row is the lineup source of truth.
+    }
+  }
 }

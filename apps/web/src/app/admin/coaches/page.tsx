@@ -18,8 +18,17 @@ type CoachRow = {
   coachedCountries: string[];
 };
 
+type AttentionRow = {
+  id: string;
+  name: string;
+  slug: string;
+  reasons: string[];
+};
+
 export default function CoachesAdminPage() {
   const [coaches, setCoaches] = useState<CoachRow[]>([]);
+  const [attention, setAttention] = useState<AttentionRow[]>([]);
+  const [showAttentionOnly, setShowAttentionOnly] = useState(false);
   const [teamGroups, setTeamGroups] = useState<TeamPickerGroup[]>([]);
   const [search, setSearch] = useState("");
   const [countryTeamId, setCountryTeamId] = useState("");
@@ -33,9 +42,14 @@ export default function CoachesAdminPage() {
     if (search) params.set("search", search);
     if (countryTeamId) params.set("countryTeamId", countryTeamId);
     const qs = params.toString();
-    const res = await fetch(`/api/admin/coaches${qs ? `?${qs}` : ""}`);
-    const data = await res.json();
+    const [listRes, attentionRes] = await Promise.all([
+      fetch(`/api/admin/coaches${qs ? `?${qs}` : ""}`),
+      fetch("/api/admin/coaches/attention"),
+    ]);
+    const data = await listRes.json();
+    const attentionData = await attentionRes.json();
     setCoaches(data.coaches ?? []);
+    setAttention(attentionData.coaches ?? []);
     setLoading(false);
   }, [search, countryTeamId]);
 
@@ -77,6 +91,11 @@ export default function CoachesAdminPage() {
     setAssigningTeams(false);
   }
 
+  const attentionById = new Map(attention.map((a) => [a.id, a.reasons]));
+  const visibleCoaches = showAttentionOnly
+    ? coaches.filter((c) => attentionById.has(c.id))
+    : coaches;
+
   return (
     <>
       <PageHeader
@@ -101,6 +120,49 @@ export default function CoachesAdminPage() {
           </div>
         }
       />
+
+      <div className="cms-card mb-4 border border-amber-900/40">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h3 className="font-semibold m-0">Coaches needing attention</h3>
+          <button
+            type="button"
+            className={`cms-btn text-xs ${showAttentionOnly ? "cms-btn--primary" : "cms-btn--secondary"}`}
+            onClick={() => setShowAttentionOnly((v) => !v)}
+          >
+            {showAttentionOnly ? "Showing queue only" : `Queue (${attention.length})`}
+          </button>
+        </div>
+        <p className="text-sm text-zinc-500 mt-0 mb-3">
+          Working list for editors — missing team, career, image, honours, source, or needs review.
+        </p>
+        {attention.length === 0 ? (
+          <p className="text-sm text-zinc-500 m-0">No coaches currently need attention.</p>
+        ) : (
+          <ul className="space-y-2 list-none p-0 m-0 max-h-56 overflow-y-auto">
+            {attention.slice(0, 25).map((row) => (
+              <li
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-2 text-sm border-b border-zinc-800/60 pb-2"
+              >
+                <Link href={`/admin/coaches/${row.id}/edit`} className="text-emerald-400">
+                  {row.name}
+                </Link>
+                <span className="flex flex-wrap gap-1">
+                  {row.reasons.map((reason) => (
+                    <span
+                      key={reason}
+                      className="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide bg-amber-950 text-amber-300 border border-amber-800"
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="cms-card mb-4 grid gap-4 md:grid-cols-2">
         <label className="block text-sm text-zinc-400">
           Search by name or nationality
@@ -127,7 +189,7 @@ export default function CoachesAdminPage() {
       {assignMessage ? <p className="text-sm text-zinc-400 mb-4">{assignMessage}</p> : null}
       {loading ? (
         <p className="text-sm text-zinc-500">Loading…</p>
-      ) : coaches.length === 0 ? (
+      ) : visibleCoaches.length === 0 ? (
         <p className="text-sm text-zinc-500">No coaches found.</p>
       ) : (
         <div className="cms-card overflow-x-auto">
@@ -137,34 +199,39 @@ export default function CoachesAdminPage() {
                 <th className="py-2 pr-3">Name</th>
                 <th className="py-2 pr-3">Nationality</th>
                 <th className="py-2 pr-3">Coached countries</th>
+                <th className="py-2 pr-3">Attention</th>
                 <th className="py-2 pr-3">DOB</th>
                 <th className="py-2 pr-3">Source</th>
                 <th className="py-2 pr-3">Bio</th>
               </tr>
             </thead>
             <tbody>
-              {coaches.map((coach) => (
+              {visibleCoaches.map((coach) => (
                 <tr key={coach.id} className="border-b border-zinc-800/60">
                   <td className="py-2 pr-3">
                     <Link href={`/admin/coaches/${coach.id}/edit`} className="text-emerald-400">
                       {coach.name}
                     </Link>
                   </td>
-                  <td className="py-2 pr-3 text-zinc-500">{coach.nationality ?? "—"}</td>
-                  <td className="py-2 pr-3 text-zinc-500">
-                    {coach.coachedCountries.length > 0 ? coach.coachedCountries.join(", ") : "—"}
+                  <td className="py-2 pr-3 text-zinc-400">{coach.nationality ?? "—"}</td>
+                  <td className="py-2 pr-3 text-zinc-400">
+                    {coach.coachedCountries?.length ? coach.coachedCountries.join(", ") : "—"}
                   </td>
-                  <td className="py-2 pr-3 text-zinc-500">{coach.birthDate ?? "—"}</td>
-                  <td className="py-2 pr-3 text-zinc-500">
-                    {coach.wikipediaUrl ? (
-                      <a href={coach.wikipediaUrl} target="_blank" rel="noreferrer" className="text-emerald-400">
-                        Wikipedia
-                      </a>
-                    ) : (
-                      coach.sourceProvider
-                    )}
+                  <td className="py-2 pr-3">
+                    <span className="flex flex-wrap gap-1">
+                      {(attentionById.get(coach.id) ?? []).slice(0, 2).map((reason) => (
+                        <span
+                          key={reason}
+                          className="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide bg-amber-950 text-amber-300 border border-amber-800"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </span>
                   </td>
-                  <td className="py-2 pr-3 text-zinc-500 max-w-md truncate">
+                  <td className="py-2 pr-3 text-zinc-400">{coach.birthDate ?? "—"}</td>
+                  <td className="py-2 pr-3 text-zinc-400">{coach.sourceProvider ?? "—"}</td>
+                  <td className="py-2 pr-3 text-zinc-500 max-w-xs truncate">
                     {coach.bioSummary ?? "—"}
                   </td>
                 </tr>

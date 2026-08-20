@@ -8,3 +8,12 @@ Module._load = function (request, parent, isMain) {
   if (request === "server-only") return {};
   return originalLoad(request, parent, isMain);
 };
+
+// Node 20 lacks global WebSocket; @supabase/supabase-js realtime needs it for scripts.
+try {
+  if (typeof globalThis.WebSocket === "undefined") {
+    globalThis.WebSocket = require("ws");
+  }
+} catch {
+  /* ws optional outside sync scripts */
+}

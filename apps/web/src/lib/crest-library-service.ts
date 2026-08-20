@@ -562,17 +562,68 @@ export async function resolveApprovedTeamCrest(
   };
 }
 
-/** Prefer approved crest image; fall back to teams.image_url. */
+/** Local crest assets for teams whose `teams.image_url` is missing or a mislabelled photo. */
+const CREST_REFERENCE_BY_SLUG: Record<string, string> = {
+  "south-africa": "/crest-references/south-africa-official.png",
+};
+
+/** Prefer approved crest image; then any current crest library version; last resort team image. */
 export async function resolveTeamCrestImageUrl(teamId: string): Promise<string | null> {
   const approved = await resolveApprovedTeamCrest(teamId);
   if (approved?.displayImageUrl) return approved.displayImageUrl;
+
   const db = getDb();
+  const [crest] = await db
+    .select()
+    .from(teamCrests)
+    .where(
+      and(
+        eq(teamCrests.teamId, teamId),
+        ne(teamCrests.status, "ARCHIVED"),
+        eq(teamCrests.isCurrent, true),
+      ),
+    )
+    .limit(1);
+
+  if (crest) {
+    const versions = await db
+      .select()
+      .from(teamCrestVersions)
+      .where(eq(teamCrestVersions.crestId, crest.id))
+      .orderBy(desc(teamCrestVersions.versionNumber));
+    const preferred =
+      versions.find((v) => v.id === crest.approvedVersionId) ?? versions[0] ?? null;
+    const fromLibrary = preferred
+      ? displayUrl(preferred.officialImageUrl, preferred.replicaImageUrl)
+      : null;
+    if (fromLibrary && !looksLikePersonPhotoUrl(fromLibrary)) return fromLibrary;
+  }
+
   const [team] = await db
-    .select({ imageUrl: teams.imageUrl })
+    .select({ imageUrl: teams.imageUrl, teamType: teams.teamType, slug: teams.slug })
     .from(teams)
     .where(eq(teams.id, teamId))
     .limit(1);
-  return team?.imageUrl ?? null;
+
+  const reference = team?.slug ? CREST_REFERENCE_BY_SLUG[team.slug] : undefined;
+  const fallback = team?.imageUrl?.trim() || null;
+  // Avoid using player/person photos as team crests on public profiles.
+  if (fallback && !looksLikePersonPhotoUrl(fallback)) return fallback;
+  return reference ?? null;
+}
+
+function looksLikePersonPhotoUrl(url: string): boolean {
+  const u = url.toLowerCase();
+  return (
+    /\/players?\//.test(u) ||
+    /player[-_]?image/.test(u) ||
+    /headshot/.test(u) ||
+    /portrait/.test(u) ||
+    /media\.gettyimages/.test(u) ||
+    /inpho/.test(u) ||
+    // Known mislabelled SA "crest" upload that is a player headshot.
+    /crest-ab02a44f-db95-4132-99ad-c6c6c737ade8/.test(u)
+  );
 }
 
 export async function listTeamCrests(teamId: string) {

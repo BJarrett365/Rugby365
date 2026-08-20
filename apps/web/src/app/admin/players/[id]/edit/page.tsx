@@ -10,6 +10,7 @@ import { PlayerPlanetRugbyImagesPanel } from "@/components/admin/PlayerPlanetRug
 import { PlayerImageLearningPanel } from "@/components/admin/PlayerImageLearningPanel";
 import { WikipediaCareerTables } from "@/components/admin/WikipediaCareerTables";
 import { PlayerLegendSection } from "@/components/admin/PlayerLegendSection";
+import { PlayerCmsWorkflowPanel } from "@/components/admin/PlayerCmsWorkflowPanel";
 import { PlayerTransferConflictWarning } from "@/components/admin/PlayerTransferConflictWarning";
 import { PlayerDevelopmentChartCmsPanel } from "@/components/admin/PlayerDevelopmentChartCmsPanel";
 import { PlayerMatchRatingsPanel } from "@/components/admin/PlayerMatchRatingsPanel";
@@ -70,6 +71,17 @@ const PlayerScoutIntelligencePanel = dynamic(
     loading: () => (
       <p className="text-zinc-500 text-sm cms-card mb-4">Loading Scout Intelligence…</p>
     ),
+  },
+);
+
+const PlayerCmsPositionsPanelLoader = dynamic(
+  () =>
+    import("@/components/admin/PlayerCmsPositionsPanelLoader").then((m) => ({
+      default: m.PlayerCmsPositionsPanelLoader,
+    })),
+  {
+    ssr: false,
+    loading: () => <p className="text-zinc-500 text-sm cms-card mb-4">Loading positions…</p>,
   },
 );
 
@@ -587,6 +599,10 @@ export default function EditPlayerPage() {
       />
 
       <AiAssistPanel entityType="player" entityId={id} onApplied={() => void load()} />
+
+      <PlayerCmsWorkflowPanel playerId={id} slug={values.slug || null} />
+
+      <PlayerCmsPositionsPanelLoader playerId={id} publicSlug={values.slug || null} />
 
       <div className="cms-card mb-4">
         <h3 className="font-semibold m-0 mb-2">Player profile information</h3>

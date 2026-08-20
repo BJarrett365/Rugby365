@@ -5,6 +5,7 @@ import {
   PLAYER_TITLE_TYPES,
   type PlayerTitleRow,
 } from "@/lib/player-titles-types";
+import { PlayerValueHistoryBackfillPanel } from "@/components/admin/PlayerValueHistoryBackfillPanel";
 
 const TITLE_TYPE_LABELS: Record<string, string> = {
   world_cup: "World Cup",
@@ -286,6 +287,18 @@ export function PlayerPublicProfileDataPanel({ playerId, onApplied }: Props) {
           </button>
         </div>
       </form>
+
+      <div className="border-t border-white/10 pt-4">
+        <h4 className="font-semibold m-0 mb-1 text-sm uppercase tracking-wide">
+          Market value
+        </h4>
+        <p className="text-xs text-zinc-500 mt-0 mb-0">
+          Live recalculation writes a LIVE snapshot when material / monthly rules allow. Use History
+          below to reconstruct month-end BACKFILLED points.
+        </p>
+      </div>
+
+      <PlayerValueHistoryBackfillPanel playerId={playerId} onApplied={onApplied} />
 
       <div className="border-t border-white/10 pt-4">
         <h4 className="font-semibold m-0 mb-2 text-sm">Titles & trophies</h4>

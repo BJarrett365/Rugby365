@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   extractProviderScorerMinutes,
   formatProviderScorerMinutes,
+  lookupPlayerLink,
   normalizeProviderPlayerName,
+  playerNameLookupKeys,
+  type MatchEntityContext,
 } from "./match-entity-context";
 
 describe("provider scorer minutes", () => {
@@ -29,5 +32,34 @@ describe("provider scorer minutes", () => {
         minute: 79,
       }),
     ).toEqual([79]);
+  });
+});
+
+describe("player name lookup keys", () => {
+  it("includes reversed given/family order", () => {
+    expect(playerNameLookupKeys("Sam Clarke")).toEqual(
+      expect.arrayContaining(["sam clarke", "clarke sam"]),
+    );
+  });
+});
+
+describe("lookupPlayerLink", () => {
+  it("matches reversed provider names against CMS profiles", () => {
+    const link = {
+      id: "1",
+      slug: "sam-clarke",
+      name: "Sam Clarke",
+      externalProviderId: "abc",
+    };
+    const context: MatchEntityContext = {
+      playersByExternalId: { abc: link },
+      playersByName: Object.fromEntries(playerNameLookupKeys(link.name).map((k) => [k, link])),
+      teamsByExternalId: {},
+      homeTeam: null,
+      awayTeam: null,
+      squadPlayerIds: [],
+    };
+    expect(lookupPlayerLink(context, { name: "Clarke Sam" })?.slug).toBe("sam-clarke");
+    expect(lookupPlayerLink(context, { externalId: "abc" })?.slug).toBe("sam-clarke");
   });
 });

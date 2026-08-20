@@ -2,6 +2,9 @@
 @import "../styles/pr-cms-theme.css";
 @import "../styles/pr-public-match-centre.css";
 @import "../styles/team-of-week.css";
+@import "../styles/pr-coach-profile.css";
+@import "../styles/pr-player-profile.css";
+@import "../styles/pr-venues.css";
 
 /* ─── Surface design tokens ─── */
 :root {
@@ -1130,6 +1133,42 @@ html[data-surface="print"] .no-print {
   border-radius: 0.5rem;
   color: #a1a1aa;
   text-align: center;
+}
+
+.match-data-commentary__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.match-data-commentary__item {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.match-data-commentary__clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #ca8a04;
+}
+
+.match-data-commentary__text {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.match-data-commentary__type {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
 }
 
 .match-detail-stats__header {

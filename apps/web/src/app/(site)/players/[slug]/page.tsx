@@ -1,37 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  PublicPlayerJsonLd,
-  PublicPlayerProfileView,
-} from "@/components/players/PublicPlayerProfileView";
-import { getPublicPlayerProfile } from "@/lib/public-player-profile-service";
-import { parsePublicPlayerSearchParams } from "@/lib/public-player-filters";
+import { PublicPlayerJsonLd } from "@/components/players/PublicPlayerProfileView";
+import { PublicPlayerOverviewV2 } from "@/components/players/PublicPlayerOverviewV2";
+import { getPublicPlayerOverviewV2 } from "@/lib/public-player-overview-v2-service";
+import { isPreviewParam } from "@/lib/public-entity-profile-utils";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{
-    tab?: string;
-    season?: string;
-    competition?: string;
-    page?: string;
-    preview?: string;
-  }>;
+  searchParams: Promise<{ preview?: string; compare?: string }>;
 };
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const sp = await searchParams;
-  const filters = parsePublicPlayerSearchParams(sp);
-  const profile = await getPublicPlayerProfile(slug, {
-    preview: filters.preview,
-    season: filters.season,
-    competition: filters.competition,
-    view: "domestic",
-    page: filters.page,
+  const overview = await getPublicPlayerOverviewV2(slug, {
+    preview: isPreviewParam(sp.preview),
+    compareSlug: sp.compare?.trim() || null,
   });
-  if (!profile) {
+  if (!overview) {
     return { title: "Player not found | Rugby365" };
   }
+  const profile = overview.base;
   return {
     title: profile.seo.title,
     description: profile.seo.description,
@@ -67,20 +56,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 export default async function PublicPlayerPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
-  const filters = parsePublicPlayerSearchParams(sp);
-  const profile = await getPublicPlayerProfile(slug, {
-    preview: filters.preview,
-    season: filters.season,
-    competition: filters.competition,
-    view: "domestic",
-    page: filters.page,
+  const overview = await getPublicPlayerOverviewV2(slug, {
+    preview: isPreviewParam(sp.preview),
+    compareSlug: sp.compare?.trim() || null,
   });
-  if (!profile) notFound();
+  if (!overview) notFound();
 
   return (
     <>
-      <PublicPlayerJsonLd profile={profile} />
-      <PublicPlayerProfileView profile={profile} activeTab={filters.tab} />
+      <PublicPlayerJsonLd profile={overview.base} />
+      <PublicPlayerOverviewV2 overview={overview} />
     </>
   );
 }

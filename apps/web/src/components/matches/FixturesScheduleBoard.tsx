@@ -750,9 +750,11 @@ export function FixturesScheduleBoard({
   const matchDateKeys = useMemo(() => datesWithMatches, [datesWithMatches]);
 
   const competitionOptions = useMemo(() => {
-    // Full catalogue from the schedule API (all competitions), not just today's fixtures.
+    // Prefer year-scoped CMS comps so RWC etc. stay selectable off-match-days,
+    // then fall back to the full schedule catalogue (skipping legacy duplicates).
     const options = new Map<string, { id: string; name: string; slug: string }>();
-    for (const c of competitions) {
+    const catalogue = yearCompetitions.length ? yearCompetitions : competitions;
+    for (const c of catalogue) {
       if (c.slug.includes("__legacy__")) continue;
       const name = (c.name || c.slug).trim();
       if (!name) continue;
@@ -788,7 +790,7 @@ export function FixturesScheduleBoard({
     return [...options.values()]
       .map(({ id, name }) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [competitions, yearCompetitions, fixtures, competitionById]);
+  }, [yearCompetitions, competitions, fixtures, competitionById]);
 
   const filtered = useMemo(() => {
     if (competitionFilter === "all") return fixtures;

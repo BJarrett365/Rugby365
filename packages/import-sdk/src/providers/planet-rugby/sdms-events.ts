@@ -13,9 +13,14 @@ export type SdmsKeyEvent = {
 export function sdmsEventTypeToMatchEvent(type: string): string | null {
   const t = type.trim().toLowerCase();
   if (t === "try") return "try";
+  if (t.includes("missed conversion") || t === "conversion_missed") return "conversion_missed";
   if (t === "conversion") return "conversion";
+  if (t.includes("missed penalty") || t === "penalty_missed" || t === "penalty_goal_missed") {
+    return "penalty_missed";
+  }
   // Store as penalty_goal so fixture_players / career points count kicks.
   if (t === "penalty" || t === "penalty goal" || t === "penalty_goal") return "penalty_goal";
+  if (t.includes("missed drop")) return "drop_goal_missed";
   if (t === "drop goal" || t === "drop-goal" || t === "drop_goal") return "drop_goal";
   if (t.includes("yellow")) return "yellow_card";
   if (t.includes("red")) return "red_card";

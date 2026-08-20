@@ -7,10 +7,10 @@ import type { WorldRugbyRankingCategory, WorldRugbyRankingsPayload } from "./ran
 
 export async function fetchWorldRugbyRankings(
   category: WorldRugbyRankingCategory,
-  options?: { language?: string; fetchImpl?: typeof fetch },
+  options?: { language?: string; date?: string; fetchImpl?: typeof fetch },
 ): Promise<WorldRugbyRankingsPayload> {
   const fetchImpl = options?.fetchImpl ?? fetch;
-  const url = worldRugbyRankingsUrl(category, options?.language ?? "en");
+  const url = worldRugbyRankingsUrl(category, options?.language ?? "en", options?.date);
   const res = await fetchImpl(url, {
     headers: {
       Accept: "application/json",

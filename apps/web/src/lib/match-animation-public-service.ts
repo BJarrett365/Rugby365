@@ -5,6 +5,8 @@ import {
   fixturePlayers,
   fixtures,
   fixtureTrackerSettings,
+  matchCommentary,
+  audioCommentaryScripts,
   matchEvents,
   playerMatchPerformanceStats,
   players,
@@ -15,9 +17,12 @@ import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { getDb } from "./db";
 import {
   resolveMatchAnimationAvailability,
+  isPublicAnimationTabVisible,
   type AnimationSettingsSnapshot,
   type MatchAnimationTabBadge,
+  type PublicMatchMediaVisibility,
 } from "./match-animation-availability";
+import { youtubeEmbedSrc } from "./youtube-embed";
 import { mapKeyEventsToAnimation } from "./match-animation-events";
 import {
   enrichAnimationEventPlayers,
@@ -92,6 +97,67 @@ async function loadSettings(fixtureId: string | null): Promise<AnimationSettings
   } catch {
     return null;
   }
+}
+
+/**
+ * Lightweight flags for public Match Centre tabs / header chips.
+ * Media tabs stay hidden until the match has real activation or content.
+ */
+export async function loadPublicMatchMediaVisibility(input: {
+  fixtureId: string | null;
+  fixtureStatus: string;
+  period?: string | null;
+  scheduledKickoffAt: string | null;
+  watchalongYoutubeUrl?: string | null;
+  highlightsYoutubeUrl?: string | null;
+  publishedEventCount?: number;
+}): Promise<PublicMatchMediaVisibility> {
+  const watchalong = Boolean(youtubeEmbedSrc(input.watchalongYoutubeUrl ?? null));
+  const highlights = Boolean(youtubeEmbedSrc(input.highlightsYoutubeUrl ?? null));
+
+  if (!input.fixtureId) {
+    return {
+      animation: false,
+      audio: false,
+      commentary: false,
+      watchalong,
+      highlights,
+    };
+  }
+
+  const db = getDb();
+  const [settings, audioRow, commentaryRow] = await Promise.all([
+    loadSettings(input.fixtureId),
+    db
+      .select({ id: audioCommentaryScripts.id })
+      .from(audioCommentaryScripts)
+      .where(eq(audioCommentaryScripts.fixtureId, input.fixtureId))
+      .limit(1)
+      .catch(() => [] as Array<{ id: string }>),
+    db
+      .select({ id: matchCommentary.id })
+      .from(matchCommentary)
+      .where(eq(matchCommentary.fixtureId, input.fixtureId))
+      .limit(1)
+      .catch(() => [] as Array<{ id: string }>),
+  ]);
+
+  const availability = resolveMatchAnimationAvailability({
+    fixtureStatus: input.fixtureStatus,
+    period: input.period,
+    scheduledKickoffAt: input.scheduledKickoffAt,
+    serverNowIso: new Date().toISOString(),
+    settings,
+    publishedEventCount: input.publishedEventCount ?? 0,
+  });
+
+  return {
+    animation: isPublicAnimationTabVisible({ settings, availability }),
+    audio: audioRow.length > 0,
+    commentary: commentaryRow.length > 0,
+    watchalong,
+    highlights,
+  };
 }
 
 /**
@@ -254,6 +320,12 @@ export async function buildMatchAnimationPublicPayload(
       try {
         await syncFixtureLiveStateFromSdms(cmsFixture.id, detail);
         await syncSdmsLiveEventsFromDetail(cmsFixture.id, detail.match_id, detail);
+        const { refreshActivatedNarrativeCommentary } = await import(
+          "./match-narrative-live-refresh"
+        );
+        await refreshActivatedNarrativeCommentary(cmsFixture.id, {
+          syncProvider: false,
+        });
       } catch (error) {
         console.warn(
           `[match-animation] live feed sync failed for ${detail.match_id}:`,

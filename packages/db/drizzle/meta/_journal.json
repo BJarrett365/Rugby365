@@ -470,6 +470,125 @@
       "when": 1786500000000,
       "tag": "0066_multi_presenter_voices",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1786600000000,
+      "tag": "0067_nations_championship_audio_voices",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786700000000,
+      "tag": "0068_coach_platform",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1786800000000,
+      "tag": "0069_coach_assessment_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1786900000000,
+      "tag": "0070_coach_career_record_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1787000000000,
+      "tag": "0071_coach_calc_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1787100000000,
+      "tag": "0072_coach_coverage_gap_overrides",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1787200000000,
+      "tag": "0073_data_change_events_recalc_queue",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1787300000000,
+      "tag": "0074_coach_rating_history_trends",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1787400000000,
+      "tag": "0075_world_ranking_movements",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1787500000000,
+      "tag": "0076_achievements_honours",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1787600000000,
+      "tag": "0077_player_profile_v2_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1787700000000,
+      "tag": "0078_player_value_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1787800000000,
+      "tag": "0079_player_value_score_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1787900000000,
+      "tag": "0080_player_ranking_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1788000000000,
+      "tag": "0081_player_form_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1788100000000,
+      "tag": "0082_player_ranking_board_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1788200000000,
+      "tag": "0083_venue_editorial_rankings",
+      "breakpoints": true
     }
   ]
 }

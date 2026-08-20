@@ -37,6 +37,7 @@ import {
   LEADERBOARD_VALUE_LABELS,
   teamCodeForLeaderboard,
 } from "./competition-player-stat-display";
+import { isJunkPlayerName } from "./entity-normalize";
 
 export type LeaderboardMetric =
   | "points"
@@ -393,7 +394,9 @@ async function loadSeasonStatAggregates(
     )
     .orderBy(desc(playerSeasonStats.points));
 
-  return rows.map((row) => ({
+  return rows
+    .filter((row) => !isJunkPlayerName(row.playerName))
+    .map((row) => ({
     playerId: row.playerId,
     playerName: row.playerName,
     playerSlug: row.playerSlug,
@@ -462,6 +465,7 @@ async function loadMatchStatAggregates(
 
   const buckets = new Map<string, AggregatedPlayer>();
   for (const row of rows) {
+    if (isJunkPlayerName(row.playerName)) continue;
     const key = `${row.playerId}:${row.teamId}`;
     const existing =
       buckets.get(key) ??

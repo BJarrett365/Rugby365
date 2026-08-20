@@ -1,0 +1,3160 @@
+/* Rugby365 Coach Profile — public intelligence dashboard */
+
+.pr-coach-profile {
+  --cp-bg: #0b111b;
+  --cp-card: #111827;
+  --cp-border: rgba(255, 255, 255, 0.08);
+  --cp-green: #22c55e;
+  --cp-green-dim: #16a34a;
+  --cp-gold: #e7bc63;
+  --cp-red: #ef4444;
+  --cp-amber: #f59e0b;
+  --cp-muted: #9ca3af;
+  --cp-text: #f8fafc;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  padding: 0 0.5rem 2rem;
+  min-height: 60vh;
+  width: calc(100% + (2 * var(--page-pad-x, 1rem)));
+  max-width: none;
+  margin-left: calc(-1 * var(--page-pad-x, 1rem));
+  margin-right: calc(-1 * var(--page-pad-x, 1rem));
+  box-sizing: border-box;
+}
+
+.pr-coach-profile a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pr-coach-profile__nav {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding: 0.45rem 0.35rem 0.35rem;
+  border-bottom: 1px solid var(--cp-border);
+  scrollbar-width: none;
+  align-items: center;
+}
+
+.pr-coach-profile__nav a {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid transparent;
+}
+
+.pr-coach-profile__nav a.is-active {
+  color: var(--cp-text);
+  border-bottom-color: var(--cp-green);
+}
+
+.pr-coach-profile__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.pr-coach-profile__btn {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--cp-border);
+  background: transparent;
+  color: var(--cp-text);
+  padding: 0.28rem 0.6rem;
+  border-radius: 3px;
+  line-height: 1.2;
+}
+
+.pr-coach-profile__btn--primary {
+  background: transparent;
+  border-color: var(--cp-border);
+}
+
+.pr-coach-profile__btn--icon {
+  width: 1.7rem;
+  padding-left: 0;
+  padding-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Hero — one compact horizontal unit */
+.pr-coach-hero {
+  display: grid;
+  grid-template-columns: minmax(150px, 23%) minmax(0, 1fr) minmax(120px, 16%) minmax(230px, 24%);
+  gap: 0.55rem 0.75rem;
+  padding: 0.35rem 0.35rem 0.45rem;
+  align-items: stretch;
+  min-height: clamp(240px, 26vw, 270px);
+  max-height: 280px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 42% 90% at 10% 78%, rgba(28, 90, 55, 0.38), transparent 68%),
+    radial-gradient(ellipse 30% 60% at 55% 30%, rgba(15, 40, 35, 0.25), transparent 70%),
+    var(--cp-bg);
+}
+
+.pr-coach-hero__image {
+  /* Spacer cell keeps the 4-col grid; portrait + fade are absolutely painted vs the hero. */
+  z-index: 1;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+  margin: 0;
+  pointer-events: none;
+}
+
+.pr-coach-hero__image img,
+.pr-coach-hero__silhouette {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0;
+  z-index: 1;
+  height: 100%;
+  width: auto;
+  max-width: 46%;
+  object-fit: contain;
+  object-position: bottom left;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: block;
+  /* Soft cut: bottom bleed + dissolve into the text column on the right */
+  -webkit-mask-image:
+    linear-gradient(to top, transparent 0%, #000 14%),
+    linear-gradient(to right, #000 38%, rgba(0, 0, 0, 0.65) 62%, transparent 92%);
+  mask-image:
+    linear-gradient(to top, transparent 0%, #000 14%),
+    linear-gradient(to right, #000 38%, rgba(0, 0, 0, 0.65) 62%, transparent 92%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.pr-coach-hero__silhouette {
+  width: 28%;
+  max-width: 280px;
+  height: 92%;
+  background: linear-gradient(180deg, rgba(31, 41, 55, 0.55), transparent);
+}
+
+/* Dark gradient under text where the portrait bleeds into the mid column */
+.pr-coach-hero__image::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 12%;
+  width: 34%;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(11, 17, 27, 0.28) 22%,
+    rgba(11, 17, 27, 0.72) 52%,
+    rgba(11, 17, 27, 0.94) 76%,
+    var(--cp-bg) 100%
+  );
+}
+
+.pr-coach-hero__mid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  align-self: center;
+  justify-content: center;
+  padding-top: 0.15rem;
+  position: relative;
+  z-index: 3;
+}
+
+.pr-coach-hero__identity h1 {
+  font-size: clamp(1.15rem, 1.9vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+  margin: 0 0 0.2rem;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.pr-coach-hero__name-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pr-coach-hero__verified {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  background: var(--cp-green);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: #04110a;
+  flex-shrink: 0;
+}
+
+.pr-coach-hero__nat {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--cp-muted);
+  font-size: 0.78rem;
+  margin-bottom: 0.12rem;
+}
+
+.pr-coach-hero__flag {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.pr-coach-hero__role {
+  font-size: 0.68rem;
+  color: var(--cp-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pr-coach-hero__team {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+  line-height: 1.15;
+}
+
+.pr-coach-hero__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem 0.45rem;
+  margin: 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--cp-border);
+}
+
+.pr-coach-hero__grid--row2 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--cp-border);
+}
+
+.pr-coach-hero__fact {
+  border-left: 1px solid var(--cp-border);
+  padding-left: 0.4rem;
+  min-width: 0;
+}
+
+.pr-coach-hero__fact:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.pr-coach-hero__fact dt {
+  font-size: 0.55rem;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+
+.pr-coach-hero__assess {
+  font-size: 0.48rem;
+  letter-spacing: 0.03em;
+  color: rgba(231, 188, 99, 0.85);
+  border: 1px solid rgba(231, 188, 99, 0.28);
+  border-radius: 999px;
+  padding: 0 0.28rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.pr-coach-hero__fact dd {
+  margin: 0.08rem 0 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.pr-coach-hero__crest-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  z-index: 2;
+  min-width: 0;
+}
+
+.pr-coach-hero__crest {
+  width: clamp(108px, 12vw, 150px);
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: block;
+}
+
+.pr-coach-snapshot {
+  background: rgba(17, 24, 39, 0.92);
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  padding: 0.55rem 0.65rem 0.55rem;
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+  align-self: center;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.pr-coach-snapshot h2 {
+  margin: 0 0 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cp-text);
+}
+
+.pr-coach-snapshot__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.pr-coach-snapshot__row {
+  display: grid;
+  grid-template-columns: 20px 34px minmax(0, 1fr);
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 20px;
+}
+
+.pr-coach-snapshot__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--cp-green);
+  color: #04110a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pr-coach-snapshot__icon svg {
+  width: 11px;
+  height: 11px;
+}
+
+.pr-coach-snapshot__value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cp-text);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-snapshot__label {
+  font-size: 0.58rem;
+  color: var(--cp-muted);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.pr-coach-snapshot__empty {
+  color: var(--cp-muted);
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+/* KPI strip */
+.pr-coach-kpi {
+  display: grid;
+  grid-template-columns: repeat(var(--kpi-cols, 7), minmax(0, 1fr));
+  gap: 0;
+  margin: 0.35rem 0.35rem 0.85rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  background: var(--cp-card);
+  overflow: hidden;
+}
+
+.pr-coach-kpi__cell {
+  padding: 0.55rem 0.55rem 0.5rem;
+  border-right: 1px solid var(--cp-border);
+  min-width: 0;
+}
+
+.pr-coach-kpi__link {
+  display: block;
+  text-decoration: none !important;
+  color: inherit;
+  cursor: pointer;
+  margin: -0.55rem;
+  padding: 0.55rem;
+  height: 100%;
+  transition: background-color 0.12s ease;
+}
+
+.pr-coach-kpi__link:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pr-coach-kpi__link:hover .pr-coach-kpi__label {
+  color: var(--cp-gold, #e7bc63);
+}
+
+.pr-coach-kpi__cell:last-child {
+  border-right: 0;
+}
+
+.pr-coach-kpi__label {
+  font-size: 0.52rem;
+  color: var(--cp-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.18rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.pr-coach-kpi__value {
+  font-size: clamp(1.35rem, 2.1vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pr-coach-kpi__value--green {
+  color: var(--cp-green);
+}
+
+.pr-coach-kpi__sub {
+  font-size: 0.62rem;
+  color: var(--cp-muted);
+  margin-top: 0.18rem;
+}
+
+.pr-coach-kpi__stars {
+  color: var(--cp-gold);
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: 0.12rem;
+}
+
+.pr-coach-form {
+  display: flex;
+  gap: 0.15rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.pr-coach-form span {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 2px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pr-coach-form .w {
+  background: var(--cp-green);
+  color: #04110a;
+}
+.pr-coach-form .l {
+  background: var(--cp-red);
+  color: #fff;
+}
+.pr-coach-form .d {
+  background: #4b5563;
+  color: #fff;
+}
+
+/* Cards grid */
+.pr-coach-row {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0 1.25rem 0.85rem;
+}
+
+.pr-coach-row--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.pr-coach-world-rankings {
+  padding-bottom: 0.55rem;
+}
+
+.pr-coach-world-rankings__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-coach-world-rankings__ellipsis {
+  text-align: center;
+  color: #7f93a8;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.15rem 0;
+}
+
+.pr-coach-world-rankings__row {
+  display: grid;
+  grid-template-columns: 28px 34px minmax(0, 1fr) 48px 22px;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 50px;
+  padding: 0.2rem 0.35rem;
+  margin: 0 -0.35rem;
+  border-radius: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pr-coach-world-rankings__row:hover .pr-coach-world-rankings__name {
+  color: var(--cp-gold, #e7bc63);
+}
+
+.pr-coach-world-rankings__row:last-child {
+  border-bottom: none;
+}
+
+.pr-coach-world-rankings__row.is-self {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 2px 0 0 #22c55e;
+}
+
+.pr-coach-world-rankings__rank {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f3f7fb;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-world-rankings__img {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #1f2937;
+  display: block;
+}
+
+.pr-coach-world-rankings__img--empty {
+  background:
+    radial-gradient(circle at 50% 38%, #4b5563 0 28%, transparent 29%),
+    linear-gradient(#374151, #1f2937);
+}
+
+.pr-coach-world-rankings__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.pr-coach-world-rankings__name {
+  color: #f3f7fb;
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.pr-coach-world-rankings__team {
+  color: #8fa3b8;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-coach-world-rankings__rating {
+  color: #f3f7fb;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.pr-coach-world-rankings__move {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8fa3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-world-rankings__move.is-up {
+  color: var(--cp-green);
+}
+
+.pr-coach-world-rankings__move.is-down {
+  color: var(--cp-red);
+}
+
+.pr-coach-row--2 {
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.95fr);
+  align-items: stretch;
+}
+
+.pr-coach-card {
+  background: var(--cp-card);
+  border: 1px solid var(--cp-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  min-height: 0;
+}
+
+.pr-coach-card--fill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pr-coach-card--fill > .pr-coach-empty,
+.pr-coach-card--fill > .pr-coach-trends__body,
+.pr-coach-card--fill > .pr-coach-selection-stability__body,
+.pr-coach-card--fill > .pr-coach-player-dev__list,
+.pr-coach-card--fill > .pr-coach-recent-results__list,
+.pr-coach-card--fill > .pr-coach-world-rankings__list,
+.pr-coach-card--fill > .pr-coach-upcoming__panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pr-coach-upcoming.pr-coach-card--fill .pr-coach-upcoming__cta {
+  margin-top: auto;
+}
+
+.pr-coach-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.pr-coach-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.pr-coach-card__head h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pr-coach-card__link {
+  font-size: 0.68rem;
+  color: var(--cp-gold);
+  text-decoration: none;
+}
+
+.pr-coach-card__link:hover {
+  color: var(--cp-gold);
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.pr-coach-card__kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+  margin-bottom: 0.35rem;
+}
+
+.pr-coach-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  color: var(--cp-text);
+}
+
+.pr-coach-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pr-coach-history-row .pr-career-badge {
+  flex: 0 0 auto;
+}
+
+.pr-coach-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pr-coach-stat-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 4.5rem;
+}
+
+.pr-coach-stat-row strong {
+  font-size: 1.25rem;
+}
+
+.pr-coach-stat-row span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cp-muted);
+}
+
+.pr-coach-empty {
+  color: var(--cp-muted);
+  font-size: 0.82rem;
+}
+
+/* Intelligence */
+.pr-coach-intel {
+  gap: 0;
+}
+
+.pr-coach-intel__cols {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 0.55fr;
+  gap: 0.35rem;
+  font-size: 0.62rem;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.pr-coach-intel__list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  justify-content: space-between;
+  min-height: 0;
+}
+
+.pr-coach-intel__row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 0.55fr;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.28rem 0;
+}
+
+.pr-coach-intel__name {
+  font-size: 0.78rem;
+}
+
+.pr-coach-intel__barwrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.pr-coach-intel__bar {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.pr-coach-intel__bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cp-green);
+}
+
+.pr-coach-intel__bar > i.amber {
+  background: var(--cp-amber);
+}
+.pr-coach-intel__bar > i.orange {
+  background: #f97316;
+}
+.pr-coach-intel__bar > i.red {
+  background: var(--cp-red);
+}
+
+.pr-coach-intel__score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cp-green);
+  min-width: 1.6rem;
+  text-align: right;
+}
+
+.pr-coach-intel__rank {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cp-green);
+  text-align: right;
+}
+
+/* Career record */
+.pr-coach-record {
+  gap: 0;
+}
+
+.pr-coach-record__pwdl {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--cp-border);
+  border-radius: 8px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.pr-coach-record__pwdl > div {
+  padding: 0.65rem 0.35rem;
+  text-align: center;
+  border-right: 1px solid var(--cp-border);
+}
+
+.pr-coach-record__pwdl > div:last-child {
+  border-right: 0;
+}
+
+.pr-coach-record__pwdl span {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--cp-muted);
+}
+
+.pr-coach-record__pwdl strong {
+  font-size: 1.25rem;
+}
+
+.pr-coach-record__pwdl .w {
+  color: var(--cp-green);
+}
+.pr-coach-record__pwdl .l {
+  color: var(--cp-red);
+}
+
+.pr-coach-record__mid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  flex: 1 1 auto;
+  align-items: stretch;
+  padding: 0.75rem 0;
+  min-height: 8.5rem;
+}
+
+.pr-coach-record__winrate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 100%;
+}
+
+.pr-coach-donut {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--cp-green) calc(var(--pct, 0) * 1%), rgba(255, 255, 255, 0.08) 0);
+}
+
+.pr-coach-donut__inner {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  background: var(--cp-card);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.pr-coach-record__pts {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+}
+
+.pr-coach-record__pts div {
+  border-bottom: 1px solid var(--cp-border);
+  padding: 0.65rem 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pr-coach-record__pts div:last-child {
+  border-bottom: 0;
+}
+
+.pr-coach-record__pts span {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pr-coach-record__pts strong {
+  font-size: 1.15rem;
+}
+
+.pr-coach-record__avgs,
+.pr-coach-record__bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.75rem;
+  border-top: 1px solid var(--cp-border);
+  padding: 0.7rem 0 0;
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.pr-coach-record__bottom {
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0.7rem 0 0.1rem;
+  margin-top: 0;
+}
+
+.pr-coach-record__avgs span,
+.pr-coach-record__bottom span {
+  display: block;
+  font-size: 0.58rem;
+  color: var(--cp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pr-coach-record__avgs strong,
+.pr-coach-record__bottom strong {
+  font-size: 0.95rem;
+}
+
+/* Power index */
+.pr-coach-power {
+  gap: 0.65rem;
+}
+
+.pr-coach-power__ring {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  margin: 0.15rem auto 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.pr-coach-power__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.pr-coach-power__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
+}
+
+.pr-coach-power__progress {
+  fill: none;
+  stroke: var(--cp-green);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.85s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-coach-power__progress {
+    transition: none;
+  }
+}
+
+.pr-coach-power__ring-inner {
+  position: relative;
+  z-index: 1;
+  width: 106px;
+  height: 106px;
+  border-radius: 999px;
+  background: var(--cp-card);
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.pr-coach-power__ring-inner strong {
+  font-size: 2.05rem;
+  line-height: 1;
+}
+
+.pr-coach-power__ring-inner span {
+  font-size: 0.58rem;
+  color: var(--cp-muted);
+  letter-spacing: 0.06em;
+}
+
+.pr-coach-power__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 1.25rem;
+  border-top: 1px solid var(--cp-border);
+  padding-top: 0.65rem;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  align-content: stretch;
+}
+
+.pr-coach-power__cols > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  gap: 0.15rem;
+}
+
+.pr-coach-power__metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  padding: 0.18rem 0;
+  width: 100%;
+}
+
+.pr-coach-power__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--cp-green);
+  margin-right: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.pr-coach-power__dot.amber {
+  background: var(--cp-amber);
+}
+
+.pr-coach-power__dot.orange {
+  background: #f97316;
+}
+
+.pr-coach-power__dot.red {
+  background: var(--cp-red);
+}
+
+.pr-coach-power__dot.muted {
+  background: var(--cp-muted);
+}
+
+.pr-coach-power__metric .label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-coach-power__metric strong {
+  flex: 0 0 auto;
+  min-width: 1.75rem;
+  text-align: right;
+}
+
+/* Timeline — compact horizontal career journey */
+.pr-coach-timeline {
+  overflow-x: auto;
+  padding: 0.15rem 0 0.25rem;
+  margin: 0 -0.15rem;
+}
+
+.pr-coach-timeline__track {
+  display: flex;
+  width: 100%;
+  min-width: max-content;
+  justify-content: space-between;
+  gap: 0.35rem;
+  position: relative;
+  padding: 0.15rem 0.2rem 0.2rem;
+}
+
+.pr-coach-timeline__track::before {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 1.35rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pr-coach-timeline__node {
+  flex: 1 1 0;
+  min-width: 4.6rem;
+  max-width: 6.5rem;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pr-coach-timeline__year {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(248, 250, 252, 0.78);
+  margin-bottom: 0.35rem;
+  line-height: 1;
+}
+
+.pr-coach-timeline__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #fff;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.pr-coach-timeline__dot.player {
+  background: #e5e7eb;
+}
+.pr-coach-timeline__dot.coach {
+  background: var(--cp-green);
+}
+.pr-coach-timeline__dot.technical {
+  background: var(--cp-gold);
+}
+
+.pr-coach-timeline__stem {
+  width: 1px;
+  height: 0.55rem;
+  background: rgba(255, 255, 255, 0.28);
+  margin: 0 auto;
+}
+
+.pr-coach-timeline__crest-wrap {
+  width: 2.75rem;
+  height: 2.9rem;
+  margin: 0.1rem auto 0.28rem;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Career timeline shield badge */
+.pr-career-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.9rem;
+}
+
+.pr-career-badge__shield {
+  width: 2.55rem;
+  height: 2.7rem;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #163528 0%, #0c1a14 100%);
+  border: 1.5px solid var(--cp-gold);
+  clip-path: polygon(50% 0%, 95% 12%, 95% 62%, 50% 100%, 5% 62%, 5% 12%);
+  box-shadow: inset 0 1px 0 rgba(231, 188, 99, 0.18);
+}
+
+.pr-career-badge.has-crest .pr-career-badge__shield {
+  background: linear-gradient(180deg, #142018 0%, #0b111b 100%);
+  padding: 0.2rem;
+}
+
+.pr-career-badge.has-crest .pr-team-crest {
+  width: 1.7rem !important;
+  height: 1.7rem !important;
+}
+
+.pr-career-badge__icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+  background: var(--cp-gold);
+  opacity: 0.92;
+}
+
+.pr-career-badge__icon--jersey {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M16 4l3 2v3l-2 1v10H7V10L5 9V6l3-2h2l1 2h2l1-2h2z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M16 4l3 2v3l-2 1v10H7V10L5 9V6l3-2h2l1 2h2l1-2h2z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.pr-career-badge__icon--whistle {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M8 10a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm4.5-1L20 6v3l-5 2.2V18h-3v-9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M8 10a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm4.5-1L20 6v3l-5 2.2V18h-3v-9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.pr-career-badge__icon--tactics {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h3v3H8V8zm5 0h3v3h-3V8zM8 13h3v3H8v-3zm5 0h3v3h-3v-3z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h3v3H8V8zm5 0h3v3h-3V8zM8 13h3v3H8v-3zm5 0h3v3h-3v-3z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.pr-career-badge__icon--management {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 3l8 4v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4zm0 2.2L6 8.1v4.7c0 3.6 2.4 6.2 6 6.7 3.6-.5 6-3.1 6-6.7V8.1l-6-2.9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 3l8 4v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4zm0 2.2L6 8.1v4.7c0 3.6 2.4 6.2 6 6.7 3.6-.5 6-3.1 6-6.7V8.1l-6-2.9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.pr-career-badge__icon--ball {
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 2px #0b111b;
+}
+
+.pr-career-badge__marker {
+  position: absolute;
+  right: -0.15rem;
+  bottom: 0.05rem;
+  min-width: 1.05rem;
+  padding: 0.05rem 0.18rem;
+  border-radius: 999px;
+  background: #0b111b;
+  border: 1px solid var(--cp-gold);
+  color: var(--cp-gold);
+  font-size: 0.42rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+
+.pr-career-badge.is-current .pr-career-badge__shield {
+  box-shadow:
+    0 0 0 2px rgba(34, 197, 94, 0.55),
+    inset 0 1px 0 rgba(231, 188, 99, 0.18);
+}
+
+.pr-coach-timeline__node.is-current .pr-coach-timeline__crest-wrap {
+  box-shadow: none;
+}
+
+.pr-coach-timeline__meta {
+  font-size: 0.52rem;
+  color: var(--cp-muted);
+  line-height: 1.15;
+  margin-bottom: 0.12rem;
+}
+
+.pr-coach-timeline__role {
+  font-size: 0.58rem;
+  font-weight: 650;
+  line-height: 1.15;
+  color: var(--cp-text);
+  margin-bottom: 0.08rem;
+}
+
+.pr-coach-timeline__team {
+  font-size: 0.52rem;
+  color: var(--cp-muted);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.pr-coach-timeline__node.is-current .pr-coach-timeline__dot {
+  background: var(--cp-green);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+}
+
+.pr-coach-timeline__node.is-current .pr-coach-timeline__crest-wrap {
+  box-shadow: 0 0 0 1px var(--cp-green);
+}
+
+.pr-coach-row--2 > .pr-coach-card:has(.pr-coach-timeline) {
+  padding-top: 0.7rem;
+  padding-bottom: 0.55rem;
+}
+
+/* Honours grid */
+.pr-coach-honours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--cp-border);
+  margin: 0 -1rem -0.85rem;
+  width: calc(100% + 2rem);
+  flex: 1;
+}
+
+.pr-coach-honours__tile {
+  text-align: center;
+  padding: 1rem 0.75rem 1.05rem;
+  border-right: 1px solid var(--cp-border);
+  border-bottom: 1px solid var(--cp-border);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.2rem;
+}
+
+.pr-coach-honours__tile:last-child {
+  border-right: 0;
+}
+
+.pr-coach-honours__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  margin-bottom: 0.15rem;
+  line-height: 1;
+}
+
+.pr-coach-honours__count {
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pr-coach-honours__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cp-muted);
+  line-height: 1.35;
+  max-width: 11rem;
+  margin: 0.15rem auto 0;
+  text-wrap: balance;
+}
+
+.pr-coach-honours-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.pr-coach-honours-card .pr-coach-card__head {
+  margin-bottom: 0.55rem;
+  flex-shrink: 0;
+}
+
+.pr-coach-honours[data-count="1"] {
+  grid-template-columns: 1fr;
+}
+
+.pr-coach-honours[data-count="2"] {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  flex: 1 1 auto;
+  min-height: 10.5rem;
+  align-self: stretch;
+}
+
+.pr-coach-honours[data-count="2"] .pr-coach-honours__tile {
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: left;
+  gap: 0.85rem;
+  padding: 1.1rem 1.15rem;
+  border-right: 0;
+  min-height: 4.75rem;
+}
+
+.pr-coach-honours[data-count="2"] .pr-coach-honours__icon {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  height: auto;
+}
+
+.pr-coach-honours[data-count="2"] .pr-coach-honours__count {
+  font-size: 1.85rem;
+  min-width: 1.6rem;
+}
+
+.pr-coach-honours[data-count="2"] .pr-coach-honours__label {
+  margin: 0;
+  max-width: none;
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+.pr-coach-honours[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pr-coach-honours[data-count="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Playing career tabs + dense table + international strip */
+.pr-coach-playing .pr-coach-card__head {
+  margin-bottom: 0.35rem;
+}
+
+.pr-coach-playing .pr-coach-card__head h2 {
+  color: var(--cp-text);
+  font-weight: 700;
+}
+
+.pr-coach-playing .pr-coach-card__link {
+  color: var(--cp-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.pr-coach-playing .pr-coach-card__link:hover {
+  color: var(--cp-text);
+  opacity: 1;
+}
+
+.pr-coach-tabs {
+  display: flex;
+  gap: 0.95rem;
+  margin: 0 0 0.55rem;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pr-coach-tabs button {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  color: #8b9aab;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0 0.4rem;
+  margin: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  line-height: 1.1;
+}
+
+.pr-coach-tabs button:hover {
+  color: var(--cp-text);
+}
+
+.pr-coach-tabs button.is-active,
+.pr-coach-tabs--underline button.is-active {
+  color: var(--cp-text);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid var(--cp-green);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pr-coach-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.admin-shell .pr-coach-playing table,
+.pr-coach-playing .pr-coach-table--playing {
+  font-size: 0.72rem !important;
+  width: 100%;
+}
+
+.admin-shell .pr-coach-playing table tbody td,
+.pr-coach-playing .pr-coach-table--playing td {
+  padding: 0.42rem 0.3rem !important;
+  vertical-align: middle !important;
+}
+
+.pr-coach-table--playing {
+  table-layout: fixed;
+}
+
+.pr-coach-table--playing col.years {
+  width: 34%;
+}
+
+.pr-coach-table--playing col.team {
+  width: 40%;
+}
+
+.pr-coach-table--playing col.apps,
+.pr-coach-table--playing col.points {
+  width: 13%;
+}
+
+.pr-coach-table--playing th,
+.pr-coach-table th {
+  text-align: left;
+  color: #8b9aab !important;
+  font-size: 0.56rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.3rem 0.45rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  white-space: nowrap;
+}
+
+/* Kill CMS thead navy/green bar when coach profile is inside admin-shell */
+.admin-shell .pr-coach-playing table thead th,
+.admin-shell .pr-coach-profile table.pr-coach-table--playing thead th,
+.pr-coach-playing table thead th {
+  background: transparent !important;
+  color: #8b9aab !important;
+  font-size: 0.56rem !important;
+  font-weight: 600 !important;
+  padding: 0.2rem 0.3rem 0.45rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.pr-coach-table--playing td,
+.pr-coach-table td {
+  padding: 0.42rem 0.3rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  vertical-align: middle;
+  background: transparent !important;
+  color: var(--cp-text);
+}
+
+/* Kill CMS zebra striping when coach profile is viewed inside admin-shell */
+.admin-shell .pr-coach-playing table tbody tr,
+.admin-shell .pr-coach-playing table tbody tr:nth-child(even),
+.admin-shell .pr-coach-playing table tbody tr:hover,
+.pr-coach-profile table tbody tr,
+.pr-coach-profile table tbody tr:nth-child(even),
+.pr-coach-playing table tbody tr,
+.pr-coach-playing table tbody tr:nth-child(even) {
+  background: transparent !important;
+}
+
+.pr-coach-table--playing tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.pr-coach-table .num,
+.pr-coach-table--playing th.num,
+.pr-coach-table--playing td.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  padding-right: 0.15rem !important;
+}
+
+.pr-coach-table--playing td.years {
+  color: #9aa8b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.pr-coach-table--playing td.team {
+  font-weight: 600;
+  color: var(--cp-text);
+  overflow: hidden;
+}
+
+.pr-coach-teamcell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.pr-coach-teamcell > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-coach-teamcell__crest {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: 2px;
+}
+
+.pr-coach-teamcell__crest--empty {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pr-coach-intl {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 0.75rem 0.9rem;
+  align-items: center;
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pr-coach-intl__shield {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.pr-coach-intl__shield img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.pr-coach-intl__shield-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--cp-muted);
+}
+
+.pr-coach-intl__body {
+  min-width: 0;
+}
+
+.pr-coach-intl__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cp-text);
+  margin-bottom: 0.45rem;
+}
+
+.pr-coach-intl__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+.pr-coach-intl__stats > div {
+  padding: 0 0.65rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pr-coach-intl__stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.pr-coach-intl__stats span {
+  display: block;
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8b9aab;
+  margin-bottom: 0.15rem;
+}
+
+.pr-coach-intl__stats strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--cp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 520px) {
+  .pr-coach-intl {
+    grid-template-columns: 56px 1fr;
+    padding: 0.6rem;
+  }
+  .pr-coach-intl__shield,
+  .pr-coach-intl__shield img {
+    width: 56px;
+    height: 56px;
+  }
+  .pr-coach-intl__stats strong {
+    font-size: 0.85rem;
+  }
+  .pr-coach-table--playing td.years {
+    white-space: normal;
+  }
+}
+
+.pr-coach-award-row,
+.pr-coach-medal-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.78rem;
+}
+
+.pr-coach-award-list,
+.pr-coach-medal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pr-coach-award-row {
+  grid-template-columns: 2.75rem 1.75rem minmax(0, 1fr) auto;
+  min-height: 56px;
+  gap: 0.55rem;
+  padding: 0.45rem 0;
+}
+
+.pr-coach-award-row__year {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--cp-text);
+}
+
+.pr-coach-award-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pr-coach-award-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.pr-coach-award-row__org {
+  font-size: 0.72rem;
+  color: #c5d0dc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-coach-award-row__title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--cp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-coach-medal-group {
+  margin-top: 0.35rem;
+}
+
+.pr-coach-medal-group__label {
+  margin: 0.45rem 0 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b9aab;
+}
+
+.pr-coach-medal-row {
+  grid-template-columns: 2.75rem minmax(0, 1fr) 2.4rem;
+  min-height: 56px;
+  gap: 0.55rem;
+  padding: 0.45rem 0;
+}
+
+.pr-coach-medal-row__year {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-medal-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.pr-coach-medal-row__comp {
+  font-weight: 600;
+  color: var(--cp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-coach-medal-row__result {
+  font-size: 0.72rem;
+  color: #8b9aab;
+}
+
+.pr-coach-medal-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.pr-coach-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--cp-green);
+}
+
+.pr-coach-impact .pr-coach-card__head h2 {
+  color: var(--cp-text);
+}
+
+.pr-coach-impact__baseline {
+  margin: 0 0 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #8b9aab;
+}
+
+.pr-coach-impact__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.74rem;
+}
+
+.pr-coach-impact__table th,
+.pr-coach-impact__table td {
+  padding: 0.42rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: right;
+  vertical-align: middle;
+  background: transparent !important;
+  color: var(--cp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-impact__table th {
+  color: #8b9aab !important;
+  font-size: 0.56rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+}
+
+.admin-shell .pr-coach-impact table thead th,
+.admin-shell .pr-coach-impact__table thead th {
+  background: transparent !important;
+  color: #8b9aab !important;
+  font-size: 0.56rem !important;
+  font-weight: 600 !important;
+  padding: 0.42rem 0.3rem !important;
+}
+
+.admin-shell .pr-coach-impact table tbody tr,
+.admin-shell .pr-coach-impact table tbody tr:nth-child(even),
+.admin-shell .pr-coach-impact table tbody tr:hover {
+  background: transparent !important;
+}
+
+.pr-coach-impact__table th:first-child,
+.pr-coach-impact__table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  width: 34%;
+}
+
+.pr-coach-impact__table th:nth-child(2),
+.pr-coach-impact__table td:nth-child(2),
+.pr-coach-impact__table th:nth-child(3),
+.pr-coach-impact__table td:nth-child(3) {
+  width: 18%;
+}
+
+.pr-coach-impact__table th:nth-child(4),
+.pr-coach-impact__table td:nth-child(4) {
+  width: 30%;
+  font-weight: 700;
+}
+
+.pr-coach-impact__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.pr-coach-impact .up {
+  color: var(--cp-green);
+}
+.pr-coach-impact .down {
+  color: var(--cp-red);
+}
+
+.pr-coach-impact table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.pr-coach-impact th,
+.pr-coach-impact td {
+  padding: 0.4rem 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: right;
+}
+
+.pr-coach-impact th:first-child,
+.pr-coach-impact td:first-child {
+  text-align: left;
+}
+
+.pr-coach-chart {
+  height: 160px;
+  position: relative;
+}
+
+.pr-coach-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pr-coach-trends__filter select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e8eef5;
+  border-radius: 6px;
+  padding: 0.35rem 1.6rem 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background-image: linear-gradient(45deg, transparent 50%, #9db0c3 50%),
+    linear-gradient(135deg, #9db0c3 50%, transparent 50%);
+  background-position: calc(100% - 12px) 48%, calc(100% - 7px) 48%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.pr-coach-trends__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pr-coach-trends__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0;
+}
+
+.pr-coach-trends__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.pr-coach-trends__stats--wide {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pr-coach-trends__stat-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8fa3b8;
+}
+
+.pr-coach-trends__stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f3f7fb;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-trends__stat-value.up {
+  color: var(--cp-green);
+}
+
+.pr-coach-trends__stat-value.down {
+  color: var(--cp-red);
+}
+
+.pr-coach-trends__chart-wrap {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 132px;
+}
+
+.pr-coach-trends__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pr-coach-trends__grid {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+
+.pr-coach-trends__axis {
+  fill: #7f93a8;
+  font-size: 8px;
+}
+
+.pr-coach-trends__line {
+  stroke: #22c55e;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.pr-coach-trends__area {
+  fill: rgba(34, 197, 94, 0.08);
+  stroke: none;
+}
+
+.pr-coach-trends__point {
+  cursor: pointer;
+}
+
+.pr-coach-trends__tooltip-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.pr-coach-trends__tooltip {
+  margin-top: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(8, 16, 28, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.pr-coach-trends__tooltip-major {
+  color: #fbbf24;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.pr-coach-trends__tooltip-title {
+  font-weight: 700;
+  color: #f3f7fb;
+}
+
+.pr-coach-trends__tooltip-meta {
+  color: #8fa3b8;
+  margin: 0.15rem 0 0.55rem;
+}
+
+.pr-coach-trends__tooltip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.75rem;
+}
+
+.pr-coach-trends__tooltip-grid span {
+  display: block;
+  color: #8fa3b8;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pr-coach-trends__tooltip-grid strong {
+  color: #eef4fa;
+}
+
+.pr-coach-trends__tooltip-grid .up,
+.pr-coach-trends__drivers .up {
+  color: var(--cp-green);
+}
+
+.pr-coach-trends__tooltip-grid .down,
+.pr-coach-trends__drivers .down {
+  color: var(--cp-red);
+}
+
+.pr-coach-trends__drivers {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pr-coach-trends__drivers-title {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8fa3b8;
+  margin-bottom: 0.3rem;
+}
+
+.pr-coach-trends__drivers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pr-coach-trends__drivers li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.12rem 0;
+}
+
+
+.pr-coach-dev-row,
+.pr-coach-rank-row {
+  display: grid;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.78rem;
+}
+
+.pr-coach-dev-row {
+  grid-template-columns: 1.8rem 1fr auto auto;
+}
+
+.pr-coach-rank-row {
+  grid-template-columns: 1.2rem 1.8rem 1fr auto auto;
+}
+
+/* Player Development — Most Improved */
+.pr-coach-player-dev__list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pr-coach-player-dev__cols {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 36px 44px 36px;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0 0 0.35rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-player-dev__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 36px 44px 36px;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-decoration: none !important;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pr-coach-player-dev__row:last-child {
+  border-bottom: none;
+}
+
+.pr-coach-player-dev__row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pr-coach-player-dev__photo {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #1f2937;
+}
+
+.pr-coach-player-dev__photo-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pr-coach-player-dev__name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+a.pr-coach-player-dev__row:hover .pr-coach-player-dev__name {
+  color: var(--cp-gold, #e7bc63);
+}
+
+.pr-coach-player-dev__apps {
+  font-size: 0.78rem;
+  color: var(--cp-muted, #9ca3af);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-player-dev__change {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #f3f4f6;
+}
+
+.pr-coach-player-dev__change.is-up {
+  color: var(--cp-green, #22c55e);
+}
+
+.pr-coach-player-dev__change.is-down {
+  color: var(--cp-red, #ef4444);
+}
+
+.pr-coach-player-dev__trend {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-player-dev__trend.is-up {
+  color: var(--cp-green, #22c55e);
+}
+
+.pr-coach-player-dev__trend.is-down {
+  color: var(--cp-red, #ef4444);
+}
+
+.pr-coach-player-dev__tip {
+  display: none;
+  position: absolute;
+  left: 28px;
+  top: calc(100% - 2px);
+  z-index: 24;
+  width: min(260px, calc(100% - 0.5rem));
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111827;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: 11px;
+  color: var(--cp-muted, #9ca3af);
+  pointer-events: none;
+}
+
+.pr-coach-player-dev__row:hover .pr-coach-player-dev__tip {
+  display: flex;
+}
+
+.pr-coach-player-dev__tip-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f3f4f6;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pr-coach-player-dev__tip-pos {
+  color: var(--cp-gold, #e7bc63);
+  margin-bottom: 0.15rem;
+}
+
+.pr-coach-player-dev__tip-cta {
+  margin-top: 0.25rem;
+  font-weight: 700;
+  color: var(--cp-gold, #e7bc63);
+}
+
+/* Compact Recent Results — coach perspective */
+.pr-coach-recent-results__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-coach-recent-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 80px minmax(140px, 1fr) 28px 70px 30px;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-decoration: none !important;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.pr-coach-recent-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pr-coach-recent-row:last-child {
+  border-bottom: none;
+}
+
+.pr-coach-recent-row__date {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-recent-row__date-short {
+  display: none;
+}
+
+.pr-coach-recent-row__opp {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.pr-coach-recent-row__crest {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pr-coach-recent-row__crest-fallback {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pr-coach-recent-row__opp-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.pr-coach-recent-row__ha {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cp-muted, #9ca3af);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pr-coach-recent-row__ha-mobile {
+  display: none;
+  margin-left: 0.35rem;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--cp-muted, #9ca3af);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  padding: 0 0.2rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.pr-coach-recent-row__score {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.pr-coach-recent-row__badge {
+  width: 24px;
+  height: 22px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  justify-self: end;
+  background: #4b5563;
+  color: #fff;
+}
+
+.pr-coach-recent-row__badge.is-w {
+  background: var(--cp-green, #22c55e);
+  color: #04110a;
+}
+
+.pr-coach-recent-row__badge.is-l {
+  background: var(--cp-red, #ef4444);
+  color: #fff;
+}
+
+.pr-coach-recent-row__badge.is-d {
+  background: #d97706;
+  color: #04110a;
+}
+
+.pr-coach-recent-row__tip {
+  display: none;
+  position: absolute;
+  left: 80px;
+  top: calc(100% - 2px);
+  z-index: 20;
+  width: min(280px, calc(100% - 1rem));
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111827;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  flex-direction: column;
+  gap: 0.28rem;
+  pointer-events: none;
+}
+
+.pr-coach-recent-row:hover .pr-coach-recent-row__tip {
+  display: flex;
+}
+
+.pr-coach-recent-row__tip-comp {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-gold);
+}
+
+.pr-coach-recent-row__tip-date,
+.pr-coach-recent-row__tip-venue,
+.pr-coach-recent-row__tip-coach {
+  font-size: 11px;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-recent-row__tip-scoreline {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f3f4f6;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-recent-row__tip-cta {
+  margin-top: 0.2rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cp-gold);
+}
+
+.pr-coach-result-row {
+  display: grid;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.78rem;
+  grid-template-columns: 4.5rem 1fr auto 1fr auto;
+}
+
+.pr-coach-avatar {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #1f2937;
+}
+
+.pr-coach-upcoming {
+  text-align: center;
+}
+
+.pr-coach-upcoming .pr-coach-card__head h2 {
+  color: var(--cp-text);
+}
+
+.pr-coach-upcoming__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.85rem 0.75rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.pr-coach-upcoming__comp {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #8b9aab;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.pr-coach-upcoming__teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.pr-coach-upcoming__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.pr-coach-upcoming__side img,
+.pr-coach-upcoming__crest-fallback {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
+}
+
+.pr-coach-upcoming__crest-fallback {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pr-coach-upcoming__team-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cp-text);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-coach-upcoming__vs {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--cp-text);
+  padding: 0 0.15rem;
+}
+
+.pr-coach-upcoming__meta {
+  display: grid;
+  gap: 0.18rem;
+  justify-items: center;
+}
+
+.pr-coach-upcoming__date,
+.pr-coach-upcoming__time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e8eef5;
+  line-height: 1.25;
+}
+
+.pr-coach-upcoming__venue {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #8b9aab;
+  line-height: 1.3;
+  margin-top: 0.1rem;
+}
+
+.pr-coach-upcoming__cta {
+  display: block;
+  width: 100%;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-top: auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cp-text);
+  text-decoration: none;
+  background: rgba(8, 16, 28, 0.55);
+}
+
+.pr-coach-upcoming__cta:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  background: rgba(8, 16, 28, 0.75);
+}
+
+.pr-coach-stability {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Selection Stability — compact donut + metrics */
+.pr-coach-selection-stability__body {
+  display: grid;
+  grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
+  gap: 0.65rem 0.85rem;
+  align-items: center;
+  min-height: 0;
+}
+
+.pr-coach-selection-stability__ring {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.pr-coach-selection-stability__ring-inner {
+  position: relative;
+  z-index: 1;
+  width: 74px;
+  height: 74px;
+  border-radius: 999px;
+  background: var(--cp-card);
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 0.05rem;
+}
+
+.pr-coach-selection-stability__ring-inner strong {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fff;
+}
+
+.pr-coach-selection-stability__ring-inner span {
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--cp-muted, #9ca3af);
+  line-height: 1.1;
+}
+
+.pr-coach-selection-stability__metrics {
+  margin: 0;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.pr-coach-selection-stability__metrics div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.pr-coach-selection-stability__metrics dt {
+  margin: 0;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-selection-stability__metrics dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-stability__ring {
+  width: 110px;
+  height: 110px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--cp-green) calc(var(--pct, 0) * 1%), rgba(255, 255, 255, 0.08) 0);
+}
+
+.pr-coach-stability__ring-inner {
+  width: 78px;
+  height: 78px;
+  border-radius: 999px;
+  background: var(--cp-card);
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.pr-coach-stability__ring-inner strong {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.pr-coach-stability__ring-inner span {
+  font-size: 0.52rem;
+  color: var(--cp-muted);
+}
+
+.pr-coach-stability__stats div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  padding: 0.18rem 0;
+}
+
+.pr-coach-stability__stats span {
+  color: var(--cp-muted);
+}
+
+.pr-coach-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem 0;
+  color: var(--cp-muted);
+  font-size: 0.65rem;
+}
+
+.pr-coach-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (max-width: 1100px) {
+  .pr-coach-hero {
+    grid-template-columns: minmax(120px, 28%) minmax(0, 1fr) minmax(200px, 32%);
+    max-height: none;
+    min-height: 0;
+  }
+  .pr-coach-hero__crest-wrap {
+    display: none;
+  }
+  .pr-coach-hero__image {
+    min-height: 180px;
+  }
+  .pr-coach-hero__image img,
+  .pr-coach-hero__silhouette {
+    max-width: 52%;
+  }
+  .pr-coach-hero__image::after {
+    left: 10%;
+    width: 42%;
+  }
+  .pr-coach-snapshot {
+    max-width: none;
+    justify-self: stretch;
+  }
+  .pr-coach-kpi {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .pr-coach-kpi__cell:nth-child(4n) {
+    border-right: 0;
+  }
+  .pr-coach-kpi__cell:not(:nth-child(4n)) {
+    border-right: 1px solid var(--cp-border);
+  }
+  .pr-coach-row--3,
+  .pr-coach-row--2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pr-coach-trends__head-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .pr-coach-hero {
+    grid-template-columns: 1fr;
+    max-height: none;
+  }
+  .pr-coach-hero__image {
+    position: relative;
+    min-height: 200px;
+    max-height: 220px;
+  }
+  .pr-coach-hero__image img,
+  .pr-coach-hero__silhouette {
+    position: relative;
+    left: auto;
+    max-width: 70%;
+    height: 200px;
+    margin: 0 auto;
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 14%);
+    mask-image: linear-gradient(to top, transparent 0%, #000 14%);
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+  }
+  .pr-coach-hero__image::after {
+    display: none;
+  }
+  .pr-coach-hero__crest-wrap {
+    display: flex;
+  }
+  .pr-coach-hero__crest {
+    width: 96px;
+  }
+  .pr-coach-hero__grid,
+  .pr-coach-hero__grid--row2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pr-coach-form {
+    flex-wrap: wrap;
+  }
+  .pr-coach-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pr-coach-row--3,
+  .pr-coach-row--2 {
+    grid-template-columns: 1fr;
+  }
+  .pr-coach-honours {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    margin: 0 -0.85rem -0.85rem;
+    width: calc(100% + 1.7rem);
+  }
+  .pr-coach-recent-row {
+    grid-template-columns: 58px minmax(0, 1fr) 56px 28px;
+    gap: 0.3rem;
+    min-height: 42px;
+  }
+  .pr-coach-recent-row__date-full {
+    display: none;
+  }
+  .pr-coach-recent-row__date-short {
+    display: inline;
+  }
+  .pr-coach-recent-row__ha {
+    display: none;
+  }
+  .pr-coach-recent-row__ha-mobile {
+    display: inline-flex;
+  }
+  .pr-coach-recent-row__tip {
+    display: none !important;
+  }
+  .pr-coach-player-dev__tip {
+    display: none !important;
+  }
+  .pr-coach-recent-row__comp {
+    display: none !important;
+  }
+  .pr-coach-result-row {
+    grid-template-columns: 4rem 1fr auto;
+  }
+  .pr-coach-result-row .opp {
+    display: none;
+  }
+}
+
+/* Inner rating / power / rankings pages */
+.pr-coach-inner {
+  padding: 1.25rem;
+}
+
+.pr-coach-inner__header {
+  margin-bottom: 1rem;
+}
+
+.pr-coach-inner__title {
+  margin: 0.15rem 0 0.35rem;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pr-coach-inner__lede {
+  margin: 0 0 0.35rem;
+  color: var(--cp-muted, #9ca3af);
+  font-size: 0.92rem;
+  max-width: 52rem;
+  line-height: 1.45;
+}
+
+.pr-coach-inner__compare {
+  margin: 1rem 0 0;
+}
+
+.pr-coach-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.78rem;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-breadcrumb a {
+  color: var(--cp-gold, #e7bc63);
+  text-decoration: none;
+}
+
+.pr-coach-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.pr-coach-breadcrumb__sep {
+  margin: 0 0.25rem;
+  opacity: 0.55;
+}
+
+.pr-coach-breadcrumb .is-current {
+  color: #e5e7eb;
+}
+
+.pr-coach-muted {
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-rating-hero {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pr-coach-rating-hero__value {
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.pr-coach-rating-hero__stars {
+  margin-top: 0.25rem;
+  color: var(--cp-gold, #e7bc63);
+  letter-spacing: 0.08em;
+}
+
+.pr-coach-rating-hero__label {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-rating-hero__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.pr-coach-rating-hero__meta dt {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+  margin-bottom: 0.15rem;
+}
+
+.pr-coach-rating-hero__meta dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.pr-coach-rating-hero__meta a {
+  color: var(--cp-gold, #e7bc63);
+  text-decoration: none;
+}
+
+.pr-coach-breakdown__head,
+.pr-coach-breakdown__row {
+  display: grid;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.pr-coach-breakdown__head {
+  padding-bottom: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cp-muted, #9ca3af);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pr-coach-breakdown__row {
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-coach-breakdown__row:last-child {
+  border-bottom: none;
+}
+
+.pr-coach-breakdown__name {
+  font-weight: 600;
+}
+
+.pr-coach-why__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pr-coach-why__title {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cp-gold, #e7bc63);
+}
+
+.pr-coach-why__note {
+  margin: 0.85rem 0 0;
+  font-size: 0.75rem;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-card--block {
+  margin-bottom: 1rem;
+}
+
+.pr-coach-table-wrap {
+  overflow-x: auto;
+}
+
+.pr-coach-table--dense th,
+.pr-coach-table--dense td {
+  padding: 0.4rem 0.45rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.pr-coach-table__sublinks {
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  color: var(--cp-muted, #9ca3af);
+}
+
+.pr-coach-table__sublinks a {
+  color: var(--cp-gold, #e7bc63);
+}
+
+@media (max-width: 760px) {
+  .pr-coach-rating-hero {
+    grid-template-columns: 1fr;
+  }
+  .pr-coach-why__grid {
+    grid-template-columns: 1fr;
+  }
+}
+

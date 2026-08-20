@@ -17,6 +17,7 @@ import {
 } from "@/lib/match-entity-context";
 import {
   formatMatchEventMinute,
+  isHomeSideKeyEvent,
   type PublicKeyEvent,
 } from "@/lib/match-key-events";
 import { PlayerProfileLink } from "./EntityProfileLinks";
@@ -401,12 +402,16 @@ function KeyEventPlayers({
 export function KeyEventsPanel({
   events,
   homeTeamId,
+  homeTeamIds,
   entities,
 }: {
   events: PublicKeyEvent[];
   homeTeamId?: string;
+  /** CMS UUID and/or SDMS provider id — either may appear on event.team_id. */
+  homeTeamIds?: Array<string | null | undefined>;
   entities: MatchEntityContext;
 }) {
+  const homeIds = homeTeamIds?.length ? homeTeamIds : [homeTeamId];
   const rows = useMemo(() => {
     const out: Array<
       | { kind: "period"; label: string; key: string }
@@ -464,8 +469,8 @@ export function KeyEventsPanel({
             );
           }
           const e = row.event;
-          const isHome = Boolean(homeTeamId && e.team_id === homeTeamId);
-          const isAway = Boolean(e.team_id && (!homeTeamId || e.team_id !== homeTeamId));
+          const isHome = isHomeSideKeyEvent(e.team_id, homeIds);
+          const isAway = Boolean(e.team_id && !isHome);
           const iconSrc = eventIconSrc(e.type);
 
           return (

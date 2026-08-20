@@ -16,6 +16,51 @@ export type PublicKeyEvent = {
   away_score?: number | null;
 };
 
+/**
+ * Home-side match for Key Events / strip markers.
+ * CMS rows may carry internal UUIDs while the page home id is the SDMS provider id
+ * (or the reverse) — accept any known home identifier.
+ */
+export function isHomeSideKeyEvent(
+  teamId: string | null | undefined,
+  homeTeamIds: Array<string | null | undefined> | string | null | undefined,
+): boolean {
+  if (!teamId) return false;
+  const ids = (Array.isArray(homeTeamIds) ? homeTeamIds : [homeTeamIds])
+    .map((id) => (typeof id === "string" ? id.trim() : ""))
+    .filter(Boolean);
+  return ids.includes(teamId);
+}
+
+function countableKeyEvent(e: PublicKeyEvent): boolean {
+  if (/half\s*start|half\s*end|full\s*time|kick\s*off|period/i.test(e.type) && !e.player_name) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Prefer the richer public timeline. Sparse CMS scoring-only imports must not
+ * hide a fuller SDMS feed (subs, cards, period markers).
+ */
+export function selectPublicKeyEvents(
+  sdmsEvents: PublicKeyEvent[],
+  cmsEvents: PublicKeyEvent[],
+): PublicKeyEvent[] {
+  if (cmsEvents.length === 0) return sdmsEvents;
+  if (sdmsEvents.length === 0) return cmsEvents;
+
+  const sdmsCount = sdmsEvents.filter(countableKeyEvent).length;
+  const cmsCount = cmsEvents.filter(countableKeyEvent).length;
+  if (cmsCount < Math.max(1, Math.ceil(sdmsCount * 0.6))) {
+    return sdmsEvents;
+  }
+
+  const cmsMax = Math.max(0, ...cmsEvents.map((e) => Math.floor(Number(e.minute) || 0)));
+  const sdmsMax = Math.max(0, ...sdmsEvents.map((e) => Math.floor(Number(e.minute) || 0)));
+  return cmsMax >= sdmsMax ? cmsEvents : sdmsEvents;
+}
+
 /** Whole match minutes only — e.g. `2'` not `2'02`. */
 export function formatMatchEventMinute(minute: number | null | undefined): string {
   const m = Math.max(0, Math.floor(Number(minute) || 0));

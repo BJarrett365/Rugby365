@@ -128,8 +128,6 @@ export function CompetitionPlayerStatsClient({
     if (json.seasons?.length) setSeasons(json.seasons);
     if (json.season?.label && json.season.label !== seasonLabel) {
       setSeasonLabel(json.season.label);
-    } else if (!seasonLabel && json.season?.label) {
-      setSeasonLabel(json.season.label);
     }
     const advancedPrimaryEmpty = (json.boards ?? [])
       .filter((b) => ["tacklesCompleted", "metresCarried", "carries"].includes(b.metric))

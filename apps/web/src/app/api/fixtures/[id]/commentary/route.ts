@@ -10,6 +10,7 @@ import {
   type MatchPhase,
 } from "@/lib/commentary-entry";
 import { apiErrorResponse } from "@/lib/api-errors";
+import { refreshActivatedNarrativeCommentary } from "@/lib/match-narrative-live-refresh";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,6 +18,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, id)).limit(1);
   if (!fixture) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Keep activated Live Commentary in sync while the public tab polls (throttled).
+  try {
+    await refreshActivatedNarrativeCommentary(id, { syncProvider: true });
+  } catch (error) {
+    console.warn(
+      `[commentary] live narrative refresh failed for ${id}:`,
+      error instanceof Error ? error.message : error,
+    );
+  }
 
   let lines = await db
     .select()

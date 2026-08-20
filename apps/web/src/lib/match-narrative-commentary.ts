@@ -788,6 +788,36 @@ export function buildTeamAnnouncementLine(
   };
 }
 
+/** True when the fixture has not started — Generate should stay pre-match only. */
+export function isPreMatchNarrativeStatus(status?: string | null): boolean {
+  const s = (status ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return (
+    !s ||
+    s === "scheduled" ||
+    s === "fixture" ||
+    s === "upcoming" ||
+    s === "not_started" ||
+    s === "pre_match" ||
+    s === "prematch" ||
+    s === "postponed" ||
+    s === "cancelled"
+  );
+}
+
+/**
+ * Highest match minute the narrative may treat as "reached".
+ * Fabricated story beats must not exceed this.
+ */
+export function narrativeProgressMinute(ctx: NarrativeMatchContext): number {
+  const eventMax = ctx.events.reduce((m, e) => Math.max(m, e.minute), 0);
+  const s = (ctx.status ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (/full_time|finished|result|complete/.test(s)) return Math.max(eventMax, 80);
+  if (s === "half_time" || s === "ht") return Math.max(eventMax, 40);
+  if (/second_half/.test(s)) return Math.max(eventMax, 41);
+  if (/live|first_half|in_play|inplay/.test(s)) return Math.max(eventMax, 1);
+  return eventMax;
+}
+
 export function buildKickOffLine(ctx: NarrativeMatchContext): NarrativeCommentaryLine {
   const venueBit = ctx.venueName?.trim() ? ` at ${ctx.venueName.trim()}` : "";
   return {
@@ -829,14 +859,31 @@ function applyScoreDelta(
   event: NarrativeEventInput,
   delta: number,
 ) {
+  const before = { ...running };
   if (typeof event.homeScore === "number" && typeof event.awayScore === "number") {
+    if (
+      ctx.finalHomeScore != null &&
+      ctx.finalAwayScore != null &&
+      (event.homeScore > ctx.finalHomeScore || event.awayScore > ctx.finalAwayScore)
+    ) {
+      return;
+    }
     running.home = event.homeScore;
     running.away = event.awayScore;
-    return;
+  } else {
+    const team = (event.teamName ?? "").trim();
+    if (team === ctx.homeName) running.home += delta;
+    else if (team === ctx.awayName) running.away += delta;
   }
-  const team = (event.teamName ?? "").trim();
-  if (team === ctx.homeName) running.home += delta;
-  else if (team === ctx.awayName) running.away += delta;
+
+  if (
+    ctx.finalHomeScore != null &&
+    ctx.finalAwayScore != null &&
+    (running.home > ctx.finalHomeScore || running.away > ctx.finalAwayScore)
+  ) {
+    running.home = before.home;
+    running.away = before.away;
+  }
 }
 
 /** Colour / momentum reaction after the scoreboard moves. */
@@ -1031,13 +1078,16 @@ export function buildMatchNarrativeCommentary(
   );
   if (awayAnnounce) lines.push(awayAnnounce);
 
-  lines.push(buildKickOffLine(ctx));
-
-  // In-play: Commentary Intelligence Engine (10 layers, personalities, blended insights).
-  lines.push(...buildIntelligenceInPlayCommentary(ctx));
+  // Scheduled / not kicked off with no timed events: pre-match pack only.
+  const preMatch =
+    isPreMatchNarrativeStatus(ctx.status) && narrativeProgressMinute(ctx) <= 0;
+  if (!preMatch) {
+    lines.push(buildKickOffLine(ctx));
+    lines.push(...buildIntelligenceInPlayCommentary(ctx));
+  }
 
   const shouldCloseGame =
-    /full_time|finished|result|complete|live/i.test(ctx.status ?? "") &&
+    /full_time|finished|result|complete/i.test(ctx.status ?? "") &&
     ctx.finalHomeScore != null &&
     ctx.finalAwayScore != null;
 

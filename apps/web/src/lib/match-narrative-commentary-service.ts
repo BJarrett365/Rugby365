@@ -28,6 +28,7 @@ import {
   type NarrativeWinPrediction,
 } from "./match-narrative-commentary";
 import { normalizeTeamSideStats } from "./match-narrative-team-stats";
+import { dedupeNarrativeEvents } from "./match-narrative-event-dedupe";
 import { compareFixtureHeadToHead } from "./head-to-head-service";
 import { findCatalogEntryForCompetitionName } from "./competition-catalog";
 import { isFixtureRatingsPublished } from "./match-rating-math";
@@ -521,8 +522,8 @@ export async function loadNarrativeMatchContext(
     };
   });
 
-  // Collapse duplicate CMS rows + pair Sub On/Off at the same minute.
-  const events: NarrativeEventInput[] = [];
+  // Collapse duplicate CMS rows (dual rugby_data + SDMS imports) + pair Sub On/Off.
+  const collapsed: NarrativeEventInput[] = [];
   const seen = new Set<string>();
   for (let i = 0; i < rawEvents.length; i++) {
     const event = rawEvents[i]!;
@@ -560,7 +561,7 @@ export async function loadNarrativeMatchContext(
         ].join("|");
         if (seen.has(pairedKey)) continue; // already emitted with its pair
         seen.add(pairedKey);
-        events.push({
+        collapsed.push({
           ...event,
           eventType: "substitution",
           playerOn: event.playerOn ?? pair.playerOn ?? null,
@@ -571,8 +572,10 @@ export async function loadNarrativeMatchContext(
       }
     }
 
-    events.push(event);
+    collapsed.push(event);
   }
+
+  const events: NarrativeEventInput[] = dedupeNarrativeEvents(collapsed);
 
   const competitionName =
     fixture.competition?.name ?? fixture.competitionName ?? "Competition";
@@ -917,9 +920,9 @@ export async function generateAndPublishMatchNarrativeCommentary(
   }
 
   // Audio is a separate Lead + Analyst rewrite — never TTS of written prose.
-  // Default on: written feed still primary; scripts are admin drafts until TTS/mix.
+  // Only activate when explicitly requested; otherwise clear so the public Audio tab stays off.
   let audioScriptsCreated: number | undefined;
-  if (options?.generateAudioScripts !== false) {
+  if (options?.generateAudioScripts === true) {
     const { generateAndStoreAudioScriptsForFixture } = await import(
       "./audio-commentary-script-service"
     );
@@ -927,7 +930,17 @@ export async function generateAndPublishMatchNarrativeCommentary(
       replace: options?.replace !== false,
     });
     audioScriptsCreated = audio.created;
+  } else if (options?.replace !== false) {
+    const { clearAudioCommentaryScriptsForFixture } = await import(
+      "./audio-commentary-script-service"
+    );
+    await clearAudioCommentaryScriptsForFixture(fixtureId);
+    audioScriptsCreated = 0;
   }
+
+  // Seed live-refresh signature so public polls do not rebuild until match state changes.
+  const { markNarrativeCommentaryFresh } = await import("./match-narrative-live-refresh");
+  await markNarrativeCommentaryFresh(fixtureId);
 
   return { created, lines, audioScriptsCreated };
 }

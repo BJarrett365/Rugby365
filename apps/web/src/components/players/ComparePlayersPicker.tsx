@@ -53,6 +53,9 @@ type Props = {
   /** Pre-select this competition on both sides (competition hub compare page). */
   competitionSlug?: string;
   competitionName?: string;
+  /** Prefill from /players/compare?player1=&player2= (or legacy player/opponent). */
+  initialPlayerA?: string | null;
+  initialPlayerB?: string | null;
 };
 
 function emptySide(competitionSlug = ""): SideState {
@@ -299,7 +302,12 @@ function useSideRoster(
   }, [competitionSlug, setSide]);
 }
 
-export function ComparePlayersPicker({ competitionSlug, competitionName }: Props) {
+export function ComparePlayersPicker({
+  competitionSlug,
+  competitionName,
+  initialPlayerA,
+  initialPlayerB,
+}: Props) {
   const hubSlug = competitionSlug?.trim() ?? "";
   // Competition hub pages default to that competition; global menu defaults to Nations Championship.
   const defaultCompetitionSlug = hubSlug || NATIONS_CHAMPIONSHIP_COMPETITION_SLUG;
@@ -310,6 +318,7 @@ export function ComparePlayersPicker({ competitionSlug, competitionName }: Props
 
   const [sideA, setSideA] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
   const [sideB, setSideB] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
+  const [initialHydrated, setInitialHydrated] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -381,6 +390,82 @@ export function ComparePlayersPicker({ competitionSlug, competitionName }: Props
 
   useSideRoster(sideA.competitionSlug, setSideA);
   useSideRoster(sideB.competitionSlug, setSideB);
+
+  useEffect(() => {
+    if (initialHydrated) return;
+    const a = initialPlayerA?.trim() || "";
+    const b = initialPlayerB?.trim() || "";
+    if (!a && !b) {
+      setInitialHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      async function resolveSlug(slug: string): Promise<SearchHit | null> {
+        const q = slug.replace(/-/g, " ").trim();
+        const res = await fetch(
+          `/api/players/search?q=${encodeURIComponent(q.length >= 2 ? q : slug)}&pageSize=48`,
+          { cache: "no-store" },
+        );
+        const json = (await res.json().catch(() => ({}))) as {
+          rows?: Array<{
+            slug: string;
+            name: string;
+            positionName: string | null;
+            clubName: string | null;
+          }>;
+        };
+        const hit = (json.rows ?? []).find((r) => r.slug === slug);
+        if (!hit) {
+          return {
+            slug,
+            name: slug
+              .split("-")
+              .filter((p) => !/^[a-z0-9]{6,}$/i.test(p))
+              .join(" ")
+              .replace(/\b\w/g, (c) => c.toUpperCase()) || slug,
+            position: null,
+            clubName: null,
+          };
+        }
+        return {
+          slug: hit.slug,
+          name: hit.name,
+          position: hit.positionName,
+          clubName: hit.clubName,
+        };
+      }
+
+      try {
+        const [hitA, hitB] = await Promise.all([
+          a ? resolveSlug(a) : Promise.resolve(null),
+          b ? resolveSlug(b) : Promise.resolve(null),
+        ]);
+        if (cancelled) return;
+        if (hitA) {
+          setSideA((prev) => ({
+            ...prev,
+            playerSlug: hitA.slug,
+            picked: hitA,
+          }));
+        }
+        if (hitB) {
+          setSideB((prev) => ({
+            ...prev,
+            playerSlug: hitB.slug,
+            picked: hitB,
+          }));
+        }
+      } finally {
+        if (!cancelled) setInitialHydrated(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPlayerA, initialPlayerB, initialHydrated]);
 
   const canCompare = Boolean(
     sideA.playerSlug && sideB.playerSlug && sideA.playerSlug !== sideB.playerSlug,

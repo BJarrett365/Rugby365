@@ -25,7 +25,19 @@ describe("audio-voice-settings helpers", () => {
     expect(competitionScopeFromSlugOrName("npc", "Bunnings NPC")).toBe("npc");
     expect(competitionScopeFromSlugOrName("top-14", "Top 14")).toBe("top14");
     expect(competitionScopeFromSlugOrName("urc", "United Rugby Championship")).toBe("urc");
-    expect(competitionScopeFromSlugOrName("six-nations", "Six Nations")).toBe("global");
+    expect(
+      competitionScopeFromSlugOrName("nations-championship", "Nations Championship"),
+    ).toBe("nations_championship");
+    expect(
+      competitionScopeFromSlugOrName(null, "World Rugby Nations Championship"),
+    ).toBe("nations_championship");
+    expect(competitionScopeFromSlugOrName("six-nations", "Six Nations")).toBe("six_nations");
+    expect(competitionScopeFromSlugOrName("super-rugby-pacific", "Super Rugby")).toBe(
+      "super_rugby",
+    );
+    expect(competitionScopeFromSlugOrName("champions-cup", "Investec Champions Cup")).toBe(
+      "champions_cup",
+    );
   });
 
   it("formats Creator Profile labels Plexa-style", () => {

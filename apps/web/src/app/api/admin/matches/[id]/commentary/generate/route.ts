@@ -16,7 +16,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     };
     const result = await generateAndPublishMatchNarrativeCommentary(id, {
       replace: body.replace !== false,
-      generateAudioScripts: body.generateAudioScripts !== false,
+      // Audio is opt-in — CMS asks whether to power Live Audio on the match page.
+      generateAudioScripts: body.generateAudioScripts === true,
     });
     const stored = await listMatchNarrativeCommentary(id);
     const audioScripts = await listAudioCommentaryScripts(id);

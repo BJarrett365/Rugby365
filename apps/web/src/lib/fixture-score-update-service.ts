@@ -125,6 +125,26 @@ export async function updateFixtureScoreStatus(
     /* non-blocking */
   }
 
+  const nextStatus = patch.status ?? fixture.status;
+  try {
+    const {
+      cascadeFixtureDataChange,
+      didTransitionToCompleted,
+    } = await import("./data-change-event-service");
+    const completed = didTransitionToCompleted(existing.status, nextStatus);
+    await cascadeFixtureDataChange({
+      fixtureId: id,
+      eventType: completed ? "MATCH_COMPLETED" : "MATCH_UPDATED",
+      source: "manual",
+      importMethod: "MANUAL",
+      payload: { changed: changed.map((c) => c.field) },
+      // Live FT: queue only — nightly / explicit process drains heavy work.
+      processNow: false,
+    });
+  } catch {
+    /* cascade is best-effort */
+  }
+
   const lockAfterSave = input.lockAfterSave !== false;
   if (lockAfterSave) {
     for (const change of changed) {

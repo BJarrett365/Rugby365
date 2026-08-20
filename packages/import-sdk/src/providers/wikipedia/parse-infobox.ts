@@ -274,11 +274,16 @@ function collectCoachingRows(params: InfoboxParams): WikipediaCoachingStint[] {
     if (!team) continue;
     const yearsLabel = stripWikiMarkup(years ?? "");
     const range = parseYearRange(yearsLabel);
+    const rawTeam = stripWikiMarkup(team);
+    const roleMatch = rawTeam.match(/\(([^)]+)\)\s*$/);
+    const roleHint = roleMatch?.[1]?.trim() || null;
+    const teamName = rawTeam.replace(/\s*\([^)]+\)\s*$/, "").trim() || rawTeam;
     rows.push({
       yearsLabel: yearsLabel || String(i),
       startYear: range.startYear ?? null,
       endYear: range.endYear ?? null,
-      teamName: stripWikiMarkup(team),
+      teamName,
+      roleHint,
       sortOrder: i,
     });
   }

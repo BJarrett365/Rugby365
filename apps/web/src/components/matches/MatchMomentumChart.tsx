@@ -10,10 +10,11 @@ import {
   type MomentumBucket,
 } from "@/lib/match-momentum";
 import { teamAccentColor } from "@/lib/team-accent-color";
+import { isHomeSideKeyEvent } from "@/lib/match-key-events";
 
 function eventBoostAt(
   events: SdmsKeyEvent[],
-  homeTeamId: string | undefined,
+  homeTeamIds: Array<string | null | undefined> | string | undefined,
   minuteStart: number,
   minuteEnd: number,
 ): { home: number; away: number } {
@@ -32,7 +33,7 @@ function eventBoostAt(
             ? 0.06
             : 0;
     if (weight === 0) continue;
-    if (homeTeamId && e.team_id === homeTeamId) home += weight;
+    if (isHomeSideKeyEvent(e.team_id, homeTeamIds)) home += weight;
     else away += weight;
   }
   return { home, away };
@@ -89,6 +90,7 @@ export function MatchMomentumChart({
   matchStats,
   events,
   homeTeamId,
+  homeTeamIds,
   homeName,
   awayName,
   matchStatus,
@@ -97,6 +99,7 @@ export function MatchMomentumChart({
   matchStats: SdmsMatchStatsBundle | null | undefined;
   events: SdmsKeyEvent[];
   homeTeamId?: string;
+  homeTeamIds?: Array<string | null | undefined>;
   homeName: string;
   awayName: string;
   homeImageUrl?: string | null;
@@ -107,6 +110,7 @@ export function MatchMomentumChart({
   const [hover, setHover] = useState<number | null>(null);
   const homeColor = teamAccentColor(homeName, "home");
   const awayColor = teamAccentColor(awayName, "away");
+  const homeIds = homeTeamIds?.length ? homeTeamIds : [homeTeamId];
 
   const elapsedMinute = useMemo(
     () =>
@@ -123,7 +127,7 @@ export function MatchMomentumChart({
     const boosts = Array.from({ length: MOMENTUM_BUCKETS }, (_, i) => {
       const minuteStart = (i / MOMENTUM_BUCKETS) * 80;
       const minuteEnd = ((i + 1) / MOMENTUM_BUCKETS) * 80;
-      const boost = eventBoostAt(events, homeTeamId, minuteStart, minuteEnd);
+      const boost = eventBoostAt(events, homeIds, minuteStart, minuteEnd);
       return { minuteStart, minuteEnd, ...boost };
     });
     return buildMomentumBuckets({
@@ -134,7 +138,7 @@ export function MatchMomentumChart({
       elapsedMinute,
       eventBoosts: boosts,
     });
-  }, [matchStats, events, homeTeamId, elapsedMinute]);
+  }, [matchStats, events, homeIds, elapsedMinute]);
 
   const hasPossession =
     matchStats?.possession &&

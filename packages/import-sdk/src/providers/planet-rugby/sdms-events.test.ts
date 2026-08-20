@@ -9,7 +9,9 @@ describe("sdms-events", () => {
   it("maps conversion and penalty goal types", () => {
     expect(sdmsEventTypeToMatchEvent("Conversion")).toBe("conversion");
     expect(sdmsEventTypeToMatchEvent("Penalty")).toBe("penalty_goal");
-    expect(sdmsEventTypeToMatchEvent("Missed Conversion")).toBeNull();
+    expect(sdmsEventTypeToMatchEvent("Missed Conversion")).toBe("conversion_missed");
+    expect(sdmsEventTypeToMatchEvent("Missed Penalty")).toBe("penalty_missed");
+    expect(sdmsEventTypeToMatchEvent("Missed Drop Goal")).toBe("drop_goal_missed");
   });
 
   it("builds stable ids that include player and minute, not only array index", () => {

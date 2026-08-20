@@ -287,6 +287,7 @@ async function syncSeason(input: {
         competitionId: input.competitionId,
         externalMatchId: fx.externalMatchId ?? `fixture:${fx.id}`,
         sourceProvider: PROVIDER,
+        skipCascade: true,
         stats: {
           side,
           tries: scoring.tries,

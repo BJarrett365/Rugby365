@@ -230,6 +230,38 @@ export async function uploadPlayerImageBytesToSupabase(input: {
   }
 }
 
+/** Upload coach portrait bytes to Supabase media bucket. */
+export async function uploadCoachImageBytesToSupabase(input: {
+  coachId: string;
+  imageId: string;
+  bytes: Buffer | Uint8Array;
+  contentType?: string;
+  ext?: string;
+}): Promise<{ publicUrl: string | null; path: string | null; error?: string }> {
+  try {
+    const contentType = input.contentType ?? "image/png";
+    const ext = input.ext ?? (contentType.includes("webp") ? "webp" : "png");
+    const path = `coaches/${input.coachId}/${input.imageId}.${ext}`;
+    await ensureBucket(SUPABASE_MEDIA_BUCKET, true);
+    const supabase = await getSupabaseServerClient("service");
+    const upload = await supabase.storage.from(SUPABASE_MEDIA_BUCKET).upload(path, input.bytes, {
+      contentType,
+      upsert: true,
+    });
+    if (upload.error) {
+      return { publicUrl: null, path: null, error: upload.error.message };
+    }
+    const { data } = supabase.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path);
+    return { publicUrl: data.publicUrl, path };
+  } catch (error) {
+    return {
+      publicUrl: null,
+      path: null,
+      error: error instanceof Error ? error.message : "Upload failed",
+    };
+  }
+}
+
 export async function mirrorRemoteImageToSupabase(input: {
   sourceUrl: string;
   playerId: string;

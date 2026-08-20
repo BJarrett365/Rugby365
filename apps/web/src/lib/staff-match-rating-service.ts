@@ -274,6 +274,57 @@ export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof
   return updated ?? fixture;
 }
 
+/**
+ * If a finished fixture has linked coaches/referee but missing match-rating rows
+ * (e.g. coach linked after the first ratings pass), calculate and persist them.
+ * Idempotent when all expected ratings already exist.
+ */
+export async function ensureMissingFixtureStaffMatchRatings(fixtureId: string): Promise<{
+  coachesCalculated: number;
+  refereeCalculated: number;
+  triggered: boolean;
+}> {
+  const db = getDb();
+  await ensureFixtureStaffLinks(fixtureId);
+  const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
+    return { coachesCalculated: 0, refereeCalculated: 0, triggered: false };
+  }
+
+  const expectedCoachIds = [fixture.homeCoachId, fixture.awayCoachId].filter(
+    (id): id is string => Boolean(id),
+  );
+
+  const existingCoachRows = await db
+    .select({ coachId: coachMatchRatings.coachId })
+    .from(coachMatchRatings)
+    .where(eq(coachMatchRatings.fixtureId, fixtureId));
+  const existingCoachIds = new Set(existingCoachRows.map((r) => r.coachId));
+  const missingCoachRating = expectedCoachIds.some((id) => !existingCoachIds.has(id));
+
+  let missingRefereeRating = false;
+  if (fixture.refereeId) {
+    const [refRow] = await db
+      .select({ id: refereeMatchRatings.id })
+      .from(refereeMatchRatings)
+      .where(
+        and(
+          eq(refereeMatchRatings.fixtureId, fixtureId),
+          eq(refereeMatchRatings.refereeId, fixture.refereeId),
+        ),
+      )
+      .limit(1);
+    missingRefereeRating = !refRow;
+  }
+
+  if (!missingCoachRating && !missingRefereeRating) {
+    return { coachesCalculated: 0, refereeCalculated: 0, triggered: false };
+  }
+
+  const result = await calculateAndPersistFixtureStaffMatchRatings(fixtureId);
+  return { ...result, triggered: true };
+}
+
 /** Calculate coach + referee match ratings for a completed fixture. */
 export async function calculateAndPersistFixtureStaffMatchRatings(fixtureId: string): Promise<{
   coachesCalculated: number;
@@ -458,18 +509,31 @@ export async function backfillStaffMatchRatingsForCompetitionSeason(
 
   const fixtureIds = finished.map((f) => f.id);
   const existingRefRows = await db
-    .select({ fixtureId: refereeMatchRatings.fixtureId })
+    .select({
+      fixtureId: refereeMatchRatings.fixtureId,
+      refereeId: refereeMatchRatings.refereeId,
+    })
     .from(refereeMatchRatings)
     .where(inArray(refereeMatchRatings.fixtureId, fixtureIds));
   const existingCoachRows = await db
-    .select({ fixtureId: coachMatchRatings.fixtureId })
+    .select({
+      fixtureId: coachMatchRatings.fixtureId,
+      coachId: coachMatchRatings.coachId,
+    })
     .from(coachMatchRatings)
     .where(inArray(coachMatchRatings.fixtureId, fixtureIds));
 
-  const ratedRefFixtures = new Set(existingRefRows.map((r) => r.fixtureId));
-  const coachCountByFixture = new Map<string, number>();
+  const ratedRefByFixture = new Map<string, Set<string>>();
+  for (const row of existingRefRows) {
+    const set = ratedRefByFixture.get(row.fixtureId) ?? new Set<string>();
+    set.add(row.refereeId);
+    ratedRefByFixture.set(row.fixtureId, set);
+  }
+  const ratedCoachesByFixture = new Map<string, Set<string>>();
   for (const row of existingCoachRows) {
-    coachCountByFixture.set(row.fixtureId, (coachCountByFixture.get(row.fixtureId) ?? 0) + 1);
+    const set = ratedCoachesByFixture.get(row.fixtureId) ?? new Set<string>();
+    set.add(row.coachId);
+    ratedCoachesByFixture.set(row.fixtureId, set);
   }
 
   let fixturesProcessed = 0;
@@ -479,13 +543,17 @@ export async function backfillStaffMatchRatingsForCompetitionSeason(
   for (const fixture of finished) {
     if (!isFixtureRatingsPublished(fixture.status)) continue;
 
-    const missingRefereeRating = Boolean(fixture.refereeId) && !ratedRefFixtures.has(fixture.id);
-    const coachRows = coachCountByFixture.get(fixture.id) ?? 0;
-    const expectedCoachSlots =
-      (fixture.homeCoachId ? 1 : 0) + (fixture.awayCoachId ? 1 : 0);
+    const ratedCoaches = ratedCoachesByFixture.get(fixture.id) ?? new Set<string>();
+    const expectedCoachIds = [fixture.homeCoachId, fixture.awayCoachId].filter(
+      (id): id is string => Boolean(id),
+    );
     // Always try when coaches are missing on the fixture — ensureFixtureStaffLinks may fill them.
     const missingCoachLinks = !fixture.homeCoachId || !fixture.awayCoachId;
-    const missingCoachRatings = missingCoachLinks || coachRows < Math.max(expectedCoachSlots, 1);
+    const missingCoachRatings =
+      missingCoachLinks || expectedCoachIds.some((id) => !ratedCoaches.has(id));
+    const missingRefereeRating =
+      Boolean(fixture.refereeId) &&
+      !(ratedRefByFixture.get(fixture.id)?.has(fixture.refereeId!) ?? false);
 
     if (!missingRefereeRating && !missingCoachRatings) continue;
 

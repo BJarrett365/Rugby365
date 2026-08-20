@@ -125,24 +125,37 @@ async function fetchVoiceEndpoint(url: string, key: string): Promise<ApiVoice[]>
     cache: "no-store",
   });
   if (!res.ok) {
-    const err = new Error(`ElevenLabs voices failed (${res.status})`) as Error & {
-      status?: number;
-    };
+    let detail = "";
+    try {
+      const body = (await res.json()) as { detail?: unknown; message?: unknown };
+      const raw = body.detail ?? body.message;
+      if (typeof raw === "string") detail = raw.slice(0, 160);
+      else if (raw != null) detail = JSON.stringify(raw).slice(0, 160);
+    } catch {
+      /* ignore body parse failures */
+    }
+    const err = new Error(
+      detail
+        ? `ElevenLabs voices failed (${res.status}): ${detail}`
+        : `ElevenLabs voices failed (${res.status})`,
+    ) as Error & { status?: number };
     err.status = res.status;
     throw err;
   }
-  const data = (await res.json()) as { voices?: ApiVoice[] };
-  return Array.isArray(data.voices) ? data.voices : [];
+  const data = (await res.json()) as { voices?: ApiVoice[]; results?: ApiVoice[] };
+  if (Array.isArray(data.voices)) return data.voices;
+  if (Array.isArray(data.results)) return data.results;
+  return [];
 }
 
 async function fetchAvailableVoices(key: string): Promise<ApiVoice[]> {
   const endpoints = [
-    "https://api.elevenlabs.io/v2/voices/search?page_size=100&sort=name&sort_direction=asc",
     "https://api.elevenlabs.io/v1/voices?show_legacy=true",
+    "https://api.elevenlabs.io/v2/voices/search?page_size=100&sort=name&sort_direction=asc",
   ];
   const seen = new Set<string>();
   const voices: ApiVoice[] = [];
-  let lastError: Error | null = null;
+  const errors: string[] = [];
 
   for (const endpoint of endpoints) {
     try {
@@ -154,12 +167,25 @@ async function fetchAvailableVoices(key: string): Promise<ApiVoice[]> {
         voices.push(voice);
       }
     } catch (e) {
-      lastError = e instanceof Error ? e : new Error(String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      errors.push(message);
       // Continue — one endpoint may work when the other fails.
     }
   }
 
-  if (!voices.length && lastError) throw lastError;
+  if (!voices.length) {
+    const err = new Error(
+      errors.length
+        ? errors.join(" | ")
+        : "ElevenLabs returned no voices",
+    ) as Error & { status?: number };
+    const authHit = errors.find((m) => /\((401|403)\)/.test(m));
+    if (authHit) {
+      const match = authHit.match(/\((401|403)\)/);
+      err.status = match ? Number(match[1]) : 401;
+    }
+    throw err;
+  }
   return voices;
 }
 
@@ -170,6 +196,10 @@ export const REGIONAL_ACCENT_HINTS: Record<string, string[]> = {
   npc: ["new zealand", "australian", "kiwi"],
   top14: ["french", "british"],
   urc: ["british", "irish", "south african", "welsh"],
+  nations_championship: ["british", "american", "australian", "new zealand", "south african"],
+  six_nations: ["british", "irish", "english"],
+  super_rugby: ["new zealand", "australian", "kiwi"],
+  champions_cup: ["british", "irish", "french", "south african"],
   global: ["british", "american", "neutral"],
 };
 
@@ -253,8 +283,12 @@ export async function getAdminVoiceLibrary(): Promise<AdminVoiceLibraryResponse>
       e && typeof e === "object" && "status" in e
         ? Number((e as { status?: number }).status)
         : 0;
-    const status =
-      statusCode === 401 || statusCode === 403 ? "auth_failed" : "network_error";
+    const detail = e instanceof Error ? e.message : String(e);
+    const authLike =
+      statusCode === 401 ||
+      statusCode === 403 ||
+      /invalid_api_key|authentication_error|unauthorized|api key id used/i.test(detail);
+    const status = authLike ? "auth_failed" : "network_error";
     return {
       ok: true,
       elevenlabs: {
@@ -271,8 +305,8 @@ export async function getAdminVoiceLibrary(): Promise<AdminVoiceLibraryResponse>
         configureUrl,
         message:
           status === "auth_failed"
-            ? "ElevenLabs key is saved but not authorised. Re-save a valid key at /admin/keys#elevenlabs."
-            : "Could not reach ElevenLabs. Try again shortly.",
+            ? "ElevenLabs rejected the saved key (it must be a secret key starting with sk_, not a key ID). Re-save a valid key at /admin/keys#elevenlabs."
+            : `Could not reach ElevenLabs (${detail}). Check network access and try again.`,
       },
       openai: { voices: openaiVoices },
       regionalAccentHints: REGIONAL_ACCENT_HINTS,

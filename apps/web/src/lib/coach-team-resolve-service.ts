@@ -27,12 +27,29 @@ export function coachStintTeamMatchesCmsTeam(stintName: string, cmsTeamName: str
   if (stint === cms) return true;
   if (stint.includes(cms) || cms.includes(stint)) return true;
 
+  const aliases: Record<string, string[]> = {
+    "south africa": ["springboks", "springbok", "south africa national"],
+    springboks: ["south africa"],
+    stormers: ["dhl stormers", "dhl stormers xxiii"],
+    "dhl stormers xxiii": ["stormers", "dhl stormers"],
+    "golden lions": ["lions"],
+    lions: ["golden lions"],
+    "free state": ["free state cheetahs"],
+    "free state cheetahs": ["free state", "cheetahs"],
+    cheetahs: ["free state cheetahs"],
+    cats: ["golden cats"],
+  };
+
+  const stintAliases = aliases[stint] ?? [];
+  const cmsAliases = aliases[cms] ?? [];
+  if (stintAliases.includes(cms) || cmsAliases.includes(stint)) return true;
+
   const stintFirst = stint.split(" ")[0];
   const cmsFirst = cms.split(" ")[0];
   if (stintFirst.length >= 4 && stintFirst === cmsFirst) return true;
 
   if (stint.startsWith("british irish lions") || stint.startsWith("british & irish lions")) {
-    return cms.includes("lions");
+    return cms.includes("lions") && !cms.includes("golden");
   }
 
   return false;

@@ -38,7 +38,7 @@ export default async function LegendsEraPage({ params }: PageProps) {
       </nav>
 
       <header className="pr-legends-header">
-        <p className="pr-mc-pr-badge">Planet Rugby Legends</p>
+        <p className="pr-legends-header__eyebrow">Planet Rugby Legends</p>
         <h1>{era.label}</h1>
         <p className="pr-legends-header__lede">
           Players who defined the {era.label} — each card opens their full player profile.

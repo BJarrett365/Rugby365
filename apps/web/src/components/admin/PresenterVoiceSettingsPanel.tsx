@@ -303,12 +303,17 @@ export function PresenterVoiceSettingsPanel({
 
       <div className={openaiOnly ? "opacity-60" : undefined}>
         <label className={labelClass()}>ElevenLabs voice</label>
-        {voicesStatus === "missing_key" || voicesStatus === "auth_failed" ? (
+        {voicesStatus === "missing_key" ||
+        voicesStatus === "auth_failed" ||
+        voicesStatus === "network_error" ||
+        voicesStatus === "empty" ? (
           <p className="m-0 rounded-md border border-amber-800/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
-            {voicesMessage || "ElevenLabs key missing."}{" "}
-            <Link href={configureUrl} className="text-emerald-400 hover:underline">
-              Configure at /admin/keys#elevenlabs
-            </Link>
+            {voicesMessage || "ElevenLabs voices unavailable."}{" "}
+            {voicesStatus === "missing_key" || voicesStatus === "auth_failed" ? (
+              <Link href={configureUrl} className="text-emerald-400 hover:underline">
+                Configure at /admin/keys#elevenlabs
+              </Link>
+            ) : null}
           </p>
         ) : null}
 

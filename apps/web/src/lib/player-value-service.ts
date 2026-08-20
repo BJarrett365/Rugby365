@@ -27,6 +27,8 @@ import {
   type PlayerValueMediaCheckResult,
   type PlayerValueMediaSnippet,
 } from "./player-value-media-check";
+import { saveValueSnapshot } from "./player-value-history-service";
+import { tryCalculateAndPersistPlayerValueScore } from "./player-value-score-service";
 
 export type PublicPlayerValue = {
   modelVersion: string;
@@ -44,6 +46,7 @@ export type PublicPlayerValue = {
   riskScore: number;
   confidence: number;
   confidenceLabel: string;
+  trendPct: number | null;
   trendLabel: string;
   ratingBandLabel: string;
   factors: PlayerValueFactor[];
@@ -53,6 +56,7 @@ export type PublicPlayerValue = {
     status: string;
     summary: string;
     citedUrls: string[];
+    warnings?: string[];
   } | null;
   disclaimer: string;
   calculatedAt: string | null;
@@ -108,6 +112,7 @@ function toPublic(row: {
     riskScore: row.riskScore,
     confidence: row.confidence,
     confidenceLabel: `${Math.round(row.confidence * 100)}%`,
+    trendPct: row.trendPct ?? null,
     trendLabel: row.trendLabel ?? "→ Stable",
     ratingBandLabel: row.ratingBandLabel ?? "—",
     factors,
@@ -118,6 +123,7 @@ function toPublic(row: {
           status: media.status,
           summary: media.summary,
           citedUrls: media.citedUrls ?? [],
+          warnings: media.warnings ?? [],
         }
       : null,
     disclaimer:
@@ -176,6 +182,33 @@ async function daysUnavailableLastYear(playerId: string): Promise<number> {
     days += daysBetween(start < since ? since : start, end > now ? now : end);
   }
   return days;
+}
+
+async function resolveCompetitionId(playerId: string, clubTeamId: string | null): Promise<string | null> {
+  if (!clubTeamId) return null;
+  const db = getDb();
+  const [domestic] = await db
+    .select({ id: competitions.id })
+    .from(fixtures)
+    .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+    .where(
+      and(
+        sql`(${fixtures.homeTeamId} = ${clubTeamId} OR ${fixtures.awayTeamId} = ${clubTeamId})`,
+        eq(competitions.competitionType, "domestic"),
+      ),
+    )
+    .orderBy(desc(fixtures.kickoffAt))
+    .limit(1);
+  if (domestic?.id) return domestic.id;
+
+  const [any] = await db
+    .select({ id: competitions.id })
+    .from(fixtures)
+    .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+    .where(sql`(${fixtures.homeTeamId} = ${clubTeamId} OR ${fixtures.awayTeamId} = ${clubTeamId})`)
+    .orderBy(desc(fixtures.kickoffAt))
+    .limit(1);
+  return any?.id ?? null;
 }
 
 async function resolveCompetitionKey(playerId: string, clubTeamId: string | null): Promise<string | null> {
@@ -238,7 +271,7 @@ async function ratingByYearMap(playerId: string): Promise<Record<number, number>
 
 export async function calculateAndPersistPlayerValue(
   playerId: string,
-  options: { mediaSnippets?: PlayerValueMediaSnippet[] } = {},
+  options: { mediaSnippets?: PlayerValueMediaSnippet[]; materialEvent?: boolean } = {},
 ): Promise<PublicPlayerValue | null> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
@@ -273,9 +306,11 @@ export async function calculateAndPersistPlayerValue(
         )`,
       ),
     );
-  const caps = Number(capsRow?.caps ?? 0);
+  const caps = player.verifiedInternationalCaps ?? Number(capsRow?.caps ?? 0);
+  const linkedCaps = Number(capsRow?.caps ?? 0);
 
   const competitionKey = await resolveCompetitionKey(playerId, player.clubTeamId);
+  const competitionId = await resolveCompetitionId(playerId, player.clubTeamId);
   const unavailable = await daysUnavailableLastYear(playerId);
   const social = normalizeSocialAccounts(player.socialAccounts);
   const hasSocial = Boolean(social.twitter || social.instagram || social.facebook || social.website);
@@ -299,7 +334,7 @@ export async function calculateAndPersistPlayerValue(
     currentRating: rating?.manualOverrideRating ?? rating?.playerRating ?? null,
     seasonRating: rating?.seasonRating ?? null,
     formScore: rating?.formScore ?? null,
-    lastFiveMatchRatings: lastFive,
+    lastFiveMatchRatings: lastFive.map((n) => (n > 10 ? n / 10 : n)),
     potential: rating?.potential ?? null,
     reputation: rating?.reputation ?? null,
     age: calculatePlayerAge(player.birthDate),
@@ -312,6 +347,32 @@ export async function calculateAndPersistPlayerValue(
     hasSocialPresence: hasSocial,
     mediaNudgePct: null,
   });
+
+  // Elite international + club + solid rating + absurdly low value → flag, do not auto-correct.
+  const outlierWarnings: string[] = [];
+  if (
+    caps >= 50 &&
+    player.clubTeamId &&
+    player.internationalTeamId &&
+    (rating?.playerRating ?? 0) >= 55 &&
+    draft.marketValueGbp > 0 &&
+    draft.marketValueGbp < 250_000
+  ) {
+    outlierWarnings.push(
+      "VALUE OUTLIER REVIEW — elite international + club + rating vs very low model value",
+    );
+  }
+  if (player.contractExpiresOn == null) {
+    outlierWarnings.push("Contract unknown — value confidence reduced by model");
+  }
+  if (
+    player.verifiedInternationalCaps != null &&
+    linkedCaps < player.verifiedInternationalCaps * 0.6
+  ) {
+    outlierWarnings.push(
+      `Caps coverage thin: ${linkedCaps}/${player.verifiedInternationalCaps} linked fixtures`,
+    );
+  }
 
   if (options.mediaSnippets?.length) {
     media = await reviewPlayerValueMediaSnippets({
@@ -329,7 +390,7 @@ export async function calculateAndPersistPlayerValue(
           currentRating: rating?.manualOverrideRating ?? rating?.playerRating ?? null,
           seasonRating: rating?.seasonRating ?? null,
           formScore: rating?.formScore ?? null,
-          lastFiveMatchRatings: lastFive,
+          lastFiveMatchRatings: lastFive.map((n) => (n > 10 ? n / 10 : n)),
           potential: rating?.potential ?? null,
           reputation: rating?.reputation ?? null,
           age: calculatePlayerAge(player.birthDate),
@@ -357,6 +418,20 @@ export async function calculateAndPersistPlayerValue(
     ratingByYear: byYear,
   });
 
+  const mediaPayload: PlayerValueMediaCheckResult = media ?? {
+    status: "skipped",
+    summary: outlierWarnings.length
+      ? "Model flags present — no media nudge applied"
+      : "No media check",
+    citedUrls: [],
+    confidence: 0,
+    warnings: [],
+    nudgePct: 0,
+  };
+  if (outlierWarnings.length) {
+    mediaPayload.warnings = [...(mediaPayload.warnings ?? []), ...outlierWarnings];
+  }
+
   await db
     .update(playerMarketValues)
     .set({ isCurrent: false, updatedAt: new Date() })
@@ -383,7 +458,7 @@ export async function calculateAndPersistPlayerValue(
       baseValueGbp: computed.baseValueGbp,
       factors: computed.factors,
       recommendations: computed.recommendations,
-      mediaCheck: media ?? { status: "skipped", summary: "No media check", citedUrls: [], confidence: 0, warnings: [], nudgePct: 0 },
+      mediaCheck: mediaPayload,
       timeline,
       calculatedAt: new Date(),
       updatedAt: new Date(),
@@ -406,13 +481,42 @@ export async function calculateAndPersistPlayerValue(
         baseValueGbp: computed.baseValueGbp,
         factors: computed.factors,
         recommendations: computed.recommendations,
-        mediaCheck: media ?? { status: "skipped", summary: "No media check", citedUrls: [], confidence: 0, warnings: [], nudgePct: 0 },
+        mediaCheck: mediaPayload,
         timeline,
         calculatedAt: new Date(),
         updatedAt: new Date(),
       },
     })
     .returning();
+
+  if (saved) {
+    const valueScoreResult = await tryCalculateAndPersistPlayerValueScore(playerId, {
+      calculationReason: "value_recalculation",
+      competitionKey,
+    });
+
+    await saveValueSnapshot({
+      playerId,
+      estimatedValue: computed.marketValueGbp,
+      confidence: computed.confidence,
+      coverage: rating?.intelligenceCoverage ?? null,
+      overallRating: rating?.manualOverrideRating ?? rating?.playerRating ?? null,
+      potentialRating: rating?.potential ?? null,
+      currentFormScore: rating?.formScore ?? null,
+      clubId: player.clubTeamId,
+      competitionId,
+      contractEndDate: player.contractExpiresOn ? String(player.contractExpiresOn) : null,
+      contractMonthsRemaining,
+      ageAtSnapshot: calculatePlayerAge(player.birthDate),
+      primaryPosition: player.positionName,
+      valueScore: valueScoreResult?.valueScore ?? null,
+      modelVersion: PLAYER_VALUE_MODEL,
+      snapshotType: "LIVE",
+      calculationReason: "value_recalculation",
+      factorScores: computed.factors,
+      materialEvent: options.materialEvent === true,
+    });
+  }
 
   return saved ? toPublic(saved) : null;
 }

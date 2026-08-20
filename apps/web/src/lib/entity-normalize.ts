@@ -163,14 +163,16 @@ const TEAM_DEDUP_BASE_ALIASES: Record<string, string> = {
   "british & irish lions": "british irish lions",
 };
 
-/** International nicknames that should collapse onto the country label for team dedupe. */
+/**
+ * International nicknames that should collapse onto the country label for team dedupe.
+ * Bare "pumas" stays the SA club; Argentina is matched via "los pumas" / country name.
+ */
 const TEAM_DEDUP_NICKNAME_ALIASES: Record<string, string> = {
   "all blacks": "new zealand",
   "new zealand (all blacks)": "new zealand",
   springboks: "south africa",
   "south africa springboks": "south africa",
   wallabies: "australia",
-  pumas: "argentina",
   "los pumas": "argentina",
 };
 

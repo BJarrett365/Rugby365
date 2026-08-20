@@ -667,22 +667,6 @@ async function loadPerspectives(input: {
   return perspectives;
 }
 
-function parseStandingFormMeta(form: string | null | undefined): {
-  tryBonusPoints?: number;
-  losingBonusPoints?: number;
-} {
-  if (!form?.startsWith("{")) return {};
-  try {
-    const parsed = JSON.parse(form) as { tbp?: number; lbp?: number };
-    return {
-      tryBonusPoints: parsed.tbp,
-      losingBonusPoints: parsed.lbp,
-    };
-  } catch {
-    return {};
-  }
-}
-
 function buildStandingsFromPerspectives(
   perspectives: TeamFixturePerspective[],
   metricFn?: (row: TeamFixturePerspective) => number | null,
@@ -710,12 +694,10 @@ async function trySyncedStandings(
   const rows = await getSeasonStandings(seasonId, view);
   if (!rows.length) return null;
   const mapped = rows.map((row) => {
-    const bonusMeta = parseStandingFormMeta(row.form);
+    // Legacy rows kept bonus splits inside `form`; prefer the dedicated columns.
     const legacyMeta = parseStandingForm(row.form);
-    const tryBonusPoints =
-      row.tryBonusPoints ?? bonusMeta.tryBonusPoints ?? legacyMeta.tryBonusPoints ?? null;
-    const losingBonusPoints =
-      row.losingBonusPoints ?? bonusMeta.losingBonusPoints ?? legacyMeta.losingBonusPoints ?? null;
+    const tryBonusPoints = row.tryBonusPoints ?? legacyMeta.tryBonusPoints ?? null;
+    const losingBonusPoints = row.losingBonusPoints ?? legacyMeta.losingBonusPoints ?? null;
     const formLetters = legacyMeta.lastFive ?? "";
     // formSequence is newest-first to match Table Lab form tables.
     const formSequence = [...formLetters]
