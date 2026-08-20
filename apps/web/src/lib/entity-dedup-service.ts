@@ -1,7 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import {
+  coachMatchRatings,
+  coaches,
   fixturePlayers,
   fixtures,
+  legendCollectionMembers,
   matchEvents,
   playerBioHistory,
   playerBioProfiles,
@@ -24,9 +27,13 @@ import {
   playerTransfers,
   players,
   providerEntityMappings,
+  refereeAppointments,
+  refereeMatchRatings,
+  referees,
   standingRows,
   teamCoachingStaff,
   teamMatchStats,
+  teamOfWeekAwards,
   teams,
   venues,
   worldRankingRows,
@@ -275,11 +282,18 @@ export async function mergePlayerRecords(
       }
     }
     if (!canonical.clubTeamId && dup.clubTeamId) patch.clubTeamId = dup.clubTeamId;
+    if (!canonical.internationalTeamId && dup.internationalTeamId) {
+      patch.internationalTeamId = dup.internationalTeamId;
+    }
     if (!canonical.birthDate && dup.birthDate) patch.birthDate = dup.birthDate;
     if (!canonical.countryName && dup.countryName) patch.countryName = dup.countryName;
     if (!canonical.positionName && dup.positionName) patch.positionName = dup.positionName;
     if (!canonical.fullName && dup.fullName) patch.fullName = dup.fullName;
     if (!canonical.imageUrl && dup.imageUrl) patch.imageUrl = dup.imageUrl;
+    if (!canonical.primaryImageId && dup.primaryImageId) patch.primaryImageId = dup.primaryImageId;
+    if (!canonical.wikipediaUrl && dup.wikipediaUrl) patch.wikipediaUrl = dup.wikipediaUrl;
+    if (canonical.heightCm == null && dup.heightCm != null) patch.heightCm = dup.heightCm;
+    if (canonical.weightKg == null && dup.weightKg != null) patch.weightKg = dup.weightKg;
     if (!canonical.rugbypassPlayerId && dup.rugbypassPlayerId) {
       patch.rugbypassPlayerId = dup.rugbypassPlayerId;
       patch.rugbypassSlug = dup.rugbypassSlug;
@@ -348,10 +362,31 @@ export async function mergePlayerRecords(
       .update(playerTransfers)
       .set({ playerId: canonicalId })
       .where(eq(playerTransfers.playerId, duplicateId));
-    await db
-      .update(playerCareerStints)
-      .set({ playerId: canonicalId })
+
+    const careerRows = await db
+      .select()
+      .from(playerCareerStints)
       .where(eq(playerCareerStints.playerId, duplicateId));
+    for (const row of careerRows) {
+      const [existing] = await db
+        .select({ id: playerCareerStints.id })
+        .from(playerCareerStints)
+        .where(
+          and(
+            eq(playerCareerStints.playerId, canonicalId),
+            eq(playerCareerStints.careerType, row.careerType),
+            eq(playerCareerStints.yearsLabel, row.yearsLabel),
+            eq(playerCareerStints.teamName, row.teamName),
+          ),
+        )
+        .limit(1);
+      if (existing) await db.delete(playerCareerStints).where(eq(playerCareerStints.id, row.id));
+      else
+        await db
+          .update(playerCareerStints)
+          .set({ playerId: canonicalId })
+          .where(eq(playerCareerStints.id, row.id));
+    }
 
     const membershipRows = await db
       .select()
@@ -779,14 +814,325 @@ export async function dedupeTeams(): Promise<DedupeSummary> {
   return { groups: groups.length, merged: groups.length, deleted, details };
 }
 
-export async function dedupeAllEntities(): Promise<{ players: DedupeSummary; teams: DedupeSummary }> {
-  const players = await dedupePlayers();
-  const teams = await dedupeTeams();
-  return { players, teams };
+// ---------------------------------------------------------------------------
+// Referee dedup
+// ---------------------------------------------------------------------------
+
+function scoreReferee(row: DuplicateEntityRow): number {
+  let score = entityNameQualityScore(row.name);
+  if (row.externalProviderId) score += 5;
+  if (isSdmsExternalId(row.externalProviderId)) score += 8;
+  if (row.sourceProvider === "sport365" || row.sourceProvider === "sdms") score += 3;
+  if (row.sourceProvider === "rugby_data") score += 2;
+  if (/<[^>]+>/.test(row.name) || /__legacy__/i.test(row.slug)) score -= 20;
+  return score;
+}
+
+export async function findDuplicateReferees(): Promise<DuplicateEntityGroup[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: referees.id,
+      name: referees.name,
+      slug: referees.slug,
+      externalProviderId: referees.externalProviderId,
+      sourceProvider: referees.sourceProvider,
+    })
+    .from(referees);
+
+  const buckets = new Map<string, DuplicateEntityRow[]>();
+  for (const row of rows) {
+    const key = normalizePlayerName(row.name).toLowerCase();
+    if (!key) continue;
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(row);
+    buckets.set(key, bucket);
+  }
+
+  const groups: DuplicateEntityGroup[] = [];
+  for (const [key, bucket] of buckets) {
+    if (bucket.length < 2) continue;
+    const sorted = [...bucket].sort((a, b) => scoreReferee(b) - scoreReferee(a) || a.name.localeCompare(b.name));
+    const canonical = sorted[0]!;
+    groups.push({
+      key,
+      normalizedName: normalizePlayerName(canonical.name),
+      canonicalId: canonical.id,
+      rows: sorted,
+      duplicateIds: sorted.slice(1).map((r) => r.id),
+    });
+  }
+  return groups.sort((a, b) => a.normalizedName.localeCompare(b.normalizedName));
+}
+
+export async function mergeRefereeRecords(canonicalId: string, duplicateIds: string[]) {
+  if (duplicateIds.length === 0) return;
+  const db = getDb();
+
+  const [canonical] = await db.select().from(referees).where(eq(referees.id, canonicalId)).limit(1);
+  if (!canonical) throw new Error("Canonical referee not found");
+
+  const patch: Partial<typeof referees.$inferInsert> = {};
+
+  let bestExternal = canonical.externalProviderId
+    ? { id: canonical.externalProviderId, source: canonical.sourceProvider, score: canonical.sourceProvider === "sdms" ? 3 : isSdmsExternalId(canonical.externalProviderId) ? 2 : 1 }
+    : null;
+
+  for (const dupId of duplicateIds) {
+    const [dup] = await db.select().from(referees).where(eq(referees.id, dupId)).limit(1);
+    if (!dup) continue;
+    if (dup.externalProviderId) {
+      const score = dup.sourceProvider === "sdms" ? 3 : isSdmsExternalId(dup.externalProviderId) ? 2 : 1;
+      if (!bestExternal || score > bestExternal.score) bestExternal = { id: dup.externalProviderId, source: dup.sourceProvider, score };
+    }
+    if (!canonical.birthDate && dup.birthDate) patch.birthDate = dup.birthDate;
+    if (!canonical.nationality && dup.nationality) patch.nationality = dup.nationality;
+    if (!canonical.countryName && dup.countryName) patch.countryName = dup.countryName;
+    if (!canonical.imageUrl && dup.imageUrl) patch.imageUrl = dup.imageUrl;
+    if (!canonical.wikipediaUrl && dup.wikipediaUrl) patch.wikipediaUrl = dup.wikipediaUrl;
+  }
+
+  if (bestExternal && bestExternal.id !== canonical.externalProviderId) {
+    for (const dupId of duplicateIds) {
+      await db.update(referees).set({ externalProviderId: null, sourceProvider: "manual" }).where(eq(referees.id, dupId));
+    }
+    patch.externalProviderId = bestExternal.id;
+    patch.sourceProvider = bestExternal.source;
+  }
+
+  if (Object.keys(patch).length) {
+    await db.update(referees).set(patch).where(eq(referees.id, canonicalId));
+  }
+
+  for (const dupId of duplicateIds) {
+    await db.update(fixtures).set({ refereeId: canonicalId }).where(eq(fixtures.refereeId, dupId));
+
+    const apptRows = await db.select().from(refereeAppointments).where(eq(refereeAppointments.refereeId, dupId));
+    for (const row of apptRows) {
+      if (row.fixtureId) {
+        const [existing] = await db.select({ id: refereeAppointments.id }).from(refereeAppointments)
+          .where(and(eq(refereeAppointments.refereeId, canonicalId), eq(refereeAppointments.fixtureId, row.fixtureId)))
+          .limit(1);
+        if (existing) { await db.delete(refereeAppointments).where(eq(refereeAppointments.id, row.id)); continue; }
+      }
+      await db.update(refereeAppointments).set({ refereeId: canonicalId }).where(eq(refereeAppointments.id, row.id));
+    }
+
+    const ratingRows = await db.select().from(refereeMatchRatings).where(eq(refereeMatchRatings.refereeId, dupId));
+    for (const row of ratingRows) {
+      const [existing] = await db.select({ id: refereeMatchRatings.id }).from(refereeMatchRatings)
+        .where(and(eq(refereeMatchRatings.fixtureId, row.fixtureId), eq(refereeMatchRatings.refereeId, canonicalId)))
+        .limit(1);
+      if (existing) await db.delete(refereeMatchRatings).where(eq(refereeMatchRatings.id, row.id));
+      else await db.update(refereeMatchRatings).set({ refereeId: canonicalId }).where(eq(refereeMatchRatings.id, row.id));
+    }
+
+    await db.update(teamOfWeekAwards).set({ refereeId: canonicalId }).where(eq(teamOfWeekAwards.refereeId, dupId));
+
+    await db.update(providerEntityMappings).set({ rugby365Id: canonicalId })
+      .where(and(eq(providerEntityMappings.entityType, "referee"), eq(providerEntityMappings.rugby365Id, dupId)));
+
+    await db.delete(referees).where(eq(referees.id, dupId));
+  }
+}
+
+export async function dedupeReferees(): Promise<DedupeSummary> {
+  const groups = await findDuplicateReferees();
+  const details: DedupeSummary["details"] = [];
+  let deleted = 0;
+  const errors: string[] = [];
+
+  for (const group of groups) {
+    try {
+      await mergeRefereeRecords(group.canonicalId, group.duplicateIds);
+      deleted += group.duplicateIds.length;
+      details.push({ key: group.key, kept: group.canonicalId, removed: group.duplicateIds });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${group.normalizedName}: ${message}`);
+      console.error(`  ✗ referee merge failed for ${group.normalizedName}: ${message}`);
+    }
+  }
+
+  if (errors.length) console.error(`Referee dedupe completed with ${errors.length} error(s).`);
+  return { groups: groups.length, merged: details.length, deleted, details };
+}
+
+// ---------------------------------------------------------------------------
+// Coach dedup
+// ---------------------------------------------------------------------------
+
+function scoreCoach(row: DuplicateEntityRow): number {
+  let score = entityNameQualityScore(row.name);
+  if (row.externalProviderId) score += 5;
+  if (isSdmsExternalId(row.externalProviderId)) score += 8;
+  if (row.sourceProvider === "sport365" || row.sourceProvider === "sdms") score += 3;
+  if (row.sourceProvider === "rugby_data") score += 2;
+  if (/<[^>]+>/.test(row.name) || /__legacy__/i.test(row.slug)) score -= 20;
+  return score;
+}
+
+export async function findDuplicateCoaches(): Promise<DuplicateEntityGroup[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: coaches.id,
+      name: coaches.name,
+      slug: coaches.slug,
+      externalProviderId: coaches.externalProviderId,
+      sourceProvider: coaches.sourceProvider,
+    })
+    .from(coaches);
+
+  const buckets = new Map<string, DuplicateEntityRow[]>();
+  for (const row of rows) {
+    const key = normalizePlayerName(row.name).toLowerCase();
+    if (!key) continue;
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(row);
+    buckets.set(key, bucket);
+  }
+
+  const groups: DuplicateEntityGroup[] = [];
+  for (const [key, bucket] of buckets) {
+    if (bucket.length < 2) continue;
+    const sorted = [...bucket].sort((a, b) => scoreCoach(b) - scoreCoach(a) || a.name.localeCompare(b.name));
+    const canonical = sorted[0]!;
+    groups.push({
+      key,
+      normalizedName: normalizePlayerName(canonical.name),
+      canonicalId: canonical.id,
+      rows: sorted,
+      duplicateIds: sorted.slice(1).map((r) => r.id),
+    });
+  }
+  return groups.sort((a, b) => a.normalizedName.localeCompare(b.normalizedName));
+}
+
+export async function mergeCoachRecords(canonicalId: string, duplicateIds: string[]) {
+  if (duplicateIds.length === 0) return;
+  const db = getDb();
+
+  const [canonical] = await db.select().from(coaches).where(eq(coaches.id, canonicalId)).limit(1);
+  if (!canonical) throw new Error("Canonical coach not found");
+
+  const patch: Partial<typeof coaches.$inferInsert> = {};
+
+  let bestExternal = canonical.externalProviderId
+    ? { id: canonical.externalProviderId, source: canonical.sourceProvider, score: canonical.sourceProvider === "sdms" ? 3 : isSdmsExternalId(canonical.externalProviderId) ? 2 : 1 }
+    : null;
+
+  for (const dupId of duplicateIds) {
+    const [dup] = await db.select().from(coaches).where(eq(coaches.id, dupId)).limit(1);
+    if (!dup) continue;
+    if (dup.externalProviderId) {
+      const score = dup.sourceProvider === "sdms" ? 3 : isSdmsExternalId(dup.externalProviderId) ? 2 : 1;
+      if (!bestExternal || score > bestExternal.score) bestExternal = { id: dup.externalProviderId, source: dup.sourceProvider, score };
+    }
+    if (!canonical.birthDate && dup.birthDate) patch.birthDate = dup.birthDate;
+    if (!canonical.nationality && dup.nationality) patch.nationality = dup.nationality;
+    if (!canonical.imageUrl && dup.imageUrl) patch.imageUrl = dup.imageUrl;
+    if (!canonical.wikipediaUrl && dup.wikipediaUrl) patch.wikipediaUrl = dup.wikipediaUrl;
+  }
+
+  if (bestExternal && bestExternal.id !== canonical.externalProviderId) {
+    for (const dupId of duplicateIds) {
+      await db.update(coaches).set({ externalProviderId: null, sourceProvider: "manual" }).where(eq(coaches.id, dupId));
+    }
+    patch.externalProviderId = bestExternal.id;
+    patch.sourceProvider = bestExternal.source;
+  }
+
+  if (Object.keys(patch).length) {
+    await db.update(coaches).set(patch).where(eq(coaches.id, canonicalId));
+  }
+
+  for (const dupId of duplicateIds) {
+    await db.update(fixtures).set({ homeCoachId: canonicalId }).where(eq(fixtures.homeCoachId, dupId));
+    await db.update(fixtures).set({ awayCoachId: canonicalId }).where(eq(fixtures.awayCoachId, dupId));
+
+    const staffRows = await db.select().from(teamCoachingStaff).where(eq(teamCoachingStaff.coachId, dupId));
+    for (const row of staffRows) {
+      const [existing] = await db.select({ id: teamCoachingStaff.id }).from(teamCoachingStaff)
+        .where(and(eq(teamCoachingStaff.teamId, row.teamId), eq(teamCoachingStaff.coachId, canonicalId), eq(teamCoachingStaff.role, row.role)))
+        .limit(1);
+      if (existing) await db.delete(teamCoachingStaff).where(eq(teamCoachingStaff.id, row.id));
+      else await db.update(teamCoachingStaff).set({ coachId: canonicalId }).where(eq(teamCoachingStaff.id, row.id));
+    }
+
+    const ratingRows = await db.select().from(coachMatchRatings).where(eq(coachMatchRatings.coachId, dupId));
+    for (const row of ratingRows) {
+      const [existing] = await db.select({ id: coachMatchRatings.id }).from(coachMatchRatings)
+        .where(and(eq(coachMatchRatings.fixtureId, row.fixtureId), eq(coachMatchRatings.coachId, canonicalId)))
+        .limit(1);
+      if (existing) await db.delete(coachMatchRatings).where(eq(coachMatchRatings.id, row.id));
+      else await db.update(coachMatchRatings).set({ coachId: canonicalId }).where(eq(coachMatchRatings.id, row.id));
+    }
+
+    const legendRows = await db.select().from(legendCollectionMembers).where(eq(legendCollectionMembers.coachId, dupId));
+    for (const row of legendRows) {
+      const [existing] = await db.select({ id: legendCollectionMembers.id }).from(legendCollectionMembers)
+        .where(and(eq(legendCollectionMembers.collectionId, row.collectionId), eq(legendCollectionMembers.coachId, canonicalId)))
+        .limit(1);
+      if (existing) await db.delete(legendCollectionMembers).where(eq(legendCollectionMembers.id, row.id));
+      else await db.update(legendCollectionMembers).set({ coachId: canonicalId }).where(eq(legendCollectionMembers.id, row.id));
+    }
+
+    await db.update(teamOfWeekAwards).set({ coachId: canonicalId }).where(eq(teamOfWeekAwards.coachId, dupId));
+
+    await db.update(providerEntityMappings).set({ rugby365Id: canonicalId })
+      .where(and(eq(providerEntityMappings.entityType, "coach"), eq(providerEntityMappings.rugby365Id, dupId)));
+
+    await db.delete(coaches).where(eq(coaches.id, dupId));
+  }
+}
+
+export async function dedupeCoaches(): Promise<DedupeSummary> {
+  const groups = await findDuplicateCoaches();
+  const details: DedupeSummary["details"] = [];
+  let deleted = 0;
+  const errors: string[] = [];
+
+  for (const group of groups) {
+    try {
+      await mergeCoachRecords(group.canonicalId, group.duplicateIds);
+      deleted += group.duplicateIds.length;
+      details.push({ key: group.key, kept: group.canonicalId, removed: group.duplicateIds });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${group.normalizedName}: ${message}`);
+      console.error(`  ✗ coach merge failed for ${group.normalizedName}: ${message}`);
+    }
+  }
+
+  if (errors.length) console.error(`Coach dedupe completed with ${errors.length} error(s).`);
+  return { groups: groups.length, merged: details.length, deleted, details };
+}
+
+// ---------------------------------------------------------------------------
+// Combined dedup
+// ---------------------------------------------------------------------------
+
+export async function dedupeAllEntities(): Promise<{
+  players: DedupeSummary;
+  teams: DedupeSummary;
+  referees: DedupeSummary;
+  coaches: DedupeSummary;
+}> {
+  const playerResult = await dedupePlayers();
+  const teamResult = await dedupeTeams();
+  const refereeResult = await dedupeReferees();
+  const coachResult = await dedupeCoaches();
+  return { players: playerResult, teams: teamResult, referees: refereeResult, coaches: coachResult };
 }
 
 export async function duplicateEntityCounts() {
-  const [playerGroups, teamGroups] = await Promise.all([findDuplicatePlayers(), findDuplicateTeams()]);
+  const [playerGroups, teamGroups, refereeGroups, coachGroups] = await Promise.all([
+    findDuplicatePlayers(),
+    findDuplicateTeams(),
+    findDuplicateReferees(),
+    findDuplicateCoaches(),
+  ]);
   return {
     players: {
       groups: playerGroups.length,
@@ -795,6 +1141,14 @@ export async function duplicateEntityCounts() {
     teams: {
       groups: teamGroups.length,
       rows: teamGroups.reduce((sum, group) => sum + group.duplicateIds.length, 0),
+    },
+    referees: {
+      groups: refereeGroups.length,
+      rows: refereeGroups.reduce((sum, group) => sum + group.duplicateIds.length, 0),
+    },
+    coaches: {
+      groups: coachGroups.length,
+      rows: coachGroups.reduce((sum, group) => sum + group.duplicateIds.length, 0),
     },
   };
 }
