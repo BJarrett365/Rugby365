@@ -1,0 +1,17 @@
+# Netlify config for the Rugby365 Next.js app (npm workspaces monorepo).
+# Do not set publish — @netlify/plugin-nextjs owns the Next.js output.
+# Keep Base directory unset (repo root). Package directory in UI: apps/web.
+
+[build]
+  command = "npm run build -w @rugby365/web"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Ensure TypeScript and other build-time deps install on Netlify.
+  NPM_FLAGS = "--include=dev"
+  SITE_GATE_ENABLED = "true"
+  # Avoid OOM on Netlify builders during Next compile.
+  NODE_OPTIONS = "--max-old-space-size=6144"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

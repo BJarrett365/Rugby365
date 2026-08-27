@@ -15,3 +15,12 @@ apps/web/src/lib/.venue-audit-tmp.json
 # Accidental F1 drops (use planetf1-live)
 **/openf1/**
 **/planetf1/**
+
+media/alamy/inbox/*
+!media/alamy/inbox/README.md
+media/alamy/inbox/_imported/
+media/alamy/library/
+apps/web/public/media/alamy/
+
+# Local Netlify folder
+.netlify

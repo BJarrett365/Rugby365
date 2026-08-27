@@ -11,7 +11,7 @@
     "dev:kill-port": "lsof -tiTCP:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true",
     "dev:restart": "npm run dev:kill-port && rm -rf apps/web/.next apps/web/node_modules/.cache/rugby365-next && NEXT_DIST_DIR=node_modules/.cache/rugby365-next npm run dev -w @rugby365/web",
     "dev:restart:full": "npm run dev:kill-port && rm -rf apps/web/.next && node scripts/ensure-db.cjs && npm run dev -w @rugby365/web",
-    "prebuild": "npm run dev:kill-port",
+    "prebuild": "node scripts/prebuild-safe.cjs",
     "build": "npm run build -w @rugby365/web",
     "db:generate": "npm run generate -w @rugby365/db",
     "db:up": "node scripts/ensure-db.cjs",
@@ -76,6 +76,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.13",
     "sharp": "^0.35.3",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
