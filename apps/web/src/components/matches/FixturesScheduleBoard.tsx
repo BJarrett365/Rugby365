@@ -671,7 +671,7 @@ export function FixturesScheduleBoard({
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ date: dateKey, tz: browserTimeZone });
+      const params = new URLSearchParams({ date: dateKey, tz: browserTimeZone, lite: "1" });
       if (competitionIdParam) params.set("competitionId", competitionIdParam);
       const res = await fetch(`/api/fixtures/schedule?${params.toString()}`);
       const text = await res.text();

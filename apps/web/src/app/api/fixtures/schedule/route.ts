@@ -5,13 +5,17 @@ import { getScheduleForDate } from "@/lib/planet-rugby-live-fixtures-service";
 import { apiErrorResponse } from "@/lib/api-errors";
 import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
 
+export const maxDuration = 26;
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const dateKey = searchParams.get("date") ?? dateKeyLocal(new Date());
     const timeZone = searchParams.get("tz") ?? DEFAULT_FIXTURES_TIMEZONE;
     const competitionId = searchParams.get("competitionId");
-    const lite = searchParams.get("lite") === "1";
+    // Default to the DB-only path. Full SDMS/Rugby Data sync exceeds Netlify's
+    // function budget and 502s the public /matches board (`lite=0` keeps the old path).
+    const lite = searchParams.get("lite") !== "0";
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
       return NextResponse.json({ error: "Invalid date (use YYYY-MM-DD)" }, { status: 400 });
     }
