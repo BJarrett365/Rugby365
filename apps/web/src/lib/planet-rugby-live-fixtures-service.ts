@@ -8,8 +8,8 @@ import {
   utcInstantFromZonedWallClock,
   type SdmsFixtureRow,
 } from "@rugby365/import-sdk";
-import { and, asc, desc, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
-import { competitions, fixtures, referees } from "@rugby365/db";
+import { and, asc, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
+import { competitions, fixtures, referees, teams } from "@rugby365/db";
 import { extractYoutubeVideoId } from "./youtube-embed";
 import {
   addDaysToDateKey,
@@ -23,7 +23,7 @@ import {
 } from "@/lib/match-schedule-utils";
 import { listCompetitions } from "./competition-admin-service";
 import { getDb } from "./db";
-import { listTeams, buildFixtureSlug } from "./fixture-admin-service";
+import { buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
@@ -237,7 +237,22 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
     .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)))
     .orderBy(fixtures.kickoffAt);
 
-  const teamRows = await listTeams();
+  const teamIds = [
+    ...new Set(
+      rows.flatMap(({ fixture: f }) => [f.homeTeamId, f.awayTeamId]).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const teamRows = teamIds.length
+    ? await db
+        .select({
+          id: teams.id,
+          name: teams.name,
+          slug: teams.slug,
+          imageUrl: teams.imageUrl,
+        })
+        .from(teams)
+        .where(inArray(teams.id, teamIds))
+    : [];
   const teamById = Object.fromEntries(teamRows.map((t) => [t.id, t]));
 
   return rows
@@ -252,18 +267,6 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
       const mapped = mapDbFixture(f, timeZone);
       return fixtureOnCalendarDate(mapped, dateKey);
     });
-}
-
-function fixtureNeedsScoreHeal(row: {
-  status: string;
-  kickoffAt: Date | null;
-  homeScore: number;
-  awayScore: number;
-}): boolean {
-  if (/full_time|live|half_time|result|finished/i.test(row.status)) return false;
-  if ((row.homeScore ?? 0) + (row.awayScore ?? 0) > 0) return false;
-  if (!row.kickoffAt) return false;
-  return Date.now() - row.kickoffAt.getTime() > 90 * 60 * 1000;
 }
 
 export async function getScheduleForDate(
@@ -297,44 +300,39 @@ export async function getScheduleForDate(
   const datesRangeEnd = month.end > stripEnd ? month.end : stripEnd;
 
   if (lite) {
-    const [competitions, dbRows] = await Promise.all([
-      listCompetitions(),
-      listDbFixturesForDate(dateKey, timeZone),
-    ]);
-    if (dbRows.some(fixtureNeedsScoreHeal)) {
-      void syncRugbyDataFixturesForDate(dateKey, {
-        timeZone,
-        syncEvents: false,
-        mirrorSupabase: false,
-      }).catch((error) => {
-        console.warn(
-          `[schedule] lite rugby_data score sync failed for ${dateKey}:`,
-          error instanceof Error ? error.message : error,
-        );
-      });
-    }
-    const competitionList: ScheduleCompetition[] = competitions.map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-    }));
-    let fixtures = sanitizePublicScheduleFixtures(
+    const dbRows = await listDbFixturesForDate(dateKey, timeZone);
+    const competitionIds = [
+      ...new Set(dbRows.map((row) => row.competitionId).filter((id): id is string => Boolean(id))),
+    ];
+    const competitionList: ScheduleCompetition[] = competitionIds.length
+      ? (
+          await getDb()
+            .select({
+              id: competitions.id,
+              name: competitions.name,
+              slug: competitions.slug,
+            })
+            .from(competitions)
+            .where(inArray(competitions.id, competitionIds))
+        ).map((c) => ({ id: c.id, name: c.name, slug: c.slug }))
+      : [];
+    let mappedFixtures = sanitizePublicScheduleFixtures(
       dbRows
         .map((row) => mapDbFixture(row, timeZone))
         .filter((f) => fixtureOnCalendarDate(f, dateKey)),
     );
     if (competitionIdFilter) {
-      fixtures = fixtures.filter((f) => f.competitionId === competitionIdFilter);
+      mappedFixtures = mappedFixtures.filter((f) => f.competitionId === competitionIdFilter);
     }
-    fixtures.sort((a, b) => {
+    mappedFixtures.sort((a, b) => {
       const ta = a.kickoffAt ? new Date(a.kickoffAt).getTime() : 0;
       const tb = b.kickoffAt ? new Date(b.kickoffAt).getTime() : 0;
       return ta - tb;
     });
     return {
-      fixtures,
+      fixtures: mappedFixtures,
       competitions: competitionList,
-      liveCount: fixtures.filter((f) => /live|half_time|half time/i.test(f.status)).length,
+      liveCount: mappedFixtures.filter((f) => /live|half_time|half time/i.test(f.status)).length,
       dbCount: dbRows.length,
       datesWithMatches: [],
       timeZone,

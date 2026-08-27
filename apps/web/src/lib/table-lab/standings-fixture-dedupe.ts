@@ -126,7 +126,7 @@ export function isRugbyChampionshipParticipant(teamName: string): boolean {
 
 export function isUnknownStandingsTeamName(name: string | null | undefined): boolean {
   if (!name?.trim()) return true;
-  return /^unknown\b/i.test(name.trim()) || /^orphan-/i.test(name.trim());
+  return /^unknown\b/i.test(name.trim()) || /^orphan\b/i.test(name.trim());
 }
 
 /** Infer home/away labels from slug when CMS team rows are orphan placeholders. */

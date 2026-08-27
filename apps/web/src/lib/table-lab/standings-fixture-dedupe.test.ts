@@ -22,6 +22,7 @@ describe("standings fixture dedupe", () => {
 
   it("detects unknown/orphan team labels", () => {
     expect(isUnknownStandingsTeamName("Unknown team e416a7d7de5e")).toBe(true);
+    expect(isUnknownStandingsTeamName("Orphan")).toBe(true);
     expect(isUnknownStandingsTeamName("Argentina")).toBe(false);
   });
 
