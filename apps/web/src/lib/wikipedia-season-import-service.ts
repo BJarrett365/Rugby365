@@ -21,6 +21,11 @@ import { formatSeasonRangeLabel } from "./season-label-utils";
 import { canonicalPremiershipTeamName } from "./transfer-match-service";
 import { resolveVenue } from "./venue-admin-service";
 import {
+  isUrcLineageSlug,
+  urcSplitTableKindForYear,
+  urcStandingViewForSplit,
+} from "./urc-lineage";
+import {
   PREMIERSHIP_CHAMPIONS,
   CHALLENGE_CUP_CHAMPIONS,
   CHAMPIONS_CUP_CHAMPIONS,
@@ -498,53 +503,119 @@ async function importStandings(
   createMissingTeams: boolean,
   unmappedTeams: Set<string>,
   competitionSlug: string,
+  seasonStartYear: number,
 ): Promise<WikipediaSeasonImportCounts> {
   const counts = emptyCounts(rows.length);
   const db = getDb();
 
-  if (mode === "update_existing") {
-    await db.delete(standingRows).where(and(eq(standingRows.seasonId, seasonId), eq(standingRows.view, "overall")));
+  const splitKind = isUrcLineageSlug(competitionSlug)
+    ? urcSplitTableKindForYear(seasonStartYear)
+    : null;
+
+  // URC lineage: only persist Pool/Conference views for the seasons that used them.
+  // Other years flatten wiki Pool A/B (e.g. 2002–03 page) into one overall table.
+  let normalized = rows;
+  if (isUrcLineageSlug(competitionSlug) && !splitKind && rows.some((row) => row.pool)) {
+    normalized = [...rows]
+      .sort(
+        (a, b) =>
+          b.points - a.points ||
+          b.pointsDiff - a.pointsDiff ||
+          a.teamName.localeCompare(b.teamName),
+      )
+      .map((row, index) => ({
+        ...row,
+        pool: null,
+        groupKind: null,
+        rank: index + 1,
+      }));
+  } else if (splitKind === "conference") {
+    normalized = rows.map((row) =>
+      row.pool
+        ? { ...row, groupKind: row.groupKind === "pool" ? "conference" : (row.groupKind ?? "conference") }
+        : row,
+    );
+  } else if (splitKind === "pool") {
+    normalized = rows.map((row) =>
+      row.pool ? { ...row, groupKind: row.groupKind ?? "pool" } : row,
+    );
+  }
+
+  const splitViews = [
+    ...new Set(
+      normalized
+        .map((row) => {
+          const key = row.pool?.trim();
+          if (!key) return null;
+          const kind =
+            (row.groupKind as "pool" | "conference" | null | undefined) ??
+            splitKind ??
+            "pool";
+          if (isUrcLineageSlug(competitionSlug) && splitKind && kind !== splitKind) {
+            return null;
+          }
+          if (isUrcLineageSlug(competitionSlug) && !splitKind) return null;
+          return urcStandingViewForSplit(kind, key);
+        })
+        .filter((view): view is string => Boolean(view)),
+    ),
+  ];
+
+  const obsoleteSplitViews = isUrcLineageSlug(competitionSlug)
+    ? [
+        ...(splitKind === "pool" ? [] : ["pool_a", "pool_b"]),
+        ...(splitKind === "conference" ? [] : ["conference_a", "conference_b"]),
+      ]
+    : [];
+
+  const viewsToClear =
+    mode === "update_existing"
+      ? [...new Set(["overall", ...splitViews, ...obsoleteSplitViews])]
+      : [];
+
+  if (viewsToClear.length) {
+    for (const view of viewsToClear) {
+      await db
+        .delete(standingRows)
+        .where(and(eq(standingRows.seasonId, seasonId), eq(standingRows.view, view)));
+    }
   }
 
   const syncedAt = new Date();
-  for (const row of rows) {
-    const team = await resolveSeasonTeam(row.teamName, createMissingTeams, competitionSlug);
-    if (!team) {
-      unmappedTeams.add(row.teamName);
-      counts.skipped += 1;
-      continue;
-    }
 
-    const values = standingRowValues(row);
-
+  async function upsertStandingView(
+    row: WikipediaStandingRow,
+    view: string,
+    values: ReturnType<typeof standingRowValues>,
+    teamId: string,
+  ) {
     const [existing] = await db
       .select()
       .from(standingRows)
       .where(
         and(
           eq(standingRows.seasonId, seasonId),
-          eq(standingRows.teamId, team.id),
-          eq(standingRows.view, "overall"),
+          eq(standingRows.teamId, teamId),
+          eq(standingRows.view, view),
         ),
       )
       .limit(1);
 
     if (existing && mode === "fill_missing") {
-      // Prefer Wikipedia completed table when existing looks incomplete / inconsistent.
       const shouldReplace =
         existing.played !== values.played ||
         existing.points !== values.points ||
         existing.rank !== values.rank;
       if (!shouldReplace) {
         counts.skipped += 1;
-        continue;
+        return;
       }
       await db
         .update(standingRows)
         .set({ ...values, syncedAt })
         .where(eq(standingRows.id, existing.id));
       counts.updated += 1;
-      continue;
+      return;
     }
 
     if (existing) {
@@ -556,12 +627,60 @@ async function importStandings(
     } else {
       await db.insert(standingRows).values({
         seasonId,
-        teamId: team.id,
-        view: "overall",
+        teamId,
+        view,
         ...values,
         syncedAt,
       });
       counts.created += 1;
+    }
+  }
+
+  for (const row of normalized) {
+    const team = await resolveSeasonTeam(row.teamName, createMissingTeams, competitionSlug);
+    if (!team) {
+      unmappedTeams.add(row.teamName);
+      counts.skipped += 1;
+      continue;
+    }
+
+    const values = standingRowValues(row);
+    const key = row.pool?.trim();
+    const kind =
+      (row.groupKind as "pool" | "conference" | null | undefined) ?? splitKind ?? "pool";
+    const splitView =
+      key && (!isUrcLineageSlug(competitionSlug) || splitKind)
+        ? urcStandingViewForSplit(
+            isUrcLineageSlug(competitionSlug) ? (splitKind ?? kind) : kind,
+            key,
+          )
+        : null;
+    if (splitView) {
+      await upsertStandingView(row, splitView, values, team.id);
+    } else {
+      await upsertStandingView(row, "overall", values, team.id);
+    }
+  }
+
+  // For split seasons, also write a combined overall table (points order).
+  if (splitViews.length) {
+    const combined = [...normalized]
+      .filter((row) => row.pool)
+      .sort(
+        (a, b) =>
+          b.points - a.points ||
+          b.pointsDiff - a.pointsDiff ||
+          a.teamName.localeCompare(b.teamName),
+      );
+    for (const [index, row] of combined.entries()) {
+      const team = await resolveSeasonTeam(row.teamName, createMissingTeams, competitionSlug);
+      if (!team) continue;
+      await upsertStandingView(
+        row,
+        "overall",
+        standingRowValues({ ...row, rank: index + 1 }),
+        team.id,
+      );
     }
   }
 
@@ -612,6 +731,7 @@ export async function importWikipediaSeasonPage(
       createMissingTeams,
       unmappedTeams,
       competition.slug,
+      year,
     );
   }
 

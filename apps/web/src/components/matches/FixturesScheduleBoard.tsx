@@ -768,6 +768,13 @@ export function FixturesScheduleBoard({
         c.slug.length < existing.slug.length;
       if (prefer) options.set(key, { id: c.id, name, slug: c.slug });
     }
+    // Year-scoped CMS comps (RWC etc.) stay selectable on off-match days.
+    for (const c of yearCompetitions) {
+      const name = (c.name || c.slug).trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (!options.has(key)) options.set(key, { id: c.id, name, slug: c.slug });
+    }
     // Ensure comps that appear on the selected day are still selectable even if
     // they were missing from the catalogue payload for any reason.
     for (const f of fixtures) {

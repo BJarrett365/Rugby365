@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { TeamCrest } from "./TeamCrest";
 import { MatchAnimationPitch } from "./MatchAnimationPitch";
+import { MatchAnimationPlayerOverlay } from "./MatchAnimationPlayerOverlay";
 import { MatchAnimationFullTime } from "./MatchAnimationFullTime";
 import { MatchAnimationScoreboard } from "./MatchAnimationScoreboard";
 import { MatchAnimationSignal } from "./MatchAnimationSignal";
@@ -695,6 +696,29 @@ export function MatchAnimationPanel({
               possession={possession}
               darkened
               reducedMotion={reducedMotion}
+              hideBall
+            />
+            <MatchAnimationPlayerOverlay
+              placement="pitch"
+              ballX={ballX}
+              ballY={ballY}
+              eventType={lastEvent?.eventType}
+              possession={
+                livePayload.playerOfTheMatchTeamSide ?? possession
+              }
+              facing={
+                (livePayload.playerOfTheMatchTeamSide ?? possession) === "away"
+                  ? awayAttackDirection ?? "left"
+                  : homeAttackDirection ?? "right"
+              }
+              shirtColor={
+                (livePayload.playerOfTheMatchTeamSide ?? possession) === "away"
+                  ? away.colour
+                  : home.colour
+              }
+              playerName={livePayload.playerOfTheMatch ?? lastEvent?.playerName}
+              jerseyNumber={lastEvent?.jerseyNumber ?? null}
+              forceState={livePayload.playerOfTheMatch ? "celebrate" : "idle"}
             />
           </div>
           <MatchAnimationFullTime
@@ -828,8 +852,29 @@ export function MatchAnimationPanel({
                 lit={view === "live" && !showHalfTimeInsight}
                 darkened={showHalfTimeInsight}
                 reducedMotion={reducedMotion}
+                hideBall={!showHalfTimeInsight}
               />
             )}
+            {!showHalfTimeInsight ? (
+              <MatchAnimationPlayerOverlay
+                placement={showFrontGoal ? "goal" : "pitch"}
+                ballX={tryPreamble ? (possession === "away" ? 4 : 96) : ballX}
+                ballY={ballY}
+                eventType={current?.eventType}
+                signalKind={activeSignal?.kind}
+                frontGoalView={activeSignal?.frontGoalView ?? null}
+                conversionFlight={conversionFlight}
+                possession={possession}
+                facing={
+                  possession === "away"
+                    ? awayAttackDirection ?? "left"
+                    : homeAttackDirection ?? "right"
+                }
+                shirtColor={possession === "away" ? away.colour : home.colour}
+                playerName={current?.playerName ?? activeSignal?.playerName}
+                jerseyNumber={current?.jerseyNumber ?? activeSignal?.jerseyNumber ?? null}
+              />
+            ) : null}
             {activeSignal && !showHalfTimeInsight && !showFrontGoal ? (
               <MatchAnimationSignal
                 signal={activeSignal}

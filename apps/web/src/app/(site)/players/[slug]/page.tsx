@@ -5,6 +5,9 @@ import { PublicPlayerOverviewV2 } from "@/components/players/PublicPlayerOvervie
 import { getPublicPlayerOverviewV2 } from "@/lib/public-player-overview-v2-service";
 import { isPreviewParam } from "@/lib/public-entity-profile-utils";
 
+/** Player overview is TTL + request-deduped; allow soft revalidation. */
+export const revalidate = 60;
+
 type PageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ preview?: string; compare?: string }>;

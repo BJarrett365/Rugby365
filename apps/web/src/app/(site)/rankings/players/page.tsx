@@ -12,7 +12,8 @@ import {
   listRankingFilterOptions,
 } from "@/lib/public-player-rankings-product-service";
 
-export const dynamic = "force-dynamic";
+/** Rankings boards are snapshot-backed + memory-cached; refresh at most every minute. */
+export const revalidate = 60;
 
 type SearchParams =
   | Promise<Record<string, string | string[] | undefined>>

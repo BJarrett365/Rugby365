@@ -97,8 +97,8 @@ export function buildPublicPlayerIntro(input: PublicPlayerIntroInput): string | 
   return sentence;
 }
 
-/** Display helper: confirmed zero stays "0"; missing stays "—". */
+/** Display helper: missing numeric stats show as "0" (confirmed zeros and unknowns). */
 export function formatStatValue(value: number | null | undefined): string {
-  if (value == null || !Number.isFinite(value)) return "—";
+  if (value == null || !Number.isFinite(value)) return "0";
   return String(value);
 }

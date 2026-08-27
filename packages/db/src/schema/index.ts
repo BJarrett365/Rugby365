@@ -489,6 +489,28 @@ export const playerCareerStints = pgTable(
   ],
 );
 
+/** News / article links scraped from external player pages (e.g. Ultimate Rugby). */
+export const playerSourceNews = pgTable(
+  "player_source_news",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    sourceProvider: text("source_provider").notNull().default("ultimate_rugby"),
+    importKey: text("import_key").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    publishedLabel: text("published_label"),
+    viewCount: integer("view_count"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("player_source_news_import_key_unique").on(table.importKey),
+    index("player_source_news_player_idx").on(table.playerId),
+  ],
+);
+
 export const coaches = pgTable(
   "coaches",
   {
@@ -2803,6 +2825,7 @@ export const providerEntityMappings = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     provider: text("provider").notNull(),
     entityType: text("entity_type").notNull(),
+    /** Provider's external key (e.g. Sport CC ID). Never used as Rugby365 PK. */
     externalId: text("external_id").notNull(),
     rugby365Id: uuid("rugby365_id"),
     externalName: text("external_name"),
@@ -2813,6 +2836,10 @@ export const providerEntityMappings = pgTable(
     conflictStatus: text("conflict_status"),
     notes: text("notes"),
     extras: jsonb("extras").notNull().default({}),
+    /** Sport CC (or other) preferred mapping for this entity+provider. */
+    isDefaultProvider: boolean("is_default_provider").notNull().default(false),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedBy: text("confirmed_by"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
@@ -2831,6 +2858,69 @@ export const providerEntityMappings = pgTable(
       table.provider,
     ),
     index("provider_entity_mappings_status_idx").on(table.status),
+  ],
+);
+
+/**
+ * Approved historic / alternate names and slugs for stable identity resolution.
+ * Never changes the Rugby365 UUID — only helps resolve imports to existing entities.
+ */
+export const entityAliases = pgTable(
+  "entity_aliases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    rugby365Id: uuid("rugby365_id").notNull(),
+    alias: text("alias").notNull(),
+    normalizedAlias: text("normalized_alias").notNull(),
+    aliasKind: text("alias_kind").notNull().default("name"),
+    isApproved: boolean("is_approved").notNull().default(true),
+    sourceProvider: text("source_provider"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("entity_aliases_type_normalized_unique").on(
+      table.entityType,
+      table.normalizedAlias,
+    ),
+    index("entity_aliases_entity_idx").on(table.entityType, table.rugby365Id),
+  ],
+);
+
+/**
+ * CMS identity review queue — unclear matches land here; never silent duplicates.
+ */
+export const identityReviewQueue = pgTable(
+  "identity_review_queue",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull(),
+    provider: text("provider").notNull(),
+    providerKey: text("provider_key").notNull(),
+    incomingName: text("incoming_name"),
+    suggestedRugby365Id: uuid("suggested_rugby365_id"),
+    suggestedName: text("suggested_name"),
+    confidence: integer("confidence").notNull().default(0),
+    matchReason: jsonb("match_reason").notNull().default({}),
+    status: text("status").notNull().default("open"),
+    resolution: text("resolution"),
+    resolvedBy: text("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    conflictFields: jsonb("conflict_fields").notNull().default({}),
+    existingAliases: jsonb("existing_aliases").notNull().default([]),
+    existingProviderIds: jsonb("existing_provider_ids").notNull().default([]),
+    notes: text("notes"),
+    mappingId: uuid("mapping_id").references(() => providerEntityMappings.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("identity_review_queue_status_idx").on(table.status, table.createdAt),
+    index("identity_review_queue_entity_idx").on(table.entityType, table.suggestedRugby365Id),
   ],
 );
 

@@ -20,7 +20,16 @@ export function stripWikiMarkup(value: string): string {
   text = text.replace(/\b\d+(?:st|nd|rd|th)\s+title\b/gi, "");
   text = text.replace(/\(\d+\)/g, "");
   text = text.replace(/\b\((?:C|SF|QF|RU|F|PO|P|Q|Q1|Q2|Q3)\)\b/gi, "");
-  text = text.replace(/&nbsp;/g, " ");
+  text = text.replace(/&nbsp;/gi, " ");
+  // MediaWiki API often returns HTML entities in rugbybox scores ("17&ndash;15").
+  text = text.replace(/&ndash;/gi, "–");
+  text = text.replace(/&mdash;/gi, "—");
+  text = text.replace(/&#0*8211;/g, "–");
+  text = text.replace(/&#0*8212;/g, "—");
+  text = text.replace(/&#x0*2013;/gi, "–");
+  text = text.replace(/&#x0*2014;/gi, "—");
+  text = text.replace(/&minus;/gi, "-");
+  text = text.replace(/&amp;/gi, "&");
   text = text.replace(/,/g, "");
   // Wikipedia flag/thumb size crumbs that leak into labels ("23px England")
   text = text.replace(/^\d+px\b[\s-]*/i, "");
@@ -169,7 +178,9 @@ export function parseAttendance(value: string | undefined): number | null {
 
 export function parseScore(value: string | undefined): { home: number; away: number } | null {
   if (!value) return null;
-  const cleaned = stripWikiMarkup(value).replace(/–/g, "-").replace(/—/g, "-");
+  const cleaned = stripWikiMarkup(value)
+    .replace(/–|—|−/g, "-")
+    .replace(/\u2212/g, "-"); // minus sign
   const match = cleaned.match(/(\d+)\s*-\s*(\d+)/);
   if (!match) return null;
   return { home: Number.parseInt(match[1]!, 10), away: Number.parseInt(match[2]!, 10) };

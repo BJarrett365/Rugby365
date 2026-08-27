@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   parsePremiershipSeasonWikitext,
   parsePoolWikitableStandings,
+  parseInternationalTableStandings,
+  parseLeagueWikitableStandings,
   parseSportsTableModule,
   parseRugbyboxFixtures,
   parseResultTableFixtures,
@@ -139,6 +141,7 @@ describe("parsePoolWikitableStandings", () => {
 |}
 `);
     expect(rows.map((r) => r.teamName)).toEqual(["Agen", "Sale Sharks", "Castres Olympique"]);
+    expect(rows[0]).toMatchObject({ played: 5, won: 5, points: 10 });
   });
 
   it("parses lettered RWC pool headings", () => {
@@ -153,6 +156,130 @@ describe("parsePoolWikitableStandings", () => {
 |}
 `);
     expect(rows[0]?.teamName).toBe("Japan");
+  });
+
+  it("parses Celtic League Pool A/B Table headings with full stats", () => {
+    const rows = parsePoolWikitableStandings(`
+===Pool A Table===
+{| class="wikitable"
+|-
+! !!Team!!Pld!!W!!D!!L!!PF!!PA!!PD!!TF!!TA!!Try bonus!!Losing bonus!!Pts
+|- bgcolor=#d8ffeb
+|1||align=left|{{flagicon|IRE|rugby union}} [[Munster Rugby|Munster]]
+|7||6||0||1||227||129||+98||25||12||4||0||'''28'''
+|- bgcolor=#d8ffeb
+|2||align=left|{{flagicon|SCO}} [[Edinburgh Rugby|Edinburgh]]
+|7||6||0||1||231||145||+86||24||13||2||1||'''27'''
+|}
+===Pool B Table===
+{| class="wikitable"
+|-
+! !!Team!!Pld!!W!!D!!L!!PF!!PA!!PD!!TF!!TA!!Try bonus!!Losing bonus!!Pts
+|-
+|1||align=left|{{flagicon|WAL}} [[Pontypridd RFC|Pontypridd]]
+|7||6||0||1||226||86||+140||28||7||4||0||'''26'''
+|}
+`);
+    expect(rows.map((r) => [r.pool, r.teamName, r.played, r.points])).toEqual([
+      ["A", "Munster", 7, 28],
+      ["A", "Edinburgh", 7, 27],
+      ["B", "Pontypridd", 7, 26],
+    ]);
+    expect(rows[0]).toMatchObject({
+      won: 6,
+      lost: 1,
+      pointsFor: 227,
+      pointsAgainst: 129,
+      tryBonusPoints: 4,
+      losingBonusPoints: 0,
+    });
+  });
+});
+
+describe("parseLeagueWikitableStandings", () => {
+  it("parses Pro12 league table templates with flag icon + Club header", () => {
+    const rows = parseLeagueWikitableStandings(`
+{| class="wikitable"
+|-
+! !!Club!!Played!!Won!!Drawn!!Lost!!Points For!!Points Against!!Points Difference!!Tries For!!Tries Against!!Try Bonus!!Losing Bonus!!Points
+|-
+|1||{{flag icon|IRE|rugby union}} [[Ulster Rugby|Ulster]] (RU)
+|22||17||1||4||577||348||+229||62||33||8||3||'''81'''
+|-
+|2||{{flag icon|IRE|rugby union}} [[Leinster Rugby|Leinster]] (CH)
+|22||17||0||5||585||386||+199||63||46||9||1||'''78'''
+|}
+`);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ teamName: "Ulster", played: 22, points: 81 });
+    expect(rows[1]).toMatchObject({ teamName: "Leinster", played: 22, points: 78, isChampionMarker: true });
+  });
+
+  it("parses Pro14 Conference A/B banners without flattening ranks", () => {
+    const rows = parseLeagueWikitableStandings(`
+{| class="wikitable"
+|-
+!colspan=14 |'''Conference A'''
+|-
+! !!Team!!P!!W!!D!!L!!PF!!PA!!PD!!TF!!TA!!TBP!!LBP!!Pts
+|-
+|1||{{flag icon|IRE|rugby union}} [[Glasgow Warriors|Glasgow]]
+|21||15||1||5||614||366||+248||80||42||9||2||'''73'''
+|-
+|2||{{flag icon|IRE|rugby union}} [[Munster Rugby|Munster]]
+|21||13||1||7||568||314||+254||72||36||8||3||'''69'''
+|-
+!colspan=14 |'''Conference B'''
+|-
+|1||{{flag icon|IRE|rugby union}} [[Leinster Rugby|Leinster]]
+|21||14||1||6||601||285||+316||83||31||10||2||'''70'''
+|-
+|2||{{flag icon|WAL}} [[Scarlets]]
+|21||12||0||9||501||365||+136||58||40||6||4||'''58'''
+|}
+`);
+    expect(rows.map((r) => [r.groupKind, r.pool, r.teamName, r.rank, r.points])).toEqual([
+      ["conference", "A", "Glasgow", 1, 73],
+      ["conference", "A", "Munster", 2, 69],
+      ["conference", "B", "Leinster", 1, 70],
+      ["conference", "B", "Scarlets", 2, 58],
+    ]);
+  });
+});
+
+describe("parseInternationalTableStandings", () => {
+  it("parses Celtic League club ==Table== with flagicon + link cells", () => {
+    const rows = parseInternationalTableStandings(`
+==Table==
+{| class="wikitable"
+|-
+! !!Team!!Played!!Won!!Drawn!!Lost!!Points For!!Points Against!!Points Difference!!Tries For!!Tries Against!!Try Bonus!!Losing Bonus!!Points
+|- bgcolor=#d8ffeb
+|1||align=left|{{flagicon|WAL}} [[Scarlets|Llanelli Scarlets]]
+|22||16||1||5||597||385||+212||57||39||7||3||'''76'''
+|-
+|12||align=left|{{flagicon|SCO}} [[Border Reivers|Borders]]
+|22||4||0||18||363||588||−225||35||72||1||5||'''22'''
+|-
+| colspan="14" |Under the standard bonus point system, teams receive...
+|-
+| colspan="14" |Source: [https://example.com]
+|}
+`);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      teamName: "Llanelli Scarlets",
+      played: 22,
+      won: 16,
+      draw: 1,
+      lost: 5,
+      pointsFor: 597,
+      pointsAgainst: 385,
+      tryBonusPoints: 7,
+      losingBonusPoints: 3,
+      points: 76,
+    });
+    expect(rows[1]).toMatchObject({ teamName: "Borders", played: 22, points: 22 });
   });
 });
 
@@ -190,6 +317,13 @@ describe("parseWikiTeamLabel national templates", () => {
     expect(parseWikiTeamLabel("{{ruu|20|RSA}}")).toBe("South Africa U20");
     expect(parseWikiTeamLabel("{{Ru|SAM|name=Samoa XV}}")).toBe("Samoa XV");
     expect(parseWikiTeamLabel("{{unknown|FOO}}")).toBe("");
+  });
+
+  it("parses HTML-entity en-dashes from MediaWiki rugbybox scores", async () => {
+    const { parseScore } = await import("./wiki-text-utils");
+    expect(parseScore("17&ndash;15")).toEqual({ home: 17, away: 15 });
+    expect(parseScore("23&mdash;30")).toEqual({ home: 23, away: 30 });
+    expect(parseScore("13–40")).toEqual({ home: 13, away: 40 });
   });
 });
 

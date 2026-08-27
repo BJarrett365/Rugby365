@@ -3,6 +3,21 @@ export const SEASON_LABEL_DASH = "\u2013";
 
 export const DOMESTIC_SEASON_FIRST_YEAR = 1987;
 
+/**
+ * League-specific first domestic season start year for catalog shells.
+ * URC lineage begins with the 2001–02 Celtic League (not Premiership-style 1987).
+ */
+const DOMESTIC_SEASON_FIRST_YEAR_BY_SLUG: Record<string, number> = {
+  "united-rugby-championship": 2001,
+};
+
+export function domesticSeasonFirstYearForCompetition(
+  competitionSlug: string | null | undefined,
+): number {
+  if (!competitionSlug) return DOMESTIC_SEASON_FIRST_YEAR;
+  return DOMESTIC_SEASON_FIRST_YEAR_BY_SLUG[competitionSlug] ?? DOMESTIC_SEASON_FIRST_YEAR;
+}
+
 export type SeasonStatus = "current" | "previous" | "historical";
 
 /** Northern-hemisphere club season: Jul+ is the upcoming season; before Jul is still the prior season window. */

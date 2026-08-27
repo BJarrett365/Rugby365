@@ -3,11 +3,17 @@ import {
   buildCompetitionBuildingState,
   buildPlayerRankingsTitle,
   buildRankingFilterKey,
+  cleanRankingClubName,
+  cleanRankingPlayerName,
   computePositionRankingScore,
+  computeRatingMovementDelta,
   denseRankWithTies,
   formatRankingDisplay,
+  formatRatingMovementDelta,
   intelligenceMetricsForPosition,
+  isDirtyRankingPlayerName,
   isEligibleForCurrentRanking,
+  pickCareerClubName,
   pluralizePositionLabel,
   rankPlayerInCohort,
   resolveRankingPoolStatus,
@@ -205,5 +211,37 @@ describe("player-ranking-engine", () => {
         era: null,
       }),
     ).toBe("current|pos:fly_half|nat:south africa|club:all|comp:all|top:10|era:na");
+  });
+
+  it("computes rating movement deltas from newest-first series", () => {
+    const up = computeRatingMovementDelta([92, 91, 90, 89, 88, 80, 79, 78, 77, 76], 5);
+    expect(up?.movement).toBe("up");
+    expect(up!.delta).toBeGreaterThan(0);
+    expect(formatRatingMovementDelta(up!.delta)).toMatch(/^\+/);
+
+    const down = computeRatingMovementDelta([70, 71, 72, 73, 74, 90, 91, 92, 93, 94], 5);
+    expect(down?.movement).toBe("down");
+    expect(down!.delta).toBeLessThan(0);
+  });
+
+  it("estimates movement when history is missing so cells are never empty", async () => {
+    const { estimateRankingMovement } = await import("./player-ranking-engine");
+    const jean = estimateRankingMovement({
+      peakRating: 50,
+      careerRating: 50,
+      overallScore: 58,
+      clubScore: 66,
+      internationalScore: 68,
+    });
+    expect(jean.delta).not.toBeNull();
+    expect(["up", "down", "flat"]).toContain(jean.movement);
+  });
+
+  it("strips retired/released suffixes from ranking display names", () => {
+    expect(cleanRankingPlayerName("John Smit retired")).toBe("John Smit");
+    expect(cleanRankingPlayerName("Schalk Burger released")).toBe("Schalk Burger");
+    expect(cleanRankingPlayerName("Joe Launchbury (retired)")).toBe("Joe Launchbury");
+    expect(isDirtyRankingPlayerName("John Smit retired")).toBe(true);
+    expect(isDirtyRankingPlayerName("John Smit")).toBe(false);
   });
 });

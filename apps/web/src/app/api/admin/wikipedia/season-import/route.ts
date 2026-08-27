@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       mode: body.mode ?? "update_existing",
       createMissingTeams:
         body.createMissingTeams ??
-        [
+        ([
           "challenge-cup",
           "rugby-champions-cup",
           "rugby-championship",
@@ -75,9 +75,9 @@ export async function POST(req: Request) {
           "nations-championship",
           "world-rugby-nations-cup",
         ].includes(competitionSlug) ||
-        competitionSlug.startsWith("currie-cup") ||
-        competitionSlug.startsWith("npc-") ||
-        competitionSlug.startsWith("autumn-nations-cup"),
+          competitionSlug.startsWith("currie-cup") ||
+          competitionSlug.startsWith("npc-") ||
+          competitionSlug.startsWith("autumn-nations-cup")),
     });
     return NextResponse.json(report);
   } catch (e) {

@@ -106,6 +106,16 @@ export function computeFormSequenceFromFixtures(
   return results.slice(-limit).join("");
 }
 
+/**
+ * True when a W/D/L sequence is almost certainly from 0–0 placeholder fixtures
+ * (entire window is draws). Real rugby seasons almost never finish a last-N
+ * window as all draws of length ≥ 4.
+ */
+export function isPlaceholderAllDrawForm(form: string | null | undefined): boolean {
+  const letters = normalizeFormSequence(form);
+  return Boolean(letters && letters.length >= 4 && /^D+$/.test(letters));
+}
+
 /** True when stored form is missing, dash-padded, or contains non-result placeholders. */
 export function standingFormNeedsRecompute(form: string | null | undefined): boolean {
   const trimmed = form?.trim();
@@ -114,5 +124,7 @@ export function standingFormNeedsRecompute(form: string | null | undefined): boo
   if (/-/.test(trimmed) && !trimmed.startsWith("{")) return true;
   const parsed = parseStandingForm(trimmed).lastFive;
   if (!parsed) return true;
+  // Long all-draw sequences are almost always 0–0 placeholder imports, not real form.
+  if (isPlaceholderAllDrawForm(parsed)) return true;
   return false;
 }

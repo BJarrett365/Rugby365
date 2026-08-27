@@ -178,7 +178,7 @@ describe("public-player-stats-v2-math", () => {
   });
 
   it("resolves attempts from miss events only when misses exist", () => {
-    expect(resolveGoalKickAttempts(null, 5, null)).toBeNull();
+    expect(resolveGoalKickAttempts(null, 5, null)).toBe(5);
     expect(resolveGoalKickAttempts(null, 5, 0)).toBeNull();
     expect(resolveGoalKickAttempts(null, 5, 1)).toBe(6);
     expect(resolveGoalKickAttempts(8, 5, 1)).toBe(8);

@@ -29,15 +29,19 @@ export function formResultForPerspective(row: TeamFixturePerspective): FormResul
   return "L";
 }
 
+function isPlaceholderScore(row: TeamFixturePerspective): boolean {
+  return row.pointsFor === 0 && row.pointsAgainst === 0;
+}
+
 /** Latest N completed matches per team — venue filter applied before slicing. */
 export function recentFormMatchesByTeam(
   perspectives: TeamFixturePerspective[],
   matchCount: number,
   tableView: RugbyTableView = "all",
 ): Map<string, TeamFixturePerspective[]> {
-  let scoped = perspectives;
-  if (tableView === "home") scoped = filterBySide(perspectives, "home");
-  if (tableView === "away") scoped = filterBySide(perspectives, "away");
+  let scoped = perspectives.filter((row) => !isPlaceholderScore(row));
+  if (tableView === "home") scoped = filterBySide(scoped, "home");
+  if (tableView === "away") scoped = filterBySide(scoped, "away");
 
   const byTeam = new Map<string, TeamFixturePerspective[]>();
   for (const row of scoped) {

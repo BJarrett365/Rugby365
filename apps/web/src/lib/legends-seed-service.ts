@@ -30,6 +30,8 @@ export type LegendSeedOptions = {
   delayMs?: number;
   /** Only process names matching this substring */
   search?: string;
+  /** Only process catalog entries for this country (e.g. "South Africa") */
+  countryName?: string;
 };
 
 export type LegendSeedItemResult = {
@@ -112,6 +114,10 @@ export async function seedPlanetRugbyLegends(
   let catalog = mergeLegendCatalogByName();
   if (search) {
     catalog = catalog.filter((row) => row.name.toLowerCase().includes(search));
+  }
+  if (options.countryName?.trim()) {
+    const want = options.countryName.trim().toLowerCase();
+    catalog = catalog.filter((row) => (row.countryName ?? "").toLowerCase().includes(want));
   }
   const batch = options.limit ? catalog.slice(0, options.limit) : catalog;
 

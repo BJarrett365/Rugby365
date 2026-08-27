@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { getFixtureDatesInRange } from "@/lib/planet-rugby-live-fixtures-service";
 import { apiErrorResponse } from "@/lib/api-errors";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
 
 export async function GET(req: Request) {
   try {
@@ -16,16 +17,26 @@ export async function GET(req: Request) {
     }
 
     const season = start.slice(0, 4);
-    const dates = await getFixtureDatesInRange(season, start, end, timeZone, {
-      competitionId,
-    });
-    return NextResponse.json({
-      start,
-      end,
-      timeZone,
-      competitionId: competitionId || null,
-      dates,
-    });
+    const cacheKey = `fixtures:dates:${season}:${start}:${end}:${timeZone}:${competitionId ?? ""}`;
+    const dates = await cachedPublic(cacheKey, PUBLIC_CACHE_TTL.fixturesMeta, () =>
+      getFixtureDatesInRange(season, start, end, timeZone, {
+        competitionId,
+      }),
+    );
+    return NextResponse.json(
+      {
+        start,
+        end,
+        timeZone,
+        competitionId: competitionId || null,
+        dates,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+        },
+      },
+    );
   } catch (e) {
     return apiErrorResponse(e, "Failed to load fixture dates");
   }

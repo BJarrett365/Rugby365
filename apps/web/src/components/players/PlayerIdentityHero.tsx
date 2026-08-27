@@ -146,7 +146,7 @@ export function PlayerIdentityHero({
 
   const clubLabel = overview.club?.name ?? "—";
   const contractLabel =
-    overview.contract.termLabel ?? overview.contract.expiresLabel ?? "—";
+    overview.contract.termLabel ?? overview.contract.expiresLabel ?? "Unknown";
 
   const ratingTitle = [
     "Rugby365 Player Rating",
@@ -175,7 +175,12 @@ export function PlayerIdentityHero({
         <div className="pr-pih__photo" aria-hidden={!!overview.imageUrl}>
           {overview.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={overview.imageUrl} alt="" />
+            <img
+              src={overview.imageUrl}
+              alt=""
+              decoding="async"
+              fetchPriority="high"
+            />
           ) : (
             <span className="pr-pih__silhouette">{overview.displayName.slice(0, 1)}</span>
           )}

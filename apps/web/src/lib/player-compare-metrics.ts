@@ -13,6 +13,17 @@ function n(v: number | null | undefined): number | null {
   return v != null && Number.isFinite(v) ? v : null;
 }
 
+function radarAxis(player: PublicPlayerProfile, key: string): number | null {
+  const spokes =
+    player.performanceRadar?.seoSpokes ??
+    player.performanceRadar?.radars?.[player.performanceRadar.defaultType ?? "overall"]?.spokes ??
+    [];
+  const hit = spokes.find(
+    (s) => s.key === key || s.label.toLowerCase().includes(key.toLowerCase()),
+  );
+  return hit?.playerValue ?? null;
+}
+
 export function buildPlayerCompareMetrics(
   playerA: PublicPlayerProfile,
   playerB: PublicPlayerProfile,
@@ -101,11 +112,39 @@ export function buildPlayerCompareMetrics(
       b: n(sb?.defendersBeaten),
     },
     {
+      key: "tackle_breaks",
+      label: "Tackle breaks",
+      group: "attack",
+      a: n(sa?.defendersBeaten),
+      b: n(sb?.defendersBeaten),
+    },
+    {
       key: "assists",
       label: "Try assists",
       group: "attack",
       a: n(sa?.tryAssists),
       b: n(sb?.tryAssists),
+    },
+    {
+      key: "intel_kick",
+      label: "Kicking (radar)",
+      group: "kicking",
+      a: n(radarAxis(playerA, "kicking")),
+      b: n(radarAxis(playerB, "kicking")),
+    },
+    {
+      key: "intel_play",
+      label: "Playmaking (radar)",
+      group: "kicking",
+      a: n(radarAxis(playerA, "playmaking")),
+      b: n(radarAxis(playerB, "playmaking")),
+    },
+    {
+      key: "kick_pts",
+      label: "Season points (proxy)",
+      group: "kicking",
+      a: n(sa?.points),
+      b: n(sb?.points),
     },
     {
       key: "tackles",
@@ -156,20 +195,33 @@ export function buildPlayerCompareMetrics(
       a: n(playerA.internationalSummary.caps),
       b: n(playerB.internationalSummary.caps),
     },
-    // Placeholder groups so tabs exist even when season kicking/discipline stats are sparse
-    {
-      key: "kick_pts",
-      label: "Season points (proxy)",
-      group: "kicking",
-      a: n(sa?.points),
-      b: n(sb?.points),
-    },
     {
       key: "minutes",
       label: "Minutes (availability)",
       group: "discipline",
       a: n(sa?.minutesPlayed),
       b: n(sb?.minutesPlayed),
+    },
+    {
+      key: "career_conv",
+      label: "Career conversions",
+      group: "kicking",
+      a: n(playerA.career.conversions),
+      b: n(playerB.career.conversions),
+    },
+    {
+      key: "career_pen",
+      label: "Career penalties",
+      group: "kicking",
+      a: n(playerA.career.penalties),
+      b: n(playerB.career.penalties),
+    },
+    {
+      key: "career_dg",
+      label: "Career drop goals",
+      group: "kicking",
+      a: n(playerA.career.dropGoals),
+      b: n(playerB.career.dropGoals),
     },
   ];
 }

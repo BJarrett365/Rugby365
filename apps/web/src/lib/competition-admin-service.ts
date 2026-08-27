@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, ne, or, sql } from "drizzle-orm";
 import {
   competitionSeasons,
   competitions,
@@ -14,6 +14,7 @@ import {
   buildDomesticSeasonCatalog,
   canonicalSeasonPickerScore,
   currentDomesticSeasonStartYear,
+  domesticSeasonFirstYearForCompetition,
   formatSeasonLabelForKind,
   formatSeasonRangeLabel,
   normalizeSeasonLabel,
@@ -36,6 +37,7 @@ import {
 import { lookupCompetitionChampion } from "./competition-champions-catalog";
 import { isPlayoffRound } from "./rugby-round-utils";
 import { resolveTeamNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
+import { applyUrcLineageSeasonLabels } from "./urc-lineage";
 
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
 
@@ -80,6 +82,14 @@ export async function listAllSeasons(competitionId?: string) {
     seasonKind,
   );
 
+  if (competitionId) {
+    const competition = await getCompetitionById(competitionId);
+    return {
+      seasons: applyUrcLineageSeasonLabels(competition?.slug, seasons),
+      seasonKind,
+    };
+  }
+
   return { seasons, seasonKind };
 }
 
@@ -105,15 +115,18 @@ export async function listSeasonsForPicker(competitionId: string) {
     )
     .orderBy(desc(competitionSeasons.year));
 
-  return decorateSeasonPickerRows(
-    dedupeSeasonsByYear(
-      rows.map((row) => ({
-        ...row,
-        year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
-      })),
+  return applyUrcLineageSeasonLabels(
+    competition?.slug,
+    decorateSeasonPickerRows(
+      dedupeSeasonsByYear(
+        rows.map((row) => ({
+          ...row,
+          year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
+        })),
+      ),
+      new Date(),
+      seasonKind,
     ),
-    new Date(),
-    seasonKind,
   );
 }
 
@@ -380,6 +393,58 @@ export async function ensureRecentDomesticSeasons(
         inArray(competitionSeasons.year, [currentYear - 1, currentYear]),
       ),
     );
+
+  // Prefer previous season while the new catalog year has not kicked off yet.
+  const [currentSeason] = await db
+    .select({ id: competitionSeasons.id })
+    .from(competitionSeasons)
+    .where(
+      and(
+        eq(competitionSeasons.competitionId, competitionId),
+        eq(competitionSeasons.year, currentYear),
+        eq(competitionSeasons.isDeprecated, false),
+      ),
+    )
+    .limit(1);
+  let activeYear = currentYear;
+  if (currentSeason) {
+    const seasonFixtures = await db
+      .select({
+        status: fixtures.status,
+        homeScore: fixtures.homeScore,
+        awayScore: fixtures.awayScore,
+        kickoffAt: fixtures.kickoffAt,
+      })
+      .from(fixtures)
+      .where(eq(fixtures.seasonId, currentSeason.id));
+    const completed = seasonFixtures.some((row) => {
+      const status = (row.status ?? "").toLowerCase();
+      if (!["full_time", "finished", "completed", "ft", "result", "complete"].includes(status)) {
+        return false;
+      }
+      if (row.homeScore == null || row.awayScore == null) return false;
+      return !(row.homeScore === 0 && row.awayScore === 0);
+    });
+    const firstKickoff = seasonFixtures
+      .map((row) => row.kickoffAt)
+      .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+    if (!completed && (firstKickoff == null || firstKickoff.getTime() > Date.now())) {
+      activeYear = currentYear - 1;
+    }
+  }
+  await db
+    .update(competitionSeasons)
+    .set({ isActive: false })
+    .where(
+      and(eq(competitionSeasons.competitionId, competitionId), ne(competitionSeasons.year, activeYear)),
+    );
+  await db
+    .update(competitionSeasons)
+    .set({ isActive: true })
+    .where(
+      and(eq(competitionSeasons.competitionId, competitionId), eq(competitionSeasons.year, activeYear)),
+    );
 }
 
 async function migrateStandingRowsToSeason(fromSeasonId: string, toSeasonId: string) {
@@ -539,7 +604,8 @@ export async function syncDomesticSeasonCatalog(competitionId: string, reference
   await mergeDuplicateCompetitionSeasons(competitionId);
 
   const currentYear = currentDomesticSeasonStartYear(referenceDate);
-  const catalog = buildDomesticSeasonCatalog(undefined, currentYear);
+  const firstYear = domesticSeasonFirstYearForCompetition(competition.slug);
+  const catalog = buildDomesticSeasonCatalog(firstYear, currentYear);
 
   for (const season of catalog) {
     await upsertSeason({
@@ -550,17 +616,70 @@ export async function syncDomesticSeasonCatalog(competitionId: string, reference
   }
 
   const db = getDb();
+
+  // Prefer the previous campaign while the catalog "current" year has no results yet
+  // (URC flips in July but usually kicks off in September).
+  const currentSeasonRows = await db
+    .select({ id: competitionSeasons.id })
+    .from(competitionSeasons)
+    .where(
+      and(
+        eq(competitionSeasons.competitionId, competitionId),
+        eq(competitionSeasons.year, currentYear),
+        eq(competitionSeasons.isDeprecated, false),
+      ),
+    )
+    .limit(1);
+  const currentSeasonId = currentSeasonRows[0]?.id;
+  let activeYear = currentYear;
+  if (currentSeasonId) {
+    const seasonFixtures = await db
+      .select({
+        status: fixtures.status,
+        homeScore: fixtures.homeScore,
+        awayScore: fixtures.awayScore,
+        kickoffAt: fixtures.kickoffAt,
+      })
+      .from(fixtures)
+      .where(eq(fixtures.seasonId, currentSeasonId));
+    const completed = seasonFixtures.some((row) => {
+      const status = (row.status ?? "").toLowerCase();
+      if (!["full_time", "finished", "completed", "ft", "result", "complete"].includes(status)) {
+        return false;
+      }
+      if (row.homeScore == null || row.awayScore == null) return false;
+      return !(row.homeScore === 0 && row.awayScore === 0);
+    });
+    const firstKickoff = seasonFixtures
+      .map((row) => row.kickoffAt)
+      .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+    if (!completed && (firstKickoff == null || firstKickoff.getTime() > Date.now())) {
+      activeYear = currentYear - 1;
+    }
+  }
+
   await db
     .update(competitionSeasons)
     .set({ isActive: false })
-    .where(and(eq(competitionSeasons.competitionId, competitionId), ne(competitionSeasons.year, currentYear)));
+    .where(and(eq(competitionSeasons.competitionId, competitionId), ne(competitionSeasons.year, activeYear)));
   await db
     .update(competitionSeasons)
     .set({ isActive: true })
-    .where(and(eq(competitionSeasons.competitionId, competitionId), eq(competitionSeasons.year, currentYear)));
+    .where(and(eq(competitionSeasons.competitionId, competitionId), eq(competitionSeasons.year, activeYear)));
+  // Hide shells outside this league's real history (e.g. URC before 2001–02, future seasons).
+  await db
+    .update(competitionSeasons)
+    .set({ isDeprecated: true, isActive: false })
+    .where(
+      and(
+        eq(competitionSeasons.competitionId, competitionId),
+        or(lt(competitionSeasons.year, firstYear), gt(competitionSeasons.year, currentYear)),
+      ),
+    );
 }
 
-export type StandingView = "overall" | "home" | "away";
+export type StandingView = "overall" | "home" | "away" | `pool_${string}` | `conference_${string}`;
 
 type ResolvedCompetitionSeason = {
   seasons: Array<typeof competitionSeasons.$inferSelect & { year: number }>;
@@ -605,7 +724,7 @@ async function resolveCompetitionSeason(
   return { seasons, season };
 }
 
-export async function getSeasonStandings(seasonId: string, view: StandingView = "overall") {
+export async function getSeasonStandings(seasonId: string, view: StandingView | string = "overall") {
   const db = getDb();
   const rows = await db
     .select({
@@ -649,7 +768,10 @@ export async function getCompetitionStandingsBySlug(
   }
 
   const { seasons, season } = await resolveCompetitionSeason(competition.id, options.seasonLabel);
-  const pickerSeasons = decorateSeasonPickerRows(seasons);
+  const pickerSeasons = applyUrcLineageSeasonLabels(
+    competition.slug,
+    decorateSeasonPickerRows(seasons),
+  );
 
   if (!seasons.length) {
     return {

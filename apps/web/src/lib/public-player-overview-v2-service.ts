@@ -10,6 +10,7 @@
  */
 import "server-only";
 
+import { cache } from "react";
 import { and, asc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   fixturePlayers,
@@ -23,6 +24,7 @@ import {
   players,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 import {
   getPublicPlayerProfile,
   type PublicPlayerProfile,
@@ -733,7 +735,7 @@ function buildIntelligenceContributions(
   });
 }
 
-export async function getPublicPlayerOverviewV2(
+async function loadPublicPlayerOverviewV2(
   slug: string,
   options: { preview?: boolean; compareSlug?: string | null } = {},
 ): Promise<PublicPlayerOverviewV2 | null> {
@@ -1235,7 +1237,14 @@ export async function getPublicPlayerOverviewV2(
       const awards = buildPublicAwardsFromAchievements(rows);
       const awardIds = new Set(awards.map((a) => a.id));
       achievements = rows
-        .filter((r) => awardIds.has(r.achievement.id) || r.achievement.achievementType === "TEAM_HONOUR")
+        .filter(
+          (r) =>
+            awardIds.has(r.achievement.id) ||
+            r.achievement.achievementType === "TEAM_HONOUR" ||
+            (r.achievement.achievementType === "PERSONAL_AWARD" &&
+              r.achievement.visibility === "public" &&
+              (r.achievement.notes ?? "").toLowerCase().includes("nominee")),
+        )
         .map((r) => {
           const title =
             r.achievement.titleOverride?.trim() ||
@@ -1257,7 +1266,15 @@ export async function getPublicPlayerOverviewV2(
             id: r.achievement.id,
             year: r.achievement.year,
             title,
-            detail: r.achievement.teamName,
+            detail:
+              [
+                resultLabel && resultLabel !== "Winner" ? resultLabel : null,
+                r.achievement.notes?.trim() || null,
+                r.achievement.seasonLabel,
+                r.achievement.teamName,
+              ]
+                .filter(Boolean)
+                .join(" · ") || null,
             resultLabel,
             seasonLabel: r.achievement.seasonLabel ?? null,
             verificationStatus:
@@ -1491,6 +1508,26 @@ export async function getPublicPlayerOverviewV2(
     seo: profile.seo,
     base: profile,
   };
+}
+
+const getCachedPublicPlayerOverviewV2 = cache(
+  (slug: string, compareSlug: string): Promise<PublicPlayerOverviewV2 | null> =>
+    cachedPublic(
+      `player-overview:${slug}:${compareSlug}`,
+      PUBLIC_CACHE_TTL.playerOverview,
+      () => loadPublicPlayerOverviewV2(slug, { compareSlug: compareSlug || null }),
+    ),
+);
+
+/** Public overview — request-deduped + TTL cached (skips cache for preview). */
+export async function getPublicPlayerOverviewV2(
+  slug: string,
+  options: { preview?: boolean; compareSlug?: string | null } = {},
+): Promise<PublicPlayerOverviewV2 | null> {
+  if (options.preview) {
+    return loadPublicPlayerOverviewV2(slug, options);
+  }
+  return getCachedPublicPlayerOverviewV2(slug, options.compareSlug?.trim() || "");
 }
 
 export type { PositionHistoryRow };

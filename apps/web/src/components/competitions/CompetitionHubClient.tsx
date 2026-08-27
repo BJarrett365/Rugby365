@@ -7,7 +7,13 @@ import { LeagueTable } from "@/components/competitions/LeagueTable";
 
 type View = "overall" | "home" | "away";
 
-type Season = { id: string; label: string; year: number; isActive: boolean };
+type Season = {
+  id: string;
+  label: string;
+  year: number;
+  isActive: boolean;
+  displayLabel?: string;
+};
 
 type Standing = {
   rank: number;
@@ -123,7 +129,7 @@ export function CompetitionHubClient({
             >
               {seasons.map((s) => (
                 <option key={s.id} value={s.label}>
-                  {s.label}
+                  {s.displayLabel ?? s.label}
                 </option>
               ))}
             </select>

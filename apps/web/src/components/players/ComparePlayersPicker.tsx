@@ -56,6 +56,11 @@ type Props = {
   /** Prefill from /players/compare?player1=&player2= (or legacy player/opponent). */
   initialPlayerA?: string | null;
   initialPlayerB?: string | null;
+  /**
+   * When true (profile → compare?player=slug), Player A is fixed — only show an opponent picker.
+   */
+  anchoredMode?: boolean;
+  anchoredDisplayName?: string | null;
 };
 
 function emptySide(competitionSlug = ""): SideState {
@@ -257,9 +262,7 @@ function useSideRoster(
       ...prev,
       rosterLoading: true,
       rosterError: null,
-      teamId: "",
-      playerSlug: "",
-      picked: null,
+      // Keep an already-hydrated pick (anchored compare / URL prefill) across roster reloads.
       teams: [],
       players: [],
     }));
@@ -307,6 +310,8 @@ export function ComparePlayersPicker({
   competitionName,
   initialPlayerA,
   initialPlayerB,
+  anchoredMode = false,
+  anchoredDisplayName = null,
 }: Props) {
   const hubSlug = competitionSlug?.trim() ?? "";
   // Competition hub pages default to that competition; global menu defaults to Nations Championship.
@@ -599,7 +604,7 @@ export function ComparePlayersPicker({
     return (
       <div className="rounded-xl border border-[var(--pr-mc-border)] bg-[var(--pr-mc-panel)] p-4 space-y-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pr-mc-grey)] m-0">
-          Player {side.toUpperCase()}
+          {anchoredMode && side === "b" ? "Opponent" : `Player ${side.toUpperCase()}`}
         </p>
 
         <label className="block space-y-1.5">
@@ -728,16 +733,32 @@ export function ComparePlayersPicker({
         <p className="m-0 text-sm text-red-300">{competitionsError}</p>
       ) : null}
 
-      <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
-        {hubSlug
-          ? `Both sides start on ${competitionName || "this competition"} — you can switch either side to another competition.`
-          : "Defaults to Nations Championship — pick players from the same league or different ones."}
-      </p>
+      {anchoredMode ? (
+        <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
+          Comparing against{" "}
+          <strong className="text-[var(--pr-mc-text)]">
+            {anchoredDisplayName || sideA.picked?.name || initialPlayerA}
+          </strong>
+          . Choose an opponent below.
+        </p>
+      ) : (
+        <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
+          {hubSlug
+            ? `Both sides start on ${competitionName || "this competition"} — you can switch either side to another competition.`
+            : "Defaults to Nations Championship — pick players from the same league or different ones."}
+        </p>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {renderSide("a")}
-        {renderSide("b")}
-      </div>
+      {anchoredMode ? (
+        <div className="grid gap-4 max-w-xl">
+          {renderSide("b")}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {renderSide("a")}
+          {renderSide("b")}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         {canCompare ? (
@@ -749,7 +770,7 @@ export function ComparePlayersPicker({
           </Link>
         ) : (
           <button type="button" className="cms-btn cms-btn--primary touch-target" disabled>
-            Select two players to compare
+            {anchoredMode ? "Select an opponent" : "Select two players to compare"}
           </button>
         )}
         {sideA.playerSlug &&
@@ -763,6 +784,13 @@ export function ComparePlayersPicker({
             className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
           >
             Back to player stats
+          </Link>
+        ) : anchoredMode && initialPlayerA ? (
+          <Link
+            href={`/players/${encodeURIComponent(initialPlayerA)}`}
+            className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
+          >
+            Back to profile
           </Link>
         ) : (
           <Link href="/players" className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline">

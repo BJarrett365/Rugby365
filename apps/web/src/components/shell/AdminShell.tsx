@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ADMIN_BOTTOM_NAV,
@@ -80,6 +80,8 @@ function bottomNavActive(pathname: string, href: string): boolean {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const embed = searchParams.get("embed") === "1";
   const [menuOpen, setMenuOpen] = useState(false);
   // Active nav classes only after mount — keeps SSR markup identical to the first client paint.
   const [navReady, setNavReady] = useState(false);
@@ -89,7 +91,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setNavReady(true);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("pr-embed-mode", embed);
+    return () => document.documentElement.classList.remove("pr-embed-mode");
+  }, [embed]);
+
   const activePath = navReady ? pathname : "";
+
+  if (embed) {
+    return (
+      <div className="admin-shell admin-shell--embed" data-cms-theme="planet-rugby">
+        <div className="admin-shell__content admin-shell__content--embed">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-shell" data-cms-theme="planet-rugby">

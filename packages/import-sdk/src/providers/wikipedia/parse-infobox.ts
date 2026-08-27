@@ -5,6 +5,8 @@ import type {
   WikipediaEntityType,
   WikipediaRefereeStint,
 } from "./types";
+import { parseWikiTeamLabel } from "./season/wiki-text-utils";
+import { parsePlayerHonoursFromHtml, parsePlayerHonoursFromWikitext } from "./parse-player-honours";
 
 type InfoboxParams = Record<string, string>;
 
@@ -277,7 +279,9 @@ function collectCoachingRows(params: InfoboxParams): WikipediaCoachingStint[] {
     const rawTeam = stripWikiMarkup(team);
     const roleMatch = rawTeam.match(/\(([^)]+)\)\s*$/);
     const roleHint = roleMatch?.[1]?.trim() || null;
-    const teamName = rawTeam.replace(/\s*\([^)]+\)\s*$/, "").trim() || rawTeam;
+    const teamName =
+      parseWikiTeamLabel(team) || rawTeam.replace(/\s*\([^)]+\)\s*$/, "").trim() || rawTeam;
+    if (!teamName) continue;
     rows.push({
       yearsLabel: yearsLabel || String(i),
       startYear: range.startYear ?? null,
@@ -306,12 +310,14 @@ function collectIndexedRows(
     if (!team) continue;
     const yearsLabel = stripWikiMarkup(years ?? "");
     const range = parseYearRange(yearsLabel);
+    const teamName = parseWikiTeamLabel(team);
+    if (!teamName) continue;
     rows.push({
       careerType,
       yearsLabel: yearsLabel || String(i),
       startYear: range.startYear ?? null,
       endYear: range.endYear ?? null,
-      teamName: stripWikiMarkup(team),
+      teamName,
       apps: parseIntField(params[`${capsPrefix}${i}`]) ?? null,
       points: parseIntField(params[`${pointsPrefix}${i}`]) ?? null,
       sortOrder: i,
@@ -343,6 +349,8 @@ export function parseWikipediaArchiveFromHtml(input: {
   abstract?: string;
   imageUrl?: string;
   entityType?: WikipediaEntityType;
+  /** Optional article wikitext — used for Honours section parsing. */
+  wikitext?: string;
 }): WikipediaArchiveData {
   const infobox = extractInfoboxFromHtml(input.html);
   if (!infobox) {
@@ -437,6 +445,11 @@ export function parseWikipediaArchiveFromHtml(input: {
       "international",
     );
 
+    const honours = input.wikitext
+      ? parsePlayerHonoursFromWikitext(input.wikitext)
+      : parsePlayerHonoursFromHtml(input.html);
+    const honourLines = honours.map((h) => h.sourceLine);
+
     return {
       entityType: "player",
       articleTitle: input.articleTitle,
@@ -458,12 +471,16 @@ export function parseWikipediaArchiveFromHtml(input: {
         ) || undefined,
       relatives: stripWikiMarkup(infobox.params.relatives) || undefined,
       positions: parsePositions(infobox.params.position),
-      currentTeam: stripWikiMarkup(infobox.params.currentclub ?? infobox.params.currentteam) || undefined,
+      currentTeam:
+        parseWikiTeamLabel(infobox.params.currentclub ?? infobox.params.currentteam ?? "") ||
+        undefined,
       imageUrl: input.imageUrl,
       bioSummary,
       clubCareer,
       cupCareer: cupCareer.length > 0 ? cupCareer : undefined,
       internationalCareer,
+      honourLines: honourLines.length ? honourLines : undefined,
+      honours: honours.length ? honours : undefined,
       infoboxTemplate: infobox.template,
     };
   }

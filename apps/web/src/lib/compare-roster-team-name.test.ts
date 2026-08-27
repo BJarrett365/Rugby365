@@ -7,6 +7,8 @@ describe("isRealCompareRosterTeamName", () => {
     expect(isRealCompareRosterTeamName("New Zealand")).toBe(true);
     expect(isRealCompareRosterTeamName("South Africa")).toBe(true);
     expect(isRealCompareRosterTeamName("Bath")).toBe(true);
+    expect(isRealCompareRosterTeamName("Pontypool")).toBe(true);
+    expect(isRealCompareRosterTeamName("Liverpool St Helens")).toBe(true);
   });
 
   it("rejects World Cup draw / stage placeholders", () => {

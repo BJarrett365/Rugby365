@@ -2,8 +2,9 @@
  * Persist + recalculate Planet Rugby Legend Scores for players.
  */
 
-import { asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 import {
+  achievements,
   playerCareerStints,
   playerLegendScores,
   playerLegends,
@@ -102,6 +103,11 @@ export async function recalculatePlayerLegendScore(playerId: string): Promise<Pl
     .from(playerTitles)
     .where(eq(playerTitles.playerId, playerId));
 
+  const [achievementAgg] = await db
+    .select({ n: count() })
+    .from(achievements)
+    .where(and(eq(achievements.entityType, "player"), eq(achievements.entityId, playerId)));
+
   const [stintAgg] = await db
     .select({ n: count() })
     .from(playerCareerStints)
@@ -120,13 +126,15 @@ export async function recalculatePlayerLegendScore(playerId: string): Promise<Pl
     overallScore?: number | null;
   };
 
+  const titleCount = Number(titleAgg?.n ?? 0) + Number(achievementAgg?.n ?? 0);
+
   const computed: LegendScoreResult = computeLegendScore({
     careerRating: rating?.manualOverrideRating ?? rating?.playerRating ?? rating?.currentAbility ?? null,
     peakRating: rating?.careerHigh ?? rating?.playerRating ?? null,
     reputation: rating?.reputation ?? null,
     legendLevel: legend?.legendLevel ?? null,
     collectionSlugs,
-    titleCount: Number(titleAgg?.n ?? 0),
+    titleCount,
     internationalApps: intlApps || null,
     clubStintCount: Number(stintAgg?.n ?? 0) || null,
     overrides,

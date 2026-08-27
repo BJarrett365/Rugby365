@@ -248,5 +248,8 @@ export function transferClubLabel(
   teamName: string | null | undefined,
   clubName: string | null | undefined,
 ): string | null {
-  return sanitizeTransferClub(teamName) ?? sanitizeTransferClub(clubName);
+  const team = sanitizeTransferClub(teamName);
+  // Prefer human club text over sync-repair stub team rows.
+  if (team && !/^unknown team\b/i.test(team) && !/^orphan-/i.test(team)) return team;
+  return sanitizeTransferClub(clubName) ?? team;
 }

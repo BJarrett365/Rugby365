@@ -115,12 +115,42 @@ async function fetchFromPublicWikipedia(
     wikidataId = summary.wikibase_item;
   }
 
+  let wikitext: string | undefined;
+  try {
+    const wtRes = await fetch(
+      `https://${lang}.wikipedia.org/w/api.php?${new URLSearchParams({
+        action: "parse",
+        page: articleTitle.replace(/_/g, " "),
+        prop: "wikitext",
+        format: "json",
+        formatversion: "2",
+        redirects: "1",
+      }).toString()}`,
+      {
+        headers: {
+          "User-Agent": "Rugby365ArchiveImport/1.0 (read-only archive enrichment)",
+          Accept: "application/json",
+        },
+      },
+    );
+    if (wtRes.ok) {
+      const payload = (await wtRes.json()) as {
+        parse?: { wikitext?: string | { "*": string } };
+      };
+      const raw = payload.parse?.wikitext;
+      wikitext = typeof raw === "string" ? raw : raw?.["*"];
+    }
+  } catch {
+    /* optional — HTML honours fallback still works */
+  }
+
   return {
     articleTitle: articleTitle.replace(/_/g, " "),
     wikipediaUrl: wikipediaArticleUrl(articleTitle, lang),
     wikidataId,
     abstract,
     html,
+    wikitext,
     source: "wikipedia_public",
     imageUrl,
     fetchedAt: new Date().toISOString(),
@@ -179,6 +209,7 @@ export async function parseWikipediaArchive(input: {
     abstract: fetched.abstract,
     imageUrl: fetched.imageUrl,
     entityType: input.entityType,
+    wikitext: fetched.wikitext,
   });
 
   return {

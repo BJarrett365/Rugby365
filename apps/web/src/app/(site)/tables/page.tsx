@@ -2,7 +2,8 @@ import Link from "next/link";
 import { PublicFixturesTabs } from "@/components/matches/PublicFixturesTabs";
 import { listPublicCompetitionTables } from "@/lib/public-tables-service";
 
-export const dynamic = "force-dynamic";
+/** Tables hub is TTL-cached; refresh at most every 2 minutes. */
+export const revalidate = 120;
 
 export const metadata = {
   title: "League Tables · Rugby365",

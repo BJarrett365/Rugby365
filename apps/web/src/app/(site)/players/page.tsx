@@ -7,6 +7,8 @@ type PageProps = {
   searchParams: Promise<{ page?: string; q?: string }>;
 };
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Rugby Players — Stats, Clubs and Profiles | Rugby365",
   description:

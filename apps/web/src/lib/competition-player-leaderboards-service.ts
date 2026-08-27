@@ -16,6 +16,7 @@ import {
   RUGBY_CHAMPIONSHIP_FIRST_YEAR,
   TRI_NATIONS_FIRST_YEAR,
 } from "./rugby-championship-lineage";
+import { applyUrcLineageSeasonLabels, isUrcLineageSlug } from "./urc-lineage";
 import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import {
   currentDomesticSeasonStartYear,
@@ -254,6 +255,10 @@ function decorateSeasonsForCompetition(
   slug: string,
   seasons: Awaited<ReturnType<typeof listSeasonsForPicker>>,
 ) {
+  if (isUrcLineageSlug(slug)) {
+    return applyUrcLineageSeasonLabels(slug, seasons);
+  }
+
   if (!isRugbyChampionshipLineageSlug(slug)) {
     return seasons.map((season) => ({
       ...season,
@@ -550,11 +555,25 @@ export async function getCompetitionPlayerStatsBySlug(
     await syncDomesticSeasonCatalog(competition.id);
   }
 
-  const { seasons, season } = await resolveSeasonForCompetition(
+  let { seasons, season } = await resolveSeasonForCompetition(
     competition.id,
     competition.slug,
     options.seasonLabel,
   );
+
+  // Future "active" RWC seasons (e.g. 2027) have empty boards and wipe the UI after load.
+  // Prefer a completed tournament unless the caller asked for a specific season.
+  if (!options.seasonLabel?.trim() && competition.slug === "rugby-world-cup") {
+    const nowYear = new Date().getFullYear();
+    season =
+      seasons.find((s) => s.year === 1987) ??
+      seasons.find((s) => s.isActive && (s.year ?? 0) <= nowYear) ??
+      [...seasons]
+        .filter((s) => (s.year ?? 0) > 0 && (s.year ?? 0) <= nowYear)
+        .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0] ??
+      season;
+  }
+
   const supportsHemisphereFilter = isNationsChampionshipSlug(competition.slug);
   const hemisphereFilter: HemisphereFilter =
     supportsHemisphereFilter && options.hemisphere

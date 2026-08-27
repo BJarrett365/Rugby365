@@ -104,6 +104,7 @@ async function thinWikiYears(competitionId: string) {
       and (
         not exists (select 1 from standing_rows sr where sr.season_id = s.id and sr.view = 'overall')
         or (select count(*) from standing_rows sr where sr.season_id = s.id and sr.view = 'overall') < 4
+        or (select coalesce(sum(played), 0) from standing_rows sr where sr.season_id = s.id and sr.view = 'overall') = 0
       )
   `);
   return new Set((thin as Array<{ year: number }>).map((r) => r.year));

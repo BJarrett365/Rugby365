@@ -4,7 +4,7 @@ import {
   fetchSdmsTable,
   type StandingView as SdmsView,
 } from "@rugby365/import-sdk";
-import { competitionSeasons, standingRows } from "@rugby365/db";
+import { competitionSeasons, fixtures, standingRows } from "@rugby365/db";
 import {
   getCompetitionById,
   normalizeCompetitionSeasonLabels,
@@ -69,6 +69,32 @@ export async function syncSeasonStandings(
   const syncedAt = new Date();
   const seasonKeys = sdmsSeasonKeyCandidates(season.label, season.year);
 
+  // Never stamp a non-zero table onto a season that has not played yet (SDMS often
+  // returns the previous campaign under the next calendar/season key).
+  const existingFixtures = await db
+    .select({
+      status: fixtures.status,
+      homeScore: fixtures.homeScore,
+      awayScore: fixtures.awayScore,
+      kickoffAt: fixtures.kickoffAt,
+    })
+    .from(fixtures)
+    .where(eq(fixtures.seasonId, seasonId));
+  const completedCount = existingFixtures.filter((row) => {
+    const status = (row.status ?? "").toLowerCase();
+    if (!["full_time", "finished", "completed", "ft", "result", "complete"].includes(status)) {
+      return false;
+    }
+    if (row.homeScore == null || row.awayScore == null) return false;
+    return !(row.homeScore === 0 && row.awayScore === 0);
+  }).length;
+  const firstKickoff = existingFixtures
+    .map((row) => row.kickoffAt)
+    .filter((value): value is Date => value instanceof Date && !Number.isNaN(value.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  const seasonNotStarted =
+    completedCount === 0 && (firstKickoff == null || firstKickoff.getTime() > Date.now());
+
   for (const view of views) {
     const sdmsRows = await fetchSdmsTableWithFallbacks(
       competition.sdmsCompCode,
@@ -76,6 +102,11 @@ export async function syncSeasonStandings(
       view as SdmsView,
     );
     if (!sdmsRows?.length) continue;
+
+    if (seasonNotStarted && sdmsRows.some((row) => (row.played ?? 0) > 0)) {
+      // Keep any zeroed roster; skip polluted previous-season tables.
+      continue;
+    }
 
     await db
       .delete(standingRows)

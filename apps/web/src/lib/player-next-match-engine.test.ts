@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  classifyFixtureStatus,
+  collapseSameDayOpponentDuplicates,
   isEligibleNextMatchStatus,
   isInternationalWindowActive,
   pickSoonestEligible,
   resolvePlayerNextMatch,
+  classifyFixtureStatus,
   type NextMatchCandidate,
 } from "./player-next-match-engine";
 
@@ -21,7 +22,7 @@ function fixture(partial: Partial<NextMatchCandidate> & { fixtureId: string }): 
     homeTeamCrestUrl: partial.homeTeamCrestUrl ?? null,
     awayTeamCrestUrl: partial.awayTeamCrestUrl ?? null,
     venueName: partial.venueName ?? "Welford Road",
-    href: partial.href ?? "/matches/test",
+    href: partial.href !== undefined ? partial.href : "/matches/test",
     fixtureId: partial.fixtureId,
   };
 }
@@ -144,6 +145,33 @@ describe("player-next-match-engine", () => {
       internationalWindowActive: true,
     });
     expect(resolved.match?.fixtureId).toBe("ok");
+  });
+
+  it("prefers Match Centre twin over earlier duplicate without href", () => {
+    const springboks = fixture({
+      fixtureId: "sb",
+      kickoffAt: "2026-08-22T15:10:00.000Z",
+      homeTeamName: "South Africa",
+      awayTeamName: "New Zealand",
+      competitionName: "Castle Double Malt",
+      href: null,
+    });
+    const planet = fixture({
+      fixtureId: "pr",
+      kickoffAt: "2026-08-22T18:00:00.000Z",
+      homeTeamName: "South Africa",
+      awayTeamName: "New Zealand",
+      competitionName: "Nations Championship",
+      href: "/matches/wjx0wovj/nations-championship/qo6gdo63/south-africa-v-new-zealand/2026-08-22",
+    });
+
+    const collapsed = collapseSameDayOpponentDuplicates([springboks, planet]);
+    expect(collapsed).toHaveLength(1);
+    expect(collapsed[0]?.fixtureId).toBe("pr");
+
+    const pick = pickSoonestEligible([springboks, planet], Date.parse("2026-08-10T12:00:00.000Z"));
+    expect(pick?.fixtureId).toBe("pr");
+    expect(pick?.href).toContain("/matches/wjx0wovj/");
   });
 
   it("detects active international window from near-term fixtures", () => {

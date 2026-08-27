@@ -8,6 +8,7 @@ import { getDb } from "./db";
 import { stripTeamSponsorAndSeasonLabels } from "./entity-normalize";
 import {
   computeFormSequenceFromFixtures,
+  isPlaceholderAllDrawForm,
   parseStandingForm,
   standingFormNeedsRecompute,
 } from "./standing-form";
@@ -176,7 +177,7 @@ function rowNeedsRecompute(
   const letters = (parseStandingForm(form).lastFive ?? "").replace(/-/g, "").length;
   const expected = Math.min(Math.max(played ?? 0, 0), 5);
   if (expected > 0 && letters < expected) return true;
-  return /^D+$/.test((parseStandingForm(form).lastFive ?? "").replace(/-/g, ""));
+  return isPlaceholderAllDrawForm(parseStandingForm(form).lastFive);
 }
 
 export async function recomputeStandingFormForSeason(
@@ -186,7 +187,71 @@ export async function recomputeStandingFormForSeason(
   const db = getDb();
   const force = Boolean(options.force);
   const scored = await loadScoredFixtures(seasonId);
-  if (!scored.length) return { updated: 0, cleared: 0, skipped: 0 };
+
+  // No real results → clear placeholder all-draw / dash forms so UI does not show fake Ds.
+  if (!scored.length) {
+    const placeholderRows = await db
+      .select({ id: standingRows.id, form: standingRows.form })
+      .from(standingRows)
+      .where(eq(standingRows.seasonId, seasonId));
+
+    let cleared = 0;
+    let skipped = 0;
+    for (const row of placeholderRows) {
+      if (!row.form) {
+        skipped += 1;
+        continue;
+      }
+      const letters = parseStandingForm(row.form).lastFive;
+      const shouldClear =
+        force ||
+        isPlaceholderAllDrawForm(letters) ||
+        standingFormNeedsRecompute(row.form) ||
+        /^-+$/.test(row.form.trim());
+      if (!shouldClear) {
+        skipped += 1;
+        continue;
+      }
+      await db.update(standingRows).set({ form: null }).where(eq(standingRows.id, row.id));
+      cleared += 1;
+    }
+    return { updated: 0, cleared, skipped };
+  }
+
+  const viewRows = await db
+    .selectDistinct({ view: standingRows.view })
+    .from(standingRows)
+    .where(eq(standingRows.seasonId, seasonId));
+  const views = [
+    ...new Set(
+      viewRows
+        .map((row) => row.view)
+        .filter((view) => view === "overall" || /^pool_/i.test(view) || /^conference_/i.test(view)),
+    ),
+  ];
+  if (!views.includes("overall")) views.push("overall");
+
+  let updated = 0;
+  let cleared = 0;
+  let skipped = 0;
+
+  for (const view of views) {
+    const result = await recomputeStandingFormForSeasonView(seasonId, view, scored, force);
+    updated += result.updated;
+    cleared += result.cleared;
+    skipped += result.skipped;
+  }
+
+  return { updated, cleared, skipped };
+}
+
+async function recomputeStandingFormForSeasonView(
+  seasonId: string,
+  view: string,
+  scored: ScoredFixture[],
+  force: boolean,
+): Promise<{ updated: number; cleared: number; skipped: number }> {
+  const db = getDb();
 
   const rows = await db
     .select({
@@ -198,11 +263,45 @@ export async function recomputeStandingFormForSeason(
     })
     .from(standingRows)
     .innerJoin(teams, eq(teams.id, standingRows.teamId))
-    .where(and(eq(standingRows.seasonId, seasonId), eq(standingRows.view, "overall")));
+    .where(and(eq(standingRows.seasonId, seasonId), eq(standingRows.view, view)));
+
+  if (!rows.length) return { updated: 0, cleared: 0, skipped: 0 };
+
+  const poolNameKeys = new Set(
+    rows.map((row) => formMatchKey(row.teamName)).filter((key) => Boolean(key)),
+  );
+  const poolMemberIds = new Set(rows.map((row) => row.teamId));
+
+  // Expand pool membership to fixture-side duplicate team rows that share the same name
+  // (historic URC imports often left multiple Connacht/Edinburgh IDs).
+  if ((/^pool_/i.test(view) || /^conference_/i.test(view)) && scored.length) {
+    const fixtureTeamIds = [...new Set(scored.flatMap((f) => [f.homeTeamId, f.awayTeamId]))];
+    if (fixtureTeamIds.length) {
+      const fixtureTeams = await db
+        .select({ id: teams.id, name: teams.name })
+        .from(teams)
+        .where(inArray(teams.id, fixtureTeamIds));
+      for (const team of fixtureTeams) {
+        const key = formMatchKey(team.name);
+        if (key && poolNameKeys.has(key)) poolMemberIds.add(team.id);
+        for (const alias of TEAM_ALIASES[key] ?? []) {
+          if (poolNameKeys.has(formMatchKey(alias))) poolMemberIds.add(team.id);
+        }
+      }
+    }
+  }
+
+  // Pool/conference tables should only show form from matches within that group.
+  const fixturesForView =
+    /^pool_/i.test(view) || /^conference_/i.test(view)
+      ? scored.filter((f) => poolMemberIds.has(f.homeTeamId) && poolMemberIds.has(f.awayTeamId))
+      : scored;
+
+  if (!fixturesForView.length) return { updated: 0, cleared: 0, skipped: rows.length };
 
   const teamIdsByName = new Map<string, string[]>();
   const fixtureTeamIds = new Set<string>();
-  for (const f of scored) {
+  for (const f of fixturesForView) {
     fixtureTeamIds.add(f.homeTeamId);
     fixtureTeamIds.add(f.awayTeamId);
   }
@@ -235,7 +334,6 @@ export async function recomputeStandingFormForSeason(
     for (const alias of TEAM_ALIASES[key] ?? []) {
       for (const id of teamIdsByName.get(formMatchKey(alias)) ?? []) relatedIds.add(id);
     }
-    // Prefix match: "Clermont [2]" already normalized; also "Leicester Tigers" ↔ exact.
     if (key.length >= 4) {
       for (const [fixtureKey, ids] of teamIdsByName) {
         if (fixtureKey === key) continue;
@@ -245,12 +343,11 @@ export async function recomputeStandingFormForSeason(
       }
     }
 
-    // Always keep up to five real results; UI left-pads shorter sequences.
     const formLimit = 5;
     const form = computeFormSequenceFromFixtures(
       row.teamId,
       dedupeAliasFixtures(
-        scored.flatMap((f) => {
+        fixturesForView.flatMap((f) => {
           const homeMatch = relatedIds.has(f.homeTeamId);
           const awayMatch = relatedIds.has(f.awayTeamId);
           if (!homeMatch && !awayMatch) return [];
@@ -270,10 +367,19 @@ export async function recomputeStandingFormForSeason(
     );
 
     if (!form) {
-      if (force && row.form) {
+      // Clear fake all-draw / dash forms when fixtures cannot produce a sequence.
+      if (
+        row.form &&
+        (force ||
+          isPlaceholderAllDrawForm(parseStandingForm(row.form).lastFive) ||
+          /^-+$/.test(row.form.trim()) ||
+          (/-/.test(row.form) && !row.form.trim().startsWith("{")))
+      ) {
+        await db.update(standingRows).set({ form: null }).where(eq(standingRows.id, row.id));
+        cleared += 1;
+      } else if (force && row.form) {
         const existing = parseStandingForm(row.form).lastFive;
         if (existing) {
-          // Keep feed form when this season has no matching fixtures for the team.
           const next = existing.slice(-formLimit);
           if (next !== row.form) {
             await db.update(standingRows).set({ form: next }).where(eq(standingRows.id, row.id));
@@ -281,9 +387,6 @@ export async function recomputeStandingFormForSeason(
           } else {
             skipped += 1;
           }
-        } else if (/^-+$/.test(row.form.trim()) || /-/u.test(row.form)) {
-          await db.update(standingRows).set({ form: null }).where(eq(standingRows.id, row.id));
-          cleared += 1;
         } else {
           skipped += 1;
         }

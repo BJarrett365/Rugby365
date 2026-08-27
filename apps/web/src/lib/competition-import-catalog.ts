@@ -429,6 +429,26 @@ export const COMPETITION_IMPORT_CATALOG: CompCatalogEntry[] = [
     wikiSeasons: calendarRange(2021, 2024, (y) => `${y}_Rugby_Europe_Super_Cup`),
   },
 
+  // ── Club: URC lineage (canonical modern slug) ──────────────────
+  {
+    slug: "united-rugby-championship",
+    name: "United Rugby Championship",
+    competitionType: "domestic",
+    group: "club",
+    wikipediaUrl: wiki("United_Rugby_Championship"),
+    planetRugbySlug: "united-rugby-championship",
+    sdmsCompCode: "vx91ejw1",
+    firstYear: 2001,
+    wikiSeasons: [
+      ...crossYearRange(2001, 2010, (y, end) => `${y}–${end}_Celtic_League`),
+      ...crossYearRange(2011, 2016, (y, end) => `${y}–${end}_Pro12`),
+      ...crossYearRange(2017, 2020, (y, end) => `${y}–${end}_Pro14`),
+      ...crossYearRange(2021, 2025, (y, end) => `${y}–${end}_United_Rugby_Championship`),
+    ],
+    notes:
+      "Canonical URC page. Lineage Celtic League (2001) → Pro12 → Pro14 → URC (2021+). Historic branding rows remain under celtic-league / pro12 / pro14.",
+  },
+
   // ── Historic ───────────────────────────────────────────────────
   {
     slug: "celtic-league",

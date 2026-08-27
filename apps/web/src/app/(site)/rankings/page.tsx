@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { TeamCrest } from "@/components/matches/TeamCrest";
 import { listWorldRankingFeeds } from "@/lib/world-rugby-rankings-service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function WorldRankingsPage() {
   const feeds = await listWorldRankingFeeds();

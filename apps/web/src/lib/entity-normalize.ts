@@ -118,6 +118,9 @@ export function isJunkTeamName(name: string): boolean {
   if (!trimmed) return true;
   if (/^\d+$/.test(trimmed)) return true;
   if (/^#?\d{1,3}$/.test(trimmed)) return true;
+  if (/bonus\s+point\s+system/i.test(trimmed)) return true;
+  if (/^source\s*:/i.test(trimmed)) return true;
+  if (/^under\s+the\b/i.test(trimmed)) return true;
   if (/^(seed|rank|pool|pos(?:ition)?|p|w|d|l|pf|pa|pd|bp|pts?)$/i.test(trimmed)) return true;
   if (/^\{\{/.test(trimmed) || /\}\}/.test(trimmed)) return true;
   if (/football kit/i.test(trimmed)) return true;
@@ -162,8 +165,13 @@ const TEAM_DEDUP_BASE_ALIASES: Record<string, string> = {
   "british lions": "british irish lions",
   "british and irish lions": "british irish lions",
   "british & irish lions": "british irish lions",
-  // International nicknames for TRC / nations tables. Bare "pumas" stays the
-  // SA club; Argentina is matched via "los pumas" / country name.
+};
+
+/**
+ * International nicknames that should collapse onto the country label for team dedupe.
+ * Bare "pumas" stays the SA club; Argentina is matched via "los pumas" / country name.
+ */
+const TEAM_DEDUP_NICKNAME_ALIASES: Record<string, string> = {
   "all blacks": "new zealand",
   "new zealand (all blacks)": "new zealand",
   springboks: "south africa",
@@ -195,11 +203,11 @@ export function teamDedupBaseName(name: string): string {
     .replace(/\s+rugby\b/gi, "")
     .replace(/[),]+/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
-  const lower = normalized.toLowerCase();
-  if (TEAM_DEDUP_BASE_ALIASES[lower]) return TEAM_DEDUP_BASE_ALIASES[lower]!;
-  if (/\bzaf\b/.test(lower)) return "south africa";
-  return lower;
+    .trim()
+    .toLowerCase();
+  if (TEAM_DEDUP_NICKNAME_ALIASES[normalized]) return TEAM_DEDUP_NICKNAME_ALIASES[normalized]!;
+  if (/\bzaf\b/.test(normalized)) return "south africa";
+  return TEAM_DEDUP_BASE_ALIASES[normalized] ?? normalized;
 }
 
 /** Duplicate teams must share base name and tier — Women/U18/U20 never merge with senior sides. */

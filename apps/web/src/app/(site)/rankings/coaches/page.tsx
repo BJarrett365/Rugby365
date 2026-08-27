@@ -9,8 +9,15 @@ export const metadata: Metadata = {
     "Coaches ranked by Rugby365 Coach Rating — overall coach quality across eligible active coaches.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function WorldCoachRankingsPage() {
-  const rankings = await listCoachWorldRankings(100);
+  let rankings: Awaited<ReturnType<typeof listCoachWorldRankings>> = [];
+  try {
+    rankings = await listCoachWorldRankings(100);
+  } catch (err) {
+    console.error("[rankings/coaches] failed to load rankings", err);
+  }
 
   return (
     <article className="pr-coach-profile">
