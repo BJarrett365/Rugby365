@@ -6,9 +6,11 @@ import {
   listedMatchIdentityKey,
   parseRugbyDataScore,
   pickRugbyDataSyncCandidate,
+  pickRugbyDataSyncCandidateByExternalId,
   rugbyDataCandidateNameKeys,
   rugbyDataEventTypeToMatchEvent,
   rugbyDataStatusToFixtureStatus,
+  teamNameKey,
 } from "./rugby-data-day-sync";
 
 describe("rugby-data-day-sync helpers", () => {
@@ -108,5 +110,34 @@ describe("rugby-data-day-sync helpers", () => {
       "auckland:wellington",
     );
     expect(picked?.id).toBe("canonical");
+  });
+
+  it("aliases French club names onto one identity key", () => {
+    expect(teamNameKey("US Oyonnax")).toBe(teamNameKey("Oyonnax"));
+    expect(teamNameKey("Grenoble FC")).toBe(teamNameKey("FC Grenoble"));
+    expect(teamNameKey("Angouleme")).toBe(teamNameKey("Soyaux Angoulême"));
+  });
+
+  it("matches CMS rows by Rugby Data externalMatchId", () => {
+    const picked = pickRugbyDataSyncCandidateByExternalId(
+      [
+        {
+          id: "wrong",
+          slug: "other",
+          externalMatchId: "1111",
+          homeName: "A",
+          awayName: "B",
+        },
+        {
+          id: "prod2",
+          slug: "orphan-v-orphan",
+          externalMatchId: "9636",
+          homeName: "Unknown team",
+          awayName: "Unknown team",
+        },
+      ],
+      "9636",
+    );
+    expect(picked?.id).toBe("prod2");
   });
 });

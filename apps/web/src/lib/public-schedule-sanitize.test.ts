@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScheduleFixture } from "./match-schedule-utils";
-import { sanitizePublicScheduleFixtures } from "./public-schedule-sanitize";
+import { sanitizePublicScheduleFixtures, publicFixtureStatus } from "./public-schedule-sanitize";
 
 function fixture(partial: Partial<ScheduleFixture> & Pick<ScheduleFixture, "id" | "slug">): ScheduleFixture {
   return {
@@ -129,5 +129,19 @@ describe("sanitizePublicScheduleFixtures", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.homeTeam?.name).toBe("Hawke's Bay");
     expect(rows[0]?.homeScore).toBe(50);
+  });
+});
+
+describe("publicFixtureStatus", () => {
+  const kickoff = "2026-08-27T17:30:00.000Z";
+
+  it("shows live after kickoff while the CMS row is still scheduled", () => {
+    const now = Date.parse("2026-08-27T18:10:00.000Z");
+    expect(publicFixtureStatus("scheduled", kickoff, 0, 0, now)).toBe("live");
+  });
+
+  it("promotes a stale live scored row to a result", () => {
+    const now = Date.parse("2026-08-27T19:30:00.000Z");
+    expect(publicFixtureStatus("live", kickoff, 7, 0, now)).toBe("full_time");
   });
 });

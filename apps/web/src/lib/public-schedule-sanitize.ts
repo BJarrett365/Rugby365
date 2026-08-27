@@ -11,6 +11,7 @@ function publicSideName(name: string): string {
 }
 
 const PAST_RESULT_MS = 90 * 60 * 1000;
+const STALE_LIVE_RESULT_MS = 110 * 60 * 1000;
 
 /** Promote stale scored rows so the board shows a result instead of "vs". */
 export function publicFixtureStatus(
@@ -24,11 +25,17 @@ export function publicFixtureStatus(
   if (normalized === "full_time" || normalized === "result" || normalized === "finished" || normalized === "ft") {
     return "full_time";
   }
-  if (normalized === "live" || normalized === "half_time") return status;
+  const kickoffMs = kickoffAt ? new Date(kickoffAt).getTime() : NaN;
+  const elapsed = Number.isFinite(kickoffMs) ? nowMs - kickoffMs : null;
   const scored = (homeScore ?? 0) + (awayScore ?? 0) > 0;
-  if (scored && kickoffAt) {
-    const kickoffMs = new Date(kickoffAt).getTime();
-    if (Number.isFinite(kickoffMs) && nowMs - kickoffMs > PAST_RESULT_MS) return "full_time";
+  if (normalized === "live" || normalized === "half_time") {
+    if (elapsed != null && scored && elapsed > STALE_LIVE_RESULT_MS) return "full_time";
+    return status;
+  }
+  if (normalized === "postponed") return status;
+  if (elapsed != null) {
+    if (scored && elapsed > PAST_RESULT_MS) return "full_time";
+    if (elapsed > 2 * 60 * 1000 && elapsed <= PAST_RESULT_MS) return "live";
   }
   return status;
 }

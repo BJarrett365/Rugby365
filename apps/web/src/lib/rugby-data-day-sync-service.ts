@@ -22,6 +22,7 @@ import {
   listRugbyDataSyncCandidates,
   parseRugbyDataScore,
   pickRugbyDataSyncCandidate,
+  pickRugbyDataSyncCandidateByExternalId,
   rugbyDataEventTypeToMatchEvent,
   rugbyDataStatusToFixtureStatus,
   type RugbyDataInfoEvent,
@@ -30,6 +31,7 @@ import {
 } from "./rugby-data-day-sync";
 import { utcInstantFromZonedWallClock } from "@rugby365/import-sdk";
 import { addDaysToDateKey, formatRoundLabel } from "./match-schedule-utils";
+import { invalidatePublicCache } from "./public-data-cache";
 
 export type RugbyDataDaySyncResult = {
   dateKey: string;
@@ -58,7 +60,7 @@ function dateFromListed(match: RugbyDataListedMatch): string {
 async function resolveFixtureForListedMatch(
   match: RugbyDataListedMatch,
   candidates: RugbyDataSyncCandidate[],
-): Promise<{ fixtureId: string; via: "mapping" | "identity"; siblingIds: string[] } | null> {
+): Promise<{ fixtureId: string; via: "mapping" | "identity" | "external_id"; siblingIds: string[] } | null> {
   const externalId = String(match.id);
   const mapped = await getConfirmedMapping({
     provider: PROVIDER_RUGBY_DATA,
@@ -92,21 +94,46 @@ async function resolveFixtureForListedMatch(
   void existingMap;
 
   const identity = listedMatchIdentityKey(match);
-  if (!identity) return null;
-  const wantNames = identity.slice(11); // after YYYY-MM-DD:
-  const hit = pickRugbyDataSyncCandidate(candidates, wantNames);
-  if (!hit) return null;
+  if (identity) {
+    const wantNames = identity.slice(11); // after YYYY-MM-DD:
+    const hit = pickRugbyDataSyncCandidate(candidates, wantNames);
+    if (hit) {
+      await confirmMapping({
+        provider: PROVIDER_RUGBY_DATA,
+        entityType: "match",
+        externalId,
+        rugby365Id: hit.id,
+        rugby365Name: `${hit.homeName ?? "?"} v ${hit.awayName ?? "?"}`,
+        confirmedBy: "rugby_data_day_sync",
+        notes: `Day identity match (${match.dt ?? dateFromListed(match)})`,
+      }).catch(() => null);
+      return {
+        fixtureId: hit.id,
+        via: "identity",
+        siblingIds: listRugbyDataSyncCandidates(candidates, wantNames).map((row) => row.id),
+      };
+    }
+  }
+
+  const byExternal = pickRugbyDataSyncCandidateByExternalId(candidates, externalId);
+  if (!byExternal) return null;
 
   await confirmMapping({
     provider: PROVIDER_RUGBY_DATA,
     entityType: "match",
     externalId,
-    rugby365Id: hit.id,
-    rugby365Name: `${hit.homeName ?? "?"} v ${hit.awayName ?? "?"}`,
+    rugby365Id: byExternal.id,
+    rugby365Name: `${byExternal.homeName ?? match.competitors?.htn ?? "?"} v ${byExternal.awayName ?? match.competitors?.atn ?? "?"}`,
     confirmedBy: "rugby_data_day_sync",
-    notes: `Day identity match (${match.dt ?? dateFromListed(match)})`,
+    notes: `Day externalMatchId match (${match.dt ?? dateFromListed(match)})`,
   }).catch(() => null);
-  return { fixtureId: hit.id, via: "identity", siblingIds: listRugbyDataSyncCandidates(candidates, wantNames).map((row) => row.id) };
+  return {
+    fixtureId: byExternal.id,
+    via: "external_id",
+    siblingIds: candidates
+      .filter((row) => (row.externalMatchId ?? "").trim() === externalId)
+      .map((row) => row.id),
+  };
 }
 
 async function applyScoreAndStatus(
@@ -127,11 +154,18 @@ async function applyScoreAndStatus(
       : parseRugbyDataScore(match.ft) ?? parseRugbyDataScore(match.cfs);
 
   // P1 sometimes returns scores with status labels like "Result only" that used to
-  // fall through to scheduled — promote when a score is present after kickoff.
-  if (status === "scheduled" && score && existing.kickoffAt) {
+  // fall through to scheduled — promote from kickoff + score when the label is weak.
+  if (status === "scheduled" && existing.kickoffAt) {
     const kickoffMs = new Date(existing.kickoffAt).getTime();
-    if (Number.isFinite(kickoffMs) && Date.now() - kickoffMs > 90 * 60 * 1000) {
-      status = "full_time";
+    if (Number.isFinite(kickoffMs)) {
+      const elapsed = Date.now() - kickoffMs;
+      if (elapsed > 100 * 60 * 1000 && score) {
+        status = "full_time";
+      } else if (elapsed > 2 * 60 * 1000 && elapsed <= 100 * 60 * 1000) {
+        status = "live";
+      } else if (elapsed > 90 * 60 * 1000 && score) {
+        status = "full_time";
+      }
     }
   }
 
@@ -211,6 +245,8 @@ async function applyScoreAndStatus(
       st: match.st ?? match.cp ?? null,
       mins: match.mins ?? null,
       ro: match.ro ?? null,
+      homeName: match.competitors?.htn ?? null,
+      awayName: match.competitors?.atn ?? null,
     },
   };
 
@@ -348,6 +384,7 @@ export async function syncRugbyDataFixturesForDate(
     fixtureRows.map((f) => ({
       id: f.id,
       slug: f.slug,
+      externalMatchId: f.externalMatchId,
       homeTeamId: f.homeTeamId,
       awayTeamId: f.awayTeamId,
       homeName: f.homeTeamId ? teamById[f.homeTeamId] ?? null : null,
@@ -408,4 +445,38 @@ export async function syncRugbyDataFixturesForDate(
   }
 
   return result;
+}
+
+const liteSyncInflight = new Map<string, Promise<void>>();
+
+/**
+ * Non-blocking P1 score/status refresh for the public lite board.
+ * Single-flight per date so /matches traffic cannot stampede the API.
+ */
+export function scheduleLiteRugbyDataSync(
+  dateKey: string,
+  timeZone = "Europe/London",
+): void {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+  if (liteSyncInflight.has(dateKey)) return;
+  const run = syncRugbyDataFixturesForDate(dateKey, {
+    timeZone,
+    syncEvents: false,
+    mirrorSupabase: false,
+  })
+    .then((result) => {
+      if (result.scoresUpdated > 0 || result.statusesUpdated > 0) {
+        invalidatePublicCache("fixtures:schedule:");
+      }
+    })
+    .catch((error) => {
+      console.warn(
+        `[schedule] lite rugby_data sync failed for ${dateKey}:`,
+        error instanceof Error ? error.message : error,
+      );
+    })
+    .finally(() => {
+      liteSyncInflight.delete(dateKey);
+    });
+  liteSyncInflight.set(dateKey, run);
 }

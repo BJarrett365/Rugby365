@@ -140,13 +140,40 @@ export function buildRugbyDataEventId(
   return `rd:${matchId}:${type}:${mins}:${player}:${side}:${index}`;
 }
 
+/** Collapse common P1 / CMS club labels onto one identity key. */
+const RUGBY_DATA_CLUB_ALIASES: Record<string, string> = {
+  "us oyonnax": "oyonnax",
+  "oyonnax rugby": "oyonnax",
+  "nissa rugby": "nice",
+  "rugby club nicois": "nice",
+  "rc nicois": "nice",
+  angouleme: "soyaux angouleme",
+  "soyaux angouleme": "soyaux angouleme",
+  saxv: "soyaux angouleme",
+  "grenoble fc": "grenoble",
+  "fc grenoble": "grenoble",
+  "rc narbonne": "narbonne",
+  "racing club narbonne": "narbonne",
+  "us dax": "dax",
+  "us colomiers": "colomiers",
+  "stade aurillacois": "aurillac",
+  "uson nevers": "nevers",
+  "provence rugby": "aix",
+  "aix en provence": "aix",
+  "su agen": "agen",
+  "as beziers": "beziers",
+  asbh: "beziers",
+  "biarritz olympique": "biarritz",
+};
+
 export function teamNameKey(name: string | null | undefined): string {
-  return (name ?? "")
+  const base = (name ?? "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+  return RUGBY_DATA_CLUB_ALIASES[base] ?? base;
 }
 
 export function listedMatchIdentityKey(match: RugbyDataListedMatch): string | null {
@@ -160,6 +187,7 @@ export function listedMatchIdentityKey(match: RugbyDataListedMatch): string | nu
 export type RugbyDataSyncCandidate = {
   id: string;
   slug?: string | null;
+  externalMatchId?: string | null;
   homeName: string | null;
   awayName: string | null;
   status?: string | null;
@@ -222,11 +250,7 @@ export function listRugbyDataSyncCandidates(
  * Pick the CMS fixture to receive P1 scores. Duplicate imports of the same
  * match used to return no hit (`hits.length !== 1`), so August results never landed.
  */
-export function pickRugbyDataSyncCandidate(
-  candidates: RugbyDataSyncCandidate[],
-  wantNames: string,
-): RugbyDataSyncCandidate | null {
-  const hits = listRugbyDataSyncCandidates(candidates, wantNames);
+function bestRugbyDataSyncCandidate(hits: RugbyDataSyncCandidate[]): RugbyDataSyncCandidate | null {
   if (!hits.length) return null;
   return (
     hits.slice().sort((a, b) => {
@@ -234,5 +258,24 @@ export function pickRugbyDataSyncCandidate(
       if (diff !== 0) return diff;
       return a.id.localeCompare(b.id);
     })[0] ?? null
+  );
+}
+
+export function pickRugbyDataSyncCandidate(
+  candidates: RugbyDataSyncCandidate[],
+  wantNames: string,
+): RugbyDataSyncCandidate | null {
+  return bestRugbyDataSyncCandidate(listRugbyDataSyncCandidates(candidates, wantNames));
+}
+
+/** Match CMS rows that already store the Rugby Data match id. */
+export function pickRugbyDataSyncCandidateByExternalId(
+  candidates: RugbyDataSyncCandidate[],
+  externalId: string,
+): RugbyDataSyncCandidate | null {
+  const want = externalId.trim();
+  if (!want) return null;
+  return bestRugbyDataSyncCandidate(
+    candidates.filter((row) => (row.externalMatchId ?? "").trim() === want),
   );
 }

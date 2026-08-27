@@ -16,6 +16,7 @@ import {
   monthBoundsFromDateKey,
   fixtureCalendarDate,
   kickoffDateKey,
+  dateKeyLocal,
   seasonFromDateKey,
   type ScheduleCompetition,
   type ScheduleFixture,
@@ -26,11 +27,11 @@ import { listCompetitions } from "./competition-admin-service";
 import { getDb } from "./db";
 import { buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
-import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
+import { syncRugbyDataFixturesForDate, scheduleLiteRugbyDataSync } from "./rugby-data-day-sync-service";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
 import { weatherConditionFromText } from "./weather-condition";
 import { sanitizePublicScheduleFixtures } from "./public-schedule-sanitize";
-import { resolvePublicClubNamesFromFixtureSlug, stripImportedDateSuffix } from "./table-lab/standings-fixture-dedupe";
+import { resolvePublicClubNamesFromFixtureSlug, stripImportedDateSuffix, isUnknownStandingsTeamName } from "./table-lab/standings-fixture-dedupe";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -86,6 +87,7 @@ function mapDbFixture(
     highlightsYoutubeUrl?: string | null;
     externalMatchId: string | null;
     planetRugbyUrl: string | null;
+    providerSnapshot?: unknown;
     homeTeam: {
       id?: string | null;
       name: string;
@@ -109,19 +111,28 @@ function mapDbFixture(
     row.homeTeam?.name ?? "",
     row.awayTeam?.name ?? "",
   );
+  const snapNames = rugbyDataSnapshotSideNames(row.providerSnapshot);
+  const homeName =
+    isUnknownStandingsTeamName(resolved.homeName) && snapNames.home
+      ? snapNames.home
+      : resolved.homeName;
+  const awayName =
+    isUnknownStandingsTeamName(resolved.awayName) && snapNames.away
+      ? snapNames.away
+      : resolved.awayName;
   const homeTeam = toScheduleTeam(
     row.homeTeam
-      ? { ...row.homeTeam, name: resolved.homeName || row.homeTeam.name }
-      : resolved.homeName
-        ? { name: resolved.homeName }
+      ? { ...row.homeTeam, name: homeName || row.homeTeam.name }
+      : homeName
+        ? { name: homeName }
         : null,
     icons?.home,
   );
   const awayTeam = toScheduleTeam(
     row.awayTeam
-      ? { ...row.awayTeam, name: resolved.awayName || row.awayTeam.name }
-      : resolved.awayName
-        ? { name: resolved.awayName }
+      ? { ...row.awayTeam, name: awayName || row.awayTeam.name }
+      : awayName
+        ? { name: awayName }
         : null,
     icons?.away,
   );
@@ -222,6 +233,29 @@ function mapSdmsRow(
 
 function fixtureOnCalendarDate(f: ScheduleFixture, dateKey: string): boolean {
   return fixtureCalendarDate(f) === dateKey;
+}
+
+function rugbyDataSnapshotSideNames(snapshot: unknown): { home: string | null; away: string | null } {
+  if (!snapshot || typeof snapshot !== "object") return { home: null, away: null };
+  const rd = (snapshot as Record<string, unknown>).rugby_data;
+  if (!rd || typeof rd !== "object") return { home: null, away: null };
+  const rec = rd as Record<string, unknown>;
+  const home = typeof rec.homeName === "string" ? rec.homeName.trim() : "";
+  const away = typeof rec.awayName === "string" ? rec.awayName.trim() : "";
+  return { home: home || null, away: away || null };
+}
+
+function shouldKickLiteRugbyDataSync(dateKey: string, rows: ScheduleFixture[]): boolean {
+  const today = dateKeyLocal(new Date());
+  const yesterday = addDaysToDateKey(today, -1);
+  if (dateKey !== today && dateKey !== yesterday) return false;
+  return rows.some((f) => {
+    const status = (f.status ?? "").toLowerCase();
+    if (status === "live" || status === "half_time") return true;
+    if (status !== "scheduled" || !f.kickoffAt) return false;
+    const elapsed = Date.now() - new Date(f.kickoffAt).getTime();
+    return elapsed > -15 * 60 * 1000 && elapsed < 5 * 60 * 60 * 1000;
+  });
 }
 
 async function listDbFixturesForDate(dateKey: string, timeZone: string) {
@@ -330,6 +364,9 @@ export async function getScheduleForDate(
       const tb = b.kickoffAt ? new Date(b.kickoffAt).getTime() : 0;
       return ta - tb;
     });
+    if (shouldKickLiteRugbyDataSync(dateKey, mappedFixtures)) {
+      scheduleLiteRugbyDataSync(dateKey, timeZone);
+    }
     return {
       fixtures: mappedFixtures,
       competitions: competitionList,

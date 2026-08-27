@@ -657,9 +657,11 @@ export function FixturesScheduleBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- jump once per competition/year change
   }, [competitionIdParam, seasonYear, browserTimeZone]);
 
-  const load = useCallback(async (dateKey: string) => {
-    setLoading(true);
-    setError("");
+  const load = useCallback(async (dateKey: string, opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const params = new URLSearchParams({ date: dateKey, tz: browserTimeZone, lite: "1" });
       if (competitionIdParam) params.set("competitionId", competitionIdParam);
@@ -694,10 +696,12 @@ export function FixturesScheduleBoard({
         });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load fixtures");
-      setFixtures([]);
+      if (!opts?.silent) {
+        setError(e instanceof Error ? e.message : "Failed to load fixtures");
+        setFixtures([]);
+      }
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, [browserTimeZone, competitionIdParam]);
 
@@ -705,6 +709,20 @@ export function FixturesScheduleBoard({
     if (!selectedDateKey) return;
     void load(selectedDateKey);
   }, [selectedDateKey, load]);
+
+  useEffect(() => {
+    if (!isPublic || !selectedDateKey) return;
+    if (selectedDateKey !== dateKeyLocal(new Date())) return;
+    const refresh = () => {
+      void load(selectedDateKey, { silent: true });
+    };
+    const quick = window.setTimeout(refresh, 8000);
+    const poll = window.setInterval(refresh, 45_000);
+    return () => {
+      window.clearTimeout(quick);
+      window.clearInterval(poll);
+    };
+  }, [isPublic, selectedDateKey, load]);
 
   useEffect(() => {
     if (!initialFixtureId) return;
