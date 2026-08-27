@@ -37,6 +37,7 @@ import { resolveVenue, getVenueById } from "./venue-admin-service";
 import { ensureVenueCapacityInDatabase } from "./venue-capacity-sync-service";
 import { mergeProviderSnapshot } from "./head-to-head-service";
 import { sdmsStatusToPeriod } from "./rugby-match-clock";
+import { isFixtureRatingsPublished } from "./match-rating-math";
 
 function mappedLineupsToSport365(lineups: MappedLineups): Sport365Lineups {
   return lineups as Sport365Lineups;
@@ -365,6 +366,20 @@ export async function enrichFixtureFromSdmsMatch(
       playerStatsImported = statsResult.playersProcessed;
     } catch {
       /* performance stats optional when SDMS feed unavailable */
+    }
+  }
+
+  // Finished matches: persist Match Ratings as soon as performance rows land so the
+  // public lineups tab does not wait for a later page self-heal.
+  if (playerStatsImported > 0 && isFixtureRatingsPublished(status)) {
+    try {
+      const { calculateAndPersistFixtureMatchRatings } = await import("./match-rating-service");
+      await calculateAndPersistFixtureMatchRatings(fixtureId);
+    } catch (error) {
+      console.warn(
+        `[planet-rugby] match ratings calc failed for ${fixtureId}:`,
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 

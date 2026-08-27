@@ -22,7 +22,7 @@ export { parseLiveTableBoolean } from "./table-lab-param-parsers";
 
 export type LiveTableMovement = "up" | "down" | "same";
 
-const COMPLETED_STATUSES = new Set(["full_time", "finished", "completed", "ft"]);
+const COMPLETED_STATUSES = new Set(["full_time", "finished", "completed", "ft", "result"]);
 const LIVE_STATUSES = new Set([
   "live",
   "in_progress",

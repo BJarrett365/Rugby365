@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import type { MappedLineups, MappedLineupPlayer } from "@rugby365/import-sdk";
 import type { MatchEntityContext } from "@/lib/match-entity-context";
 import type { MatchRatingDisplay } from "@/lib/match-rating-service";
@@ -200,11 +201,21 @@ export function LineupsPitchView({
   const [selectedId, setSelectedId] = useState<string | null>(
     ratings.find((r) => r.isRugby365Potm)?.playerId ?? null,
   );
+  const router = useRouter();
 
   const ratingsPublished = useMemo(
     () => isFixtureRatingsPublished(matchStatus ?? ""),
     [matchStatus],
   );
+
+  // Background self-heal may finish after first paint; refresh once so Match ratings appear.
+  useEffect(() => {
+    if (!ratingsPublished || ratings.length > 0) return;
+    const timer = window.setTimeout(() => {
+      router.refresh();
+    }, 3_500);
+    return () => window.clearTimeout(timer);
+  }, [ratingsPublished, ratings.length, router]);
 
   const ratingsByExternalId = useMemo(() => {
     const map = new Map<string, MatchRatingDisplay>();

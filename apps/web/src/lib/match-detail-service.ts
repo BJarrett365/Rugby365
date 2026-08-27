@@ -192,6 +192,8 @@ export type MatchDetailPageData = {
     id: string;
     slug: string;
     seasonId: string | null;
+    /** CMS fixture status (e.g. full_time). Prefer this for ratings publish gating. */
+    status: string | null;
     squadCount: number;
     entitySyncRan: boolean;
     autoImported: boolean;
@@ -459,19 +461,29 @@ export async function getMatchDetailForPage(
         error instanceof Error ? error.message : error,
       );
     }
-  } else if (isLiveFixtureStatus(cmsFixtureRow.status) || isLiveFixtureStatus(detail.status)) {
-    try {
-      // Live score/clock only — finished matches skip this write on every page hit.
-      await syncFixtureLiveStateFromSdms(cmsFixtureRow.id, detail);
-    } catch (error) {
-      console.warn(
-        `[match-detail] live score sync failed for ${matchId}:`,
-        error instanceof Error ? error.message : error,
-      );
+  } else {
+    const cmsPublished = isFixtureRatingsPublished(cmsFixtureRow.status);
+    const sdmsPublished = isFixtureRatingsPublished(detail.status);
+    const shouldSyncLive =
+      isLiveFixtureStatus(cmsFixtureRow.status) ||
+      isLiveFixtureStatus(detail.status) ||
+      // SDMS already Result/FT but CMS still scheduled/live — without this, match
+      // ratings never unlock (ensureMissing bails when CMS status isn't published).
+      (sdmsPublished && !cmsPublished);
+    if (shouldSyncLive) {
+      try {
+        // Score/clock/status only — do not re-enrich squads/events on public RSC.
+        const synced = await syncFixtureLiveStateFromSdms(cmsFixtureRow.id, detail);
+        if (synced.patch.status) {
+          cmsFixtureRow = { ...cmsFixtureRow, status: synced.patch.status };
+        }
+      } catch (error) {
+        console.warn(
+          `[match-detail] live score sync failed for ${matchId}:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
     }
-    // Do not re-enrich squads/events on public page render — that waits on Planet SDMS
-    // and was saturating the Next server (client "network error" / 30–60s hangs).
-    // Use Admin enrich / background jobs for deep sync.
   }
 
   const competitionExternalIdPromise = resolveCompetitionExternalId(detail, cmsFixtureRow);
@@ -480,15 +492,26 @@ export async function getMatchDetailForPage(
     : Promise.resolve([] as string[]);
   const ratingsPromise = cmsFixtureRow
     ? (async () => {
-        if (isFixtureRatingsPublished(cmsFixtureRow.status)) {
-          // Cheap DB-only ensure (no SDMS). Full enrich + career calc run after the response
-          // only when this fixture still has gaps.
+        // Prefer CMS status, but treat SDMS Result/FT as published so a stale CMS
+        // row cannot blank the lineups ratings tab after full time.
+        const ratingsStatus =
+          isFixtureRatingsPublished(cmsFixtureRow.status) ||
+          isFixtureRatingsPublished(detail.status)
+            ? cmsFixtureRow.status && isFixtureRatingsPublished(cmsFixtureRow.status)
+              ? cmsFixtureRow.status
+              : detail.status
+            : cmsFixtureRow.status;
+        if (isFixtureRatingsPublished(ratingsStatus)) {
+          // Lineups tab: allow a longer DB calc wait so first paint isn't empty when
+          // perf rows already exist. SDMS enrich still stays off-request (after heal).
+          const ensureBudgetMs =
+            tab === "lineups" ? Math.max(MATCH_ENSURE_BUDGET_MS, 2_500) : MATCH_ENSURE_BUDGET_MS;
           const ensureResult = await raceWithBudget(
             ensureMissingFixturePlayerMatchRatings(cmsFixtureRow.id, {
               matchId,
               allowSdmsEnrich: false,
             }),
-            MATCH_ENSURE_BUDGET_MS,
+            ensureBudgetMs,
           );
           if (
             ensureResult == null ||
@@ -676,7 +699,13 @@ export async function getMatchDetailForPage(
   __mark("entities");
 
   let ratingsBundle: FixtureMatchRatingsBundle = ratingsListed;
-  const fixtureStatus = cmsFixtureRow?.status ?? detail.status ?? "";
+  const fixtureStatus =
+    isFixtureRatingsPublished(cmsFixtureRow?.status ?? "") ||
+    isFixtureRatingsPublished(detail.status ?? "")
+      ? isFixtureRatingsPublished(cmsFixtureRow?.status ?? "")
+        ? (cmsFixtureRow?.status ?? detail.status ?? "")
+        : (detail.status ?? cmsFixtureRow?.status ?? "")
+      : (cmsFixtureRow?.status ?? detail.status ?? "");
   const ratingsPublished = isFixtureRatingsPublished(fixtureStatus);
   __mark("ratings");
 
@@ -897,6 +926,7 @@ export async function getMatchDetailForPage(
           id: cmsFixtureRow.id,
           slug: cmsFixtureRow.slug,
           seasonId: cmsFixtureRow.seasonId ?? null,
+          status: cmsFixtureRow.status ?? null,
           squadCount: squadPlayerIds.length,
           entitySyncRan,
           autoImported,

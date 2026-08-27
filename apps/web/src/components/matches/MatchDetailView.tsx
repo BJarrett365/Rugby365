@@ -38,6 +38,7 @@ import type { MatchAnimationPublicPayload } from "@/lib/match-animation-types";
 import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability";
 import { youtubeEmbedSrc } from "@/lib/youtube-embed";
 import { resolveWeatherCondition } from "@/lib/weather-condition";
+import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso);
@@ -264,6 +265,13 @@ async function MatchDetailPanel({
     if (!lineups) {
       return <p className="match-detail-empty">Lineups are not available for this match yet.</p>;
     }
+    const lineupMatchStatus =
+      isFixtureRatingsPublished(cmsFixture?.status ?? "") ||
+      isFixtureRatingsPublished(detail.status)
+        ? isFixtureRatingsPublished(cmsFixture?.status ?? "")
+          ? (cmsFixture?.status ?? detail.status)
+          : detail.status
+        : (cmsFixture?.status ?? detail.status);
     return (
       <LineupsPitchView
         lineups={lineups}
@@ -273,7 +281,7 @@ async function MatchDetailPanel({
         rugby365PotmSlug={data.rugby365PotmSlug}
         officialPotmName={data.officialPotmName}
         officialPotmSlug={data.officialPotmSlug}
-        matchStatus={detail.status}
+        matchStatus={lineupMatchStatus}
         homeKit={data.lineupKits?.home ?? null}
         awayKit={data.lineupKits?.away ?? null}
       />

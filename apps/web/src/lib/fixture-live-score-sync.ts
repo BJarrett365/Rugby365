@@ -6,6 +6,7 @@ import { listFieldLocks } from "./provider-mapping-service";
 import { isFieldLocked } from "./data-integration-overwrite";
 import { sdmsStatusToPeriod } from "./rugby-match-clock";
 import { isLiveFixtureStatus } from "./table-lab/live-table-service";
+import { isFixtureRatingsPublished } from "./match-rating-math";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -108,6 +109,8 @@ export function resolveLiveScoreSyncPatch(
 /**
  * Lightweight sync: push SDMS live score/clock into CMS so Live Table / schedule
  * stay aligned with the Match Centre scoreline. Skips heavy squad/event import.
+ * When a fixture flips to full time, schedule match-rating generation so lineups
+ * do not stay blank until a later page visit.
  */
 export async function syncFixtureLiveStateFromSdms(
   fixtureId: string,
@@ -122,6 +125,7 @@ export async function syncFixtureLiveStateFromSdms(
       matchMinute: fixtures.matchMinute,
       matchSecond: fixtures.matchSecond,
       period: fixtures.period,
+      externalMatchId: fixtures.externalMatchId,
     })
     .from(fixtures)
     .where(eq(fixtures.id, fixtureId))
@@ -136,5 +140,22 @@ export async function syncFixtureLiveStateFromSdms(
   }
 
   await db.update(fixtures).set(patch).where(eq(fixtures.id, fixtureId));
+
+  const becamePublished =
+    patch.status != null &&
+    isFixtureRatingsPublished(patch.status) &&
+    !isFixtureRatingsPublished(existing.status);
+  if (becamePublished) {
+    const matchId = existing.externalMatchId ?? detail.match_id ?? null;
+    void import("./match-rating-service")
+      .then(({ ensureMissingFixturePlayerMatchRatings }) =>
+        ensureMissingFixturePlayerMatchRatings(fixtureId, {
+          matchId,
+          allowSdmsEnrich: true,
+        }),
+      )
+      .catch(() => undefined);
+  }
+
   return { updated: true, patch };
 }

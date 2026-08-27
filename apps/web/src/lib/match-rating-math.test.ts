@@ -40,6 +40,15 @@ describe("match-rating-math", () => {
     expect(formatMatchRatingDisplay(null, "unavailable")).toBe("—");
   });
 
+  it("treats SDMS Result and CMS full_time as published for lineup ratings", async () => {
+    const { isFixtureRatingsPublished } = await import("./match-rating-math");
+    expect(isFixtureRatingsPublished("Result")).toBe(true);
+    expect(isFixtureRatingsPublished("full_time")).toBe(true);
+    expect(isFixtureRatingsPublished("FT")).toBe(true);
+    expect(isFixtureRatingsPublished("scheduled")).toBe(false);
+    expect(isFixtureRatingsPublished("live")).toBe(false);
+  });
+
   it("formats trend labels", () => {
     expect(performanceTrendLabel("up", 0.6)).toBe("▲ +0.6");
     expect(performanceTrendLabel("down", -0.3)).toBe("▼ -0.3");
