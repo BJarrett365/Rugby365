@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createTeam } from "@/lib/entity-admin-service";
 import { listTeams } from "@/lib/fixture-admin-service";
 import { listTeamPickerData } from "@/lib/team-picker-service";
+import { collapseAdminClubCatalog } from "@/lib/admin-clubs-catalog";
 import { apiErrorResponse } from "@/lib/api-errors";
 
 export async function GET(req: Request) {
@@ -17,6 +18,9 @@ export async function GET(req: Request) {
       return NextResponse.json(payload);
     }
     const teams = await listTeams();
+    if (searchParams.get("catalog") === "1") {
+      return NextResponse.json({ teams: collapseAdminClubCatalog(teams) });
+    }
     return NextResponse.json({ teams });
   } catch (e) {
     return apiErrorResponse(e, "Failed to list teams");

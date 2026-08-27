@@ -16,15 +16,16 @@ import {
   matchDetailHref,
   matchStatusShort,
   monthBoundsFromYearMonth,
+  publicMatchRoundLabel,
   publicMatchStatusLabel,
   seasonFromDateKey,
   type ScheduleCompetition,
   type ScheduleFixture,
 } from "./match-schedule-utils";
-import { gradeModelPick } from "@/lib/match-betting-pick-grade";
 import type { MatchDetailTab } from "@/lib/match-detail-tabs";
 import { matchDetailTabHref } from "@/lib/match-detail-tabs";
 import { resolveWeatherCondition } from "@/lib/weather-condition";
+import { publicTeamDisplayName } from "@/lib/table-lab/standings-fixture-dedupe";
 
 function CompactMatchRow({
   fixture,
@@ -37,8 +38,8 @@ function CompactMatchRow({
   onDelete?: (id: string, label: string) => void;
   operatorSelect?: { selected: boolean; onSelect: () => void };
 }) {
-  const home = fixture.homeTeam?.name ?? "TBC";
-  const away = fixture.awayTeam?.name ?? "TBC";
+  const home = publicTeamDisplayName(fixture.homeTeam?.name) || "TBC";
+  const away = publicTeamDisplayName(fixture.awayTeam?.name) || "TBC";
   const label = `${home} vs ${away}`;
   const finished = isFinished(fixture.status);
   const scoreText = finished ? `${fixture.homeScore} - ${fixture.awayScore}` : "vs";
@@ -168,28 +169,12 @@ function CompactMatchRow({
   );
 }
 
-function modelPickOutcome(fixture: ScheduleFixture): {
-  favored: "home" | "away" | null;
-  correct: boolean | null;
-} {
-  const wp = fixture.winProbability;
-  if (!wp) return { favored: null, correct: null };
-  const finished =
-    fixture.status === "full_time" || /result|finished|ft/i.test(fixture.status);
-  if (!finished) {
-    const favored =
-      wp.homeWinPct > wp.awayWinPct ? "home" : wp.awayWinPct > wp.homeWinPct ? "away" : null;
-    return { favored, correct: null };
-  }
-  const grade = gradeModelPick({
-    homeWinPct: wp.homeWinPct,
-    awayWinPct: wp.awayWinPct,
-    homeScore: fixture.homeScore,
-    awayScore: fixture.awayScore,
-  });
-  return grade
-    ? { favored: grade.favored, correct: grade.correct }
-    : { favored: null, correct: null };
+function scoreOutcome(homeScore: number, awayScore: number): {
+  homeWon: boolean;
+  awayWon: boolean;
+} | null {
+  if (homeScore === awayScore) return null;
+  return { homeWon: homeScore > awayScore, awayWon: awayScore > homeScore };
 }
 
 type ScheduleMediaAction = {
@@ -241,16 +226,18 @@ function TeamMetrics({
   score,
   winPct,
   teamName,
-  showPick,
-  pickCorrect,
+  resultWon,
+  finished,
 }: {
   showScores: boolean;
   score: number;
   winPct: number | null;
   teamName: string;
-  showPick: boolean;
-  pickCorrect: boolean | null;
+  resultWon: boolean | null;
+  finished: boolean;
 }) {
+  const winLabel = finished ? `${teamName} won` : `${teamName} winning`;
+  const lossLabel = finished ? `${teamName} lost` : `${teamName} losing`;
   return (
     <>
       <span className="pr-mc-team__score" aria-hidden={!showScores}>
@@ -260,19 +247,21 @@ function TeamMetrics({
         className="pr-mc-team__winpct"
         title={winPct != null ? `${teamName} win probability ${winPct}%` : undefined}
       >
-        <span className="pr-mc-team__winpct-num">{winPct != null ? `${winPct}%` : "–"}</span>
+        <span className="pr-mc-team__winpct-num">
+          {winPct != null ? `${winPct}%` : resultWon != null ? "" : "–"}
+        </span>
         <span className="pr-mc-team__pick-slot">
-          {showPick && pickCorrect != null ? (
+          {resultWon != null ? (
             <span
               className={
-                pickCorrect
+                resultWon
                   ? "pr-mc-team__pick pr-mc-team__pick--ok"
                   : "pr-mc-team__pick pr-mc-team__pick--bad"
               }
-              title={pickCorrect ? "Model lean correct" : "Model lean incorrect"}
-              aria-label={pickCorrect ? "Correct pick" : "Incorrect pick"}
+              title={resultWon ? winLabel : lossLabel}
+              aria-label={resultWon ? winLabel : lossLabel}
             >
-              {pickCorrect ? "✓" : "✗"}
+              {resultWon ? "✓" : "✗"}
             </span>
           ) : null}
         </span>
@@ -282,8 +271,8 @@ function TeamMetrics({
 }
 
 function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
-  const home = fixture.homeTeam?.name ?? "TBC";
-  const away = fixture.awayTeam?.name ?? "TBC";
+  const home = publicTeamDisplayName(fixture.homeTeam?.name) || "TBC";
+  const away = publicTeamDisplayName(fixture.awayTeam?.name) || "TBC";
   const showScores =
     fixture.status === "full_time" ||
     fixture.status === "live" ||
@@ -312,14 +301,15 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
     Boolean(attendanceTitle) ||
     Boolean(tvTitle) ||
     Boolean(infoTitle);
-  const pick = modelPickOutcome(fixture);
+  const result = showScores ? scoreOutcome(fixture.homeScore, fixture.awayScore) : null;
+  const finished = fixture.status === "full_time" || /result|finished|ft/i.test(fixture.status);
   const wp = fixture.winProbability;
   const mediaActions = scheduleMediaActions(fixture);
 
   return (
     <article className={`pr-mc-match-row${hasFooter ? " pr-mc-match-row--with-footer" : ""}`}>
       <div className="pr-mc-match-row__meta">
-        <span className="pr-mc-match-row__round">{fixture.round?.trim() || "—"}</span>
+        <span className="pr-mc-match-row__round">{publicMatchRoundLabel(fixture.round)}</span>
       </div>
 
       <div className="pr-mc-match-row__status">
@@ -340,8 +330,8 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
             score={fixture.homeScore}
             winPct={wp?.homeWinPct ?? null}
             teamName={home}
-            showPick={pick.favored === "home"}
-            pickCorrect={pick.correct}
+            resultWon={result ? result.homeWon : null}
+            finished={finished}
           />
         </div>
         <div className="pr-mc-team pr-mc-team--metrics">
@@ -352,8 +342,8 @@ function PublicMatchRow({ fixture }: { fixture: ScheduleFixture }) {
             score={fixture.awayScore}
             winPct={wp?.awayWinPct ?? null}
             teamName={away}
-            showPick={pick.favored === "away"}
-            pickCorrect={pick.correct}
+            resultWon={result ? result.awayWon : null}
+            finished={finished}
           />
         </div>
       </div>

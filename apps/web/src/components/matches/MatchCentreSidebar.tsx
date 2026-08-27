@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ScheduleFixture } from "@/lib/match-schedule-utils";
-import { matchDetailHref } from "@/lib/match-schedule-utils";
+import { matchDetailHref, formatRoundLabel } from "@/lib/match-schedule-utils";
 import { TeamCrest } from "./TeamCrest";
 
 type SchedulePayload = {
@@ -83,9 +83,7 @@ function fixtureDateKey(f: ScheduleFixture): string {
 }
 
 function roundLabelFor(fixture: ScheduleFixture): string | null {
-  const roundRaw = fixture.round?.trim();
-  if (!roundRaw) return null;
-  return /^round\b/i.test(roundRaw) ? roundRaw : `Round ${roundRaw}`;
+  return formatRoundLabel(fixture.round);
 }
 
 function MatchRailCard({

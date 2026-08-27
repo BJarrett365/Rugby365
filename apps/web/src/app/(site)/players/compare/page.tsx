@@ -71,8 +71,7 @@ export default async function ComparePlayersPage({ searchParams }: PageProps) {
         <p className="pr-mc-pr-badge">Players</p>
         <h1 className="pr-player-profile-header__name">Compare players</h1>
         <p className="text-sm text-[var(--pr-mc-grey,#a7adac)] mt-1 mb-0">
-          For each side: competition → team → player (or search). Players can come from different
-          competitions.
+          Player A vs Player B — search or pick from the lists. No clubs or competitions to choose.
         </p>
       </header>
       <ComparePlayersPicker initialPlayerA={playerA} initialPlayerB={playerB} />

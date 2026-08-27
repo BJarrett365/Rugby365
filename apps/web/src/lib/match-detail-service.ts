@@ -31,7 +31,8 @@ import {
 } from "./match-key-events";
 import { buildMatchEntityContext, type MatchEntityContext } from "./entity-lookup-service";
 import { findFixtureBySdmsMatchId, findFixtureBySlug, getFixtureById } from "./fixture-admin-service";
-import { isSdmsShapedMatchId } from "./match-schedule-utils";
+import { isSdmsShapedMatchId, formatRoundLabel } from "./match-schedule-utils";
+import { stripImportedDateSuffix } from "./table-lab/standings-fixture-dedupe";
 import { resolveReferee } from "./entity-admin-service";
 import {
   ensureMissingFixtureStaffMatchRatings,
@@ -154,17 +155,17 @@ function cmsFixtureToSdmsDetail(fixture: CmsFixtureRow): SdmsMatchDetail {
     competition_id: fixture.competition?.id,
     competition_name: fixture.competition?.name ?? "",
     home_team_id: fixture.homeTeamId ?? undefined,
-    home_team_name: fixture.homeTeam?.name ?? "TBC",
+    home_team_name: stripImportedDateSuffix(fixture.homeTeam?.name ?? "") || "TBC",
     home_team_slug: fixture.homeTeam?.slug ?? "",
     home_team_score: fixture.homeScore ?? 0,
     home_team_icon: fixture.homeTeam?.imageUrl ?? undefined,
     away_team_id: fixture.awayTeamId ?? undefined,
-    away_team_name: fixture.awayTeam?.name ?? "TBC",
+    away_team_name: stripImportedDateSuffix(fixture.awayTeam?.name ?? "") || "TBC",
     away_team_slug: fixture.awayTeam?.slug ?? "",
     away_team_score: fixture.awayScore ?? 0,
     away_team_icon: fixture.awayTeam?.imageUrl ?? undefined,
     venue_name: fixture.venue?.name ?? fixture.venueName ?? undefined,
-    round: fixture.round ?? undefined,
+    round: formatRoundLabel(fixture.round) ?? undefined,
   };
 }
 
@@ -550,6 +551,21 @@ export async function getMatchDetailForPage(
         );
       }
     }
+  }
+
+  if (cmsFixtureRow) {
+    const cms = cmsFixtureRow as CmsFixtureRow & { round?: string | null };
+    detail.round = formatRoundLabel(cms.round) ?? formatRoundLabel(detail.round) ?? undefined;
+    const homeName = stripImportedDateSuffix(cms.homeTeam?.name || detail.home_team_name || "");
+    const awayName = stripImportedDateSuffix(cms.awayTeam?.name || detail.away_team_name || "");
+    if (homeName) detail.home_team_name = homeName;
+    if (awayName) detail.away_team_name = awayName;
+  } else {
+    const homeName = stripImportedDateSuffix(detail.home_team_name);
+    const awayName = stripImportedDateSuffix(detail.away_team_name);
+    if (homeName) detail.home_team_name = homeName;
+    if (awayName) detail.away_team_name = awayName;
+    detail.round = formatRoundLabel(detail.round) ?? undefined;
   }
 
   const competitionExternalIdPromise = resolveCompetitionExternalId(detail, cmsFixtureRow);

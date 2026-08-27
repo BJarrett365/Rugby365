@@ -53,8 +53,23 @@ const STALE_LIVE_MS = 5 * 60 * 60 * 1000;
 /** Kickoff more than this far in the future cannot be "in play". */
 const LIVE_NOT_STARTED_GRACE_MS = 2 * 60 * 1000;
 
+/** Strip clone/import debris such as "Auckland 2026 08 22 2". */
+export function stripImportedDateSuffix(name: string): string {
+  return name
+    .replace(/\s*__legacy__\S+/gi, "")
+    .replace(/[\s_-]+\d{4}[\s_-]+\d{2}[\s_-]+\d{2}(?:[\s_-]+\d+)?$/i, "")
+    .replace(/\s+[A-Za-z][A-Za-z0-9]*\d[A-Za-z0-9]{3,10}$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function publicTeamDisplayName(name: string | null | undefined): string {
+  const raw = (name ?? "").trim();
+  return stripImportedDateSuffix(raw) || raw;
+}
+
 export function canonicalStandingsTeamName(name: string): string {
-  const trimmed = name
+  const trimmed = stripImportedDateSuffix(name)
     .replace(/\{\{[^}]+\}\}/g, " ")
     .replace(/[|_]/g, " ")
     .replace(/\s+/g, " ")
@@ -78,6 +93,7 @@ export function canonicalStandingsTeamName(name: string): string {
 export function cleanFixtureSlugSideToken(raw: string): string {
   let token = (raw ?? "").trim().toLowerCase();
   if (!token) return token;
+  token = token.replace(/-\d{4}-\d{2}-\d{2}(?:-\d+)?$/i, "");
   const parts = token.split("-").filter(Boolean);
   if (parts.length >= 2) {
     const last = parts[parts.length - 1]!;
@@ -169,8 +185,8 @@ export function resolvePublicClubNamesFromFixtureSlug(
   const awayUnknown = isUnknownStandingsTeamName(away);
   if (!homeUnknown && !awayUnknown) {
     return {
-      homeName: canonicalStandingsTeamName(home),
-      awayName: canonicalStandingsTeamName(away),
+      homeName: stripImportedDateSuffix(canonicalStandingsTeamName(home)),
+      awayName: stripImportedDateSuffix(canonicalStandingsTeamName(away)),
     };
   }
 
@@ -178,7 +194,10 @@ export function resolvePublicClubNamesFromFixtureSlug(
   const withoutDate = base.replace(/-\d{4}-\d{2}-\d{2}$/, "");
   const parts = withoutDate.split("-v-");
   if (parts.length !== 2) {
-    return { homeName: canonicalStandingsTeamName(home), awayName: canonicalStandingsTeamName(away) };
+    return {
+      homeName: stripImportedDateSuffix(canonicalStandingsTeamName(home)),
+      awayName: stripImportedDateSuffix(canonicalStandingsTeamName(away)),
+    };
   }
 
   const fromSlug = (raw: string) => {
@@ -192,7 +211,10 @@ export function resolvePublicClubNamesFromFixtureSlug(
   };
   if (homeUnknown) home = fromSlug(parts[0]!);
   if (awayUnknown) away = fromSlug(parts[1]!);
-  return { homeName: home, awayName: away };
+  return {
+    homeName: stripImportedDateSuffix(home),
+    awayName: stripImportedDateSuffix(away),
+  };
 }
 
 export function isStaleLiveFixture(

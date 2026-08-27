@@ -45,7 +45,7 @@ export function splitRowsIntoWorldCupPools(
   if (!pools.length) return [];
 
   const formSlots = poolStageFormSlots(pools[0]!.teams.length);
-  const byKey = new Map(rows.map((row) => [row.teamName.trim().toLowerCase(), row]));
+  const byKey = new Map(rows.map((row) => [(row.teamName ?? "").trim().toLowerCase(), row]));
 
   return pools.map((pool) => {
     const matched: RugbyTableStandingRow[] = [];

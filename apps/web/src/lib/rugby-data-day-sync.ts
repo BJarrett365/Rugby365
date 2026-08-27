@@ -19,6 +19,7 @@ export type RugbyDataListedMatch = {
   leagueId?: number | string | null;
   league?: string | null;
   sea?: string | null;
+  ro?: string | null;
   competitors?: {
     htid?: number | string | null;
     atid?: number | string | null;

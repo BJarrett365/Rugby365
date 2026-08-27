@@ -4,7 +4,7 @@
  * (not leaderboard stats, which are often empty).
  */
 import "server-only";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { fixturePlayers, fixtures, players, teams } from "@rugby365/db";
 import { isRealCompareRosterTeamName } from "./compare-roster-team-name";
 import { getDb } from "./db";
@@ -201,24 +201,51 @@ export async function getCompetitionCompareRosterBySlug(
   const teamIds = teamsList.map((t) => t.id);
   const teamNameById = new Map(teamsList.map((t) => [t.id, t.name]));
   const db = getDb();
+  const isRwc = isRugbyWorldCupSlug(competition.slug);
 
-  const clubPlayers = await db
-    .select({
-      id: players.id,
-      slug: players.slug,
-      name: players.name,
-      position: players.positionName,
-      teamId: players.clubTeamId,
-    })
-    .from(players)
-    .where(
-      and(
-        eq(players.isPublic, true),
-        eq(players.publishStatus, "published"),
-        inArray(players.clubTeamId, teamIds),
-      ),
-    )
-    .orderBy(asc(players.name));
+  const allTeamRows = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams);
+  const rosterKeyToId = new Map(
+    teamsList.map((team) => [teamDedupKey(canonicalStandingsTeamName(team.name)), team.id] as const),
+  );
+  const rawIdToRosterId = new Map<string, string>();
+  const expandedIds: string[] = [];
+  for (const row of allTeamRows) {
+    const rosterId = rosterKeyToId.get(teamDedupKey(canonicalStandingsTeamName(row.name)));
+    if (!rosterId) continue;
+    expandedIds.push(row.id);
+    rawIdToRosterId.set(row.id, rosterId);
+  }
+  for (const id of teamIds) {
+    if (!rawIdToRosterId.has(id)) rawIdToRosterId.set(id, id);
+    if (!expandedIds.includes(id)) expandedIds.push(id);
+  }
+
+  const linkedPlayers =
+    expandedIds.length === 0
+      ? []
+      : await db
+          .select({
+            id: players.id,
+            slug: players.slug,
+            name: players.name,
+            position: players.positionName,
+            clubTeamId: players.clubTeamId,
+            internationalTeamId: players.internationalTeamId,
+          })
+          .from(players)
+          .where(
+            and(
+              eq(players.isPublic, true),
+              eq(players.publishStatus, "published"),
+              or(
+                inArray(players.clubTeamId, expandedIds),
+                inArray(players.internationalTeamId, expandedIds),
+              ),
+            ),
+          )
+          .orderBy(asc(players.name));
 
   // Also include players who appeared for these teams in this competition
   // (covers squad members without clubTeamId set).
@@ -236,35 +263,48 @@ export async function getCompetitionCompareRosterBySlug(
     .where(
       and(
         eq(fixtures.competitionId, competition.id),
-        inArray(fixturePlayers.teamId, teamIds),
+        inArray(fixturePlayers.teamId, expandedIds.length ? expandedIds : teamIds),
         eq(players.isPublic, true),
         eq(players.publishStatus, "published"),
         sql`${players.slug} is not null`,
       ),
     );
 
+  const resolveRosterTeam = (rawTeamId: string | null | undefined): string | null => {
+    if (!rawTeamId) return null;
+    return rawIdToRosterId.get(rawTeamId) ?? (teamNameById.has(rawTeamId) ? rawTeamId : null);
+  };
+
   const byId = new Map<string, CompareRosterPlayer>();
-  for (const row of clubPlayers) {
-    if (!row.teamId || !row.slug?.trim()) continue;
+  for (const row of linkedPlayers) {
+    if (!row.slug?.trim()) continue;
+    if (!row.name?.trim() || /^[-–—._]+$/.test(row.name.trim())) continue;
+    const rosterId = isRwc
+      ? resolveRosterTeam(row.internationalTeamId) ?? resolveRosterTeam(row.clubTeamId)
+      : resolveRosterTeam(row.clubTeamId) ?? resolveRosterTeam(row.internationalTeamId);
+    if (!rosterId) continue;
     byId.set(row.id, {
       id: row.id,
       slug: row.slug.trim(),
       name: row.name,
       position: row.position,
-      teamId: row.teamId,
-      teamName: teamNameById.get(row.teamId) ?? "Unknown club",
+      teamId: rosterId,
+      teamName: teamNameById.get(rosterId) ?? "Unknown club",
     });
   }
   for (const row of appearancePlayers) {
     if (!row.teamId || !row.slug?.trim()) continue;
+    if (!row.name?.trim() || /^[-–—._]+$/.test(row.name.trim())) continue;
     if (byId.has(row.id)) continue;
+    const rosterId = resolveRosterTeam(row.teamId);
+    if (!rosterId) continue;
     byId.set(row.id, {
       id: row.id,
       slug: row.slug.trim(),
       name: row.name,
       position: row.position,
-      teamId: row.teamId,
-      teamName: teamNameById.get(row.teamId) ?? "Unknown club",
+      teamId: rosterId,
+      teamName: teamNameById.get(rosterId) ?? "Unknown club",
     });
   }
 

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { fixturePlayers, matchEvents } from "@rugby365/db";
 import { getDb } from "./db";
 
@@ -41,6 +41,9 @@ export async function batchPlayerCareerStats(
   if (!playerIds.length) return result;
 
   const db = getDb();
+  const firstId = playerIds[0]!;
+  const playerFilter =
+    playerIds.length === 1 ? eq(matchEvents.playerId, firstId) : inArray(matchEvents.playerId, playerIds);
   const rows = await db
     .select({
       playerId: matchEvents.playerId,
@@ -48,7 +51,7 @@ export async function batchPlayerCareerStats(
       count: sql<number>`count(*)::int`,
     })
     .from(matchEvents)
-    .where(sql`${matchEvents.playerId} is not null`)
+    .where(playerFilter)
     .groupBy(matchEvents.playerId, matchEvents.eventType);
 
   const byPlayer = new Map<string, Record<string, number>>();

@@ -20,6 +20,7 @@ import {
   type ScheduleCompetition,
   type ScheduleFixture,
   type ScheduleTeam,
+  formatRoundLabel,
 } from "@/lib/match-schedule-utils";
 import { listCompetitions } from "./competition-admin-service";
 import { getDb } from "./db";
@@ -29,7 +30,7 @@ import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
 import { weatherConditionFromText } from "./weather-condition";
 import { sanitizePublicScheduleFixtures } from "./public-schedule-sanitize";
-import { resolvePublicClubNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
+import { resolvePublicClubNamesFromFixtureSlug, stripImportedDateSuffix } from "./table-lab/standings-fixture-dedupe";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -55,7 +56,7 @@ function toScheduleTeam(
   if (!team?.name) return null;
   return {
     id: team.id ?? null,
-    name: team.name,
+    name: stripImportedDateSuffix(team.name) || team.name,
     slug: team.slug ?? null,
     imageUrl: team.imageUrl ?? fallbackIcon ?? null,
   };
@@ -134,7 +135,7 @@ function mapDbFixture(
     seasonLabel: seasonFromDateKey(matchDate),
     kickoffAt: kickoffIso,
     status: row.status,
-    round: row.round,
+    round: formatRoundLabel(row.round),
     venue: row.venueName?.trim() || null,
     venueId: row.venueId ?? null,
     homeScore: row.homeScore,
@@ -195,20 +196,20 @@ function mapSdmsRow(
     seasonLabel: seasonFromDateKey(matchDate),
     kickoffAt,
     status: sdmsStatusToFixtureStatus(row.status),
-    round: row.round ?? null,
+    round: formatRoundLabel(row.round),
     venue: row.venue?.trim() || null,
     homeScore: row.home_team_score ?? 0,
     awayScore: row.away_team_score ?? 0,
     homeTeam: row.home_team_name
       ? {
-          name: row.home_team_name,
+          name: stripImportedDateSuffix(row.home_team_name) || row.home_team_name,
           slug: row.home_team_slug,
           imageUrl: row.home_team_icon ?? null,
         }
       : null,
     awayTeam: row.away_team_name
       ? {
-          name: row.away_team_name,
+          name: stripImportedDateSuffix(row.away_team_name) || row.away_team_name,
           slug: row.away_team_slug,
           imageUrl: row.away_team_icon ?? null,
         }

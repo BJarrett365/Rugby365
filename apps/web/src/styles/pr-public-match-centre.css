@@ -898,6 +898,13 @@
   color: var(--pr-mc-gold, #e7bc63);
 }
 
+.pr-mc-header__round {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--pr-mc-gold, #e7bc63);
+}
+
 .pr-mc-header__score {
   font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
   font-weight: 800;

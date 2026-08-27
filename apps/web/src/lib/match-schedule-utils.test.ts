@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPreviousMeetingHref,
+  formatRoundLabel,
   groupByCompetition,
   isFinished,
   isSdmsShapedMatchId,
   matchDetailHref,
+  publicMatchRoundLabel,
   type ScheduleCompetition,
   type ScheduleFixture,
 } from "./match-schedule-utils";
@@ -136,5 +138,16 @@ describe("matchDetailHref", () => {
   it("keeps SDMS ids in the match centre path", () => {
     const href = matchDetailHref({ ...base, externalMatchId: "294zg8oj" });
     expect(href?.startsWith("/matches/294zg8oj/")).toBe(true);
+  });
+});
+
+describe("formatRoundLabel", () => {
+  it("normalises numeric and prefixed rounds", () => {
+    expect(formatRoundLabel("1")).toBe("Round 1");
+    expect(formatRoundLabel("Round 3")).toBe("Round 3");
+    expect(formatRoundLabel("round 2")).toBe("Round 2");
+    expect(formatRoundLabel(null)).toBeNull();
+    expect(publicMatchRoundLabel(null)).toBe("—");
+    expect(publicMatchRoundLabel("Round 1")).toBe("Round 1");
   });
 });

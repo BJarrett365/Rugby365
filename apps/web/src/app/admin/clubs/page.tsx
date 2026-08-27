@@ -39,7 +39,7 @@ export default function ClubsAdminPage() {
   const [letter, setLetter] = useState<string>("ALL");
 
   useEffect(() => {
-    fetch("/api/admin/teams")
+    fetch("/api/admin/teams?catalog=1")
       .then((res) => res.json())
       .then((data) => {
         setClubs((data.teams ?? []) as ClubRow[]);
@@ -77,7 +77,7 @@ export default function ClubsAdminPage() {
       <PageHeader
         eyebrow="CMS"
         title="Clubs"
-        description="Every club and national side in alphabetical order. Search or jump by letter, then open a club for squad, history and stats."
+        description="One card per club. Import clones, dated names and Wikipedia debris are hidden. Search or jump by letter, then open a club for squad, history and stats."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/teams" className="cms-btn cms-btn--secondary touch-target">
@@ -153,7 +153,9 @@ export default function ClubsAdminPage() {
                           {club.teamType ? ` · ${club.teamType}` : ""}
                           {` · ${club.sourceProvider}`}
                         </p>
-                        <p className="text-xs text-zinc-600 m-0 mt-1">Slug: {club.slug}</p>
+                        {club.slug.includes("__legacy__") || club.slug.length > 48 ? null : (
+                          <p className="text-xs text-zinc-600 m-0 mt-1">Slug: {club.slug}</p>
+                        )}
                         {club.slug === "south-africa" ? (
                           <p className="text-xs text-amber-200/80 m-0 mt-1">
                             Senior Springboks national team

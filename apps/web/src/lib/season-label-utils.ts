@@ -47,7 +47,8 @@ export function seasonSlugForKind(
   return kind === "club" ? seasonSlugFromStartYear(year) : String(year);
 }
 
-export function parseSeasonStartYear(label: string): number | null {
+export function parseSeasonStartYear(label: string | null | undefined): number | null {
+  if (!label) return null;
   const trimmed = label.trim();
   if (!trimmed) return null;
 

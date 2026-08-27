@@ -231,6 +231,19 @@ export function teamInitials(name: string | null | undefined): string {
   return name.trim().slice(0, 2).toUpperCase();
 }
 
+/** Public round label: "1" → "Round 1", already-prefixed values stay as-is. */
+export function formatRoundLabel(round: string | null | undefined): string | null {
+  const raw = (round ?? "").trim();
+  if (!raw) return null;
+  if (/^round\b/i.test(raw)) return raw.replace(/^round\s+/i, "Round ");
+  if (/^\d+$/.test(raw)) return `Round ${raw}`;
+  return raw;
+}
+
+export function publicMatchRoundLabel(round: string | null | undefined): string {
+  return formatRoundLabel(round) ?? "—";
+}
+
 /** Center-left status for public fixtures rows. */
 export function publicMatchStatusLabel(
   status: string,

@@ -29,11 +29,14 @@ export async function listPublicPlayersDirectory(input: {
   page?: number;
   pageSize?: number;
   q?: string;
+  /** Skip appearance counts — used by compare search so large lists stay fast. */
+  lite?: boolean;
 }): Promise<PublicPlayerDirectoryResult> {
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(100, Math.max(12, input.pageSize ?? 48));
   const q = input.q?.trim() ?? "";
-  const cacheKey = `players:dir:${page}:${pageSize}:${q.toLowerCase()}`;
+  const lite = Boolean(input.lite);
+  const cacheKey = `players:dir:${page}:${pageSize}:${q.toLowerCase()}:${lite ? "lite" : "full"}`;
 
   return cachedPublic(cacheKey, PUBLIC_CACHE_TTL.playerDirectory, async () => {
   const db = getDb();
@@ -65,7 +68,9 @@ export async function listPublicPlayersDirectory(input: {
       clubTeamName: teams.name,
       countryName: players.countryName,
       imageUrl: players.imageUrl,
-      appearanceCount: sql<number>`(
+      appearanceCount: lite
+        ? sql<number>`0`
+        : sql<number>`(
         select count(*)::int from ${fixturePlayers} fp where fp.player_id = ${players.id}
       )`,
     })

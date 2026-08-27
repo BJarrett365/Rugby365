@@ -3,7 +3,7 @@
  */
 import "server-only";
 
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, like, ne, sql } from "drizzle-orm";
 import { playerRatings, players } from "@rugby365/db";
 import { getDb } from "./db";
 import {
@@ -70,28 +70,50 @@ function scoresFromRatingRow(row: {
 
 async function loadSideBySlug(slug: string): Promise<PlayerComparisonSide | null> {
   const db = getDb();
-  const [row] = await db
-    .select({
-      playerId: players.id,
-      slug: players.slug,
-      name: players.name,
-      fullName: players.fullName,
-      knownAs: players.knownAs,
-      imageUrl: players.imageUrl,
-      positionName: players.positionName,
-      playerRating: playerRatings.playerRating,
-      kickingRating: playerRatings.kickingRating,
-      playmakingRating: playerRatings.playmakingRating,
-      gameManagementRating: playerRatings.gameManagementRating,
-      attackRating: playerRatings.attackRating,
-      defenceRating: playerRatings.defenceRating,
-      physicalRating: playerRatings.physicalRating,
-      modelVersion: playerRatings.modelVersion,
-    })
+  const requested = slug.trim();
+  if (!requested) return null;
+  const selectShape = {
+    playerId: players.id,
+    slug: players.slug,
+    name: players.name,
+    fullName: players.fullName,
+    knownAs: players.knownAs,
+    imageUrl: players.imageUrl,
+    positionName: players.positionName,
+    playerRating: playerRatings.playerRating,
+    kickingRating: playerRatings.kickingRating,
+    playmakingRating: playerRatings.playmakingRating,
+    gameManagementRating: playerRatings.gameManagementRating,
+    attackRating: playerRatings.attackRating,
+    defenceRating: playerRatings.defenceRating,
+    physicalRating: playerRatings.physicalRating,
+    modelVersion: playerRatings.modelVersion,
+  };
+  const [exact] = await db
+    .select(selectShape)
     .from(players)
     .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
-    .where(and(eq(players.slug, slug), eq(players.isPublic, true)))
+    .where(and(eq(players.slug, requested), eq(players.isPublic, true)))
     .limit(1);
+  let row = exact ?? null;
+  if (!row) {
+    const prefix = requested.replace(/[%_]/g, "");
+    const candidates = await db
+      .select(selectShape)
+      .from(players)
+      .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
+      .where(and(like(players.slug, `${prefix}-%`), eq(players.isPublic, true)))
+      .limit(12);
+    row =
+      candidates
+        .slice()
+        .sort((a, b) => {
+          const aRated = a.playerRating != null ? 1 : 0;
+          const bRated = b.playerRating != null ? 1 : 0;
+          if (aRated !== bRated) return bRated - aRated;
+          return a.slug.length - b.slug.length;
+        })[0] ?? null;
+  }
   if (!row) return null;
   return {
     playerId: row.playerId,

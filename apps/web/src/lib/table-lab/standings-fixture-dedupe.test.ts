@@ -10,6 +10,7 @@ import {
   resolveTeamNamesFromFixtureSlug,
   scoreFixtureForStandingsDedupe,
   standingsMatchDayKey,
+  stripImportedDateSuffix,
 } from "./standings-fixture-dedupe";
 
 describe("standings fixture dedupe", () => {
@@ -24,6 +25,27 @@ describe("standings fixture dedupe", () => {
     expect(isUnknownStandingsTeamName("Unknown team e416a7d7de5e")).toBe(true);
     expect(isUnknownStandingsTeamName("Orphan")).toBe(true);
     expect(isUnknownStandingsTeamName("Argentina")).toBe(false);
+  });
+
+  it("strips clone-import date suffixes from display names", () => {
+    expect(stripImportedDateSuffix("Counties Manukau 2026 08 23 2")).toBe("Counties Manukau");
+    expect(stripImportedDateSuffix("Auckland 2026 08 22 2")).toBe("Auckland");
+    expect(stripImportedDateSuffix("Glasgow Warriors 2026 02 28__legacy__01a15850")).toBe(
+      "Glasgow Warriors",
+    );
+    expect(stripImportedDateSuffix("Auckland")).toBe("Auckland");
+    expect(stripImportedDateSuffix("Benetton Dp9zn98l")).toBe("Benetton");
+    expect(canonicalStandingsTeamName("Auckland 2026 08 22 2")).toBe("Auckland");
+  });
+
+  it("strips date suffixes from known public club names", () => {
+    expect(
+      resolvePublicClubNamesFromFixtureSlug(
+        "north-harbour-v-auckland-2026-08-22-2",
+        "North Harbour",
+        "Auckland 2026 08 22 2",
+      ),
+    ).toEqual({ homeName: "North Harbour", awayName: "Auckland" });
   });
 
   it("keeps Currie Cup Pumas as a club when recovering public names from slug", () => {

@@ -4,7 +4,7 @@
  */
 import "server-only";
 
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   fixturePlayers,
@@ -301,27 +301,36 @@ export async function getCompareLitePlayer(
   const db = getDb();
   const club = alias(teams, "compare_club");
   const nation = alias(teams, "compare_nation");
+  const requested = slug.trim();
+  if (!requested) return null;
 
-  const [row] = await db
-    .select({
-      playerId: players.id,
-      slug: players.slug,
-      name: players.name,
-      fullName: players.fullName,
-      knownAs: players.knownAs,
-      imageUrl: players.imageUrl,
-      badgeImageUrl: players.badgeImageUrl,
-      positionName: players.positionName,
-      birthDate: players.birthDate,
-      heightCm: players.heightCm,
-      weightKg: players.weightKg,
-      caps: players.verifiedInternationalCaps,
-      clubName: club.name,
-      nationName: nation.name,
-      playerRating: playerRatings.playerRating,
-      formScore: playerRatings.formScore,
-      marketValueGbp: playerMarketValues.marketValueGbp,
-    })
+  const selectShape = {
+    playerId: players.id,
+    slug: players.slug,
+    name: players.name,
+    fullName: players.fullName,
+    knownAs: players.knownAs,
+    imageUrl: players.imageUrl,
+    badgeImageUrl: players.badgeImageUrl,
+    positionName: players.positionName,
+    birthDate: players.birthDate,
+    heightCm: players.heightCm,
+    weightKg: players.weightKg,
+    caps: players.verifiedInternationalCaps,
+    clubName: club.name,
+    nationName: nation.name,
+    playerRating: playerRatings.playerRating,
+    formScore: playerRatings.formScore,
+    marketValueGbp: playerMarketValues.marketValueGbp,
+  };
+
+  const published = and(
+    eq(players.isPublic, true),
+    eq(players.publishStatus, "published"),
+  );
+
+  const [exact] = await db
+    .select(selectShape)
     .from(players)
     .leftJoin(club, eq(club.id, players.clubTeamId))
     .leftJoin(nation, eq(nation.id, players.internationalTeamId))
@@ -333,14 +342,37 @@ export async function getCompareLitePlayer(
         eq(playerMarketValues.isCurrent, true),
       ),
     )
-    .where(
-      and(
-        eq(players.slug, slug),
-        eq(players.isPublic, true),
-        eq(players.publishStatus, "published"),
-      ),
-    )
+    .where(and(eq(players.slug, requested), published))
     .limit(1);
+
+  let row = exact ?? null;
+  if (!row) {
+    const prefix = requested.replace(/[%_]/g, "");
+    const candidates = await db
+      .select(selectShape)
+      .from(players)
+      .leftJoin(club, eq(club.id, players.clubTeamId))
+      .leftJoin(nation, eq(nation.id, players.internationalTeamId))
+      .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
+      .leftJoin(
+        playerMarketValues,
+        and(
+          eq(playerMarketValues.playerId, players.id),
+          eq(playerMarketValues.isCurrent, true),
+        ),
+      )
+      .where(and(like(players.slug, `${prefix}-%`), published))
+      .limit(12);
+    row =
+      candidates
+        .slice()
+        .sort((a, b) => {
+          const aRated = a.playerRating != null ? 1 : 0;
+          const bRated = b.playerRating != null ? 1 : 0;
+          if (aRated !== bRated) return bRated - aRated;
+          return a.slug.length - b.slug.length;
+        })[0] ?? null;
+  }
 
   if (!row) return null;
 

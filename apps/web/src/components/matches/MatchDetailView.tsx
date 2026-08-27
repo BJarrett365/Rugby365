@@ -39,6 +39,8 @@ import type { MatchAnimationTabBadge } from "@/lib/match-animation-availability"
 import { youtubeEmbedSrc } from "@/lib/youtube-embed";
 import { resolveWeatherCondition } from "@/lib/weather-condition";
 import { isFixtureRatingsPublished } from "@/lib/match-rating-math";
+import { formatRoundLabel } from "@/lib/match-schedule-utils";
+import { publicTeamDisplayName } from "@/lib/table-lab/standings-fixture-dedupe";
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso);
@@ -149,9 +151,12 @@ async function MatchDetailPanel({
   bettingIntel: Awaited<ReturnType<typeof buildMatchBettingIntelligence>> | null;
 }) {
   const { detail, lineups, matchStats, playerStats, planetRugbyUrl, cmsFixture, entities } = data;
+  detail.home_team_name = publicTeamDisplayName(detail.home_team_name) || detail.home_team_name;
+  detail.away_team_name = publicTeamDisplayName(detail.away_team_name) || detail.away_team_name;
   const mappedPlayers = Object.keys(entities.playersByExternalId).length;
   const homeImageUrl = entities.homeTeam?.imageUrl ?? detail.home_team_icon ?? null;
   const awayImageUrl = entities.awayTeam?.imageUrl ?? detail.away_team_icon ?? null;
+  const roundLabel = formatRoundLabel(detail.round);
 
   if (tab === "animation") {
     if (!animationPayload) {
@@ -600,6 +605,7 @@ export async function MatchDetailView({
                 ) : null}
               </div>
               <div className="pr-mc-header__centre">
+                {roundLabel ? <span className="pr-mc-header__round">{roundLabel}</span> : null}
                 <span className="pr-mc-header__status">{statusLabel(detail.status)}</span>
                 <span className="pr-mc-header__score">
                   {detail.home_team_score} – {detail.away_team_score}

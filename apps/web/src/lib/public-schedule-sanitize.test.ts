@@ -36,16 +36,30 @@ describe("sanitizePublicScheduleFixtures", () => {
     expect(rows[0]?.awayTeam?.name).toBe("Griquas");
   });
 
-  it("drops matches that still have unknown sides after slug recovery", () => {
+  it("keeps matches with unrecovered sides as TBC instead of dropping them", () => {
     const rows = sanitizePublicScheduleFixtures([
       fixture({
         id: "1",
-        slug: "mystery-hash-only",
+        slug: "orphan-abc-v-orphan-def",
         homeTeam: { name: "Unknown team abc" },
         awayTeam: { name: "Unknown team def" },
       }),
     ]);
-    expect(rows).toHaveLength(0);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.homeTeam?.name).toBe("TBC");
+    expect(rows[0]?.awayTeam?.name).toBe("TBC");
+  });
+
+  it("strips imported date suffixes from club names", () => {
+    const rows = sanitizePublicScheduleFixtures([
+      fixture({
+        id: "1",
+        slug: "auckland-v-counties-manukau-2026-08-23-2",
+        homeTeam: { name: "Auckland" },
+        awayTeam: { name: "Counties Manukau 2026 08 23 2" },
+      }),
+    ]);
+    expect(rows[0]?.awayTeam?.name).toBe("Counties Manukau");
   });
 
   it("collapses duplicate legacy clones onto the scored result", () => {

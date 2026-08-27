@@ -5,6 +5,11 @@ import {
   scoreFixtureForStandingsDedupe,
 } from "./table-lab/standings-fixture-dedupe";
 
+function publicSideName(name: string): string {
+  if (isUnknownStandingsTeamName(name)) return "TBC";
+  return name;
+}
+
 const PAST_RESULT_MS = 90 * 60 * 1000;
 
 /** Promote stale scored rows so the board shows a result instead of "vs". */
@@ -33,21 +38,18 @@ function publicMatchIdentity(fixture: ScheduleFixture): string | null {
   const away = (fixture.awayTeam?.name ?? "").trim().toLowerCase();
   const date = fixture.matchDate ?? fixture.kickoffAt?.slice(0, 10) ?? "";
   if (!home || !away || !date) return null;
+  if (home === "tbc" || away === "tbc") return null;
   return `${date}:${home}:${away}`;
 }
 
-function withResolvedClubNames(fixture: ScheduleFixture): ScheduleFixture | null {
+function withResolvedClubNames(fixture: ScheduleFixture): ScheduleFixture {
   const resolved = resolvePublicClubNamesFromFixtureSlug(
     fixture.slug,
     fixture.homeTeam?.name ?? "",
     fixture.awayTeam?.name ?? "",
   );
-  if (
-    isUnknownStandingsTeamName(resolved.homeName) ||
-    isUnknownStandingsTeamName(resolved.awayName)
-  ) {
-    return null;
-  }
+  const homeName = publicSideName(resolved.homeName);
+  const awayName = publicSideName(resolved.awayName);
   return {
     ...fixture,
     status: publicFixtureStatus(
@@ -57,24 +59,20 @@ function withResolvedClubNames(fixture: ScheduleFixture): ScheduleFixture | null
       fixture.awayScore,
     ),
     homeTeam: fixture.homeTeam
-      ? { ...fixture.homeTeam, name: resolved.homeName }
-      : { name: resolved.homeName },
+      ? { ...fixture.homeTeam, name: homeName }
+      : { name: homeName },
     awayTeam: fixture.awayTeam
-      ? { ...fixture.awayTeam, name: resolved.awayName }
-      : { name: resolved.awayName },
+      ? { ...fixture.awayTeam, name: awayName }
+      : { name: awayName },
   };
 }
 
 /**
- * Public /matches board: recover club names from slugs, hide leftover
- * Unknown/orphan sides, and collapse duplicate legacy clones to one row.
+ * Public /matches board: recover club names from slugs, keep remaining
+ * unknown sides as TBC, and collapse duplicate legacy clones to one row.
  */
 export function sanitizePublicScheduleFixtures(fixtures: ScheduleFixture[]): ScheduleFixture[] {
-  const named: ScheduleFixture[] = [];
-  for (const fixture of fixtures) {
-    const cleaned = withResolvedClubNames(fixture);
-    if (cleaned) named.push(cleaned);
-  }
+  const named = fixtures.map((fixture) => withResolvedClubNames(fixture));
 
   const buckets = new Map<string, ScheduleFixture[]>();
   const passthrough: ScheduleFixture[] = [];

@@ -21,6 +21,9 @@ describe("season-label-utils", () => {
     expect(parseSeasonStartYear("2012\u20132013")).toBe(2012);
     expect(parseSeasonStartYear("2012-2013")).toBe(2012);
     expect(parseSeasonStartYear("2026")).toBe(2026);
+    expect(parseSeasonStartYear(null)).toBeNull();
+    expect(parseSeasonStartYear(undefined)).toBeNull();
+    expect(parseSeasonStartYear("")).toBeNull();
   });
 
   it("normalizes labels to 2025\u201326 format", () => {

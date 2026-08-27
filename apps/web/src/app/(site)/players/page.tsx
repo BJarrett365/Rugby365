@@ -63,7 +63,7 @@ export default async function PublicPlayersDirectoryPage({ searchParams }: PageP
         <ul className="pr-players-directory__grid">
           {dir.rows.map((p) => (
             <li key={p.slug}>
-              <Link href={`/players/${p.slug}`} className="pr-players-directory__card">
+              <Link href={`/players/${p.slug}`} prefetch={false} className="pr-players-directory__card">
                 <TeamCrest name={p.name} imageUrl={p.imageUrl} size="md" />
                 <span className="pr-players-directory__name">{p.name}</span>
                 <span className="pr-players-directory__meta">

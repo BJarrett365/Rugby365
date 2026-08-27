@@ -41,7 +41,7 @@ function PlayerSearchOnly({
     setRosterLoading(true);
     void (async () => {
       try {
-        const res = await fetch(`/api/players/search?browse=1&pageSize=60`, {
+        const res = await fetch(`/api/players/search?browse=1&pageSize=100`, {
           cache: "no-store",
         });
         const json = (await res.json().catch(() => ({}))) as { rows?: SearchHit[] };

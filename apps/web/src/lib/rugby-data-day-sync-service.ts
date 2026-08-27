@@ -29,7 +29,7 @@ import {
   type RugbyDataSyncCandidate,
 } from "./rugby-data-day-sync";
 import { utcInstantFromZonedWallClock } from "@rugby365/import-sdk";
-import { addDaysToDateKey } from "./match-schedule-utils";
+import { addDaysToDateKey, formatRoundLabel } from "./match-schedule-utils";
 
 export type RugbyDataDaySyncResult = {
   dateKey: string;
@@ -145,8 +145,13 @@ async function applyScoreAndStatus(
     status = existing.status;
   }
 
-  const patch: Partial<{ homeScore: number; awayScore: number; status: string; providerSnapshot: unknown }> =
-    {};
+  const patch: Partial<{
+    homeScore: number;
+    awayScore: number;
+    status: string;
+    round: string;
+    providerSnapshot: unknown;
+  }> = {};
   let skippedLocked = 0;
   let scoreChanged = false;
   let statusChanged = false;
@@ -186,6 +191,11 @@ async function applyScoreAndStatus(
     }
   }
 
+  const roundLabel = formatRoundLabel(match.ro);
+  if (roundLabel && !existing.round?.trim()) {
+    patch.round = roundLabel;
+  }
+
   const prevSnap =
     existing.providerSnapshot && typeof existing.providerSnapshot === "object"
       ? (existing.providerSnapshot as Record<string, unknown>)
@@ -200,6 +210,7 @@ async function applyScoreAndStatus(
       ft: match.ft ?? null,
       st: match.st ?? match.cp ?? null,
       mins: match.mins ?? null,
+      ro: match.ro ?? null,
     },
   };
 
