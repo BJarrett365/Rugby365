@@ -27,3 +27,7 @@ alwaysApply: true
 |------|---------|
 | `/Users/barriejarrett/Projects/planetf1-live` | F1 live / historic app |
 | `/Users/barriejarrett/Projects/planet-sport-deck` | Planet Sport decks, company-introduction, brand intelligence UI |
+
+## Why mix-ups happened (do not repeat)
+
+Cursor workspace was Rugby365 while agents also touched planetf1-live / Planet Sport deck assets. A “commit/push all uncommitted” scooped ~213 wrong untracked files into `33da982` (match-ratings fix). Removed in `af24a1d`; gitignore + this rule added in `9db41a1`. Never stage untracked paths outside rugby product scope.

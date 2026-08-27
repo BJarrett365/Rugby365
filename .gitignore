@@ -12,3 +12,6 @@ public/company-introduction/
 docs/planet-sport-*.md
 **/company-introduction/
 apps/web/src/lib/.venue-audit-tmp.json
+# Accidental F1 drops (use planetf1-live)
+**/openf1/**
+**/planetf1/**
