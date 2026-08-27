@@ -9,8 +9,15 @@ export const metadata: Metadata = {
     "Who are the strongest coaches right now? Ranked by Rugby365 Coach Power Index — current strength, not overall career quality.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CoachPowerIndexLeaderboardPage() {
-  const rows = await listCoachPowerIndexRankings(100);
+  let rows: Awaited<ReturnType<typeof listCoachPowerIndexRankings>> = [];
+  try {
+    rows = await listCoachPowerIndexRankings(100);
+  } catch (err) {
+    console.error("[coaches/power-index] failed to load rankings", err);
+  }
   const updatedLabel = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
