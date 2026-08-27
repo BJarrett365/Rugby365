@@ -36,6 +36,9 @@ const CLUB_TEAM_ALIASES: Record<string, string> = {
   "natal sharks": "Sharks",
   "hollywood sharks": "Sharks",
   "hollywood cardiffs": "Cardiff Rugby",
+  "hawkes bay": "Hawke's Bay",
+  "hawke s bay": "Hawke's Bay",
+  "hawke's bay": "Hawke's Bay",
 };
 
 /** Core Rugby Championship / Tri-Nations sides (post-name normalisation). */
@@ -148,6 +151,47 @@ export function resolveTeamNamesFromFixtureSlug(
 
   if (isUnknownStandingsTeamName(home)) home = fromSlug(parts[0]!);
   if (isUnknownStandingsTeamName(away)) away = fromSlug(parts[1]!);
+  return { homeName: home, awayName: away };
+}
+
+/**
+ * Recover club names for the public fixtures board without national nicknames
+ * (`pumas` stays Pumas, not Argentina).
+ */
+export function resolvePublicClubNamesFromFixtureSlug(
+  slug: string | null | undefined,
+  homeName: string,
+  awayName: string,
+): { homeName: string; awayName: string } {
+  let home = homeName.trim();
+  let away = awayName.trim();
+  const homeUnknown = isUnknownStandingsTeamName(home);
+  const awayUnknown = isUnknownStandingsTeamName(away);
+  if (!homeUnknown && !awayUnknown) {
+    return {
+      homeName: canonicalStandingsTeamName(home),
+      awayName: canonicalStandingsTeamName(away),
+    };
+  }
+
+  const base = (slug ?? "").split("__legacy__")[0] ?? "";
+  const withoutDate = base.replace(/-\d{4}-\d{2}-\d{2}$/, "");
+  const parts = withoutDate.split("-v-");
+  if (parts.length !== 2) {
+    return { homeName: canonicalStandingsTeamName(home), awayName: canonicalStandingsTeamName(away) };
+  }
+
+  const fromSlug = (raw: string) => {
+    const cleaned = cleanFixtureSlugSideToken(raw.replace(/\bwrmru\d+\b/gi, " "));
+    const titled = cleaned
+      .replace(/-/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    return CLUB_TEAM_ALIASES[titled.toLowerCase()] ?? titled;
+  };
+  if (homeUnknown) home = fromSlug(parts[0]!);
+  if (awayUnknown) away = fromSlug(parts[1]!);
   return { homeName: home, awayName: away };
 }
 

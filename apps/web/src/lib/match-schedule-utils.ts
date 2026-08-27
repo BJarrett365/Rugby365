@@ -285,7 +285,16 @@ export function matchStatusShort(
 }
 
 export function isFinished(status: string): boolean {
-  return status === "full_time" || status === "live";
+  const s = status.trim().toLowerCase().replace(/\s+/g, "_");
+  return (
+    s === "full_time" ||
+    s === "live" ||
+    s === "result" ||
+    s === "finished" ||
+    s === "ft" ||
+    s === "complete" ||
+    s === "completed"
+  );
 }
 
 export function groupByCompetition(

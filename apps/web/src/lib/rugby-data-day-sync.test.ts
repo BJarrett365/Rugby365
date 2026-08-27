@@ -5,6 +5,8 @@ import {
   flattenRugbyDataDayMatches,
   listedMatchIdentityKey,
   parseRugbyDataScore,
+  pickRugbyDataSyncCandidate,
+  rugbyDataCandidateNameKeys,
   rugbyDataEventTypeToMatchEvent,
   rugbyDataStatusToFixtureStatus,
 } from "./rugby-data-day-sync";
@@ -61,5 +63,50 @@ describe("rugby-data-day-sync helpers", () => {
       0,
     );
     expect(id).toBe("rd:8909:try:3:6503:h:0");
+  });
+
+  it("matches unknown-named clones via fixture slug and picks the best duplicate", () => {
+    expect(
+      rugbyDataCandidateNameKeys({
+        id: "u",
+        slug: "counties-manukau-v-tasman-2026-08-16__legacy__1966f110",
+        homeName: "Unknown team 528a75ca0173",
+        awayName: "Tasman",
+      }),
+    ).toContain("counties manukau:tasman");
+
+    const picked = pickRugbyDataSyncCandidate(
+      [
+        {
+          id: "unknown-legacy",
+          slug: "auckland-v-wellington-2026-08-08__legacy__016700a7",
+          homeName: "Unknown team 4b02e612985e",
+          awayName: "Wellington",
+          status: "scheduled",
+          homeScore: 0,
+          awayScore: 0,
+        },
+        {
+          id: "zero-legacy",
+          slug: "auckland-v-wellington-2026-08-08__legacy__65c0a39c",
+          homeName: "Auckland",
+          awayName: "Wellington",
+          status: "scheduled",
+          homeScore: 0,
+          awayScore: 0,
+        },
+        {
+          id: "canonical",
+          slug: "auckland-v-wellington-2026-08-08",
+          homeName: "Auckland",
+          awayName: "Wellington",
+          status: "scheduled",
+          homeScore: 0,
+          awayScore: 0,
+        },
+      ],
+      "auckland:wellington",
+    );
+    expect(picked?.id).toBe("canonical");
   });
 });

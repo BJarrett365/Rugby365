@@ -19,12 +19,14 @@ import {
   filterRugbyDataMatchesOnDate,
   flattenRugbyDataDayMatches,
   listedMatchIdentityKey,
+  listRugbyDataSyncCandidates,
   parseRugbyDataScore,
+  pickRugbyDataSyncCandidate,
   rugbyDataEventTypeToMatchEvent,
   rugbyDataStatusToFixtureStatus,
-  teamNameKey,
   type RugbyDataInfoEvent,
   type RugbyDataListedMatch,
+  type RugbyDataSyncCandidate,
 } from "./rugby-data-day-sync";
 import { utcInstantFromZonedWallClock } from "@rugby365/import-sdk";
 import { addDaysToDateKey } from "./match-schedule-utils";
@@ -55,15 +57,8 @@ function dateFromListed(match: RugbyDataListedMatch): string {
 
 async function resolveFixtureForListedMatch(
   match: RugbyDataListedMatch,
-  candidates: Array<{
-    id: string;
-    homeTeamId: string | null;
-    awayTeamId: string | null;
-    homeName: string | null;
-    awayName: string | null;
-    kickoffAt: Date | null;
-  }>,
-): Promise<{ fixtureId: string; via: "mapping" | "identity" } | null> {
+  candidates: RugbyDataSyncCandidate[],
+): Promise<{ fixtureId: string; via: "mapping" | "identity"; siblingIds: string[] } | null> {
   const externalId = String(match.id);
   const mapped = await getConfirmedMapping({
     provider: PROVIDER_RUGBY_DATA,
@@ -71,7 +66,15 @@ async function resolveFixtureForListedMatch(
     externalId,
   });
   if (mapped?.rugby365Id) {
-    return { fixtureId: mapped.rugby365Id, via: "mapping" };
+    const identity = listedMatchIdentityKey(match);
+    const siblings = identity
+      ? listRugbyDataSyncCandidates(candidates, identity.slice(11)).map((row) => row.id)
+      : [];
+    return {
+      fixtureId: mapped.rugby365Id,
+      via: "mapping",
+      siblingIds: [...new Set([mapped.rugby365Id, ...siblings])],
+    };
   }
 
   const existingMap = await upsertProviderMapping({
@@ -90,30 +93,20 @@ async function resolveFixtureForListedMatch(
 
   const identity = listedMatchIdentityKey(match);
   if (!identity) return null;
+  const wantNames = identity.slice(11); // after YYYY-MM-DD:
+  const hit = pickRugbyDataSyncCandidate(candidates, wantNames);
+  if (!hit) return null;
 
-  const hits = candidates.filter((row) => {
-    const key = `${String(row.kickoffAt?.toISOString() ?? "").slice(0, 10)}:${teamNameKey(row.homeName)}:${teamNameKey(row.awayName)}`;
-    // kickoff ISO date may differ from wall-clock date; also try name-only on candidate list for that day
-    const nameKey = `${teamNameKey(row.homeName)}:${teamNameKey(row.awayName)}`;
-    const wantNames = identity.slice(11); // after YYYY-MM-DD:
-    return nameKey === wantNames;
-  });
-
-  if (hits.length === 1) {
-    // Unique home/away pair on that calendar day is enough to confirm P1↔CMS match link.
-    await confirmMapping({
-      provider: PROVIDER_RUGBY_DATA,
-      entityType: "match",
-      externalId,
-      rugby365Id: hits[0].id,
-      rugby365Name: `${hits[0].homeName ?? "?"} v ${hits[0].awayName ?? "?"}`,
-      confirmedBy: "rugby_data_day_sync",
-      notes: `Day identity match (${match.dt ?? dateFromListed(match)})`,
-    }).catch(() => null);
-    return { fixtureId: hits[0].id, via: "identity" };
-  }
-
-  return null;
+  await confirmMapping({
+    provider: PROVIDER_RUGBY_DATA,
+    entityType: "match",
+    externalId,
+    rugby365Id: hit.id,
+    rugby365Name: `${hit.homeName ?? "?"} v ${hit.awayName ?? "?"}`,
+    confirmedBy: "rugby_data_day_sync",
+    notes: `Day identity match (${match.dt ?? dateFromListed(match)})`,
+  }).catch(() => null);
+  return { fixtureId: hit.id, via: "identity", siblingIds: listRugbyDataSyncCandidates(candidates, wantNames).map((row) => row.id) };
 }
 
 async function applyScoreAndStatus(
@@ -306,10 +299,11 @@ async function syncEventsFromInfo(
  */
 export async function syncRugbyDataFixturesForDate(
   dateKey: string,
-  options: { timeZone?: string; syncEvents?: boolean } = {},
+  options: { timeZone?: string; syncEvents?: boolean; mirrorSupabase?: boolean } = {},
 ): Promise<RugbyDataDaySyncResult> {
   const timeZone = options.timeZone ?? "Europe/London";
   const syncEvents = options.syncEvents !== false;
+  const mirrorSupabase = options.mirrorSupabase !== false;
   const result: RugbyDataDaySyncResult = {
     dateKey,
     listed: 0,
@@ -339,14 +333,18 @@ export async function syncRugbyDataFixturesForDate(
     .where(and(gte(fixtures.kickoffAt, start), lt(fixtures.kickoffAt, end)));
   const teamRows = await db.select({ id: teams.id, name: teams.name }).from(teams);
   const teamById = Object.fromEntries(teamRows.map((t) => [t.id, t.name]));
-  const candidates = fixtureRows.map((f) => ({
-    id: f.id,
-    homeTeamId: f.homeTeamId,
-    awayTeamId: f.awayTeamId,
-    homeName: f.homeTeamId ? teamById[f.homeTeamId] ?? null : null,
-    awayName: f.awayTeamId ? teamById[f.awayTeamId] ?? null : null,
-    kickoffAt: f.kickoffAt,
-  }));
+  const candidates: Array<RugbyDataSyncCandidate & { homeTeamId: string | null; awayTeamId: string | null }> =
+    fixtureRows.map((f) => ({
+      id: f.id,
+      slug: f.slug,
+      homeTeamId: f.homeTeamId,
+      awayTeamId: f.awayTeamId,
+      homeName: f.homeTeamId ? teamById[f.homeTeamId] ?? null : null,
+      awayName: f.awayTeamId ? teamById[f.awayTeamId] ?? null : null,
+      status: f.status,
+      homeScore: f.homeScore,
+      awayScore: f.awayScore,
+    }));
 
   for (const match of onDay) {
     try {
@@ -357,10 +355,13 @@ export async function syncRugbyDataFixturesForDate(
       }
       result.matched += 1;
 
-      const scoreResult = await applyScoreAndStatus(resolved.fixtureId, match);
-      if (scoreResult.scoreChanged) result.scoresUpdated += 1;
-      if (scoreResult.statusChanged) result.statusesUpdated += 1;
-      result.skippedLocked += scoreResult.skippedLocked;
+      const targetIds = [...new Set([resolved.fixtureId, ...resolved.siblingIds])];
+      for (const fixtureId of targetIds) {
+        const scoreResult = await applyScoreAndStatus(fixtureId, match);
+        if (scoreResult.scoreChanged) result.scoresUpdated += 1;
+        if (scoreResult.statusChanged) result.statusesUpdated += 1;
+        result.skippedLocked += scoreResult.skippedLocked;
+      }
 
       if (syncEvents) {
         const fixture = candidates.find((c) => c.id === resolved.fixtureId);
@@ -381,16 +382,18 @@ export async function syncRugbyDataFixturesForDate(
     }
   }
 
-  try {
-    const { mirrorLiveFixturesToSupabase } = await import("./supabase-live-service");
-    const mirrored = await mirrorLiveFixturesToSupabase(dateKey, { timeZone });
-    result.supabaseUpserted = mirrored.upserted;
-    result.supabaseStoragePath = mirrored.storagePath;
-    result.errors.push(...mirrored.errors.map((e) => `supabase: ${e}`));
-  } catch (error) {
-    result.errors.push(
-      `supabase: ${error instanceof Error ? error.message : "mirror failed"}`,
-    );
+  if (mirrorSupabase) {
+    try {
+      const { mirrorLiveFixturesToSupabase } = await import("./supabase-live-service");
+      const mirrored = await mirrorLiveFixturesToSupabase(dateKey, { timeZone });
+      result.supabaseUpserted = mirrored.upserted;
+      result.supabaseStoragePath = mirrored.storagePath;
+      result.errors.push(...mirrored.errors.map((e) => `supabase: ${e}`));
+    } catch (error) {
+      result.errors.push(
+        `supabase: ${error instanceof Error ? error.message : "mirror failed"}`,
+      );
+    }
   }
 
   return result;

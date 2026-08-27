@@ -9,7 +9,8 @@ import {
   getTeamOfWeekEditionBundle,
   listPublishedEditionsForCompetition,
 } from "@/lib/team-of-week-service";
-import { presentTeamOfWeekBundle, hydrateTotwLiveImages } from "@/lib/team-of-week-public";
+import { presentTeamOfWeekBundle } from "@/lib/team-of-week-public";
+import { hydrateTotwLiveImages } from "@/lib/team-of-week-hydrate";
 import "@/styles/team-of-week.css";
 
 export const dynamic = "force-dynamic";

@@ -28,6 +28,8 @@ import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 import { syncRugbyDataFixturesForDate } from "./rugby-data-day-sync-service";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
 import { weatherConditionFromText } from "./weather-condition";
+import { sanitizePublicScheduleFixtures } from "./public-schedule-sanitize";
+import { resolvePublicClubNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
 
 function sdmsStatusToFixtureStatus(status: string): string {
   if (status === "Result") return "full_time";
@@ -101,6 +103,27 @@ function mapDbFixture(
 ): ScheduleFixture {
   const kickoffIso = row.kickoffAt?.toISOString() ?? null;
   const matchDate = kickoffDateKey(kickoffIso, timeZone);
+  const resolved = resolvePublicClubNamesFromFixtureSlug(
+    row.slug,
+    row.homeTeam?.name ?? "",
+    row.awayTeam?.name ?? "",
+  );
+  const homeTeam = toScheduleTeam(
+    row.homeTeam
+      ? { ...row.homeTeam, name: resolved.homeName || row.homeTeam.name }
+      : resolved.homeName
+        ? { name: resolved.homeName }
+        : null,
+    icons?.home,
+  );
+  const awayTeam = toScheduleTeam(
+    row.awayTeam
+      ? { ...row.awayTeam, name: resolved.awayName || row.awayTeam.name }
+      : resolved.awayName
+        ? { name: resolved.awayName }
+        : null,
+    icons?.away,
+  );
   return {
     id: row.id,
     slug: row.slug,
@@ -138,8 +161,8 @@ function mapDbFixture(
     isNeutralVenue: Boolean(row.isNeutralVenue),
     hasWatchalong: Boolean(extractYoutubeVideoId(row.watchalongYoutubeUrl)),
     hasHighlights: Boolean(extractYoutubeVideoId(row.highlightsYoutubeUrl)),
-    homeTeam: toScheduleTeam(row.homeTeam, icons?.home),
-    awayTeam: toScheduleTeam(row.awayTeam, icons?.away),
+    homeTeam,
+    awayTeam,
     externalMatchId: row.externalMatchId,
     planetRugbyUrl: row.planetRugbyUrl,
     source: "db",
@@ -231,6 +254,18 @@ async function listDbFixturesForDate(dateKey: string, timeZone: string) {
     });
 }
 
+function fixtureNeedsScoreHeal(row: {
+  status: string;
+  kickoffAt: Date | null;
+  homeScore: number;
+  awayScore: number;
+}): boolean {
+  if (/full_time|live|half_time|result|finished/i.test(row.status)) return false;
+  if ((row.homeScore ?? 0) + (row.awayScore ?? 0) > 0) return false;
+  if (!row.kickoffAt) return false;
+  return Date.now() - row.kickoffAt.getTime() > 90 * 60 * 1000;
+}
+
 export async function getScheduleForDate(
   dateKey: string,
   timeZone: string = DEFAULT_FIXTURES_TIMEZONE,
@@ -266,14 +301,28 @@ export async function getScheduleForDate(
       listCompetitions(),
       listDbFixturesForDate(dateKey, timeZone),
     ]);
+    if (dbRows.some(fixtureNeedsScoreHeal)) {
+      void syncRugbyDataFixturesForDate(dateKey, {
+        timeZone,
+        syncEvents: false,
+        mirrorSupabase: false,
+      }).catch((error) => {
+        console.warn(
+          `[schedule] lite rugby_data score sync failed for ${dateKey}:`,
+          error instanceof Error ? error.message : error,
+        );
+      });
+    }
     const competitionList: ScheduleCompetition[] = competitions.map((c) => ({
       id: c.id,
       name: c.name,
       slug: c.slug,
     }));
-    let fixtures = dbRows
-      .map((row) => mapDbFixture(row, timeZone))
-      .filter((f) => fixtureOnCalendarDate(f, dateKey));
+    let fixtures = sanitizePublicScheduleFixtures(
+      dbRows
+        .map((row) => mapDbFixture(row, timeZone))
+        .filter((f) => fixtureOnCalendarDate(f, dateKey)),
+    );
     if (competitionIdFilter) {
       fixtures = fixtures.filter((f) => f.competitionId === competitionIdFilter);
     }
@@ -452,11 +501,12 @@ export async function getScheduleForDate(
     );
   }
 
+  const publicFixtures = sanitizePublicScheduleFixtures(enriched);
   return {
-    fixtures: enriched,
+    fixtures: publicFixtures,
     competitions: competitionList,
     // Count truly in-play fixtures only (not "all SDMS rows for the day").
-    liveCount: enriched.filter((f) => /live|half_time|half time/i.test(f.status)).length,
+    liveCount: publicFixtures.filter((f) => /live|half_time|half time/i.test(f.status)).length,
     dbCount: dbRowsAfterImport.length,
     datesWithMatches,
     timeZone,

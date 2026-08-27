@@ -6,6 +6,7 @@ import {
   isUnknownStandingsTeamName,
   pickCanonicalFixturesForStandings,
   pickCanonicalTeamIdByName,
+  resolvePublicClubNamesFromFixtureSlug,
   resolveTeamNamesFromFixtureSlug,
   scoreFixtureForStandingsDedupe,
   standingsMatchDayKey,
@@ -22,6 +23,16 @@ describe("standings fixture dedupe", () => {
   it("detects unknown/orphan team labels", () => {
     expect(isUnknownStandingsTeamName("Unknown team e416a7d7de5e")).toBe(true);
     expect(isUnknownStandingsTeamName("Argentina")).toBe(false);
+  });
+
+  it("keeps Currie Cup Pumas as a club when recovering public names from slug", () => {
+    expect(
+      resolvePublicClubNamesFromFixtureSlug(
+        "pumas-v-griquas-2026-08-21__legacy__6cbb44af",
+        "Unknown team ecea42c8880b",
+        "Griquas",
+      ),
+    ).toEqual({ homeName: "Pumas", awayName: "Griquas" });
   });
 
   it("resolves orphan names from fixture slug", () => {

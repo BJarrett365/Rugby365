@@ -1,5 +1,11 @@
 /** Pure helpers for Rugby Data (P1) day score/event sync. */
 
+import {
+  isUnknownStandingsTeamName,
+  resolvePublicClubNamesFromFixtureSlug,
+  resolveTeamNamesFromFixtureSlug,
+} from "./table-lab/standings-fixture-dedupe";
+
 export type RugbyDataListedMatch = {
   id: number | string;
   dt?: string | null;
@@ -148,4 +154,84 @@ export function listedMatchIdentityKey(match: RugbyDataListedMatch): string | nu
   const away = teamNameKey(match.competitors?.atn);
   if (!date || !home || !away) return null;
   return `${date}:${home}:${away}`;
+}
+
+export type RugbyDataSyncCandidate = {
+  id: string;
+  slug?: string | null;
+  homeName: string | null;
+  awayName: string | null;
+  status?: string | null;
+  homeScore?: number | null;
+  awayScore?: number | null;
+};
+
+/** Home:away keys a CMS row can match against a P1 listed match. */
+export function rugbyDataCandidateNameKeys(row: RugbyDataSyncCandidate): string[] {
+  const keys = new Set<string>();
+  const cms = `${teamNameKey(row.homeName)}:${teamNameKey(row.awayName)}`;
+  if (!cms.includes("unknown") && !cms.startsWith(":") && !cms.endsWith(":")) {
+    keys.add(cms);
+  }
+  const resolved = resolveTeamNamesFromFixtureSlug(row.slug, row.homeName ?? "", row.awayName ?? "");
+  if (
+    !isUnknownStandingsTeamName(resolved.homeName) &&
+    !isUnknownStandingsTeamName(resolved.awayName)
+  ) {
+    keys.add(`${teamNameKey(resolved.homeName)}:${teamNameKey(resolved.awayName)}`);
+  }
+  const slugKey = fixtureSlugNameKey(row.slug);
+  if (slugKey) keys.add(slugKey);
+  return [...keys];
+}
+
+function fixtureSlugNameKey(slug: string | null | undefined): string | null {
+  const base = (slug ?? "").split("__legacy__")[0] ?? "";
+  const withoutDate = base.replace(/-\d{4}-\d{2}-\d{2}$/, "");
+  const parts = withoutDate.split("-v-");
+  if (parts.length !== 2) return null;
+  const resolved = resolvePublicClubNamesFromFixtureSlug(slug, "Unknown", "Unknown");
+  const home = teamNameKey(resolved.homeName);
+  const away = teamNameKey(resolved.awayName);
+  if (!home || !away || home.includes("unknown") || away.includes("unknown")) return null;
+  return `${home}:${away}`;
+}
+
+export function scoreRugbyDataSyncCandidate(row: RugbyDataSyncCandidate): number {
+  let score = 0;
+  const home = row.homeName ?? "";
+  const away = row.awayName ?? "";
+  if (/^unknown\b/i.test(home) || /^unknown\b/i.test(away) || /^orphan-/i.test(home) || /^orphan-/i.test(away)) {
+    score -= 120;
+  }
+  if ((row.slug ?? "").includes("__legacy__")) score -= 80;
+  if ((row.status ?? "").toLowerCase() === "full_time") score += 40;
+  score += Math.min(80, (row.homeScore ?? 0) + (row.awayScore ?? 0));
+  return score;
+}
+
+export function listRugbyDataSyncCandidates(
+  candidates: RugbyDataSyncCandidate[],
+  wantNames: string,
+): RugbyDataSyncCandidate[] {
+  return candidates.filter((row) => rugbyDataCandidateNameKeys(row).includes(wantNames));
+}
+
+/**
+ * Pick the CMS fixture to receive P1 scores. Duplicate imports of the same
+ * match used to return no hit (`hits.length !== 1`), so August results never landed.
+ */
+export function pickRugbyDataSyncCandidate(
+  candidates: RugbyDataSyncCandidate[],
+  wantNames: string,
+): RugbyDataSyncCandidate | null {
+  const hits = listRugbyDataSyncCandidates(candidates, wantNames);
+  if (!hits.length) return null;
+  return (
+    hits.slice().sort((a, b) => {
+      const diff = scoreRugbyDataSyncCandidate(b) - scoreRugbyDataSyncCandidate(a);
+      if (diff !== 0) return diff;
+      return a.id.localeCompare(b.id);
+    })[0] ?? null
+  );
 }

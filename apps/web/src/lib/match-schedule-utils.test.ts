@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPreviousMeetingHref,
   groupByCompetition,
+  isFinished,
   isSdmsShapedMatchId,
   matchDetailHref,
   type ScheduleCompetition,
@@ -93,6 +94,16 @@ describe("isSdmsShapedMatchId", () => {
     expect(isSdmsShapedMatchId("9635")).toBe(false);
     expect(isSdmsShapedMatchId("352b6ba0-311c-4e2d-af78-72aa52edf241")).toBe(false);
     expect(isSdmsShapedMatchId("sdms:294zg8oj")).toBe(false);
+  });
+});
+
+describe("isFinished", () => {
+  it("treats full-time aliases as finished so results show scores", () => {
+    expect(isFinished("full_time")).toBe(true);
+    expect(isFinished("result")).toBe(true);
+    expect(isFinished("Finished")).toBe(true);
+    expect(isFinished("live")).toBe(true);
+    expect(isFinished("scheduled")).toBe(false);
   });
 });
 
