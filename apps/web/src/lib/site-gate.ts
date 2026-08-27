@@ -14,10 +14,8 @@ export function siteGatePassword(): string {
 
 export function siteGateEnabled(): boolean {
   const raw = process.env.SITE_GATE_ENABLED?.trim().toLowerCase();
-  if (raw === "0" || raw === "false" || raw === "off") return false;
-  // On by default in production / Netlify; off locally unless explicitly enabled.
-  if (raw === "1" || raw === "true" || raw === "on") return true;
-  return process.env.NODE_ENV === "production" || Boolean(process.env.NETLIFY);
+  // Explicit only — local stays open; Netlify sets SITE_GATE_ENABLED=true.
+  return raw === "1" || raw === "true" || raw === "on";
 }
 
 function toBase64Url(value: string): string {
