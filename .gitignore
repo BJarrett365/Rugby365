@@ -6,3 +6,9 @@ dist
 .DS_Store
 .env
 output/agent-sandbox
+
+# Wrong-project leftovers (Planet Sport deck / intelligence — use planet-sport-deck)
+public/company-introduction/
+docs/planet-sport-*.md
+**/company-introduction/
+apps/web/src/lib/.venue-audit-tmp.json

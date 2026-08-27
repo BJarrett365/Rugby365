@@ -1,0 +1,29 @@
+---
+description: Keep Rugby365 scoped to the rugby product — never mix Planet Sport deck or F1 work here
+alwaysApply: true
+---
+
+# Project boundary — Rugby365
+
+**This repo is:** Rugby365 / Planet Rugby product (matches, coaches, ratings, CMS, SDMS rugby data).
+
+**Workspace path:** `/Users/barriejarrett/Projects/Rugby365`
+
+## Do not create or commit here
+
+- Planet Sport investor / company-introduction decks or assets (`public/company-introduction/`, deck slides, competitive logos for the group deck)
+- Planet Sport Intelligence handoffs / build standards (`docs/planet-sport-*.md`)
+- PlanetF1 / OpenF1 / F1 live or historic app code and prompts
+- Files meant for `planet-sport-deck` or `planetf1-live`
+
+## Before writing files
+
+1. Confirm the Cursor workspace root is **Rugby365**. If the task is F1 or Planet Sport deck/intelligence, **stop** and switch workspace (`cd` / move agent root) to the correct project first.
+2. Legitimate “Planet Sport” mentions in this repo are only rugby product context (e.g. SDMS `planetsport.com` APIs, Planet Rugby media rights) — not group deck work.
+
+## Sibling projects (use those instead)
+
+| Path | Purpose |
+|------|---------|
+| `/Users/barriejarrett/Projects/planetf1-live` | F1 live / historic app |
+| `/Users/barriejarrett/Projects/planet-sport-deck` | Planet Sport decks, company-introduction, brand intelligence UI |
