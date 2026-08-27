@@ -4,6 +4,9 @@
 
 [build]
   command = "npm run build -w @rugby365/web"
+  # Must differ from package directory (apps/web) or the Next plugin refuses to run.
+  # The plugin still owns the real Next output; this only satisfies Netlify's path check.
+  publish = "apps/web/.next"
 
 [build.environment]
   NODE_VERSION = "22"
