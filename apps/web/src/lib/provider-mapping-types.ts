@@ -1,5 +1,7 @@
 /** Shared types for multi-provider entity mapping (P1 Rugby Data API + secondary sources). */
 
+/** Preferred / default external identity source for Rugby365. Never used as DB PK. */
+export const PROVIDER_SPORT_CC = "sport_cc" as const;
 export const PROVIDER_RUGBY_DATA = "rugby_data" as const;
 export const PROVIDER_SDMS = "sdms" as const;
 export const PROVIDER_SPORT365 = "sport365" as const;
@@ -10,10 +12,15 @@ export const PROVIDER_WORLD_RUGBY = "world_rugby" as const;
 export const PROVIDER_CLUB_WEBSITE = "club_website" as const;
 export const PROVIDER_ODDSCHECKER = "oddschecker" as const;
 export const PROVIDER_BMBETS = "bmbets" as const;
+export const PROVIDER_OPTA = "opta" as const;
 export const PROVIDER_MANUAL = "manual" as const;
 export const PROVIDER_AI = "ai" as const;
 
+/** Default provider when a Sport CC ID exists. */
+export const DEFAULT_EXTERNAL_PROVIDER = PROVIDER_SPORT_CC;
+
 export const DATA_INTEGRATION_PROVIDERS = [
+  PROVIDER_SPORT_CC,
   PROVIDER_RUGBY_DATA,
   PROVIDER_SDMS,
   PROVIDER_SPORT365,
@@ -24,6 +31,7 @@ export const DATA_INTEGRATION_PROVIDERS = [
   PROVIDER_CLUB_WEBSITE,
   PROVIDER_ODDSCHECKER,
   PROVIDER_BMBETS,
+  PROVIDER_OPTA,
   PROVIDER_MANUAL,
   PROVIDER_AI,
 ] as const;

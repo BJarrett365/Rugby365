@@ -33,6 +33,8 @@ export type UpsertMappingInput = {
   extras?: Record<string, unknown>;
   confirmedBy?: string | null;
   userLabel?: string;
+  /** Mark this provider mapping as the default for the entity (Sport CC preferred). */
+  isDefaultProvider?: boolean;
 };
 
 export async function listProviderMappings(filters: {
@@ -112,6 +114,10 @@ export async function upsertProviderMapping(
 
   const now = new Date();
   const status = input.status ?? existing?.status ?? "unmapped";
+  const isDefaultProvider =
+    input.isDefaultProvider ??
+    existing?.isDefaultProvider ??
+    input.provider === "sport_cc";
   const next = {
     provider: input.provider,
     entityType: input.entityType,
@@ -130,6 +136,9 @@ export async function upsertProviderMapping(
         : input.conflictStatus,
     notes: input.notes === undefined ? existing?.notes ?? null : input.notes,
     extras: (input.extras ?? existing?.extras ?? {}) as Record<string, unknown>,
+    isDefaultProvider,
+    firstSeenAt: existing?.firstSeenAt ?? now,
+    lastSeenAt: now,
     confirmedBy:
       status === "confirmed"
         ? input.confirmedBy ?? existing?.confirmedBy ?? input.userLabel ?? "system"
