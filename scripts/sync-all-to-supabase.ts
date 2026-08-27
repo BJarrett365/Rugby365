@@ -1,9 +1,16 @@
 /**
- * Map all primary Postgres data into the configured Supabase project.
+ * Upsert data from local/primary Postgres into the configured Supabase project.
+ *
+ * Source DB (read):
+ *   LOCAL_DATABASE_URL  (preferred — local Docker)
+ *   else DATABASE_URL
+ *
+ * Destination (write):
+ *   SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY  (Supabase JS upsert)
  *
  * Usage:
- *   DATABASE_URL=... npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-to-supabase.ts
- *   npx tsx --require ./scripts/stub-server-only.cjs scripts/sync-all-to-supabase.ts --tables=teams,players,fixtures
+ *   set -a && source .env && set +a && npm run sync:to-supabase
+ *   npm run sync:to-supabase -- --tables=teams,players,fixtures
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -31,9 +38,37 @@ function loadDotEnv() {
 }
 
 loadDotEnv();
-process.env.DATABASE_URL ??= "postgresql://rugby365:rugby365@localhost:5433/rugby365";
+
+const sourceUrl =
+  process.env.LOCAL_DATABASE_URL?.trim() ||
+  process.env.DATABASE_URL?.trim() ||
+  "postgresql://rugby365:rugby365@localhost:5433/rugby365";
+
+// getDb() / drizzle reads DATABASE_URL — point it at the source for this run.
+process.env.DATABASE_URL = sourceUrl;
 
 async function main() {
+  if (!process.env.SUPABASE_URL?.trim() || !process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
+    throw new Error(
+      "Supabase destination missing: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env",
+    );
+  }
+
+  const sourceHost = (() => {
+    try {
+      return new URL(sourceUrl.replace(/^postgresql:/, "http:")).host;
+    } catch {
+      return "(source)";
+    }
+  })();
+  const destHost = (() => {
+    try {
+      return new URL(process.env.SUPABASE_URL!).host;
+    } catch {
+      return "supabase";
+    }
+  })();
+
   const { syncAllDataToSupabase } = await import(
     "../apps/web/src/lib/supabase-full-sync-service"
   );
@@ -46,10 +81,12 @@ async function main() {
         .filter(Boolean)
     : undefined;
 
+  console.log(`Sync source (Postgres): ${sourceHost}`);
+  console.log(`Sync destination (Supabase API): ${destHost}`);
   console.log(
     tables?.length
-      ? `Syncing selected tables to Supabase: ${tables.join(", ")}`
-      : "Syncing all mapped tables to Supabase…",
+      ? `Syncing selected tables: ${tables.join(", ")}`
+      : "Syncing all mapped tables…",
   );
 
   const result = await syncAllDataToSupabase({

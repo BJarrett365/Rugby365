@@ -4,7 +4,7 @@
  */
 import "server-only";
 
-import { and, asc, eq, gte, inArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   competitions,
@@ -41,6 +41,25 @@ export type PlayerNextMatchCard = {
   reason: string;
 };
 
+/** Internal Match Centre path from a Planet Rugby `/matches/...` URL only. */
+function matchCentrePathFromPlanetUrl(url: string | null | undefined): string | null {
+  if (!url?.trim()) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    // springboks.rugby (and similar) may be stored in planet_rugby_url — ignore those.
+    if (host !== "planetrugby.com" && host !== "rugby365.com") return null;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const matchesIdx = parts.indexOf("matches");
+    if (matchesIdx >= 0 && parts.length >= matchesIdx + 6) {
+      return `/${parts.slice(matchesIdx).join("/")}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 function buildHref(input: {
   planetRugbyUrl: string | null;
   externalMatchId: string | null;
@@ -52,20 +71,14 @@ function buildHref(input: {
   awayTeamName: string | null;
   kickoffAt: Date | null;
 }): string | null {
-  if (input.planetRugbyUrl) {
-    try {
-      const path = new URL(input.planetRugbyUrl).pathname;
-      const parts = path.split("/").filter(Boolean);
-      const matchesIdx = parts.indexOf("matches");
-      if (matchesIdx >= 0 && parts.length >= matchesIdx + 6) {
-        return `/${parts.slice(matchesIdx).join("/")}`;
-      }
-    } catch {
-      /* ignore */
-    }
-  }
+  const fromPlanet = matchCentrePathFromPlanetUrl(input.planetRugbyUrl);
+  if (fromPlanet) return fromPlanet;
 
   const matchId = input.externalMatchId?.trim() || null;
+  // SDMS / Planet match ids are short codes — skip UUID-shaped source ids (e.g. springboks.rugby).
+  if (!matchId || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchId)) {
+    return null;
+  }
   const slugify = (s: string) =>
     s
       .trim()
@@ -77,7 +90,7 @@ function buildHref(input: {
   const matchDate = input.kickoffAt ? input.kickoffAt.toISOString().slice(0, 10) : null;
   const competitionCode = input.competitionCode?.trim() || null;
   const competitionName = input.competitionName?.trim() || null;
-  if (!matchId || !homeSlug || !awaySlug || !matchDate || !competitionCode || !competitionName) {
+  if (!homeSlug || !awaySlug || !matchDate || !competitionCode || !competitionName) {
     return null;
   }
   return buildMatchDetailPath({
@@ -190,7 +203,7 @@ async function loadTeamFixtures(
     .where(
       and(
         or(eq(fixtures.homeTeamId, teamId), eq(fixtures.awayTeamId, teamId)),
-        or(gte(fixtures.kickoffAt, lookback), sql`lower(${fixtures.status}) like '%live%'`),
+        gte(fixtures.kickoffAt, lookback),
       ),
     )
     .orderBy(asc(fixtures.kickoffAt))
@@ -234,7 +247,8 @@ async function loadConfirmedSquadFixtures(
     .where(
       and(
         eq(fixturePlayers.playerId, playerId),
-        or(gte(fixtures.kickoffAt, lookback), sql`lower(${fixtures.status}) like '%live%'`),
+        // Include live only within lookback — never pull ancient "live" rows forever.
+        gte(fixtures.kickoffAt, lookback),
       ),
     )
     .orderBy(asc(fixtures.kickoffAt))

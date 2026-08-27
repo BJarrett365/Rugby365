@@ -27,9 +27,20 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "en.wikipedia.org", pathname: "/**" },
       { protocol: "https", hostname: "www.rugbypass.com", pathname: "/**" },
       { protocol: "https", hostname: "rugbypass.com", pathname: "/**" },
+      // Player OG / headshots (e.g. eu-cdn.rugbypass.com/og-images/player/…)
+      { protocol: "https", hostname: "eu-cdn.rugbypass.com", pathname: "/**" },
+      { protocol: "https", hostname: "cdn.rugbypass.com", pathname: "/**" },
+      { protocol: "https", hostname: "**.rugbypass.com", pathname: "/**" },
       { protocol: "https", hostname: "i0.wp.com", pathname: "/**" },
       { protocol: "https", hostname: "i1.wp.com", pathname: "/**" },
       { protocol: "https", hostname: "i2.wp.com", pathname: "/**" },
+      // Alamy licensed editorial (c7/c8 zoom comps, static assets)
+      { protocol: "https", hostname: "**.alamy.com", pathname: "/**" },
+      { protocol: "https", hostname: "c7.alamy.com", pathname: "/**" },
+      { protocol: "https", hostname: "c8.alamy.com", pathname: "/**" },
+      // Official SA Rugby / Springboks player headshots
+      { protocol: "https", hostname: "media-cdn.cortextech.io", pathname: "/**" },
+      { protocol: "https", hostname: "springboks.rugby", pathname: "/**" },
       {
         protocol: "https",
         hostname: "oguqhyggjbefrhzdxomk.supabase.co",

@@ -108,7 +108,7 @@ function StandingsTable({
                     ) : null}
                   </td>
                   <td>
-                    <FormDots sequence={row.formSequence ?? []} slots={formSlots} />
+                    <FormDots sequence={row.formSequence ?? []} slots={formSlots ?? 5} pad />
                   </td>
                   <td>{row.played}</td>
                   <td>{row.won}</td>

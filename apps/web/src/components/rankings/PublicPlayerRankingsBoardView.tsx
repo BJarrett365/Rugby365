@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { TeamCrest } from "@/components/matches/TeamCrest";
-import { rankingHref } from "@/lib/player-ranking-engine";
+import { formatRatingMovementDelta, rankingHref } from "@/lib/player-ranking-engine";
 import type {
   PublicRankingBoard,
   RankingFilterOptions,
@@ -13,11 +13,11 @@ function FormBlocks({
   blocks: Array<{ rating: number; band: string }>;
   formScore: number | null;
 }) {
-  if (!blocks.length) {
+  if (!blocks.length && formScore == null) {
     return <span className="pr-rankings__dash">—</span>;
   }
   const title = [
-    `Last 5: ${blocks.map((b) => b.rating.toFixed(1)).join(" · ")}`,
+    blocks.length ? `Last 5: ${blocks.map((b) => b.rating.toFixed(1)).join(" · ")}` : null,
     formScore != null ? `Form Score: ${formScore}` : null,
   ]
     .filter(Boolean)
@@ -27,6 +27,39 @@ function FormBlocks({
       {blocks.map((b, i) => (
         <span key={`${b.rating}-${i}`} className={`pr-rankings__form-block is-${b.band}`} />
       ))}
+      {formScore != null ? (
+        <span className="pr-rankings__form-score">{Math.round(formScore)}</span>
+      ) : null}
+    </span>
+  );
+}
+
+function PeakImpactCell({
+  peakRating,
+  impactScore,
+}: {
+  peakRating: number | null;
+  impactScore: number | null;
+}) {
+  if (peakRating == null && impactScore == null) {
+    return <span className="pr-rankings__dash">—</span>;
+  }
+  return (
+    <span
+      className="pr-rankings__peak"
+      title={[
+        peakRating != null ? `Peak ${peakRating.toFixed(1)}` : null,
+        impactScore != null ? `Impact ${impactScore.toFixed(1)}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")}
+    >
+      <span className="pr-rankings__peak-main">
+        {peakRating != null ? peakRating.toFixed(1) : "—"}
+      </span>
+      {impactScore != null ? (
+        <span className="pr-rankings__peak-sub">/ {impactScore.toFixed(0)}</span>
+      ) : null}
     </span>
   );
 }
@@ -34,10 +67,30 @@ function FormBlocks({
 function MovementCell({
   movement,
   previousRank,
+  movementDelta,
 }: {
   movement: "up" | "down" | "flat" | null;
   previousRank: number | null;
+  movementDelta: number | null;
 }) {
+  const deltaLabel = formatRatingMovementDelta(movementDelta);
+  if (deltaLabel != null && movementDelta != null) {
+    const dir =
+      movementDelta > 0.05 ? "up" : movementDelta < -0.05 ? "down" : "flat";
+    const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "—";
+    return (
+      <span
+        className={`pr-rankings__move is-${dir}`}
+        title={
+          previousRank != null
+            ? `Was #${previousRank} · Form trend ${deltaLabel}`
+            : `Form trend vs prior window: ${deltaLabel}`
+        }
+      >
+        {dir === "flat" ? `— ${deltaLabel}` : `${arrow} ${deltaLabel}`}
+      </span>
+    );
+  }
   if (movement == null) return <span className="pr-rankings__dash">—</span>;
   if (movement === "flat") {
     return (
@@ -192,7 +245,8 @@ export function PublicPlayerRankingsBoardView({
       <div className="pr-rankings__title-block">
         <h1 className="pr-rankings__title">{board.title}</h1>
         <p className="pr-rankings__info" title={board.eligibilityNote}>
-          Rankings are calculated by the R365 Rating Model
+          Rankings are calculated by the{" "}
+          {isAllTime ? "R365 Legend Score Model" : "R365 Rating Model"}
           {board.calculatedAt
             ? ` · Updated ${new Date(board.calculatedAt).toLocaleString("en-GB")}`
             : null}
@@ -315,7 +369,14 @@ export function PublicPlayerRankingsBoardView({
                       </span>
                     </td>
                     <td>
-                      <FormBlocks blocks={row.formBlocks} formScore={row.formScore} />
+                      {isAllTime ? (
+                        <PeakImpactCell
+                          peakRating={row.peakRating ?? row.positionPerformance}
+                          impactScore={row.impactScore ?? row.rankingScore}
+                        />
+                      ) : (
+                        <FormBlocks blocks={row.formBlocks} formScore={row.formScore} />
+                      )}
                     </td>
                     <td className="pr-rankings__num">
                       {row.internationalPerformance != null
@@ -326,12 +387,22 @@ export function PublicPlayerRankingsBoardView({
                       {row.clubPerformance != null ? Math.round(row.clubPerformance) : "—"}
                     </td>
                     <td className="pr-rankings__num">
-                      {row.positionPerformance != null
-                        ? Math.round(row.positionPerformance)
-                        : "—"}
+                      {isAllTime
+                        ? row.peakRating != null
+                          ? Math.round(row.peakRating)
+                          : row.positionPerformance != null
+                            ? Math.round(row.positionPerformance)
+                            : "—"
+                        : row.positionPerformance != null
+                          ? Math.round(row.positionPerformance)
+                          : "—"}
                     </td>
                     <td>
-                      <MovementCell movement={row.movement} previousRank={row.previousRank} />
+                      <MovementCell
+                        movement={row.movement}
+                        previousRank={row.previousRank}
+                        movementDelta={row.movementDelta ?? null}
+                      />
                     </td>
                   </tr>
                 ))}

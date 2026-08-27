@@ -24,6 +24,7 @@ export function isRealCompareRosterTeamName(name: string): boolean {
   }
   // Plain pool / group labels mistaken for teams
   if (/^(pool|group)\s*[a-f0-9]$/i.test(n)) return false;
+  if (/\bpool\s*[a-f]\b/i.test(n) && !/pontypool|liverpool/i.test(n)) return false;
 
   return true;
 }

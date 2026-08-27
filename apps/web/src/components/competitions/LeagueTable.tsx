@@ -60,7 +60,7 @@ export function LeagueTable({
               <td className="py-2.5 pr-3 font-medium text-zinc-100">{r.teamName}</td>
               {showForm && !compact && (
                 <td className="py-2.5 pr-3">
-                  <FormDots form={r.form} slots={5} />
+                  <FormDots form={r.form} slots={5} pad />
                 </td>
               )}
               <td className="py-2.5 pr-2 text-center font-mono tabular-nums">{r.played}</td>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeFormSequenceFromFixtures,
+  isPlaceholderAllDrawForm,
   normalizeFormSequence,
   padFormForDisplay,
   parseStandingForm,
@@ -146,11 +147,25 @@ describe("computeFormSequenceFromFixtures", () => {
   });
 });
 
+describe("isPlaceholderAllDrawForm", () => {
+  it("flags long all-draw windows only", () => {
+    expect(isPlaceholderAllDrawForm("DDDDD")).toBe(true);
+    expect(isPlaceholderAllDrawForm("DDDD")).toBe(true);
+    expect(isPlaceholderAllDrawForm("DDD")).toBe(false);
+    expect(isPlaceholderAllDrawForm("DWDDD")).toBe(false);
+    expect(isPlaceholderAllDrawForm(null)).toBe(false);
+  });
+});
+
 describe("standingFormNeedsRecompute", () => {
   it("flags empty and dash-containing feed values", () => {
     expect(standingFormNeedsRecompute(null)).toBe(true);
     expect(standingFormNeedsRecompute("--W")).toBe(true);
     expect(standingFormNeedsRecompute("W-LWL")).toBe(true);
+    expect(standingFormNeedsRecompute("DDDDD")).toBe(true);
+    expect(standingFormNeedsRecompute("DDDD")).toBe(true);
+    expect(standingFormNeedsRecompute("DD")).toBe(false);
+    expect(standingFormNeedsRecompute("D")).toBe(false);
     expect(standingFormNeedsRecompute("WWWL")).toBe(false);
     expect(standingFormNeedsRecompute("WWWWL")).toBe(false);
   });

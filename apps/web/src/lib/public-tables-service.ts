@@ -5,6 +5,7 @@ import "server-only";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { competitionSeasons, competitions, standingRows } from "@rugby365/db";
 import { getDb } from "./db";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 
 export type PublicTableCompetitionCard = {
   competitionId: string;
@@ -20,7 +21,21 @@ export type PublicTableCompetitionCard = {
   href: string;
 };
 
+function tableCardScore(row: {
+  slug: string;
+  teamCount: number;
+  isActive: boolean | null;
+  year: number | null;
+}): number {
+  let score = Number(row.teamCount) || 0;
+  if (!row.slug.includes("__legacy__")) score += 1_000_000;
+  if (row.isActive) score += 1000;
+  score += Number(row.year) || 0;
+  return score;
+}
+
 export async function listPublicCompetitionTables(): Promise<PublicTableCompetitionCard[]> {
+  return cachedPublic("tables:hub", PUBLIC_CACHE_TTL.tablesHub, async () => {
   const db = getDb();
 
   // Active seasons first; fall back to latest season that has overall standings.
@@ -59,6 +74,7 @@ export async function listPublicCompetitionTables(): Promise<PublicTableCompetit
     .having(sql`count(distinct ${standingRows.teamId}) > 0`)
     .orderBy(asc(competitions.name), desc(competitionSeasons.year));
 
+  // One season per competition id (prefer active).
   const byComp = new Map<string, (typeof rows)[number]>();
   for (const row of rows) {
     const existing = byComp.get(row.competitionId);
@@ -66,13 +82,22 @@ export async function listPublicCompetitionTables(): Promise<PublicTableCompetit
       byComp.set(row.competitionId, row);
       continue;
     }
-    // Prefer active season when present.
     if (!existing.isActive && row.isActive) {
       byComp.set(row.competitionId, row);
     }
   }
 
-  return [...byComp.values()]
+  // One card per display name — collapse __legacy__ sync clones (URC ×4, Top 14 ×4, …).
+  const byName = new Map<string, (typeof rows)[number]>();
+  for (const row of byComp.values()) {
+    const key = row.name.trim().toLowerCase();
+    const prev = byName.get(key);
+    if (!prev || tableCardScore(row) > tableCardScore(prev)) {
+      byName.set(key, row);
+    }
+  }
+
+  return [...byName.values()]
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((row) => ({
       competitionId: row.competitionId,
@@ -87,4 +112,5 @@ export async function listPublicCompetitionTables(): Promise<PublicTableCompetit
       teamCount: Number(row.teamCount) || 0,
       href: `/competitions/${row.slug}/table?season=${encodeURIComponent(row.seasonLabel)}`,
     }));
+  });
 }

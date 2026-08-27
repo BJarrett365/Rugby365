@@ -11,6 +11,7 @@ export * from "./providers/planet-rugby/PlanetRugbyMatchPageAdapter";
 export * from "./providers/wikipedia/types";
 export * from "./providers/wikipedia/parse-url";
 export * from "./providers/wikipedia/parse-infobox";
+export * from "./providers/wikipedia/parse-player-honours";
 export * from "./providers/wikipedia/WikipediaArchiveAdapter";
 export * from "./providers/wikipedia/search-player";
 export * from "./providers/wikipedia/fetch-wikidata-socials";

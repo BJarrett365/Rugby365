@@ -11,7 +11,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { detectNeutralVenueFromSnapshot, resolveHemisphereFromDb, normalizeTeamType } from "../team-hemisphere-utils";
 import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "../season-label-utils";
-import { parseStandingForm } from "../standing-form";
+import { isPlaceholderAllDrawForm, parseStandingForm } from "../standing-form";
 import {
   fixtureBelongsToSeason,
   seasonKindFromCompetitionType,
@@ -686,6 +686,34 @@ function buildStandingsFromPerspectives(
   });
 }
 
+async function countCompletedFixturesForSeason(seasonId: string | undefined): Promise<number> {
+  if (!seasonId) return 0;
+  const db = getDb();
+  const rows = await db
+    .select({ status: fixtures.status, homeScore: fixtures.homeScore, awayScore: fixtures.awayScore })
+    .from(fixtures)
+    .where(eq(fixtures.seasonId, seasonId));
+  return rows.filter((row) => {
+    const status = (row.status ?? "").toLowerCase();
+    if (!COMPLETED_STATUSES.has(status) && status !== "result" && status !== "complete") {
+      return false;
+    }
+    if (row.homeScore == null || row.awayScore == null) return false;
+    // Ignore 0–0 placeholder "completed" imports.
+    if (row.homeScore === 0 && row.awayScore === 0) return false;
+    return true;
+  }).length;
+}
+
+/** Synced table claiming games played while the season has no real results yet. */
+function syncedStandingsArePremature(
+  rows: RugbyTableStandingRow[],
+  completedFixtureCount: number,
+): boolean {
+  if (completedFixtureCount > 0) return false;
+  return rows.some((row) => (row.played ?? 0) > 0);
+}
+
 async function trySyncedStandings(
   seasonId: string | undefined,
   view: StandingView,
@@ -698,7 +726,9 @@ async function trySyncedStandings(
     const legacyMeta = parseStandingForm(row.form);
     const tryBonusPoints = row.tryBonusPoints ?? legacyMeta.tryBonusPoints ?? null;
     const losingBonusPoints = row.losingBonusPoints ?? legacyMeta.losingBonusPoints ?? null;
-    const formLetters = legacyMeta.lastFive ?? "";
+    const formLetters = isPlaceholderAllDrawForm(legacyMeta.lastFive)
+      ? ""
+      : (legacyMeta.lastFive ?? "");
     // formSequence is newest-first to match Table Lab form tables.
     const formSequence = [...formLetters]
       .reverse()
@@ -724,6 +754,8 @@ async function trySyncedStandings(
     };
   });
   if (!isHealthyStandingsRows(mapped)) return null;
+  const completed = await countCompletedFixturesForSeason(seasonId);
+  if (syncedStandingsArePremature(mapped, completed)) return null;
   return mapped;
 }
 

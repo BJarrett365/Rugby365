@@ -189,26 +189,46 @@ export function MatchAnimationGoalView({
           </g>
         ) : null}
 
-        <ellipse
-          className={ballClass}
-          cx={flight === "miss" || mode === "miss" ? 78 : 50}
-          cy={
-            mode === "try"
-              ? 44
-              : flight === "kicking"
-                ? 30
-                : flight === "success"
-                  ? 16
-                  : flight === "miss" || mode === "miss"
-                    ? 20
-                    : 40
-          }
-          rx="2.2"
-          ry="1.5"
-          fill="#f5f0e6"
-          stroke="#3e2723"
-          strokeWidth="0.3"
-        />
+        <g className={ballClass} aria-hidden>
+          <ellipse
+            cx={flight === "miss" || mode === "miss" ? 78 : 50}
+            cy={
+              mode === "try"
+                ? 44
+                : flight === "kicking"
+                  ? 30
+                  : flight === "success"
+                    ? 16
+                    : flight === "miss" || mode === "miss"
+                      ? 20
+                      : 40
+            }
+            rx="3.2"
+            ry="1.85"
+            fill="#c4a574"
+            stroke="#3e2723"
+            strokeWidth="0.28"
+          />
+          <ellipse
+            cx={flight === "miss" || mode === "miss" ? 78 : 50}
+            cy={
+              mode === "try"
+                ? 44
+                : flight === "kicking"
+                  ? 30
+                  : flight === "success"
+                    ? 16
+                    : flight === "miss" || mode === "miss"
+                      ? 20
+                      : 40
+            }
+            rx="1.1"
+            ry="0.55"
+            fill="none"
+            stroke="#f5f0e6"
+            strokeWidth="0.22"
+          />
+        </g>
 
         {flight === "success" && mode === "conversion" ? (
           <rect

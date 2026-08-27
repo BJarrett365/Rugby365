@@ -602,7 +602,9 @@ export function formatStatNumber(
   value: number | null,
   opts: { digits?: number; percent?: boolean; compact?: boolean } = {},
 ): string {
-  if (value == null || !Number.isFinite(value)) return "—";
+  if (value == null || !Number.isFinite(value)) {
+    return opts.percent ? "0%" : "0";
+  }
   const digits = opts.digits ?? (Number.isInteger(value) ? 0 : 1);
   if (digits === 0) {
     const rounded = Math.round(value);
@@ -689,6 +691,16 @@ export function resolveGoalKickAttempts(
   if (missedEvents != null && missedEvents > 0) {
     const madeSafe = made != null && Number.isFinite(made) ? Math.max(0, made) : 0;
     return madeSafe + missedEvents;
+  }
+  // Floor when attempt coverage is totally unknown: every make implies ≥ that many attempts.
+  if (
+    made != null &&
+    Number.isFinite(made) &&
+    made > 0 &&
+    missedEvents == null &&
+    extrasMissed == null
+  ) {
+    return made;
   }
   return null;
 }

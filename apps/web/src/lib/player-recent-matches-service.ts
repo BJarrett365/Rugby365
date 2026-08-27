@@ -24,6 +24,7 @@ import {
   buildRecentMatchLabel,
   isEligibleRecentAppearance,
 } from "./player-recent-matches-utils";
+import { resolveTeamNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
 
 export type PlayerRecentMatchRow = {
   id: string;
@@ -295,6 +296,13 @@ export async function getPlayerRecentMatches(
     const awayScore =
       row.awayScore != null && Number.isFinite(row.awayScore) ? row.awayScore : null;
     const cards = cardCountsFromEvents(cardsByFixture.get(row.fixtureId) ?? []);
+    const resolved = resolveTeamNamesFromFixtureSlug(
+      row.slug,
+      row.homeTeamName ?? "",
+      row.awayTeamName ?? "",
+    );
+    const homeTeamName = resolved.homeName || row.homeTeamName;
+    const awayTeamName = resolved.awayName || row.awayTeamName;
 
     out.push({
       id: row.fixtureId,
@@ -305,18 +313,18 @@ export async function getPlayerRecentMatches(
         competitionCode: row.competitionCode,
         homeTeamSlug: row.homeTeamSlug,
         awayTeamSlug: row.awayTeamSlug,
-        homeTeamName: row.homeTeamName,
-        awayTeamName: row.awayTeamName,
+        homeTeamName,
+        awayTeamName,
         kickoffAt: row.kickoffAt,
       }),
       kickoffAt: row.kickoffAt?.toISOString() ?? null,
-      homeTeamName: row.homeTeamName,
-      awayTeamName: row.awayTeamName,
+      homeTeamName,
+      awayTeamName,
       homeScore,
       awayScore,
       matchLabel: buildRecentMatchLabel({
-        homeTeamName: row.homeTeamName,
-        awayTeamName: row.awayTeamName,
+        homeTeamName,
+        awayTeamName,
         homeScore,
         awayScore,
       }),

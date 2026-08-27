@@ -18,7 +18,14 @@ import type { RugbyTableResult } from "@/lib/table-lab/table-types";
 
 type View = "overall" | "home" | "away";
 
-type Season = { id: string; label: string; year: number; isActive: boolean; displayLabel?: string };
+type Season = {
+  id: string;
+  label: string;
+  year: number;
+  isActive: boolean;
+  displayLabel?: string;
+  era?: string | null;
+};
 
 type Standing = {
   rank: number;
@@ -238,8 +245,9 @@ export function CompetitionTableClient({
 
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <p className="text-sm text-zinc-500 m-0">
-          {competitionName || slug} · {view === "overall" ? "Total" : view} standings
-          {seasonLabel ? ` · ${seasonLabel}` : ""}
+          {competitionName || slug}
+          {view === "overall" ? " · Total" : ` · ${view}`} standings
+          {seasonLabel ? ` · ${seasons.find((s) => s.label === seasonLabel)?.displayLabel ?? seasonLabel}` : ""}
           {(liveResult?.liveMatchCount ?? 0) > 0 ? " · Live" : ""}
         </p>
         <div className="flex flex-wrap gap-2">

@@ -56,6 +56,22 @@ describe("standings fixture dedupe", () => {
         "Unknown team abc",
       ),
     ).toEqual({ homeName: "Sale Sharks", awayName: "Toulon" });
+
+    expect(
+      resolveTeamNamesFromFixtureSlug(
+        "stormers-v-cardiff-rugby-2026-05-30__legacy__828ef9b0",
+        "DHL Stormers XXIII",
+        "Unknown team 54fb30268418",
+      ),
+    ).toEqual({ homeName: "DHL Stormers XXIII", awayName: "Cardiff Rugby" });
+
+    expect(
+      resolveTeamNamesFromFixtureSlug(
+        "south-africa-v-ru-jpn-2025-11-01",
+        "South Africa",
+        "Unknown team 9efeaaf99bcf",
+      ),
+    ).toEqual({ homeName: "South Africa", awayName: "Japan" });
   });
 
   it("marks old live fixtures as stale", () => {

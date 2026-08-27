@@ -169,9 +169,23 @@ export function buildLiveTableStandings(input: {
     const movement = input.showMovement
       ? movementFromRanks(row.rank, previousRank)
       : null;
+    const liveForm = formByTeam.get(row.teamId) ?? [];
+    const syncedRaw = row.formSequence ?? [];
+    // Drop synced all-draw placeholders (0–0 imports) so they never win over empty live form.
+    const syncedForm =
+      syncedRaw.length >= 4 && syncedRaw.every((letter) => letter === "D") ? [] : syncedRaw;
+    // Prefer fixture-derived form when it has a full last-N window; otherwise keep
+    // synced standing form (often already last-5 from SDMS/wiki recompute).
+    const expected = Math.min(Math.max(row.played ?? 0, 0), formSlots);
+    const formSequence =
+      liveForm.length >= expected && liveForm.length >= syncedForm.length
+        ? liveForm
+        : syncedForm.length >= liveForm.length
+          ? syncedForm
+          : liveForm;
     return {
       ...row,
-      formSequence: formByTeam.get(row.teamId) ?? [],
+      formSequence,
       previousRank: previousRank ?? null,
       movement,
       movementLabel:

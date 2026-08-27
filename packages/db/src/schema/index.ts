@@ -489,6 +489,28 @@ export const playerCareerStints = pgTable(
   ],
 );
 
+/** News / article links scraped from external player pages (e.g. Ultimate Rugby). */
+export const playerSourceNews = pgTable(
+  "player_source_news",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    sourceProvider: text("source_provider").notNull().default("ultimate_rugby"),
+    importKey: text("import_key").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    publishedLabel: text("published_label"),
+    viewCount: integer("view_count"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("player_source_news_import_key_unique").on(table.importKey),
+    index("player_source_news_player_idx").on(table.playerId),
+  ],
+);
+
 export const coaches = pgTable(
   "coaches",
   {

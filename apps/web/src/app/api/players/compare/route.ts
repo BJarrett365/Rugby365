@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { buildPlayerCompareMetrics } from "@/lib/player-compare-metrics";
-import { getPublicPlayerProfile } from "@/lib/public-player-profile-service";
+import { getCompareLitePayload } from "@/lib/player-compare-lite-service";
 
-/** Public head-to-head payload for the compare picker (inline results). */
+/** Fast head-to-head payload from persisted DB rows (no full profile rebuild). */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const a = searchParams.get("a")?.trim() ?? "";
     const b = searchParams.get("b")?.trim() ?? "";
-    const preview = searchParams.get("preview") === "1";
 
     if (!a || !b) {
       return NextResponse.json({ error: "Pick two players (a and b)." }, { status: 400 });
@@ -18,22 +16,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Pick two different players." }, { status: 400 });
     }
 
-    const [playerA, playerB] = await Promise.all([
-      getPublicPlayerProfile(a, { preview }),
-      getPublicPlayerProfile(b, { preview }),
-    ]);
-
-    if (!playerA || !playerB) {
+    const payload = await getCompareLitePayload(a, b);
+    if (!payload) {
       return NextResponse.json({ error: "One or both players were not found." }, { status: 404 });
     }
 
-    return NextResponse.json({
-      playerA,
-      playerB,
-      rankingsA: playerA.rankings ?? null,
-      rankingsB: playerB.rankings ?? null,
-      metrics: buildPlayerCompareMetrics(playerA, playerB),
-    });
+    return NextResponse.json(payload);
   } catch (e) {
     return apiErrorResponse(e, "Failed to load player comparison");
   }

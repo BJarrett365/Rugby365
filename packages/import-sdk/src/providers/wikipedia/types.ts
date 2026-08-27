@@ -104,6 +104,23 @@ export const WikipediaPlayerArchiveSchema = z.object({
   clubCareer: z.array(WikipediaCareerStintSchema).optional(),
   cupCareer: z.array(WikipediaCareerStintSchema).optional(),
   internationalCareer: z.array(WikipediaCareerStintSchema).optional(),
+  /** Free-text honour lines from the Honours section (for review / debug). */
+  honourLines: z.array(z.string()).optional(),
+  /** Structured awards / team honours parsed from the Honours section. */
+  honours: z
+    .array(
+      z.object({
+        kind: z.enum(["personal_award", "team_honour"]),
+        title: z.string(),
+        year: z.number(),
+        seasonLabel: z.string().nullable().optional(),
+        groupLabel: z.string().nullable().optional(),
+        teamName: z.string().nullable().optional(),
+        placing: z.enum(["WINNER", "OTHER"]),
+        sourceLine: z.string(),
+      }),
+    )
+    .optional(),
   infoboxTemplate: z.string().optional(),
 });
 

@@ -48,11 +48,42 @@ describe("parseWikipediaArchiveFromHtml player cup career", () => {
 
     expect(parsed.entityType).toBe("player");
     if (parsed.entityType !== "player") return;
-
     expect(parsed.clubCareer).toHaveLength(1);
     expect(parsed.cupCareer).toHaveLength(2);
     expect(parsed.cupCareer?.every((row) => row.careerType === "cup")).toBe(true);
     expect(parsed.internationalCareer).toHaveLength(1);
+  });
+
+  it("resolves {{Rut|Club}} club career templates", () => {
+    const html = `
+      <div data-mw='{"parts":[{"template":{"target":{"wt":"Infobox rugby biography"},"params":{
+        "name":{"wt":"Siya Sample"},
+        "currentclub":{"wt":"{{Rut|Stormers}}"},
+        "years1":{"wt":"2011–2021"},
+        "clubs1":{"wt":"{{Rut|Western Province}}"},
+        "apps1":{"wt":"34"},
+        "points1":{"wt":"35"},
+        "years2":{"wt":"2012–2020"},
+        "clubs2":{"wt":"{{Rut|Stormers}}"},
+        "apps2":{"wt":"118"},
+        "points2":{"wt":"95"}
+      }}}]}'></div>
+    `;
+
+    const parsed = parseWikipediaArchiveFromHtml({
+      html,
+      articleTitle: "Siya Sample",
+      wikipediaUrl: "https://en.wikipedia.org/wiki/Siya_Sample",
+      entityType: "player",
+    });
+
+    expect(parsed.entityType).toBe("player");
+    if (parsed.entityType !== "player") return;
+    expect(parsed.currentTeam).toBe("Stormers");
+    expect(parsed.clubCareer?.map((r) => r.teamName)).toEqual([
+      "Western Province",
+      "Stormers",
+    ]);
   });
 });
 

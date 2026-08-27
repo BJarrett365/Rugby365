@@ -961,6 +961,11 @@ function ShareRing({ ring }: { ring: ContributionRing }) {
         </strong>
       </div>
       <span>{ring.label}</span>
+      {ring.player != null && ring.team != null ? (
+        <em className="pr-pstats__ring-count">
+          {ring.player} / {ring.team}
+        </em>
+      ) : null}
     </div>
   );
 }

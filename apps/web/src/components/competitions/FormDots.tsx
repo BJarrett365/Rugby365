@@ -1,6 +1,6 @@
 "use client";
 
-import { padFormForDisplay, parseStandingForm } from "@/lib/standing-form";
+import { isPlaceholderAllDrawForm, padFormForDisplay, parseStandingForm } from "@/lib/standing-form";
 import type { FormResult } from "@/lib/table-lab/table-types";
 
 /**
@@ -25,7 +25,8 @@ export function FormDots({
     sequence && sequence.length
       ? [...sequence].reverse().join("")
       : null;
-  const letters = parseStandingForm(fromSequence ?? form).lastFive ?? "";
+  const rawLetters = parseStandingForm(fromSequence ?? form).lastFive ?? "";
+  const letters = isPlaceholderAllDrawForm(rawLetters) ? "" : rawLetters;
   const max = slots != null && slots > 0 ? slots : undefined;
   const clipped = max != null ? letters.slice(-max) : letters;
   const display =
@@ -48,7 +49,7 @@ export function FormDots({
               : c === "L"
                 ? "bg-red-600 text-white"
                 : c === "D"
-                  ? "bg-zinc-600 text-white"
+                  ? "bg-sky-600 text-white"
                   : "bg-zinc-800 text-zinc-500"
           }`}
           title={c === "W" ? "Win" : c === "L" ? "Loss" : c === "D" ? "Draw" : "No result"}

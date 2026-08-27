@@ -90,12 +90,72 @@ function kickoffMs(iso: string | null): number {
   return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
 }
 
-/** Prefer live, then soonest kickoff. */
+function normalizeOpponentName(name: string | null | undefined): string {
+  return (name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Same calendar day + home/away names — used to collapse duplicate source rows. */
+export function sameDayMatchKey(fixture: NextMatchCandidate): string | null {
+  const day = fixture.kickoffAt?.slice(0, 10) ?? null;
+  const home = normalizeOpponentName(fixture.homeTeamName);
+  const away = normalizeOpponentName(fixture.awayTeamName);
+  if (!day || !home || !away) return null;
+  return `${day}|${home}|${away}`;
+}
+
+/**
+ * Collapse duplicate fixtures for the same opponents on the same day
+ * (e.g. springboks.rugby import + Planet Rugby SDMS twin with different team ids).
+ * Prefer a row that already has a Match Centre href, then sooner kickoff.
+ */
+export function collapseSameDayOpponentDuplicates(
+  fixtures: NextMatchCandidate[],
+): NextMatchCandidate[] {
+  const byKey = new Map<string, NextMatchCandidate>();
+  const unmatched: NextMatchCandidate[] = [];
+
+  const prefer = (a: NextMatchCandidate, b: NextMatchCandidate): NextMatchCandidate => {
+    const aHref = Boolean(a.href);
+    const bHref = Boolean(b.href);
+    if (aHref !== bHref) return aHref ? a : b;
+    return kickoffMs(a.kickoffAt) <= kickoffMs(b.kickoffAt) ? a : b;
+  };
+
+  for (const fixture of fixtures) {
+    const key = sameDayMatchKey(fixture);
+    if (!key) {
+      unmatched.push(fixture);
+      continue;
+    }
+    const existing = byKey.get(key);
+    byKey.set(key, existing ? prefer(existing, fixture) : fixture);
+  }
+
+  return [...byKey.values(), ...unmatched];
+}
+
+/** Prefer live (only if recent), then soonest kickoff. */
 export function pickSoonestEligible(
   fixtures: NextMatchCandidate[],
   nowMs: number,
 ): NextMatchCandidate | null {
-  const eligible = fixtures.filter((f) => isEligibleNextMatchStatus(f.status));
+  const liveGraceMs = 6 * 60 * 60 * 1000;
+  const upcomingGraceMs = 3 * 60 * 60 * 1000;
+
+  const collapsed = collapseSameDayOpponentDuplicates(fixtures);
+  const eligible = collapsed.filter((f) => {
+    if (!isEligibleNextMatchStatus(f.status)) return false;
+    const t = kickoffMs(f.kickoffAt);
+    if (!Number.isFinite(t)) return classifyFixtureStatus(f.status) !== "live";
+    // Stale "live" rows (kickoff far in the past) must not block real upcoming fixtures.
+    if (classifyFixtureStatus(f.status) === "live" && t < nowMs - liveGraceMs) return false;
+    return true;
+  });
   if (!eligible.length) return null;
 
   const live = eligible.filter((f) => classifyFixtureStatus(f.status) === "live");
@@ -106,8 +166,7 @@ export function pickSoonestEligible(
   const futureOrRecent = eligible
     .filter((f) => {
       const t = kickoffMs(f.kickoffAt);
-      // Allow slightly started fixtures that aren't marked live yet (grace).
-      return t >= nowMs - 3 * 60 * 60 * 1000;
+      return t >= nowMs - upcomingGraceMs;
     })
     .sort((a, b) => kickoffMs(a.kickoffAt) - kickoffMs(b.kickoffAt));
 

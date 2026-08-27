@@ -23,6 +23,10 @@ export type WikipediaStandingRow = {
   points: number;
   isChampionMarker: boolean;
   qualificationNotes: string | null;
+  /** Pool / conference key when the season used split tables (e.g. "A", "B"). */
+  pool?: string | null;
+  /** Distinguishes Celtic Pool A/B from Pro14 Conference A/B. */
+  groupKind?: "pool" | "conference" | null;
 };
 
 export type WikipediaScoringEvent = {

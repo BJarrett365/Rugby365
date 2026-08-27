@@ -444,21 +444,31 @@ export function latestRecordedClubSeason(rows: PublicAppearanceRow[]): {
 export async function resolveCurrentClubCompetitionName(clubTeamId: string | null): Promise<string | null> {
   if (!clubTeamId) return null;
   const db = getDb();
-  const [row] = await db
-    .select({
-      name: competitions.name,
-    })
-    .from(fixtures)
-    .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
-    .where(
-      and(
-        sql`(${fixtures.homeTeamId} = ${clubTeamId} OR ${fixtures.awayTeamId} = ${clubTeamId})`,
-        eq(competitions.competitionType, "domestic"),
-      ),
-    )
-    .orderBy(desc(fixtures.kickoffAt))
-    .limit(1);
-  return row?.name ?? null;
+  // Two indexed lookups beat `home OR away` full scans on large fixtures tables.
+  const [home, away] = await Promise.all([
+    db
+      .select({ name: competitions.name, kickoffAt: fixtures.kickoffAt })
+      .from(fixtures)
+      .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+      .where(and(eq(fixtures.homeTeamId, clubTeamId), eq(competitions.competitionType, "domestic")))
+      .orderBy(desc(fixtures.kickoffAt))
+      .limit(1)
+      .then((r) => r[0] ?? null),
+    db
+      .select({ name: competitions.name, kickoffAt: fixtures.kickoffAt })
+      .from(fixtures)
+      .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+      .where(and(eq(fixtures.awayTeamId, clubTeamId), eq(competitions.competitionType, "domestic")))
+      .orderBy(desc(fixtures.kickoffAt))
+      .limit(1)
+      .then((r) => r[0] ?? null),
+  ]);
+  if (!home && !away) return null;
+  if (!home) return away?.name ?? null;
+  if (!away) return home.name;
+  const homeTs = home.kickoffAt ? new Date(home.kickoffAt).getTime() : 0;
+  const awayTs = away.kickoffAt ? new Date(away.kickoffAt).getTime() : 0;
+  return awayTs > homeTs ? away.name : home.name;
 }
 
 export function positionBreakdown(rows: PublicAppearanceRow[]) {

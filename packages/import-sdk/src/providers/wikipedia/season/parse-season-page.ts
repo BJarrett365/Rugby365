@@ -112,15 +112,33 @@ function parseOneSportsTableBlock(block: string): WikipediaStandingRow[] {
     const ptsExplicit = params[`pts_${codeKey}`];
     const pointsDeduction = adjust < 0 ? -adjust : 0;
     const played = Number.parseInt(params[`played_${codeKey}`] ?? "", 10) || playedFrom({ won, draw, lost });
+    const winPoints = Number.parseInt(params.winpoints ?? params.win_points ?? "4", 10);
+    const drawPoints = Number.parseInt(params.drawpoints ?? params.draw_points ?? "2", 10);
+    const showBonus = !/^(no|false|0)$/i.test((params.show_bonus ?? "yes").trim());
+    const computedPoints =
+      won * (Number.isFinite(winPoints) ? winPoints : 4) +
+      draw * (Number.isFinite(drawPoints) ? drawPoints : 2) +
+      (showBonus ? tryBonusPoints + losingBonusPoints : 0) -
+      pointsDeduction;
     const points =
       (ptsExplicit != null ? Number.parseInt(ptsExplicit, 10) : null) ??
-      rugbyPoints({
-        won,
-        draw,
-        tryBonusPoints: bonusPoints,
-        losingBonusPoints: 0,
-        pointsDeduction,
-      });
+      (Number.isFinite(winPoints) || Number.isFinite(drawPoints) || !showBonus
+        ? computedPoints
+        : rugbyPoints({
+            won,
+            draw,
+            tryBonusPoints,
+            losingBonusPoints,
+            pointsDeduction,
+          }));
+
+    const sectionPool =
+      (params.section ?? "").match(/(?:pool|conference)\s*([A-Z]|\d+)/i)?.[1]?.toUpperCase() ?? null;
+    const sectionKind = /conference/i.test(params.section ?? "")
+      ? ("conference" as const)
+      : sectionPool
+        ? ("pool" as const)
+        : null;
 
     rows.push({
       rank: index + 1,
@@ -133,13 +151,15 @@ function parseOneSportsTableBlock(block: string): WikipediaStandingRow[] {
       pointsAgainst: pa,
       pointsDiff: pf - pa,
       triesFor: tfRaw != null ? Number.parseInt(tfRaw, 10) || 0 : null,
-      tryBonusPoints,
-      losingBonusPoints,
-      bonusPoints,
+      tryBonusPoints: showBonus ? tryBonusPoints : 0,
+      losingBonusPoints: showBonus ? losingBonusPoints : 0,
+      bonusPoints: showBonus ? bonusPoints : 0,
       pointsDeduction,
       points,
-      isChampionMarker: /\(C\)/i.test(entry.nameRaw),
+      isChampionMarker: /\(C\)/i.test(entry.nameRaw) || /^c$/i.test(params[`status_${codeKey}`] ?? ""),
       qualificationNotes: null,
+      pool: sectionPool,
+      groupKind: sectionKind,
     });
   }
 
@@ -156,6 +176,8 @@ export function parseSportsTableModule(wikitext: string): WikipediaStandingRow[]
   for (const block of blocks) {
     rows.push(...parseOneSportsTableBlock(block));
   }
+  // Keep pool-local ranks when modules are sectioned (Celtic League 2001–02).
+  if (rows.some((row) => row.pool)) return rows;
   return dedupeStandings(rows);
 }
 
@@ -444,128 +466,418 @@ export function parseInfoboxChampion(wikitext: string): {
 function extractWikitableBlocks(wikitext: string): string[] {
   const blocks: string[] = [];
   let searchFrom = 0;
-  while (true) {
+  while (searchFrom < wikitext.length) {
     const start = wikitext.indexOf("{|", searchFrom);
     if (start < 0) break;
-    const end = wikitext.indexOf("|}", start);
+    let depth = 0;
+    let i = start;
+    let end = -1;
+    while (i < wikitext.length) {
+      if (wikitext.startsWith("{|", i)) {
+        depth += 1;
+        i += 2;
+        continue;
+      }
+      if (wikitext.startsWith("|}", i)) {
+        depth -= 1;
+        i += 2;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+        continue;
+      }
+      i += 1;
+    }
     if (end < 0) break;
-    blocks.push(wikitext.slice(start, end + 2));
-    searchFrom = end + 2;
+    blocks.push(wikitext.slice(start, end));
+    searchFrom = end;
   }
   return blocks;
 }
 
-function parseWikitableRowCells(row: string): string[] {
-  const trimmed = row.replace(/^\|-[^\n]*\n?/, "").trim();
-  if (!trimmed.startsWith("|")) return [];
-  const cells: string[] = [];
-  let current = "";
-  let depth = 0;
-  for (let i = 1; i < trimmed.length; i++) {
-    const ch = trimmed[i]!;
-    if (ch === "{" && trimmed[i + 1] === "{") {
-      depth += 1;
-      current += "{{";
-      i += 1;
-      continue;
-    }
-    if (ch === "}" && trimmed[i + 1] === "}") {
-      depth -= 1;
-      current += "}}";
-      i += 1;
-      continue;
-    }
-    if (ch === "[" && trimmed[i + 1] === "[") {
-      depth += 1;
-      current += "[[";
-      i += 1;
-      continue;
-    }
-    if (ch === "]" && trimmed[i + 1] === "]") {
-      depth -= 1;
-      current += "]]";
-      i += 1;
-      continue;
-    }
-    if (ch === "|" && depth === 0) {
-      cells.push(current.trim());
-      current = "";
-      continue;
-    }
-    current += ch;
+/** Strip MediaWiki cell attributes (`align=left|`, `align="left"|`, `style=...|`). */
+function stripWikitableCellAttrs(cell: string): string {
+  let s = cell.trim();
+  while (true) {
+    const m = s.match(/^[A-Za-z_:][\w:-]*=(?:"[^"]*"|'[^']*'|[^\s|]+)\s*\|/);
+    if (!m) break;
+    s = s.slice(m[0].length).trim();
   }
-  if (current.trim()) cells.push(current.trim());
+  return s;
+}
+
+/**
+ * Parse one wikitable data/header row into cell contents.
+ * Handles MediaWiki `||` / `!!` separators and `attr=value|content` cells
+ * (e.g. Celtic League `|1||align=left|{{flagicon|WAL}} [[Scarlets|Llanelli Scarlets]]`).
+ */
+function parseWikitableRowCells(row: string): string[] {
+  let body = row.replace(/^\|-/, "");
+  const cells: string[] = [];
+
+  for (const rawLine of body.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    // Row-level attributes alone (e.g. bgcolor=#d8ffeb) — not a cell line.
+    if (!line.startsWith("|") && !line.startsWith("!")) {
+      if (/^[A-Za-z_][\w-]*=/.test(line)) continue;
+      continue;
+    }
+
+    const content = line.replace(/^[|!]+/, "");
+    // Split on || / !! outside templates and wiki links.
+    const segments: string[] = [];
+    let current = "";
+    let depth = 0;
+    for (let i = 0; i < content.length; i++) {
+      const ch = content[i]!;
+      const next = content[i + 1];
+      if (ch === "{" && next === "{") {
+        depth += 1;
+        current += "{{";
+        i += 1;
+        continue;
+      }
+      if (ch === "}" && next === "}") {
+        depth -= 1;
+        current += "}}";
+        i += 1;
+        continue;
+      }
+      if (ch === "[" && next === "[") {
+        depth += 1;
+        current += "[[";
+        i += 1;
+        continue;
+      }
+      if (ch === "]" && next === "]") {
+        depth -= 1;
+        current += "]]";
+        i += 1;
+        continue;
+      }
+      if (depth === 0 && ((ch === "|" && next === "|") || (ch === "!" && next === "!"))) {
+        segments.push(current.trim());
+        current = "";
+        i += 1;
+        continue;
+      }
+      current += ch;
+    }
+    if (current.trim() || segments.length === 0) segments.push(current.trim());
+
+    for (const seg of segments) {
+      const cleaned = stripWikitableCellAttrs(seg);
+      // Keep empty only when it is an intentional blank between || markers mid-row
+      // (rare); drop trailing empties from formatting noise.
+      if (cleaned === "" && cells.length === 0) continue;
+      cells.push(cleaned);
+    }
+  }
+
+  while (cells.length && cells[cells.length - 1] === "") cells.pop();
   return cells;
+}
+
+function isJunkStandingTeamName(name: string): boolean {
+  const t = name.replace(/\s+/g, " ").trim();
+  if (!t) return true;
+  if (/bonus\s+point\s+system/i.test(t)) return true;
+  if (/^source\s*:/i.test(t)) return true;
+  if (/^under\s+the\b/i.test(t)) return true;
+  if (/\bcolspan\b/i.test(t)) return true;
+  if (/^https?:\/\//i.test(t)) return true;
+  if (t.length > 120) return true;
+  return false;
 }
 
 function isWikitableHeaderRow(cells: string[]): boolean {
   const joined = cells.join(" ").toLowerCase();
   return (
-    /\bteam\b/.test(joined) &&
-    (/\bpts?\b/.test(joined) || /\bplayed\b/.test(joined) || /\bp\b/.test(joined))
+    (/\bteam\b/.test(joined) || /\bclub\b/.test(joined) || /\bnation\b/.test(joined)) &&
+    (/\bpts?\b/.test(joined) || /\bpoints\b/.test(joined) || /\bplayed\b/.test(joined) || /\bp\b/.test(joined) || /\bpld\b/.test(joined))
   );
 }
 
-function parseStandingRowFromCells(cells: string[], rank: number): WikipediaStandingRow | null {
-  const teamCell = cells.find((cell) => /\{\{(?:ru|Ru)/i.test(cell) || /\[\[/.test(cell)) ?? cells[0];
-  if (!teamCell) return null;
-  const linkCount = (teamCell.match(/\[\[/g) ?? []).length;
-  if (linkCount > 1) return null;
-  const teamName = parseWikiTeamLabel(teamCell)
-    .replace(/^\*+/, "")
-    .replace(/\s*\(C\)\s*$/i, "")
+/** Detect Pool/Conference section banners inside a league wikitable. */
+function parseSplitBanner(
+  cells: string[],
+  rawChunk: string,
+): { kind: "pool" | "conference"; key: string } | null {
+  const joined = stripWikiMarkup(cells.join(" "));
+  if (!joined) return null;
+  if (/legend|key\b|source:|bonus point|qualification/i.test(joined)) return null;
+  const isBanner =
+    cells.length <= 2 ||
+    /colspan\s*=/i.test(rawChunk) ||
+    /^conference\s+[a-z]$/i.test(joined) ||
+    /^pool\s+[a-z0-9]+$/i.test(joined);
+  if (!isBanner) return null;
+  const conference = joined.match(/\bConference\s+([A-Z])\b/i)?.[1];
+  if (conference) return { kind: "conference", key: conference.toUpperCase() };
+  const pool = joined.match(/\bPool\s+([A-Z]|\d+)\b/i)?.[1];
+  if (pool) return { kind: "pool", key: pool.toUpperCase() };
+  return null;
+}
+
+/** Parse any league standings wikitables (club tables, conference tables, templates). */
+export function parseLeagueWikitableStandings(wikitext: string): WikipediaStandingRow[] {
+  const rows: WikipediaStandingRow[] = [];
+  const seenTeams = new Set<string>();
+
+  for (const block of extractWikitableBlocks(wikitext)) {
+    const rowChunks = block.split(/\n\|-/);
+    let hasStandingHeader = false;
+    let currentPool: string | null = null;
+    let currentKind: "pool" | "conference" | null = null;
+    for (const chunk of rowChunks) {
+      const raw = chunk.startsWith("|") || chunk.startsWith("!") ? chunk : `|-${chunk}`;
+      const cells = parseWikitableRowCells(raw);
+      if (!cells.length) continue;
+
+      // Conference/Pool banners often appear *before* the Team/P/W header (Pro14 templates).
+      const banner = parseSplitBanner(cells, raw);
+      if (banner) {
+        currentKind = banner.kind;
+        currentPool = banner.key;
+        continue;
+      }
+
+      if (isWikitableHeaderRow(cells)) {
+        hasStandingHeader = true;
+        continue;
+      }
+      if (!hasStandingHeader) continue;
+
+      if (cells.length <= 2 && /legend|key\b|source:|bonus point/i.test(cells.join(" "))) {
+        continue;
+      }
+
+      const place = Number.parseInt(stripWikiMarkup(cells[0] ?? ""), 10);
+      const parsed = parseStandingRowFromCells(
+        cells,
+        Number.isFinite(place) ? place : rows.length + 1,
+      );
+      if (!parsed) continue;
+      const key = parsed.teamName.toLowerCase();
+      if (seenTeams.has(key)) continue;
+      seenTeams.add(key);
+      rows.push({
+        ...parsed,
+        pool: currentPool,
+        groupKind: currentKind,
+      });
+    }
+  }
+
+  // Keep conference/pool-local ranks when split banners were present.
+  if (rows.some((row) => row.pool)) return rows;
+
+  return rows
+    .slice()
+    .sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.pointsDiff - a.pointsDiff ||
+        a.teamName.localeCompare(b.teamName),
+    )
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+}
+
+function parseWikiSignedInt(raw: string): number | null {
+  const cleaned = stripWikiMarkup(raw)
+    .replace(/,/g, "")
+    .replace(/[−–—]/g, "-")
+    .replace(/[^\d+-]/g, "")
     .trim();
-  if (!teamName || /^(seed|rank|pool|qualification)$/i.test(teamName)) return null;
-  if (/^\d+$/.test(teamName) || /^#?\d{1,3}$/.test(teamName)) return null;
+  if (!/^[-+]?\d+$/.test(cleaned)) return null;
+  return Number.parseInt(cleaned, 10);
+}
 
-  const numbers = cells
-    .flatMap((cell) => stripWikiMarkup(cell).split(/\|\||\|/))
-    .map((value) => value.replace(/[^\d+-]/g, "").trim())
-    .filter((value) => /^-?\d+$/.test(value))
-    .map((value) => Number.parseInt(value, 10));
-
-  const numericCells = cells
-    .slice(1)
-    .map((cell) => {
-      const cleaned = stripWikiMarkup(cell).replace(/,/g, "");
-      if (!/^-?\d+$/.test(cleaned)) return null;
-      return Number.parseInt(cleaned, 10);
-    })
+function standingNumbersFromCells(cells: string[]): number[] {
+  const teamIdx = cells.findIndex(
+    (cell) => /\{\{(?:ru|Ru)/i.test(cell) || /\{\{\s*flag\s*icon/i.test(cell) || /\[\[/.test(cell),
+  );
+  const start = teamIdx >= 0 ? teamIdx + 1 : cells[0] && /^\d+$/.test(stripWikiMarkup(cells[0])) ? 1 : 0;
+  return cells
+    .slice(start)
+    .map((cell) => parseWikiSignedInt(cell))
     .filter((value): value is number => value != null);
+}
 
-  const played = numericCells[0] ?? numbers[0] ?? 0;
-  const won = numericCells[1] ?? numbers[1] ?? 0;
-  const draw = numericCells[2] ?? numbers[2] ?? 0;
-  const lost = numericCells[3] ?? numbers[3] ?? 0;
-  const pointsFor = numericCells.find((_, idx) => idx >= 4 && idx <= 8) ?? 0;
-  const pointsAgainst = numericCells.find((_, idx) => idx >= 5 && idx <= 9) ?? 0;
-  const points = numericCells[numericCells.length - 1] ?? won * 2 + draw;
+/** Map P/W/D/L/.../Pts columns used by club + international league tables. */
+function mapStandingStats(numbers: number[]): {
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  triesFor: number | null;
+  tryBonusPoints: number;
+  losingBonusPoints: number;
+  points: number;
+} {
+  const played = numbers[0] ?? 0;
+  const won = numbers[1] ?? 0;
+  const draw = numbers[2] ?? 0;
+  const lost = numbers[3] ?? 0;
 
+  // Celtic / URC style: P W D L PF PA PD TF TA TBP LBP Pts (12)
+  if (numbers.length >= 12) {
+    const pointsFor = numbers[4] ?? 0;
+    const pointsAgainst = numbers[5] ?? 0;
+    const tryBonusPoints = numbers[9] ?? 0;
+    const losingBonusPoints = numbers[10] ?? 0;
+    const points = numbers[11] ?? rugbyPoints({ won, draw, tryBonusPoints, losingBonusPoints, pointsDeduction: 0 });
+    return {
+      played,
+      won,
+      draw,
+      lost,
+      pointsFor,
+      pointsAgainst,
+      triesFor: numbers[7] ?? null,
+      tryBonusPoints,
+      losingBonusPoints,
+      points,
+    };
+  }
+
+  // Compact: P W D L Pts (5) — Challenge Cup-style
+  if (numbers.length === 5) {
+    return {
+      played,
+      won,
+      draw,
+      lost,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      triesFor: null,
+      tryBonusPoints: 0,
+      losingBonusPoints: 0,
+      points: numbers[4] ?? won * 2 + draw,
+    };
+  }
+
+  // Tri Nations / RC style: P W D L PF PA TBP LBP Pts (9) or with PD (10)
+  if (numbers.length >= 9) {
+    const pointsFor = numbers[4] ?? 0;
+    const pointsAgainst = numbers[5] ?? 0;
+    // 10 cols: P W D L PF PA PD TBP LBP Pts
+    if (numbers.length >= 10 && Math.abs(numbers[6] ?? 0) === Math.abs(pointsFor - pointsAgainst)) {
+      const tryBonusPoints = numbers[7] ?? 0;
+      const losingBonusPoints = numbers[8] ?? 0;
+      const points = numbers[9] ?? rugbyPoints({ won, draw, tryBonusPoints, losingBonusPoints, pointsDeduction: 0 });
+      return {
+        played,
+        won,
+        draw,
+        lost,
+        pointsFor,
+        pointsAgainst,
+        triesFor: null,
+        tryBonusPoints,
+        losingBonusPoints,
+        points,
+      };
+    }
+    const tryBonusPoints = numbers[6] ?? 0;
+    const losingBonusPoints = numbers[7] ?? 0;
+    const points = numbers[8] ?? rugbyPoints({ won, draw, tryBonusPoints, losingBonusPoints, pointsDeduction: 0 });
+    return {
+      played,
+      won,
+      draw,
+      lost,
+      pointsFor,
+      pointsAgainst,
+      triesFor: null,
+      tryBonusPoints,
+      losingBonusPoints,
+      points,
+    };
+  }
+
+  const pointsFor = numbers[4] ?? 0;
+  const pointsAgainst = numbers[5] ?? 0;
+  const points = numbers[numbers.length - 1] ?? won * 2 + draw;
   return {
-    rank,
-    teamName,
     played,
     won,
     draw,
     lost,
     pointsFor,
     pointsAgainst,
-    pointsDiff: pointsFor - pointsAgainst,
     triesFor: null,
     tryBonusPoints: 0,
     losingBonusPoints: 0,
-    bonusPoints: 0,
-    pointsDeduction: 0,
     points,
-    isChampionMarker: /\(C\)/i.test(teamCell),
+  };
+}
+
+function parseStandingRowFromCells(cells: string[], rank: number): WikipediaStandingRow | null {
+  const teamCell =
+    cells.find(
+      (cell) =>
+        /\{\{(?:ru|Ru)/i.test(cell) ||
+        /\{\{\s*flag\s*icon/i.test(cell) ||
+        /\[\[/.test(cell),
+    ) ??
+    cells.find(
+      (cell, idx) =>
+        idx > 0 && stripWikiMarkup(cell).trim().length > 1 && !/^-?\d+$/.test(stripWikiMarkup(cell)),
+    ) ??
+    cells[0];
+  if (!teamCell) return null;
+  const linkCount = (teamCell.match(/\[\[/g) ?? []).length;
+  if (linkCount > 1) return null;
+  const teamName = parseWikiTeamLabel(teamCell)
+    .replace(/^\*+/, "")
+    .replace(/\s*\((?:C|CH|RU|SF|QF|PO|P|R|T)\)\s*$/i, "")
+    .replace(/\s*\(C\)\s*$/i, "")
+    .trim();
+  if (!teamName || /^(seed|rank|pool|qualification|team|nation|place|club)$/i.test(teamName)) return null;
+  if (/^\d+$/.test(teamName) || /^#?\d{1,3}$/.test(teamName)) return null;
+  if (isJunkStandingTeamName(teamName)) return null;
+  // Nested title rows like "Pro12 table" / "2017–18 Pro14 tables"
+  if (/\b(table|tables)\b/i.test(teamName) && !/\[\[/.test(teamCell)) return null;
+
+  const numbers = standingNumbersFromCells(cells);
+  // Require real P/W/D/L (or at least played + points) so title/legend rows drop out.
+  if (numbers.length < 4) return null;
+  const stats = mapStandingStats(numbers);
+  if (stats.played === 0 && stats.points === 0 && stats.won === 0) return null;
+
+  return {
+    rank,
+    teamName,
+    played: stats.played,
+    won: stats.won,
+    draw: stats.draw,
+    lost: stats.lost,
+    pointsFor: stats.pointsFor,
+    pointsAgainst: stats.pointsAgainst,
+    pointsDiff: stats.pointsFor - stats.pointsAgainst,
+    triesFor: stats.triesFor,
+    tryBonusPoints: stats.tryBonusPoints,
+    losingBonusPoints: stats.losingBonusPoints,
+    bonusPoints: stats.tryBonusPoints + stats.losingBonusPoints,
+    pointsDeduction: 0,
+    points: stats.points,
+    isChampionMarker: /\(C(?:H)?\)/i.test(teamCell),
     qualificationNotes: null,
   };
 }
 
-/** Parse Tri Nations / Rugby Championship points tables under ==Table==. */
+/** Parse Tri Nations / Rugby Championship / Celtic League points tables under ==Table==. */
 export function parseInternationalTableStandings(wikitext: string): WikipediaStandingRow[] {
   const section = wikitext.match(/==\s*Table\s*==([\s\S]*?)(?=\n==[^=]|$)/i);
   if (!section) return [];
+  // Prefer full league-table parse (handles nested wiki + club flagicon rows).
+  const fromLeague = parseLeagueWikitableStandings(section[1]!);
+  if (fromLeague.length) return fromLeague;
 
   const rows: WikipediaStandingRow[] = [];
   const seenTeams = new Set<string>();
@@ -577,52 +889,13 @@ export function parseInternationalTableStandings(wikitext: string): WikipediaSta
       if (!cells.length || isWikitableHeaderRow(cells)) continue;
 
       const place = Number.parseInt(stripWikiMarkup(cells[0] ?? ""), 10);
-      const nationCell = cells.find((cell) => /\{\{(?:ru|Ru)/i.test(cell)) ?? cells[1];
-      if (!nationCell) continue;
-      const teamName = parseWikiTeamLabel(nationCell).trim();
-      if (!teamName || /^(place|nation|team)$/i.test(teamName)) continue;
+      const parsed = parseStandingRowFromCells(cells, Number.isFinite(place) ? place : rows.length + 1);
+      if (!parsed) continue;
 
-      const key = teamName.toLowerCase();
+      const key = parsed.teamName.toLowerCase();
       if (seenTeams.has(key)) continue;
       seenTeams.add(key);
-
-      const numbers = cells
-        .slice(2)
-        .map((cell) => {
-          const cleaned = stripWikiMarkup(cell).replace(/[^\d+-]/g, "");
-          return /^-?\d+$/.test(cleaned) ? Number.parseInt(cleaned, 10) : null;
-        })
-        .filter((value): value is number => value != null);
-
-      const played = numbers[0] ?? 0;
-      const won = numbers[1] ?? 0;
-      const draw = numbers[2] ?? 0;
-      const lost = numbers[3] ?? 0;
-      const pointsFor = numbers[4] ?? 0;
-      const pointsAgainst = numbers[5] ?? 0;
-      const tryBonus = numbers[6] ?? 0;
-      const losingBonus = numbers[7] ?? 0;
-      const points = numbers[8] ?? won * 4 + draw * 2 + tryBonus + losingBonus;
-
-      rows.push({
-        rank: Number.isFinite(place) ? place : rows.length + 1,
-        teamName,
-        played,
-        won,
-        draw,
-        lost,
-        pointsFor,
-        pointsAgainst,
-        pointsDiff: pointsFor - pointsAgainst,
-        triesFor: null,
-        tryBonusPoints: tryBonus,
-        losingBonusPoints: losingBonus,
-        bonusPoints: tryBonus + losingBonus,
-        pointsDeduction: 0,
-        points,
-        isChampionMarker: false,
-        qualificationNotes: null,
-      });
+      rows.push(parsed);
     }
   }
 
@@ -634,12 +907,16 @@ export function parsePoolWikitableStandings(wikitext: string): WikipediaStanding
   const rows: WikipediaStandingRow[] = [];
   const seenTeams = new Set<string>();
 
+  // Celtic League uses "===Pool A Table==="; Challenge Cup / RWC use "===Pool 1===" / "===Pool A===".
   const poolSections = [
-    ...wikitext.matchAll(/===\s*Pool\s+([A-Z]|\d+)\s*===([\s\S]*?)(?=\n===|\n==[^=]|$)/gi),
+    ...wikitext.matchAll(
+      /===\s*Pool\s+([A-Z]|\d+)(?:\s+Table)?\s*===([\s\S]*?)(?=\n===|\n==[^=]|$)/gi,
+    ),
   ];
   if (!poolSections.length) return rows;
 
   for (const match of poolSections) {
+    const poolKey = String(match[1] ?? "").trim().toUpperCase();
     const body = match[2]!;
     for (const block of extractWikitableBlocks(body)) {
       const rowChunks = block.split(/\n\|-/).slice(1);
@@ -654,7 +931,7 @@ export function parsePoolWikitableStandings(wikitext: string): WikipediaStanding
         const key = parsed.teamName.toLowerCase();
         if (seenTeams.has(key)) continue;
         seenTeams.add(key);
-        rows.push(parsed);
+        rows.push({ ...parsed, pool: poolKey || null, groupKind: poolKey ? "pool" : null });
       }
     }
   }
@@ -755,15 +1032,44 @@ function dedupeStandings(rows: WikipediaStandingRow[]): WikipediaStandingRow[] {
 }
 
 export function extractPoolTableTemplateNames(wikitext: string): string[] {
-  const names = new Set<string>();
-  for (const match of wikitext.matchAll(/\{\{\s*([^}|{]+?\s+Pool\s+(?:[A-Z]|\d+)\s+table)\s*\}\}/gi)) {
-    names.add(match[1]!.trim());
-  }
+  const names = setFromTemplateMatches(wikitext, [
+    // RWC / Challenge Cup pool table templates
+    /\{\{\s*([^}|{]+?\s+Pool\s+(?:[A-Z]|\d+)\s+table)\s*\}\}/gi,
+    // Pro12 / Pro14 / URC / Celtic League season table templates
+    /\{\{\s*((?:19|20)\d{2}[–-]\d{2}\s+(?:Celtic League|Pro12|Pro14|United Rugby Championship)\s+league table)\s*\}\}/gi,
+    // Generic "... league table" transclusions under ==Table==
+    /\{\{\s*([^}|{\n]+?\s+league table)\s*\}\}/gi,
+  ]);
   return [...names];
+}
+
+function setFromTemplateMatches(wikitext: string, patterns: RegExp[]): Set<string> {
+  const names = new Set<string>();
+  for (const pattern of patterns) {
+    for (const match of wikitext.matchAll(pattern)) {
+      const name = match[1]?.trim();
+      if (!name) continue;
+      // Skip non-standings templates that happen to contain "table"
+      if (/match summary|fixture|results?/i.test(name)) continue;
+      names.add(name);
+    }
+  }
+  return names;
 }
 
 /** Titles of RWC/Challenge Cup pool subpages transcluded or linked from a season page. */
 export function extractPoolSubpageTitles(wikitext: string, pageTitle?: string): string[] {
+  // Domestic club leagues use inline / template league tables — do not chase linked
+  // European cup "pool stage" pages (that contaminated Pro12/Pro14 standings).
+  if (
+    pageTitle &&
+    /(?:Celtic League|Pro12|Pro14|United Rugby Championship|English Premiership|Premiership Rugby|Top 14|Currie Cup|Super Rugby)/i.test(
+      pageTitle,
+    )
+  ) {
+    return [];
+  }
+
   const titles = new Set<string>();
 
   for (const match of wikitext.matchAll(/\{\{\s*:\s*([^}|{\n]+?)\s*[|}]/g)) {
@@ -794,7 +1100,9 @@ export function extractPoolSubpageTitles(wikitext: string, pageTitle?: string): 
     }
   }
 
-  return [...titles];
+  return [...titles].filter(
+    (title) => !/Champions Cup|Challenge Cup|Heineken Cup|European Rugby/i.test(title),
+  );
 }
 
 async function resolveStandingsFromWikitext(
@@ -802,25 +1110,48 @@ async function resolveStandingsFromWikitext(
   fetchTemplate: (templateName: string) => Promise<string>,
 ): Promise<WikipediaStandingRow[]> {
   const direct = parseSportsTableModule(wikitext);
-  if (direct.length) return dedupeStandings(direct);
+  if (direct.length) {
+    if (direct.some((row) => row.pool)) return direct;
+    return dedupeStandings(direct);
+  }
 
-  const internationalTable = parseInternationalTableStandings(wikitext);
-  if (internationalTable.length) return internationalTable;
-
+  // Prefer explicit league-table templates (Pro12/Pro14/URC) before scanning the page
+  // for pool/cup wikitables that may be linked nearby.
   const templateNames = extractPoolTableTemplateNames(wikitext);
   const fromTemplates: WikipediaStandingRow[] = [];
   for (const templateName of templateNames) {
     try {
       const templateWikitext = await fetchTemplate(templateName);
       fromTemplates.push(...parseSportsTableModule(templateWikitext));
+      fromTemplates.push(...parseLeagueWikitableStandings(templateWikitext));
     } catch {
       // Skip missing or rate-limited templates; other sources may still apply.
     }
   }
-  if (fromTemplates.length) return dedupeStandings(fromTemplates);
+  if (fromTemplates.length) {
+    // Preserve Conference A/B (or Pool A/B) identity from league-table templates.
+    if (fromTemplates.some((row) => row.pool)) return fromTemplates;
+    return dedupeStandings(fromTemplates);
+  }
+
+  const internationalTable = parseInternationalTableStandings(wikitext);
+  if (internationalTable.length) return internationalTable;
 
   const poolRows = parsePoolWikitableStandings(wikitext);
-  if (poolRows.length) return poolRows;
+  if (poolRows.length) {
+    // Keep pool-local ranks when pools are labeled (Celtic League Pool A/B).
+    // Only flatten into one overall ranking when pool identity is absent.
+    if (poolRows.some((row) => row.pool)) return poolRows;
+    return poolRows
+      .slice()
+      .sort(
+        (a, b) =>
+          b.points - a.points ||
+          b.pointsDiff - a.pointsDiff ||
+          a.teamName.localeCompare(b.teamName),
+      )
+      .map((row, index) => ({ ...row, rank: index + 1 }));
+  }
 
   const teamDetailsRows = parseTeamDetailsWikitableStandings(wikitext);
   if (teamDetailsRows.length) return teamDetailsRows;
@@ -903,6 +1234,17 @@ export function parsePremiershipSeasonWikitext(input: {
   }
   if (!standings.length) {
     standings = parsePoolWikitableStandings(input.wikitext);
+    // Preserve Pool A/B identity for Celtic League; only flatten unlabeled pools.
+    if (standings.length && !standings.some((row) => row.pool)) {
+      standings = [...standings]
+        .sort(
+          (a, b) =>
+            b.points - a.points ||
+            b.pointsDiff - a.pointsDiff ||
+            a.teamName.localeCompare(b.teamName),
+        )
+        .map((row, index) => ({ ...row, rank: index + 1 }));
+    }
   }
   if (!standings.length) {
     standings = parseTeamDetailsWikitableStandings(input.wikitext);
@@ -935,8 +1277,14 @@ export function parsePremiershipSeasonWikitext(input: {
   const playoffFixtures = dedupeFixtures(playoffRaw);
 
   if (!standings.length) {
+    // Only derive placeholder rows when we have no table at all — never invent
+    // zeroed league tables over real Wikipedia data we failed to parse.
     standings = standingsFromFixtureTeams(fixtures, playoffFixtures);
-    if (standings.length) warnings.push("Standings derived from fixture participants");
+    if (standings.length) {
+      warnings.push("Standings derived from fixture participants");
+    }
+  } else if (standings.every((r) => r.played === 0 && r.points === 0)) {
+    warnings.push("Standings rows present but all P=0/Pts=0 (likely incomplete wiki parse)");
   }
 
   const venues = [

@@ -5,6 +5,7 @@ import "server-only";
 import { and, asc, count, eq, ilike, or, sql } from "drizzle-orm";
 import { fixturePlayers, players, teams } from "@rugby365/db";
 import { getDb } from "./db";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 
 export type PublicPlayerDirectoryRow = {
   slug: string;
@@ -29,10 +30,13 @@ export async function listPublicPlayersDirectory(input: {
   pageSize?: number;
   q?: string;
 }): Promise<PublicPlayerDirectoryResult> {
-  const db = getDb();
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(100, Math.max(12, input.pageSize ?? 48));
   const q = input.q?.trim() ?? "";
+  const cacheKey = `players:dir:${page}:${pageSize}:${q.toLowerCase()}`;
+
+  return cachedPublic(cacheKey, PUBLIC_CACHE_TTL.playerDirectory, async () => {
+  const db = getDb();
 
   const conditions = [eq(players.isPublic, true), eq(players.publishStatus, "published")];
   if (q) {
@@ -87,6 +91,7 @@ export async function listPublicPlayersDirectory(input: {
     total,
     query: q,
   };
+  });
 }
 
 export async function listPublicPlayerSitemapEntries(limit = 50000): Promise<

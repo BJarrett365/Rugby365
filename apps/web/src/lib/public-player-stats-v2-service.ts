@@ -18,6 +18,7 @@ import {
   teams,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { teamDedupKey } from "./entity-normalize";
 import { buildMatchDetailPath } from "./match-schedule-utils";
 import {
   formatPeerAverageLabel,
@@ -34,6 +35,10 @@ import {
 } from "./public-player-spatial-stats-service";
 import { isInternationalCompetitionType } from "./public-player-filters";
 import { pluralizePositionLabel } from "./player-ranking-engine";
+import {
+  isUnknownStandingsTeamName,
+  resolveTeamNamesFromFixtureSlug,
+} from "./table-lab/standings-fixture-dedupe";
 import {
   aggregateDefensiveStats,
   averagePerAppearance,
@@ -223,14 +228,17 @@ function resultFromScores(
   homeScore: number | null,
   awayScore: number | null,
   isNeutral: boolean,
+  sideOverride: "home" | "away" | null = null,
 ): {
   venue: "H" | "A" | "N" | null;
   result: "W" | "D" | "L" | null;
   scoreFor: number | null;
   scoreAgainst: number | null;
 } {
-  const isHome = teamId === homeTeamId;
-  const isAway = teamId === awayTeamId;
+  const isHome =
+    sideOverride === "home" || (sideOverride == null && teamId === homeTeamId);
+  const isAway =
+    sideOverride === "away" || (sideOverride == null && teamId === awayTeamId);
   const venue: "H" | "A" | "N" | null = isNeutral ? "N" : isHome ? "H" : isAway ? "A" : null;
   if (homeScore == null || awayScore == null || (!isHome && !isAway)) {
     return { venue, result: null, scoreFor: null, scoreAgainst: null };
@@ -239,6 +247,36 @@ function resultFromScores(
   const scoreAgainst = isHome ? awayScore : homeScore;
   const result: "W" | "D" | "L" = scoreFor > scoreAgainst ? "W" : scoreFor < scoreAgainst ? "L" : "D";
   return { venue, result, scoreFor, scoreAgainst };
+}
+
+/** Player team id often differs from fixture home/away (duplicate Stormers rows). */
+function playerFixtureSide(input: {
+  teamId: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  teamName: string;
+  homeName: string;
+  awayName: string;
+}): "home" | "away" | null {
+  if (input.homeTeamId && input.teamId === input.homeTeamId) return "home";
+  if (input.awayTeamId && input.teamId === input.awayTeamId) return "away";
+  const playerKey = teamDedupKey(input.teamName);
+  if (!playerKey.startsWith("|")) {
+    const homeKey = teamDedupKey(input.homeName);
+    const awayKey = teamDedupKey(input.awayName);
+    if (homeKey === playerKey) return "home";
+    if (awayKey === playerKey) return "away";
+    const playerBase = playerKey.split("|")[0] ?? "";
+    const homeBase = homeKey.split("|")[0] ?? "";
+    const awayBase = awayKey.split("|")[0] ?? "";
+    if (playerBase && homeBase && (homeBase === playerBase || homeBase.includes(playerBase) || playerBase.includes(homeBase))) {
+      return "home";
+    }
+    if (playerBase && awayBase && (awayBase === playerBase || awayBase.includes(playerBase) || playerBase.includes(awayBase))) {
+      return "away";
+    }
+  }
+  return null;
 }
 
 function buildHref(input: {
@@ -377,6 +415,21 @@ function grainFromRow(input: {
     minutesPlayed: minutes,
     rating: ratingVal,
   });
+  // Orphan CMS placeholders ("Unknown team …") — recover labels from fixture slug,
+  // same approach as public appearances.
+  const resolvedNames = resolveTeamNamesFromFixtureSlug(
+    row.fixtureSlug,
+    row.homeTeamName ?? "Unknown",
+    row.awayTeamName ?? "Unknown",
+  );
+  const side = playerFixtureSide({
+    teamId: row.teamId,
+    homeTeamId: row.homeTeamId,
+    awayTeamId: row.awayTeamId,
+    teamName: row.teamName,
+    homeName: resolvedNames.homeName,
+    awayName: resolvedNames.awayName,
+  });
   const { venue, result, scoreFor, scoreAgainst } = resultFromScores(
     row.teamId,
     row.homeTeamId,
@@ -384,10 +437,37 @@ function grainFromRow(input: {
     row.homeScore,
     row.awayScore,
     row.isNeutralVenue,
+    side,
   );
-  const opponentIsHome = row.teamId === row.awayTeamId;
-  const opponentName = opponentIsHome ? row.homeTeamName : row.awayTeamName;
-  const opponentSlug = opponentIsHome ? row.homeTeamSlug : row.awayTeamSlug;
+  let teamName =
+    side === "home"
+      ? resolvedNames.homeName
+      : side === "away"
+        ? resolvedNames.awayName
+        : row.teamName;
+  let opponentName: string | null =
+    side === "home"
+      ? resolvedNames.awayName
+      : side === "away"
+        ? resolvedNames.homeName
+        : null;
+  if (isUnknownStandingsTeamName(teamName)) teamName = row.teamName;
+  if (opponentName && isUnknownStandingsTeamName(opponentName)) opponentName = null;
+
+  const rawOpponentSlug =
+    side === "away" ? row.homeTeamSlug : side === "home" ? row.awayTeamSlug : null;
+  const opponentSlug =
+    rawOpponentSlug &&
+    !/^orphan-/i.test(rawOpponentSlug) &&
+    opponentName &&
+    !isUnknownStandingsTeamName(opponentName)
+      ? rawOpponentSlug
+      : null;
+  const teamSlug =
+    row.teamSlug && !/^orphan-/i.test(row.teamSlug) && !isUnknownStandingsTeamName(teamName)
+      ? row.teamSlug
+      : null;
+
   const seasonStart = rugbySeasonStartFromKickoff(row.kickoffAt);
   const competitionName = row.competitionName ?? row.competitionNameStored;
   const isIntl =
@@ -407,10 +487,10 @@ function grainFromRow(input: {
     competitionSlug: row.competitionSlug,
     competitionType: row.competitionType,
     teamId: row.teamId,
-    teamName: row.teamName,
-    teamSlug: row.teamSlug,
-    opponentName: opponentName ?? null,
-    opponentSlug: opponentSlug ?? null,
+    teamName,
+    teamSlug,
+    opponentName,
+    opponentSlug,
     homeAway: venue,
     homeScore: row.homeScore,
     awayScore: row.awayScore,
@@ -420,25 +500,31 @@ function grainFromRow(input: {
     squadRole: row.squadRole,
     jerseyNumber: row.jerseyNumber,
     positionName: row.positionName,
-    tries: row.tries,
-    conversions: row.conversions,
-    penalties: row.penalties,
-    dropGoals: row.dropGoals,
-    points: row.points,
+    // Scoring from squad sheet: null → 0 when the player appeared (verified zero, not unknown).
+    tries: row.tries ?? 0,
+    conversions: row.conversions ?? 0,
+    penalties: row.penalties ?? 0,
+    dropGoals: row.dropGoals ?? 0,
+    points: row.points ?? 0,
     minutes,
-    metres: perf ? perf.metresCarried : null,
-    tacklesMade: perf ? perf.tacklesMade : null,
-    tacklesCompleted: perf ? perf.tacklesCompleted : null,
-    dominantTackles: perf ? perf.dominantTackles : null,
-    turnoversWon: perf ? perf.turnoversWon : null,
-    assists: perf ? perf.tryAssists : null,
-    cleanBreaks: perf ? perf.lineBreaks : null,
-    defendersBeaten: perf ? perf.defendersBeaten : null,
-    passes: extraNumber(extras, "passes"),
-    offloads: extraNumber(extras, "offloads"),
-    missedTackles: extraNumber(extras, "missedTackles", "missed_tackles"),
-    badPasses: extraNumber(extras, "badPasses", "bad_passes"),
-    kicks: extraNumber(extras, "kicks"),
+    // Perf columns: when a performance row exists, missing counts are verified zeros.
+    metres: perf ? perf.metresCarried ?? 0 : null,
+    tacklesMade: perf ? perf.tacklesMade ?? 0 : null,
+    tacklesCompleted: perf ? perf.tacklesCompleted ?? 0 : null,
+    dominantTackles: perf ? perf.dominantTackles ?? 0 : null,
+    turnoversWon: perf ? perf.turnoversWon ?? 0 : null,
+    assists: perf ? perf.tryAssists ?? 0 : null,
+    cleanBreaks: perf ? perf.lineBreaks ?? 0 : null,
+    defendersBeaten: perf ? perf.defendersBeaten ?? 0 : null,
+    passes: perf ? extraNumber(extras, "passes") ?? 0 : extraNumber(extras, "passes"),
+    offloads: perf ? extraNumber(extras, "offloads") ?? 0 : extraNumber(extras, "offloads"),
+    missedTackles: perf
+      ? extraNumber(extras, "missedTackles", "missed_tackles") ?? 0
+      : extraNumber(extras, "missedTackles", "missed_tackles"),
+    badPasses: perf
+      ? extraNumber(extras, "badPasses", "bad_passes") ?? 0
+      : extraNumber(extras, "badPasses", "bad_passes"),
+    kicks: perf ? extraNumber(extras, "kicks") ?? 0 : extraNumber(extras, "kicks"),
     conversionAttempts: resolveGoalKickAttempts(
       extraNumber(extras, ...CONVERSION_ATTEMPT_EXTRAS_KEYS),
       row.conversions,
@@ -458,12 +544,17 @@ function grainFromRow(input: {
       extraNumber(extras, ...DROP_GOAL_MISS_EXTRAS_KEYS),
     ),
     missedGoalKicks: extraNumber(extras, ...MISSED_GOAL_KICK_EXTRAS_KEYS),
-    tackleBreaks: extraNumber(extras, "tackleBreaks", "tackle_breaks", "brokenTackles"),
+    // SDMS stores broken tackles as defenders_beaten; extras.tackleBreaks is rarely present.
+    tackleBreaks: perf
+      ? (extraNumber(extras, "tackleBreaks", "tackle_breaks", "brokenTackles") ??
+        perf.defendersBeaten ??
+        0)
+      : extraNumber(extras, "tackleBreaks", "tackle_breaks", "brokenTackles"),
     rating: ratingVal,
     ratingBand,
     ratingBreakdown,
-    yellowCards: cards.yellow,
-    redCards: cards.red,
+    yellowCards: cards.yellow ?? 0,
+    redCards: cards.red ?? 0,
     isInternational: isIntl,
     eligible,
     href: buildHref({
@@ -652,7 +743,25 @@ function dedupeGrainsByFixture(grains: MatchGrain[]): MatchGrain[] {
       byFixture.set(g.fixtureId, g);
     }
   }
-  return [...byFixture.values()];
+  // Collapse Wikipedia + SDMS twins for the same opponents on the same day —
+  // prefer the row that actually has minutes / performance stats.
+  const byMatchDay = new Map<string, MatchGrain>();
+  const unmatched: MatchGrain[] = [];
+  for (const g of byFixture.values()) {
+    const day = g.kickoffAt?.toISOString().slice(0, 10) ?? null;
+    const opp = g.opponentName ? teamDedupKey(g.opponentName) : "";
+    const team = g.teamName ? teamDedupKey(g.teamName) : "";
+    if (!day || !opp || !team) {
+      unmatched.push(g);
+      continue;
+    }
+    const key = `${day}|${team}|${opp}`;
+    const existing = byMatchDay.get(key);
+    if (!existing || grainScore(g) > grainScore(existing)) {
+      byMatchDay.set(key, g);
+    }
+  }
+  return [...byMatchDay.values(), ...unmatched];
 }
 
 function gameLogRows(grains: MatchGrain[]): GameLogRow[] {
@@ -1484,7 +1593,9 @@ async function loadPeerAggregates(input: {
       prev.passes = (prev.passes ?? 0) + passes;
       prev.passMinutes += row.minutesPlayed ?? 0;
     }
-    const breaks = extraNumber(row.extras, "tackleBreaks", "tackle_breaks", "brokenTackles");
+    const breaks =
+      extraNumber(row.extras, "tackleBreaks", "tackle_breaks", "brokenTackles") ??
+      (row.defendersBeaten != null ? row.defendersBeaten : null);
     if (breaks != null) {
       prev.tackleBreaks = (prev.tackleBreaks ?? 0) + breaks;
     }

@@ -53,18 +53,22 @@ function statusLabel(status: string, showScores: boolean) {
   return "Fixture";
 }
 
+const UNDATED_KEY = "undated";
+
 function groupByDate(rows: LeagueMatchRow[], newestFirst: boolean) {
   const groups = new Map<string, LeagueMatchRow[]>();
   for (const row of rows) {
-    if (!row.kickoffAt) continue;
-    const key = row.kickoffAt.slice(0, 10);
+    // Historic Wikipedia imports often lack kickoff — still show them as results.
+    const key = row.kickoffAt?.slice(0, 10) ?? UNDATED_KEY;
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);
   }
-  const entries = [...groups.entries()].sort((a, b) =>
-    newestFirst ? b[0].localeCompare(a[0]) : a[0].localeCompare(b[0]),
-  );
+  const entries = [...groups.entries()].sort((a, b) => {
+    if (a[0] === UNDATED_KEY) return 1;
+    if (b[0] === UNDATED_KEY) return -1;
+    return newestFirst ? b[0].localeCompare(a[0]) : a[0].localeCompare(b[0]);
+  });
   return entries.map(([date, matches]) => ({
     date,
     matches: matches.sort((a, b) => (a.kickoffAt ?? "").localeCompare(b.kickoffAt ?? "")),
@@ -133,7 +137,9 @@ export function LeagueScheduleToolbar({
         >
           {seasons.map((s) => (
             <option key={s.id} value={s.label}>
-              {s.label}
+              {"displayLabel" in s && typeof s.displayLabel === "string" && s.displayLabel
+                ? s.displayLabel
+                : s.label}
             </option>
           ))}
         </select>
@@ -155,7 +161,8 @@ export function LeagueMatchList({
 }) {
   const filtered = useMemo(() => {
     return rows.filter((row) => {
-      if (!row.kickoffAt) return false;
+      // Undated historic results only appear in the "All" month filter.
+      if (!row.kickoffAt) return monthIndex === null;
       if (monthIndex === null) return true;
       return new Date(row.kickoffAt).getMonth() === monthIndex;
     });
@@ -175,7 +182,9 @@ export function LeagueMatchList({
     <div className="league-match-list space-y-4">
       {grouped.map(({ date, matches }) => (
         <section key={date} className="league-date-card">
-          <header className="league-date-card__header">{formatDateHeader(date)}</header>
+          <header className="league-date-card__header">
+            {date === UNDATED_KEY ? "Undated results" : formatDateHeader(date)}
+          </header>
           <div className="league-date-card__body">
             {matches.map((m) => (
               <article key={m.id} className="league-match-row">

@@ -85,7 +85,9 @@ export function standingRowsToTableRows(
 ): RugbyTableStandingRow[] {
   return rows.map((row) => {
     const formLetters = (row.form ?? "").toUpperCase().replace(/[^WDL]/g, "");
-    const formSequence = [...formLetters]
+    const usable =
+      formLetters.length >= 4 && /^D+$/.test(formLetters) ? "" : formLetters;
+    const formSequence = [...usable]
       .reverse()
       .filter((letter): letter is FormResult => letter === "W" || letter === "D" || letter === "L");
     return {

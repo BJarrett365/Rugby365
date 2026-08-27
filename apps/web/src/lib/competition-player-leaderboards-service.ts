@@ -16,6 +16,7 @@ import {
   RUGBY_CHAMPIONSHIP_FIRST_YEAR,
   TRI_NATIONS_FIRST_YEAR,
 } from "./rugby-championship-lineage";
+import { applyUrcLineageSeasonLabels, isUrcLineageSlug } from "./urc-lineage";
 import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import {
   currentDomesticSeasonStartYear,
@@ -254,6 +255,10 @@ function decorateSeasonsForCompetition(
   slug: string,
   seasons: Awaited<ReturnType<typeof listSeasonsForPicker>>,
 ) {
+  if (isUrcLineageSlug(slug)) {
+    return applyUrcLineageSeasonLabels(slug, seasons);
+  }
+
   if (!isRugbyChampionshipLineageSlug(slug)) {
     return seasons.map((season) => ({
       ...season,

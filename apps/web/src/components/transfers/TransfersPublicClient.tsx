@@ -45,6 +45,7 @@ type FilterOptions = {
     displayLabel: string;
     year: number;
     competitionId: string;
+    competitionName?: string | null;
   }>;
   teams: Array<{ id: string; name: string }>;
   movementTypes: string[];
@@ -118,8 +119,9 @@ export function TransfersPublicClient() {
     async function loadFilters() {
       try {
         const sp = new URLSearchParams({ mode: "filters" });
-        if (competitionId) sp.set("competitionId", competitionId);
-        if (seasonId) sp.set("seasonId", seasonId);
+        // Pass empty string so the API keeps "All competitions / seasons" instead of Premiership defaults.
+        sp.set("competitionId", competitionId);
+        sp.set("seasonId", seasonId);
         const res = await fetch(`/api/transfers?${sp}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Failed to load filters");
@@ -128,35 +130,26 @@ export function TransfersPublicClient() {
 
         if (!bootstrapped.current) {
           bootstrapped.current = true;
-          const seasonRows = (data.seasons ?? []) as FilterOptions["seasons"];
-          const seasonIds = new Set(seasonRows.map((s) => s.id));
-          const wikiYear = data.defaults?.seasonYear ?? 2026;
-          const urlSeason = initialSeason
-            ? seasonRows.find((s) => s.id === initialSeason)
-            : undefined;
-          // Keep URL season only if it is the Wiki/current window or newer; otherwise upgrade
-          const urlSeasonOk = Boolean(
-            urlSeason && seasonIds.has(urlSeason.id) && (urlSeason.year ?? 0) >= wikiYear,
-          );
-          const nextComp = initialCompetition || data.defaults?.competitionId || "";
-          const nextSeason =
-            (urlSeasonOk ? initialSeason : null) ||
-            data.defaults?.seasonId ||
-            data.selectedSeasonId ||
-            "";
-          if (nextComp) setCompetitionId(nextComp);
-          if (nextSeason) setSeasonId(nextSeason);
-          const params = new URLSearchParams(searchParams.toString());
-          if (nextComp) params.set("competitionId", nextComp);
-          if (nextSeason) params.set("seasonId", nextSeason);
-          if (!params.has("sortDir")) params.set("sortDir", "desc");
-          router.replace(`${pathname}?${params.toString()}`);
+          // Soft-default to Premiership + current wiki season only on a bare /transfers visit.
+          const bareVisit = !initialCompetition && !initialSeason;
+          if (bareVisit) {
+            const nextComp = data.defaults?.competitionId || "";
+            const nextSeason = data.defaults?.seasonId || data.selectedSeasonId || "";
+            if (nextComp) setCompetitionId(nextComp);
+            if (nextSeason) setSeasonId(nextSeason);
+            const params = new URLSearchParams(searchParams.toString());
+            if (nextComp) params.set("competitionId", nextComp);
+            if (nextSeason) params.set("seasonId", nextSeason);
+            if (!params.has("sortDir")) params.set("sortDir", "desc");
+            router.replace(`${pathname}?${params.toString()}`);
+          }
           setFiltersReady(true);
         } else if (preferDefaultSeason.current && data.selectedSeasonId) {
           preferDefaultSeason.current = false;
           setSeasonId(data.selectedSeasonId);
           const params = new URLSearchParams(searchParams.toString());
           if (competitionId) params.set("competitionId", competitionId);
+          else params.delete("competitionId");
           params.set("seasonId", data.selectedSeasonId);
           params.delete("teamId");
           router.replace(`${pathname}?${params.toString()}`);
@@ -176,18 +169,15 @@ export function TransfersPublicClient() {
 
   const loadTransfers = useCallback(async () => {
     if (!filtersReady || !options) return;
-    // Hold until Wiki/current season defaults are in state (avoid empty = all seasons flash)
-    const effectiveSeason = seasonId || options.defaults.seasonId || "";
-    const effectiveComp = competitionId || options.defaults.competitionId || "";
-    if (!effectiveSeason || !effectiveComp) return;
 
     setLoading(true);
     setError("");
     try {
       const sp = new URLSearchParams();
       sp.set("view", view);
-      sp.set("seasonId", effectiveSeason);
-      sp.set("competitionId", effectiveComp);
+      // Always send keys so empty = All (API does not apply Premiership defaults).
+      sp.set("seasonId", seasonId);
+      sp.set("competitionId", competitionId);
       sp.set("sortDir", "desc");
       if (teamId) sp.set("teamId", teamId);
       if (movementType) sp.set("movementType", movementType);
@@ -236,8 +226,10 @@ export function TransfersPublicClient() {
 
   const seasonLabel =
     seasonsForComp.find((s) => s.id === seasonId)?.displayLabel ||
-    options?.defaults.seasonLabel ||
-    "This season";
+    (competitionId
+      ? options?.competitions.find((c) => c.id === competitionId)?.name
+      : null) ||
+    (seasonId || competitionId ? "Selected filters" : "All competitions");
 
   return (
     <div className="pr-mc-fixtures-page pr-mc-transfers-page">
@@ -257,7 +249,7 @@ export function TransfersPublicClient() {
           </span>
         </div>
         <p className="pr-mc-transfers-page__sub">
-          {seasonLabel} · latest Premiership moves{" "}
+          {seasonLabel} · club and player moves{" "}
           {options?.defaults.wikiUrl ? (
             <>
               ·{" "}

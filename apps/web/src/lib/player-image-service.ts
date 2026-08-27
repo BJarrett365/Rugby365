@@ -15,6 +15,11 @@ import {
 import { canAutoApproveImageConfidence } from "./planet-rugby-image-match";
 import { searchPlanetRugbyPlayerImages } from "./planet-rugby-image-search-service";
 import { uploadPlayerImageBytesToSupabase } from "./supabase-live-service";
+import {
+  scoreAlamyCandidatesForPlayer,
+  type RawAlamyImage,
+} from "./alamy-image-search-service";
+import { isAllowedAlamyImageUrl } from "./alamy-image-utils";
 
 export type PlayerImageRole =
   | "primary"
@@ -288,6 +293,267 @@ export async function findPlanetRugbyImagesForPlayer(playerId: string) {
     candidates: discovered.candidates,
     images: await listPlayerImages(playerId),
     savedCount: saved.length,
+  };
+}
+
+/**
+ * Register Alamy lightbox/search images for a player.
+ * User confirmed licensed store use — high/medium name matches are approved + public.
+ * Does not replace an already-approved primary headshot.
+ */
+export async function registerAlamyImagesForPlayer(
+  playerId: string,
+  rawImages: RawAlamyImage[],
+  options?: { setPrimaryIfMissing?: boolean; maxPerPlayer?: number },
+) {
+  const ctx = await getPlayerImageContext(playerId);
+  const scored = scoreAlamyCandidatesForPlayer(rawImages, {
+    playerName: ctx.player.name,
+    aliases: ctx.aliases,
+    clubName: ctx.clubName,
+    internationalTeamName: ctx.internationalTeamName,
+    previousClubs: ctx.previousClubs,
+  });
+
+  const max = options?.maxPerPlayer ?? 6;
+  const picked = scored.slice(0, max);
+  const db = getDb();
+  const saved: Array<typeof playerImages.$inferSelect> = [];
+  let setPrimary = Boolean(options?.setPrimaryIfMissing) && !ctx.hasApprovedPrimary;
+
+  for (const candidate of picked) {
+    if (!isAllowedAlamyImageUrl(candidate.imageUrl)) continue;
+
+    const [existing] = await db
+      .select()
+      .from(playerImages)
+      .where(
+        and(
+          eq(playerImages.playerId, playerId),
+          eq(playerImages.canonicalUrl, candidate.canonicalUrl),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      if (existing.status === "rejected" || existing.status === "incorrect_player") {
+        continue;
+      }
+      saved.push(existing);
+      continue;
+    }
+
+    const autoApprove =
+      candidate.match.level === "high" ||
+      (candidate.match.level === "medium" && candidate.match.score >= 55);
+
+    const [row] = await db
+      .insert(playerImages)
+      .values({
+        playerId,
+        imageUrl: candidate.imageUrl,
+        canonicalUrl: candidate.canonicalUrl,
+        sourceProvider: "alamy",
+        sourcePageUrl: candidate.sourcePageUrl,
+        caption: candidate.caption,
+        altText: candidate.altText,
+        credit: candidate.credit,
+        agency: "Alamy",
+        licence: "alamy",
+        imageType: guessImageType(candidate.altText, candidate.caption, null),
+        role: setPrimary ? "primary" : "gallery",
+        confidence: candidate.match.level,
+        confidenceScore: candidate.match.score,
+        status: autoApprove ? "approved" : "candidate",
+        isPublic: autoApprove,
+        isAiGenerated: false,
+        approvedAt: autoApprove ? now() : null,
+        matchContext: {
+          reasons: candidate.match.reasons,
+          nameInAltOrCaption: candidate.match.nameInAltOrCaption,
+          teamContextMatch: candidate.match.teamContextMatch,
+          alamyId: candidate.alamyId,
+        },
+        discoveredAt: now(),
+        updatedAt: now(),
+      })
+      .returning();
+
+    if (!row) continue;
+    saved.push(row);
+
+    if (setPrimary && autoApprove) {
+      await db
+        .update(players)
+        .set({
+          imageUrl: row.imageUrl,
+          primaryImageId: row.id,
+          primaryImageApprovedAt: now(),
+          updatedAt: now(),
+        })
+        .where(eq(players.id, playerId));
+      setPrimary = false;
+    }
+  }
+
+  return {
+    playerId,
+    matched: scored.length,
+    savedCount: saved.length,
+    images: saved,
+  };
+}
+
+function canonicalizeSpringboksImageUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    u.hash = "";
+    u.search = "";
+    u.protocol = "https:";
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+function isAllowedSpringboksImageUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:") return false;
+    return (
+      u.hostname === "media-cdn.cortextech.io" ||
+      u.hostname === "springboks.rugby" ||
+      u.hostname.endsWith(".springboks.rugby")
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Register an official springboks.rugby / Cortex CDN headshot.
+ * Sets as primary when the player has no approved primary yet.
+ * Pass forcePrimary to replace Alamy/other primaries with the official shot.
+ */
+export async function registerSpringboksOfficialImage(
+  playerId: string,
+  imageUrl: string,
+  options?: {
+    sourcePageUrl?: string | null;
+    playerName?: string | null;
+    setPrimaryIfMissing?: boolean;
+    forcePrimary?: boolean;
+  },
+) {
+  if (!isAllowedSpringboksImageUrl(imageUrl)) {
+    return { playerId, saved: false, reason: "url_not_allowed" as const };
+  }
+
+  const ctx = await getPlayerImageContext(playerId);
+  const canonicalUrl = canonicalizeSpringboksImageUrl(imageUrl);
+  const db = getDb();
+  const forcePrimary = Boolean(options?.forcePrimary);
+  const setPrimary =
+    forcePrimary ||
+    (Boolean(options?.setPrimaryIfMissing !== false) && !ctx.hasApprovedPrimary);
+
+  const [existing] = await db
+    .select()
+    .from(playerImages)
+    .where(and(eq(playerImages.playerId, playerId), eq(playerImages.canonicalUrl, canonicalUrl)))
+    .limit(1);
+
+  async function promotePrimary(imageId: string, url: string) {
+    if (!setPrimary) return;
+    // Demote any other primary roles for this player.
+    await db
+      .update(playerImages)
+      .set({ role: "gallery", updatedAt: now() })
+      .where(
+        and(
+          eq(playerImages.playerId, playerId),
+          eq(playerImages.role, "primary"),
+          ne(playerImages.id, imageId),
+        ),
+      );
+    await db
+      .update(playerImages)
+      .set({
+        role: "primary",
+        status: "approved",
+        isPublic: true,
+        approvedAt: now(),
+        updatedAt: now(),
+      })
+      .where(eq(playerImages.id, imageId));
+    await db
+      .update(players)
+      .set({
+        imageUrl: url,
+        primaryImageId: imageId,
+        primaryImageApprovedAt: now(),
+        updatedAt: now(),
+      })
+      .where(eq(players.id, playerId));
+  }
+
+  if (existing) {
+    if (existing.status === "rejected" || existing.status === "incorrect_player") {
+      return { playerId, saved: false, reason: "rejected" as const, imageId: existing.id };
+    }
+    await promotePrimary(existing.id, existing.imageUrl);
+    return {
+      playerId,
+      saved: false,
+      reason: forcePrimary || setPrimary ? ("promoted" as const) : ("already_present" as const),
+      imageId: existing.id,
+    };
+  }
+
+  const alt = options?.playerName
+    ? `${options.playerName} — Springboks official portrait`
+    : "Springboks official portrait";
+
+  const [row] = await db
+    .insert(playerImages)
+    .values({
+      playerId,
+      imageUrl: canonicalizeSpringboksImageUrl(imageUrl),
+      canonicalUrl,
+      sourceProvider: "springboks_rugby",
+      sourcePageUrl: options?.sourcePageUrl ?? null,
+      caption: alt,
+      altText: alt,
+      credit: "SA Rugby / springboks.rugby",
+      agency: "SA Rugby",
+      licence: "editorial",
+      imageType: "headshot",
+      role: setPrimary ? "primary" : "gallery",
+      confidence: "high",
+      confidenceScore: 95,
+      status: "approved",
+      isPublic: true,
+      isAiGenerated: false,
+      approvedAt: now(),
+      matchContext: {
+        reasons: ["official_springboks_squad_image"],
+        nameInAltOrCaption: true,
+        teamContextMatch: true,
+      },
+      discoveredAt: now(),
+      updatedAt: now(),
+    })
+    .returning();
+
+  if (!row) return { playerId, saved: false, reason: "insert_failed" as const };
+
+  await promotePrimary(row.id, row.imageUrl);
+
+  return {
+    playerId,
+    saved: true,
+    reason: forcePrimary || setPrimary ? ("inserted_primary" as const) : ("inserted" as const),
+    imageId: row.id,
   };
 }
 

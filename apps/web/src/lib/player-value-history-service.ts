@@ -1,7 +1,15 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte } from "drizzle-orm";
-import { playerValueHistory, teams } from "@rugby365/db";
+import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import {
+  competitions,
+  fixturePlayers,
+  fixtures,
+  playerMatchRatings,
+  players,
+  playerValueHistory,
+  teams,
+} from "@rugby365/db";
 import { getDb } from "./db";
 import {
   classifyValueTrend90d,
@@ -11,7 +19,8 @@ import {
   type MarketValueSnapshot,
   type PlayerValueSnapshotType,
 } from "./player-market-value-trend-utils";
-import type { PlayerValueFactor } from "./player-value-math";
+import { ageAtDate } from "./player-value-backfill-math";
+import { computePlayerValue, PLAYER_VALUE_MODEL, type PlayerValueFactor } from "./player-value-math";
 
 export type PlayerValueHistoryRow = {
   id: string;
@@ -360,4 +369,183 @@ export async function auditPlayerValueHistory(playerId: string) {
       valueGbp: r.estimatedValue,
     })),
   };
+}
+
+/**
+ * Rebuild historic market-value points from real appearance years only.
+ * Each year with fixtures gets one snapshot on the last kickoff of that year,
+ * valued with period age / club / competition / match ratings — not today's value copied back.
+ */
+export async function rebuildValueTimelineFromAppearances(
+  playerId: string,
+): Promise<{ inserted: number; years: number[] }> {
+  const db = getDb();
+  const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+  if (!player) return { inserted: 0, years: [] };
+
+  const yearRows = await db
+    .select({
+      year: sql<number>`extract(year from ${fixtures.kickoffAt})::int`,
+      lastKickoff: sql<Date>`max(${fixtures.kickoffAt})`,
+      apps: sql<number>`count(*)::int`,
+    })
+    .from(fixturePlayers)
+    .innerJoin(fixtures, eq(fixtures.id, fixturePlayers.fixtureId))
+    .where(eq(fixturePlayers.playerId, playerId))
+    .groupBy(sql`extract(year from ${fixtures.kickoffAt})`)
+    .orderBy(sql`extract(year from ${fixtures.kickoffAt})`);
+
+  if (yearRows.length === 0) return { inserted: 0, years: [] };
+
+  // Drop prior appearance reconstructions so re-runs stay idempotent.
+  await db
+    .delete(playerValueHistory)
+    .where(
+      and(
+        eq(playerValueHistory.playerId, playerId),
+        eq(playerValueHistory.calculationReason, "APPEARANCE_YEAR_RECONSTRUCTION"),
+      ),
+    );
+
+  const existing = await db
+    .select({
+      snapshotDate: playerValueHistory.snapshotDate,
+      snapshotType: playerValueHistory.snapshotType,
+    })
+    .from(playerValueHistory)
+    .where(eq(playerValueHistory.playerId, playerId));
+  const blockedMonths = new Set(
+    existing
+      .filter((r) => (r.snapshotType ?? "").toUpperCase() === "LIVE")
+      .map((r) => r.snapshotDate.toISOString().slice(0, 7)),
+  );
+
+  let inserted = 0;
+  const years: number[] = [];
+
+  for (const row of yearRows) {
+    const asOf = new Date(row.lastKickoff);
+    if (Number.isNaN(asOf.getTime())) continue;
+    const monthKey = asOf.toISOString().slice(0, 7);
+    if (blockedMonths.has(monthKey)) continue;
+
+    const [side] = await db
+      .select({
+        teamId: fixturePlayers.teamId,
+        teamName: teams.name,
+        competitionId: fixtures.competitionId,
+        competitionSlug: competitions.slug,
+        competitionName: competitions.name,
+      })
+      .from(fixturePlayers)
+      .innerJoin(fixtures, eq(fixtures.id, fixturePlayers.fixtureId))
+      .leftJoin(teams, eq(teams.id, fixturePlayers.teamId))
+      .leftJoin(competitions, eq(competitions.id, fixtures.competitionId))
+      .where(
+        and(
+          eq(fixturePlayers.playerId, playerId),
+          eq(fixtures.kickoffAt, asOf),
+        ),
+      )
+      .limit(1);
+
+    if (!side?.teamId || !(side.competitionId || side.competitionSlug || side.competitionName)) {
+      continue;
+    }
+
+    const priorRatings = await db
+      .select({ rating: playerMatchRatings.rating })
+      .from(playerMatchRatings)
+      .innerJoin(fixtures, eq(fixtures.id, playerMatchRatings.fixtureId))
+      .where(
+        and(
+          eq(playerMatchRatings.playerId, playerId),
+          lte(fixtures.kickoffAt, asOf),
+          sql`${playerMatchRatings.rating} is not null`,
+        ),
+      )
+      .orderBy(desc(fixtures.kickoffAt))
+      .limit(5);
+
+    const lastFive = priorRatings
+      .map((r) => Number(r.rating))
+      .filter((n) => Number.isFinite(n))
+      .map((n) => (n > 10 ? n / 10 : n))
+      .reverse();
+
+    if (lastFive.length < 1) continue;
+
+    const matchAvg = lastFive.reduce((a, b) => a + b, 0) / lastFive.length;
+    const overallRating = Math.round(55 + matchAvg * 4);
+    const formScore = overallRating;
+    const age = ageAtDate(player.birthDate, asOf);
+
+    const [capsRow] = await db
+      .select({ caps: sql<number>`count(*)::int` })
+      .from(fixturePlayers)
+      .innerJoin(fixtures, eq(fixturePlayers.fixtureId, fixtures.id))
+      .innerJoin(competitions, eq(fixtures.competitionId, competitions.id))
+      .where(
+        and(
+          eq(fixturePlayers.playerId, playerId),
+          lte(fixtures.kickoffAt, asOf),
+          sql`(
+            ${competitions.competitionType} in ('international', 'world_cup')
+            or ${competitions.slug} ilike '%nations%'
+            or ${competitions.slug} ilike '%world-cup%'
+            or ${competitions.name} ilike '%nations%'
+            or ${competitions.name} ilike '%world cup%'
+            or ${competitions.name} ilike '%all black%'
+          )`,
+        ),
+      );
+
+    const result = computePlayerValue({
+      currentRating: overallRating,
+      seasonRating: null,
+      formScore,
+      lastFiveMatchRatings: lastFive,
+      potential: null,
+      reputation: null,
+      age,
+      positionName: player.positionName,
+      competitionKey: side.competitionSlug ?? side.competitionName,
+      internationalCaps: Number(capsRow?.caps ?? 0),
+      contractMonthsRemaining: null,
+      daysUnavailableLastYear: null,
+      isCaptain: null,
+      hasSocialPresence: false,
+      mediaNudgePct: null,
+    });
+
+    await db.insert(playerValueHistory).values({
+      playerId,
+      snapshotDate: asOf,
+      estimatedValue: result.marketValueGbp,
+      currency: "GBP",
+      confidence: Math.min(result.confidence, 0.62),
+      coverage: 70,
+      overallRating,
+      potentialRating: null,
+      currentFormScore: formScore,
+      clubId: side.teamId,
+      competitionId: side.competitionId,
+      contractEndDate: null,
+      contractMonthsRemaining: null,
+      ageAtSnapshot: age,
+      primaryPosition: player.positionName,
+      valueScore: null,
+      modelVersion: PLAYER_VALUE_MODEL,
+      snapshotType: "BACKFILLED",
+      status: "active",
+      calculationReason: "APPEARANCE_YEAR_RECONSTRUCTION",
+      factorScores: result.factors,
+    });
+
+    inserted += 1;
+    years.push(row.year);
+    blockedMonths.add(monthKey);
+  }
+
+  return { inserted, years };
 }

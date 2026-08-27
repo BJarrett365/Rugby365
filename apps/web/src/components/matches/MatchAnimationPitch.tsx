@@ -28,6 +28,8 @@ type Props = {
   showKickPath?: boolean;
   /** Optional phase label over the shade (Attack / Defence / In Possession). */
   phaseLabel?: string | null;
+  /** Hide the pitch oval when the player sprite carries the rugby ball. */
+  hideBall?: boolean;
 };
 
 function toSvgY(yPercent: number): number {
@@ -65,6 +67,7 @@ export function MatchAnimationPitch({
   intensity = null,
   showKickPath = false,
   phaseLabel = null,
+  hideBall = false,
 }: Props) {
   const bx = Math.min(98, Math.max(2, ballX));
   const by = Math.min(95, Math.max(5, ballY));
@@ -377,24 +380,26 @@ export function MatchAnimationPitch({
         ) : null}
 
         {/* Ball + name label */}
-        <g
-          className="pr-ma-pitch__ball"
-          style={{
-            transform: `translate(${bx}px, ${svgY}px)`,
-            transition: reducedMotion ? "none" : "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        >
-          <ellipse
-            cx="0"
-            cy="0"
-            rx="1.6"
-            ry="1.1"
-            fill="#f5f0e6"
-            stroke="#3e2723"
-            strokeWidth="0.25"
-            filter="url(#pr-ma-glow)"
-          />
-        </g>
+        {!hideBall ? (
+          <g
+            className="pr-ma-pitch__ball"
+            style={{
+              transform: `translate(${bx}px, ${svgY}px)`,
+              transition: reducedMotion ? "none" : "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            <ellipse
+              cx="0"
+              cy="0"
+              rx="1.6"
+              ry="1.1"
+              fill="#c4a574"
+              stroke="#3e2723"
+              strokeWidth="0.25"
+              filter="url(#pr-ma-glow)"
+            />
+          </g>
+        ) : null}
 
         {tagLines.length > 0 && !darkened && !shade ? (
           <g className="pr-ma-pitch__name-tag" transform={`translate(${labelX}, ${labelY})`}>

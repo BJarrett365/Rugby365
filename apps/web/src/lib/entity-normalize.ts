@@ -117,6 +117,9 @@ export function isJunkTeamName(name: string): boolean {
   if (!trimmed) return true;
   if (/^\d+$/.test(trimmed)) return true;
   if (/^#?\d{1,3}$/.test(trimmed)) return true;
+  if (/bonus\s+point\s+system/i.test(trimmed)) return true;
+  if (/^source\s*:/i.test(trimmed)) return true;
+  if (/^under\s+the\b/i.test(trimmed)) return true;
   if (/^(seed|rank|pool|pos(?:ition)?|p|w|d|l|pf|pa|pd|bp|pts?)$/i.test(trimmed)) return true;
   if (/^\{\{/.test(trimmed) || /\}\}/.test(trimmed)) return true;
   if (/football kit/i.test(trimmed)) return true;

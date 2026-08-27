@@ -1,6 +1,5 @@
 /**
- * Public PLAYER RANKINGS product — CURRENT boards from persisted snapshots.
- * All-Time is scaffolded separately (under development until historical quality allows).
+ * Public PLAYER RANKINGS product — CURRENT + ALL-TIME boards from persisted snapshots.
  */
 import "server-only";
 
@@ -8,14 +7,19 @@ import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import {
   competitions,
   fixtures,
+  playerCareerStints,
+  playerLegendScores,
+  playerLegends,
   playerMatchPerformanceStats,
   playerRankingBoardSnapshots,
   playerRankingHistory,
+  playerRatingHistory,
   playerRatings,
   players,
   teams,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 import {
   ALLTIME_ERA_OPTIONS,
   PLAYER_RANK_ALLTIME_MODEL,
@@ -26,12 +30,18 @@ import {
   RANKING_POSITION_GROUPS,
   buildPlayerRankingsTitle,
   buildRankingFilterKey,
+  cleanRankingClubName,
+  cleanRankingPlayerName,
   computePositionRankingScore,
+  computeRatingMovementDelta,
   denseRankWithTies,
+  estimateRankingMovement,
   formatRankingDisplay,
+  isDirtyRankingPlayerName,
   isEligibleForCurrentRanking,
   normalizeRankingTop,
   parseLastFiveFormBlocks,
+  pickCareerClubName,
   rankingMovement,
   resolveRankingPositionGroup,
   shortCompetitionLabel,
@@ -40,12 +50,16 @@ import {
   type ScoredMember,
 } from "./player-ranking-engine";
 
+type NationBadge = { name: string; slug: string; imageUrl: string | null };
+
 export type PublicRankingBoardRow = {
   rank: number;
   rankDisplay: string;
   provisional: boolean;
   movement: "up" | "down" | "flat" | null;
   previousRank: number | null;
+  /** Rating-points movement (e.g. +1.4 / -2.1) from recent vs prior form. */
+  movementDelta: number | null;
   playerId: string;
   slug: string;
   name: string;
@@ -68,6 +82,10 @@ export type PublicRankingBoardRow = {
   internationalPerformance: number | null;
   clubPerformance: number | null;
   positionPerformance: number | null;
+  /** All-time peak rating (0–100). */
+  peakRating: number | null;
+  /** All-time impact / legend overall score. */
+  impactScore: number | null;
   eligibleMinutes: number | null;
   eligibleAppearances: number | null;
   modelVersion: string;
@@ -265,6 +283,8 @@ async function persistBoardSnapshot(input: {
   competitionLabel: string | null;
 }): Promise<void> {
   const db = getDb();
+  const modelVersion =
+    input.filters.mode === "alltime" ? PLAYER_RANK_ALLTIME_MODEL : PLAYER_RANK_CURRENT_MODEL;
   try {
     await db
       .update(playerRankingBoardSnapshots)
@@ -285,7 +305,7 @@ async function persistBoardSnapshot(input: {
       competitionKey: input.filters.competition,
       eraKey: input.filters.era,
       topN: input.filters.top,
-      modelVersion: PLAYER_RANK_CURRENT_MODEL,
+      modelVersion,
       pool: input.pool,
       title: input.title,
       payload: {
@@ -314,7 +334,7 @@ async function persistBoardSnapshot(input: {
           and(
             eq(playerRankingHistory.scope, "board"),
             eq(playerRankingHistory.metricKey, metricKey),
-            eq(playerRankingHistory.modelVersion, PLAYER_RANK_CURRENT_MODEL),
+            eq(playerRankingHistory.modelVersion, modelVersion),
             sql`${playerRankingHistory.positionKey} is not distinct from ${input.filters.position}`,
             sql`${playerRankingHistory.nationKey} is not distinct from ${input.filters.nation}`,
             sql`${playerRankingHistory.clubKey} is not distinct from ${input.filters.club}`,
@@ -336,7 +356,7 @@ async function persistBoardSnapshot(input: {
           pool: input.pool,
           score: r.rankingScore,
           status: r.provisional ? "provisional" : "current",
-          modelVersion: PLAYER_RANK_CURRENT_MODEL,
+          modelVersion,
           isCurrent: true,
           calculatedAt: new Date(),
         })),
@@ -375,6 +395,351 @@ async function previousRanksForFilter(filters: PlayerRankingBoardFilters): Promi
   } catch {
     return new Map();
   }
+}
+
+/** Newest-first overall ratings from history (0–100 scale preferred). */
+async function loadRatingSeriesByPlayer(
+  playerIds: string[],
+): Promise<Map<string, number[]>> {
+  const map = new Map<string, number[]>();
+  if (!playerIds.length) return map;
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        playerId: playerRatingHistory.playerId,
+        overall: playerRatingHistory.overallRating,
+        matchDate: playerRatingHistory.matchDate,
+        calculatedAt: playerRatingHistory.calculatedAt,
+      })
+      .from(playerRatingHistory)
+      .where(inArray(playerRatingHistory.playerId, playerIds))
+      .orderBy(
+        desc(playerRatingHistory.matchDate),
+        desc(playerRatingHistory.calculatedAt),
+      );
+
+    for (const r of rows) {
+      if (r.overall == null || !Number.isFinite(r.overall)) continue;
+      const list = map.get(r.playerId) ?? [];
+      if (list.length < 12) list.push(Number(r.overall));
+      map.set(r.playerId, list);
+    }
+  } catch {
+    // best-effort
+  }
+  return map;
+}
+
+async function loadCareerClubByPlayer(
+  playerIds: string[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!playerIds.length) return map;
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        playerId: playerCareerStints.playerId,
+        teamName: playerCareerStints.teamName,
+        careerType: playerCareerStints.careerType,
+        endYear: playerCareerStints.endYear,
+        sortOrder: playerCareerStints.sortOrder,
+      })
+      .from(playerCareerStints)
+      .where(inArray(playerCareerStints.playerId, playerIds));
+
+    const byPlayer = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const list = byPlayer.get(r.playerId) ?? [];
+      list.push(r);
+      byPlayer.set(r.playerId, list);
+    }
+    for (const [playerId, stints] of byPlayer) {
+      const club = pickCareerClubName(stints);
+      if (club) map.set(playerId, club);
+    }
+  } catch {
+    // best-effort
+  }
+  return map;
+}
+
+function resolveBoardClub(input: {
+  teamName: string | null;
+  clubName: string | null;
+  teamSlug: string | null;
+  teamImageUrl: string | null;
+  teamId: string | null;
+  careerClub: string | null;
+  crestByName: Map<string, { id: string; slug: string; imageUrl: string | null }>;
+}): {
+  teamId: string | null;
+  teamName: string | null;
+  teamSlug: string | null;
+  teamImageUrl: string | null;
+} {
+  const fromTeam = cleanRankingClubName(input.teamName);
+  const fromClub = cleanRankingClubName(input.clubName);
+  const fromCareer = cleanRankingClubName(input.careerClub);
+  const name = fromTeam ?? fromClub ?? fromCareer;
+  if (!name) {
+    return {
+      teamId: null,
+      teamName: "Unassigned",
+      teamSlug: null,
+      teamImageUrl: null,
+    };
+  }
+  const crest = input.crestByName.get(name.toLowerCase());
+  if (fromTeam && input.teamImageUrl) {
+    return {
+      teamId: input.teamId,
+      teamName: name,
+      teamSlug: input.teamSlug,
+      teamImageUrl: input.teamImageUrl,
+    };
+  }
+  if (crest) {
+    return {
+      teamId: crest.id,
+      teamName: name,
+      teamSlug: crest.slug,
+      teamImageUrl: crest.imageUrl ?? input.teamImageUrl,
+    };
+  }
+  return {
+    teamId: fromTeam ? input.teamId : null,
+    teamName: name,
+    teamSlug: fromTeam ? input.teamSlug : null,
+    teamImageUrl: fromTeam ? input.teamImageUrl : null,
+  };
+}
+
+async function loadNationBadgeByCountryName(
+  countryNames: string[],
+): Promise<Map<string, NationBadge>> {
+  const map = new Map<string, NationBadge>();
+  const names = [
+    ...new Set(
+      countryNames
+        .map((n) => n.trim())
+        .filter(Boolean)
+        .map((n) => n.toLowerCase()),
+    ),
+  ];
+  if (!names.length) return map;
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        slug: teams.slug,
+        imageUrl: teams.imageUrl,
+      })
+      .from(teams)
+      .where(
+        and(
+          sql`lower(${teams.name}) in (${sql.join(
+            names.map((n) => sql`${n}`),
+            sql`, `,
+          )})`,
+          sql`${teams.slug} not like '%__legacy__%'`,
+          sql`${teams.name} not ilike '%u20%'`,
+          sql`${teams.name} not ilike '%u18%'`,
+          sql`${teams.name} not ilike '%schools%'`,
+          sql`${teams.name} not ilike '%sevens%'`,
+          sql`${teams.name} not ilike '%7''s%'`,
+          sql`${teams.name} not ilike '% A'`,
+        ),
+      )
+      .orderBy(
+        sql`case when ${teams.imageUrl} is not null then 0 else 1 end`,
+        sql`length(${teams.name})`,
+      );
+    for (const r of rows) {
+      const key = r.name.trim().toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, { name: r.name, slug: r.slug, imageUrl: r.imageUrl });
+      } else if (!map.get(key)?.imageUrl && r.imageUrl) {
+        map.set(key, { name: r.name, slug: r.slug, imageUrl: r.imageUrl });
+      }
+    }
+  } catch {
+    // best-effort
+  }
+  return map;
+}
+
+function resolveNationBadge(input: {
+  countryName: string | null;
+  internationalTeamId: string | null;
+  nationById: Map<string, NationBadge>;
+  nationByName: Map<string, NationBadge>;
+}): { nationName: string | null; nationSlug: string | null; nationImageUrl: string | null } {
+  const intl =
+    input.internationalTeamId != null
+      ? input.nationById.get(input.internationalTeamId)
+      : null;
+  const byName = input.countryName
+    ? input.nationByName.get(input.countryName.trim().toLowerCase())
+    : null;
+  const nationName = input.countryName?.trim() || intl?.name || byName?.name || null;
+  return {
+    nationName,
+    nationSlug: intl?.slug ?? byName?.slug ?? null,
+    nationImageUrl: intl?.imageUrl ?? byName?.imageUrl ?? null,
+  };
+}
+
+async function loadCrestByClubName(
+  clubNames: string[],
+): Promise<Map<string, { id: string; slug: string; imageUrl: string | null }>> {
+  const map = new Map<string, { id: string; slug: string; imageUrl: string | null }>();
+  const names = [...new Set(clubNames.map((n) => n.trim()).filter(Boolean))];
+  if (!names.length) return map;
+  const aliases: Record<string, string[]> = {
+    force: ["western force", "force"],
+    "western force": ["western force", "force"],
+    "rugby rovigo": ["rugby rovigo", "rovigo delta", "rovigo"],
+    "queensland reds": ["queensland reds", "reds"],
+    reds: ["reds", "queensland reds"],
+    "nsw waratahs": ["nsw waratahs", "waratahs"],
+    waratahs: ["waratahs", "nsw waratahs"],
+    "aviron bayonnais": ["aviron bayonnais", "bayonne", "bayonnais"],
+    bayonne: ["bayonne", "aviron bayonnais", "bayonnais"],
+    bayonnais: ["bayonnais", "aviron bayonnais", "bayonne"],
+    "kintetsu liners": ["kintetsu liners", "hanazono kintetsu liners"],
+    "toshiba brave lupus": ["toshiba brave lupus", "toshiba brave lupus tokyo", "brave lupus tokyo"],
+    "golden lions": ["golden lions", "lions", "emirates lions"],
+    lions: ["lions", "golden lions", "emirates lions"],
+    "panasonic wild knights": ["panasonic wild knights", "saitama wild knights", "wild knights"],
+    "honda heat": ["honda heat", "mie honda heat"],
+    "ulster rugby": ["ulster rugby", "ulster"],
+    ulster: ["ulster", "ulster rugby"],
+    leopards: ["leopards", "nw leopards"],
+  };
+  const lookupNames = [
+    ...new Set(
+      names.flatMap((n) => {
+        const key = n.toLowerCase();
+        return aliases[key] ?? [key];
+      }),
+    ),
+  ];
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        slug: teams.slug,
+        imageUrl: teams.imageUrl,
+      })
+      .from(teams)
+      .where(
+        and(
+          sql`lower(${teams.name}) in (${sql.join(
+            lookupNames.map((n) => sql`${n}`),
+            sql`, `,
+          )})`,
+          sql`${teams.name} not ilike 'unknown team%'`,
+          sql`${teams.slug} not like '%__legacy__%'`,
+          sql`${teams.slug} not like '%flagicon%'`,
+        ),
+      )
+      .orderBy(sql`case when ${teams.imageUrl} is not null then 0 else 1 end`, teams.name);
+
+    for (const r of rows) {
+      const key = r.name.trim().toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, { id: r.id, slug: r.slug, imageUrl: r.imageUrl });
+      } else if (!map.get(key)?.imageUrl && r.imageUrl) {
+        map.set(key, { id: r.id, slug: r.slug, imageUrl: r.imageUrl });
+      }
+    }
+    // Mirror aliased names onto requested club labels
+    for (const requested of names) {
+      const key = requested.toLowerCase();
+      if (map.get(key)?.imageUrl) continue;
+      for (const alias of aliases[key] ?? []) {
+        const hit = map.get(alias);
+        if (hit?.imageUrl) {
+          map.set(key, hit);
+          break;
+        }
+      }
+    }
+  } catch {
+    // best-effort
+  }
+  return map;
+}
+
+async function loadBestPlayerImages(
+  playerIds: string[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!playerIds.length) return map;
+  const db = getDb();
+  try {
+    const rows = await db.execute(sql`
+      SELECT DISTINCT ON (player_id)
+        player_id,
+        image_url
+      FROM player_images
+      WHERE player_id IN (${sql.join(
+        playerIds.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})
+        AND archived_at IS NULL
+        AND image_url IS NOT NULL
+        AND status IN ('approved', 'candidate')
+      ORDER BY player_id,
+        CASE role WHEN 'primary' THEN 0 WHEN 'legend' THEN 1 WHEN 'portrait' THEN 2 ELSE 3 END,
+        confidence_score DESC NULLS LAST
+    `);
+    const list =
+      (rows as unknown as { rows?: Array<{ player_id: string; image_url: string }> }).rows ??
+      (rows as unknown as Array<{ player_id: string; image_url: string }>);
+    for (const r of list) {
+      if (r.image_url) map.set(r.player_id, r.image_url);
+    }
+  } catch {
+    // best-effort
+  }
+  return map;
+}
+
+function movementFromSeries(
+  seriesNewestFirst: number[] | undefined,
+  lastFive: unknown,
+  rankMovement: "up" | "down" | "flat" | null,
+  estimateInput: Parameters<typeof estimateRankingMovement>[0],
+): { movement: "up" | "down" | "flat"; movementDelta: number } {
+  const fromHistory =
+    seriesNewestFirst?.length ? computeRatingMovementDelta(seriesNewestFirst, 5) : null;
+  if (fromHistory) {
+    return { movement: fromHistory.movement, movementDelta: fromHistory.delta };
+  }
+  const chronological = parseLastFiveFormBlocks(lastFive).map((b) => b.rating);
+  const fromLastFive =
+    chronological.length >= 2
+      ? computeRatingMovementDelta([...chronological].reverse(), 5)
+      : null;
+  if (fromLastFive) {
+    return { movement: fromLastFive.movement, movementDelta: fromLastFive.delta };
+  }
+  const estimated = estimateRankingMovement(estimateInput);
+  if (rankMovement && rankMovement !== "flat" && Math.abs(estimated.delta) < 0.15) {
+    // Prefer rank direction when estimate is near-zero but rank moved.
+    return {
+      movement: rankMovement,
+      movementDelta: rankMovement === "up" ? 0.4 : rankMovement === "down" ? -0.4 : estimated.delta,
+    };
+  }
+  return { movement: estimated.movement, movementDelta: estimated.delta };
 }
 
 async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<PublicRankingBoard> {
@@ -429,7 +794,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         eq(players.isPublic, true),
         eq(players.publishStatus, "published"),
         isNotNull(playerRatings.playerRating),
-        sql`lower(coalesce(${players.careerStatus}, 'active')) not in ('retired', 'inactive', 'deceased')`,
+        sql`lower(coalesce(${players.careerStatus}, 'active')) not in ('retired', 'inactive', 'deceased', 'legend')`,
       ),
     );
 
@@ -437,7 +802,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   const nationIds = [
     ...new Set(rows.map((r) => r.internationalTeamId).filter((id): id is string => Boolean(id))),
   ];
-  const nationById = new Map<string, { name: string; slug: string; imageUrl: string | null }>();
+  const nationById = new Map<string, NationBadge>();
   if (nationIds.length) {
     const nationRows = await db
       .select({
@@ -452,6 +817,9 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
       nationById.set(n.id, { name: n.name, slug: n.slug, imageUrl: n.imageUrl });
     }
   }
+  const nationByName = await loadNationBadgeByCountryName(
+    rows.map((r) => r.countryName).filter((n): n is string => Boolean(n)),
+  );
 
   let clubLabel: string | null = null;
   const clubNeedle = filters.club?.trim().toLowerCase() || null;
@@ -470,6 +838,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   const usePositionScore = Boolean(filters.position);
 
   for (const r of rows) {
+    if (!r?.id) continue;
     const posGroup = resolveRankingPositionGroup(r.positionName);
     if (!matchesPositionFilter(posGroup?.key, filters.position)) continue;
 
@@ -561,29 +930,74 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   const rankMap = denseRankWithTies(sorted);
   const pool = candidates.length;
   const prevRanks = await previousRanksForFilter(filters);
+  const candidateIds = candidates.map((c) => c.row.id);
+  const [ratingSeries, careerClubs, galleryImages] = await Promise.all([
+    loadRatingSeriesByPlayer(candidateIds),
+    loadCareerClubByPlayer(candidateIds),
+    loadBestPlayerImages(candidateIds),
+  ]);
+  const provisionalClubs = candidates.map((c) =>
+    cleanRankingClubName(c.row.teamName) ??
+    cleanRankingClubName(c.row.clubName) ??
+    careerClubs.get(c.row.id) ??
+    "",
+  );
+  const crestByName = await loadCrestByClubName(provisionalClubs.filter(Boolean));
 
   const boardRows: PublicRankingBoardRow[] = candidates
     .map((c) => {
       const rank = rankMap.get(c.row.id) ?? null;
       const fmt = formatRankingDisplay({ rank, pool });
       const previousRank = prevRanks.get(c.row.id) ?? null;
-      const movement = rankingMovement(fmt.showRank ? rank : null, previousRank);
-      const intl =
-        c.row.internationalTeamId != null
-          ? nationById.get(c.row.internationalTeamId)
-          : null;
-      const formBlocks = parseLastFiveFormBlocks(c.row.lastFive);
+      const rankMove = rankingMovement(fmt.showRank ? rank : null, previousRank);
       const r365 = c.row.overall != null ? Math.round(c.row.overall * 10) / 10 : null;
+      const { movement, movementDelta } = movementFromSeries(
+        ratingSeries.get(c.row.id),
+        c.row.lastFive,
+        rankMove,
+        {
+          formScore: c.row.form,
+          seasonRating: c.row.seasonRating,
+          r365Rating: r365,
+          careerRating: r365,
+          peakRating: null,
+        },
+      );
+      const nation = resolveNationBadge({
+        countryName: c.row.countryName,
+        internationalTeamId: c.row.internationalTeamId,
+        nationById,
+        nationByName,
+      });
+      const formBlocks = parseLastFiveFormBlocks(c.row.lastFive, {
+        padTo: 5,
+        formScore: c.row.form ?? r365,
+      });
       const intlPerf =
         c.row.reputation != null && Number.isFinite(c.row.reputation)
           ? Math.round(c.row.reputation * 10) / 10
-          : null;
+          : c.row.internationalTeamId != null && r365 != null
+            ? Math.round(Math.min(99, r365 * 0.92 + 4) * 10) / 10
+            : r365 != null
+              ? Math.round(Math.min(99, r365 * 0.9) * 10) / 10
+              : null;
       const clubPerf =
         c.row.seasonRating != null && Number.isFinite(c.row.seasonRating)
           ? Math.round(c.row.seasonRating * 10) / 10
-          : null;
+          : r365 != null
+            ? Math.round(r365 * 10) / 10
+            : null;
       const posPerf =
         c.positionScore != null ? Math.round(c.positionScore * 10) / 10 : null;
+      const club = resolveBoardClub({
+        teamName: c.row.teamName,
+        clubName: c.row.clubName,
+        teamSlug: c.row.teamSlug,
+        teamImageUrl: c.row.teamImageUrl,
+        teamId: c.row.clubTeamId,
+        careerClub: careerClubs.get(c.row.id) ?? null,
+        crestByName,
+      });
 
       return {
         rank: rank ?? 0,
@@ -591,17 +1005,23 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         provisional: fmt.provisional || c.provisional,
         movement,
         previousRank,
+        movementDelta,
         playerId: c.row.id,
         slug: c.row.slug,
-        name: c.row.name,
-        imageUrl: c.row.imageUrl,
-        teamId: c.row.clubTeamId,
-        teamName: c.row.teamName ?? c.row.clubName,
-        teamImageUrl: c.row.teamImageUrl,
-        teamSlug: c.row.teamSlug,
-        nationName: c.row.countryName ?? intl?.name ?? null,
-        nationImageUrl: intl?.imageUrl ?? null,
-        nationSlug: intl?.slug ?? null,
+        name: cleanRankingPlayerName(c.row.name) || c.row.name,
+        imageUrl: (() => {
+          const raw = c.row.imageUrl || galleryImages.get(c.row.id) || null;
+          if (!raw) return null;
+          if (/noimage|placeholder|default.?player/i.test(raw)) return null;
+          return raw;
+        })(),
+        teamId: club.teamId,
+        teamName: club.teamName,
+        teamImageUrl: club.teamImageUrl,
+        teamSlug: club.teamSlug,
+        nationName: nation.nationName,
+        nationImageUrl: nation.nationImageUrl,
+        nationSlug: nation.nationSlug,
         positionName: c.row.positionName,
         positionKey: c.positionKey,
         rankingScore: Math.round(c.score * 10) / 10,
@@ -611,6 +1031,8 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         internationalPerformance: intlPerf,
         clubPerformance: clubPerf,
         positionPerformance: posPerf,
+        peakRating: null,
+        impactScore: null,
         eligibleMinutes: c.minutes,
         eligibleAppearances: c.appearances,
         modelVersion: PLAYER_RANK_CURRENT_MODEL,
@@ -620,6 +1042,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
           intlPerf != null ? `International ${intlPerf}` : null,
           clubPerf != null ? `Club ${clubPerf}` : null,
           c.row.form != null ? `Form ${Math.round(c.row.form * 10) / 10}` : null,
+          `Movement ${movementDelta > 0 ? "+" : ""}${movementDelta.toFixed(1)}`,
           `Model ${PLAYER_RANK_CURRENT_MODEL}`,
         ]
           .filter(Boolean)
@@ -672,34 +1095,389 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   return board;
 }
 
-function allTimeScaffold(filters: PlayerRankingBoardFilters): PublicRankingBoard {
+function eraMatchesFilter(eraRaw: string | null | undefined, filterEra: string | null): boolean {
+  const era = (filterEra ?? "all").trim().toLowerCase();
+  if (!era || era === "all") return true;
+  const hay = (eraRaw ?? "").toLowerCase();
+  if (!hay) return false;
+  // Catalog eras are like "2010s"; board filter uses same keys.
+  return hay.includes(era) || hay.startsWith(era.replace(/s$/, ""));
+}
+
+async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<PublicRankingBoard> {
+  const db = getDb();
+  const filterKey = buildRankingFilterKey(filters);
   const top = normalizeRankingTop(filters.top);
   const positionLabel = positionLabelForKey(filters.position);
+  let clubLabel: string | null = null;
+  const clubNeedle = filters.club?.trim().toLowerCase() || null;
+
+  const rows = await db
+    .select({
+      id: players.id,
+      slug: players.slug,
+      name: players.name,
+      imageUrl: players.imageUrl,
+      countryName: players.countryName,
+      positionName: players.positionName,
+      clubName: players.clubName,
+      clubTeamId: players.clubTeamId,
+      internationalTeamId: players.internationalTeamId,
+      overallScore: playerLegendScores.overallScore,
+      careerRating: playerLegendScores.careerRating,
+      peakRating: playerLegendScores.peakRating,
+      clubScore: playerLegendScores.clubScore,
+      internationalScore: playerLegendScores.internationalScore,
+      legendEra: playerLegends.era,
+      legendCountry: playerLegends.countryName,
+      teamName: teams.name,
+      teamSlug: teams.slug,
+      teamImageUrl: teams.imageUrl,
+      form: playerRatings.formScore,
+      lastFive: playerRatings.lastFiveMatchRatings,
+      seasonRating: playerRatings.seasonRating,
+      reputation: playerRatings.reputation,
+    })
+    .from(playerLegendScores)
+    .innerJoin(players, eq(players.id, playerLegendScores.playerId))
+    .innerJoin(
+      playerLegends,
+      and(eq(playerLegends.playerId, players.id), eq(playerLegends.legendStatus, "active")),
+    )
+    .leftJoin(teams, eq(teams.id, players.clubTeamId))
+    .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
+    .where(
+      and(
+        eq(players.isPublic, true),
+        eq(players.publishStatus, "published"),
+        sql`${playerLegendScores.overallScore} > 0`,
+      ),
+    );
+
+  const nationIds = [
+    ...new Set(rows.map((r) => r.internationalTeamId).filter((id): id is string => Boolean(id))),
+  ];
+  const nationById = new Map<string, NationBadge>();
+  if (nationIds.length) {
+    const nationRows = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        slug: teams.slug,
+        imageUrl: teams.imageUrl,
+      })
+      .from(teams)
+      .where(inArray(teams.id, nationIds));
+    for (const n of nationRows) {
+      nationById.set(n.id, { name: n.name, slug: n.slug, imageUrl: n.imageUrl });
+    }
+  }
+  const nationByName = await loadNationBadgeByCountryName(
+    rows
+      .flatMap((r) => [r.countryName, r.legendCountry])
+      .filter((n): n is string => Boolean(n)),
+  );
+
+  type Candidate = {
+    row: (typeof rows)[number];
+    score: number;
+    positionKey: string | null;
+  };
+
+  const candidates: Candidate[] = [];
+  const seen = new Set<string>();
+
+  for (const r of rows) {
+    if (!r?.id) continue;
+    if (seen.has(r.id)) continue;
+    // Prefer clean legend profiles; skip transfer-note duplicates ("… retired").
+    if (isDirtyRankingPlayerName(r.name)) continue;
+    seen.add(r.id);
+
+    const posGroup = resolveRankingPositionGroup(r.positionName);
+    if (!matchesPositionFilter(posGroup?.key, filters.position)) continue;
+    if (!eraMatchesFilter(r.legendEra, filters.era)) continue;
+
+    const nationName = r.countryName?.trim() || r.legendCountry?.trim() || null;
+    if (filters.nation) {
+      const want = filters.nation.trim().toLowerCase();
+      const intl = r.internationalTeamId ? nationById.get(r.internationalTeamId) : null;
+      const hay = `${nationName ?? ""} ${intl?.name ?? ""} ${r.legendCountry ?? ""}`.toLowerCase();
+      if (!hay.includes(want) && (nationName ?? "").toLowerCase() !== want) continue;
+    }
+
+    if (clubNeedle) {
+      const teamMatch =
+        (r.clubTeamId && r.clubTeamId === filters.club) ||
+        (r.teamSlug && r.teamSlug.toLowerCase() === clubNeedle) ||
+        (r.teamName && r.teamName.toLowerCase().includes(clubNeedle)) ||
+        (r.clubName && r.clubName.toLowerCase().includes(clubNeedle));
+      if (!teamMatch) continue;
+      clubLabel = r.teamName ?? r.clubName ?? clubLabel;
+    }
+
+    const score = Number(r.overallScore);
+    if (!Number.isFinite(score) || score <= 0) continue;
+
+    candidates.push({
+      row: r,
+      score,
+      positionKey: posGroup?.key ?? null,
+    });
+  }
+
+  if (clubNeedle && !clubLabel) {
+    const [club] = await db
+      .select({ name: teams.name })
+      .from(teams)
+      .where(
+        sql`lower(${teams.slug}) = ${clubNeedle} or lower(${teams.name}) like ${`%${clubNeedle}%`}`,
+      )
+      .limit(1);
+    clubLabel = club?.name ?? filters.club;
+  }
+
+  const nationLabel = filters.nation?.trim() || null;
   const title = buildPlayerRankingsTitle({
     mode: "alltime",
     top,
     positionLabel,
-    nationLabel: filters.nation,
-    clubLabel: filters.club,
+    nationLabel,
+    clubLabel,
     competitionLabel: filters.competition,
   });
-  return {
+
+  const scored: ScoredMember[] = candidates.map((c) => ({
+    playerId: c.row.id,
+    score: c.score,
+  }));
+  const sorted = [...scored].sort((a, b) => b.score - a.score);
+  const rankMap = denseRankWithTies(sorted);
+  const pool = candidates.length;
+  const prevRanks = await previousRanksForFilter(filters);
+  const candidateIds = candidates.map((c) => c.row.id);
+  const [ratingSeries, careerClubs, galleryImages] = await Promise.all([
+    loadRatingSeriesByPlayer(candidateIds),
+    loadCareerClubByPlayer(candidateIds),
+    loadBestPlayerImages(candidateIds),
+  ]);
+  const provisionalClubs = candidates.map(
+    (c) =>
+      cleanRankingClubName(c.row.teamName) ??
+      cleanRankingClubName(c.row.clubName) ??
+      careerClubs.get(c.row.id) ??
+      "",
+  );
+  const crestByName = await loadCrestByClubName(provisionalClubs.filter(Boolean));
+
+  const boardRows: PublicRankingBoardRow[] = candidates
+    .map((c) => {
+      const rank = rankMap.get(c.row.id) ?? null;
+      const fmt = formatRankingDisplay({ rank, pool });
+      const previousRank = prevRanks.get(c.row.id) ?? null;
+      const rankMove = rankingMovement(fmt.showRank ? rank : null, previousRank);
+      const peak =
+        c.row.peakRating != null && Number.isFinite(c.row.peakRating)
+          ? Math.round(c.row.peakRating * 10) / 10
+          : null;
+      const impact = Math.round(c.score * 10) / 10;
+      const r365 =
+        c.row.careerRating != null
+          ? Math.round(c.row.careerRating * 10) / 10
+          : impact;
+      const formBlocks = parseLastFiveFormBlocks(c.row.lastFive, {
+        padTo: 5,
+        formScore: c.row.form ?? r365,
+      });
+      const { movement, movementDelta } = movementFromSeries(
+        ratingSeries.get(c.row.id),
+        c.row.lastFive,
+        rankMove,
+        {
+          peakRating: peak,
+          careerRating: r365,
+          formScore: c.row.form,
+          seasonRating: c.row.seasonRating,
+          overallScore: impact,
+          clubScore: c.row.clubScore,
+          internationalScore: c.row.internationalScore,
+          r365Rating: r365,
+        },
+      );
+      const nation = resolveNationBadge({
+        countryName: c.row.countryName ?? c.row.legendCountry ?? null,
+        internationalTeamId: c.row.internationalTeamId,
+        nationById,
+        nationByName,
+      });
+      const intlPerf =
+        c.row.internationalScore != null && Number.isFinite(c.row.internationalScore)
+          ? Math.round(c.row.internationalScore * 10) / 10
+          : c.row.reputation != null && Number.isFinite(c.row.reputation)
+            ? Math.round(c.row.reputation * 10) / 10
+            : r365 != null
+              ? Math.round(Math.min(99, r365 * 0.9) * 10) / 10
+              : null;
+      const clubPerf =
+        c.row.clubScore != null && Number.isFinite(c.row.clubScore)
+          ? Math.round(c.row.clubScore * 10) / 10
+          : c.row.seasonRating != null && Number.isFinite(c.row.seasonRating)
+            ? Math.round(c.row.seasonRating * 10) / 10
+            : r365 != null
+              ? Math.round(r365 * 10) / 10
+              : null;
+      const club = resolveBoardClub({
+        teamName: c.row.teamName,
+        clubName: c.row.clubName,
+        teamSlug: c.row.teamSlug,
+        teamImageUrl: c.row.teamImageUrl,
+        teamId: c.row.clubTeamId,
+        careerClub: careerClubs.get(c.row.id) ?? null,
+        crestByName,
+      });
+
+      return {
+        rank: rank ?? 0,
+        rankDisplay: fmt.rankDisplay,
+        provisional: false,
+        movement,
+        previousRank,
+        movementDelta,
+        playerId: c.row.id,
+        slug: c.row.slug,
+        name: cleanRankingPlayerName(c.row.name) || c.row.name,
+        imageUrl: (() => {
+          const raw = c.row.imageUrl || galleryImages.get(c.row.id) || null;
+          if (!raw) return null;
+          if (/noimage|placeholder|default.?player/i.test(raw)) return null;
+          return raw;
+        })(),
+        teamId: club.teamId,
+        teamName: club.teamName,
+        teamImageUrl: club.teamImageUrl,
+        teamSlug: club.teamSlug,
+        nationName: nation.nationName,
+        nationImageUrl: nation.nationImageUrl,
+        nationSlug: nation.nationSlug,
+        positionName: c.row.positionName,
+        positionKey: c.positionKey,
+        rankingScore: impact,
+        r365Rating: r365,
+        formScore: c.row.form != null ? Math.round(c.row.form * 10) / 10 : null,
+        formBlocks,
+        internationalPerformance: intlPerf,
+        clubPerformance: clubPerf,
+        positionPerformance: peak,
+        peakRating: peak,
+        impactScore: impact,
+        eligibleMinutes: null,
+        eligibleAppearances: null,
+        modelVersion: PLAYER_RANK_ALLTIME_MODEL,
+        breakdownTitle: [
+          `Legend Score ${impact}`,
+          peak != null ? `Peak ${peak}` : null,
+          `Impact ${impact}`,
+          intlPerf != null ? `International ${intlPerf}` : null,
+          clubPerf != null ? `Club ${clubPerf}` : null,
+          `Movement ${movementDelta > 0 ? "+" : ""}${movementDelta.toFixed(1)}`,
+          `Model ${PLAYER_RANK_ALLTIME_MODEL}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      };
+    })
+    .sort((a, b) => a.rank - b.rank || b.rankingScore - a.rankingScore)
+    .slice(0, top);
+
+  const eligibilityNote = `All-Time rankings use the R365 Legend Score model (${PLAYER_RANK_ALLTIME_MODEL}): career / peak / legacy / honours / longevity among active legend memberships.`;
+
+  const status: PublicRankingBoard["status"] =
+    pool < 5 ? "building" : pool < 10 ? "provisional" : "ready";
+
+  const board: PublicRankingBoard = {
     mode: "alltime",
-    status: "under_development",
+    status,
     title,
-    filterKey: buildRankingFilterKey({ ...filters, top }),
+    filterKey,
     filters: { ...filters, top },
-    pool: 0,
+    pool,
     modelVersion: PLAYER_RANK_ALLTIME_MODEL,
-    eligibilityNote:
-      "All-Time rankings use a separate methodology (career / peak / honours / longevity). Historical coverage is not yet sufficient to publish scores — this board is under development.",
-    calculatedAt: null,
+    eligibilityNote,
+    calculatedAt: new Date().toISOString(),
     fromSnapshot: false,
-    rows: [],
+    rows: boardRows,
     positionLabel,
-    nationLabel: filters.nation,
-    clubLabel: filters.club,
-    competitionLabel: filters.competition,
+    nationLabel,
+    clubLabel,
+    competitionLabel: filters.competition
+      ? shortCompetitionLabel(filters.competition) || filters.competition
+      : null,
+  };
+
+  await persistBoardSnapshot({
+    filters: board.filters,
+    filterKey,
+    title,
+    pool,
+    status,
+    eligibilityNote,
+    rows: boardRows,
+    positionLabel,
+    nationLabel,
+    clubLabel,
+    competitionLabel: board.competitionLabel,
+  });
+
+  return board;
+}
+
+function boardFromSnapshot(
+  mode: PlayerRankingMode,
+  filters: PlayerRankingBoardFilters,
+  filterKey: string,
+  snap: {
+    title: string;
+    pool: number;
+    modelVersion: string;
+    eligibilityNote: string | null;
+    status: string;
+    calculatedAt: Date;
+    payload: unknown;
+  },
+): PublicRankingBoard {
+  const payload = snap.payload as {
+    rows?: PublicRankingBoardRow[];
+    labels?: {
+      position?: string | null;
+      nation?: string | null;
+      club?: string | null;
+      competition?: string | null;
+    };
+  };
+  const status =
+    snap.status === "building" || snap.status === "provisional" || snap.status === "ready"
+      ? (snap.status as PublicRankingBoard["status"])
+      : "ready";
+  return {
+    mode,
+    status,
+    title: snap.title,
+    filterKey,
+    filters,
+    pool: snap.pool,
+    modelVersion: snap.modelVersion,
+    eligibilityNote:
+      snap.eligibilityNote ??
+      (mode === "alltime"
+        ? `Rankings calculated by the R365 Legend Score Model (${PLAYER_RANK_ALLTIME_MODEL}).`
+        : `Rankings calculated by the R365 Rating Model (${PLAYER_RANK_CURRENT_MODEL}).`),
+    calculatedAt: snap.calculatedAt.toISOString(),
+    fromSnapshot: true,
+    rows: Array.isArray(payload?.rows) ? payload.rows.slice(0, filters.top) : [],
+    positionLabel: payload?.labels?.position ?? positionLabelForKey(filters.position),
+    nationLabel: payload?.labels?.nation ?? filters.nation,
+    clubLabel: payload?.labels?.club ?? null,
+    competitionLabel: payload?.labels?.competition ?? null,
   };
 }
 
@@ -716,52 +1494,33 @@ export async function getPublicPlayerRankingsBoard(
     era: input.era?.trim() || "all",
   };
 
-  if (filters.mode === "alltime") {
-    return allTimeScaffold(filters);
-  }
-
   const filterKey = buildRankingFilterKey(filters);
-  if (!input.forceRebuild) {
-    const snap = await loadCurrentSnapshot(filterKey);
-    if (snap && snapshotFresh(snap.calculatedAt)) {
-      const payload = snap.payload as {
-        rows?: PublicRankingBoardRow[];
-        labels?: {
-          position?: string | null;
-          nation?: string | null;
-          club?: string | null;
-          competition?: string | null;
-        };
-      };
-      return {
-        mode: "current",
-        status:
-          snap.status === "building" || snap.status === "provisional" || snap.status === "ready"
-            ? (snap.status as PublicRankingBoard["status"])
-            : "ready",
-        title: snap.title,
-        filterKey,
-        filters,
-        pool: snap.pool,
-        modelVersion: snap.modelVersion,
-        eligibilityNote:
-          snap.eligibilityNote ??
-          `Rankings calculated by the R365 Rating Model (${PLAYER_RANK_CURRENT_MODEL}).`,
-        calculatedAt: snap.calculatedAt.toISOString(),
-        fromSnapshot: true,
-        rows: Array.isArray(payload?.rows) ? payload.rows.slice(0, filters.top) : [],
-        positionLabel: payload?.labels?.position ?? positionLabelForKey(filters.position),
-        nationLabel: payload?.labels?.nation ?? filters.nation,
-        clubLabel: payload?.labels?.club ?? null,
-        competitionLabel: payload?.labels?.competition ?? null,
-      };
+  const memKey = `rankings:board:${filterKey}`;
+
+  const load = async (): Promise<PublicRankingBoard> => {
+    if (!input.forceRebuild) {
+      const snap = await loadCurrentSnapshot(filterKey);
+      if (snap && snapshotFresh(snap.calculatedAt)) {
+        return boardFromSnapshot(filters.mode, filters, filterKey, snap);
+      }
     }
+
+    if (filters.mode === "alltime") {
+      return buildAllTimeBoard(filters);
+    }
+
+    return buildCurrentBoard(filters);
+  };
+
+  if (input.forceRebuild) {
+    return load();
   }
 
-  return buildCurrentBoard(filters);
+  return cachedPublic(memKey, PUBLIC_CACHE_TTL.rankingsBoard, load);
 }
 
 export async function listRankingFilterOptions(): Promise<RankingFilterOptions> {
+  return cachedPublic("rankings:filters", PUBLIC_CACHE_TTL.rankingsFilters, async () => {
   const db = getDb();
 
   const nationRows = await db
@@ -782,7 +1541,7 @@ export async function listRankingFilterOptions(): Promise<RankingFilterOptions> 
     .filter((n): n is string => Boolean(n))
     .sort((a, b) => a.localeCompare(b));
 
-  const clubRows = await db
+  const clubRowsRaw = await db
     .selectDistinct({
       id: teams.id,
       name: teams.name,
@@ -797,28 +1556,71 @@ export async function listRankingFilterOptions(): Promise<RankingFilterOptions> 
         eq(players.publishStatus, "published"),
         isNotNull(playerRatings.playerRating),
         sql`lower(coalesce(${teams.teamType}, 'club')) not in ('international', 'national')`,
+        sql`${teams.name} not ilike 'unknown team%'`,
+        sql`${teams.slug} not like 'orphan-%'`,
       ),
     )
     .orderBy(teams.name)
-    .limit(400);
+    .limit(500);
 
-  const compRows = await db
+  // Prefer canonical slugs (no __legacy__) when duplicate names exist.
+  const clubByName = new Map<string, (typeof clubRowsRaw)[number]>();
+  for (const c of clubRowsRaw) {
+    const key = c.name.trim().toLowerCase();
+    const prev = clubByName.get(key);
+    if (!prev) {
+      clubByName.set(key, c);
+      continue;
+    }
+    const prevLegacy = prev.slug.includes("__legacy__");
+    const nextLegacy = c.slug.includes("__legacy__");
+    if (prevLegacy && !nextLegacy) clubByName.set(key, c);
+  }
+  const clubs = [...clubByName.values()].sort((a, b) => a.name.localeCompare(b.name));
+
+  const compRowsRaw = await db
     .select({
       id: competitions.id,
       name: competitions.name,
       slug: competitions.slug,
     })
     .from(competitions)
-    .where(sql`coalesce(${competitions.lifecycleStatus}, 'current') <> 'former'`)
+    .where(
+      sql`coalesce(${competitions.lifecycleStatus}, 'current') <> 'former'
+        and ${competitions.slug} not like '%__legacy__%'
+        and ${competitions.name} not ilike '%(historic)%'`,
+    )
     .orderBy(competitions.name)
-    .limit(200);
+    .limit(400);
+
+  const compByName = new Map<string, (typeof compRowsRaw)[number]>();
+  for (const c of compRowsRaw) {
+    const key = c.name.trim().toLowerCase().replace(/\s+/g, " ");
+    const prev = compByName.get(key);
+    if (!prev) {
+      compByName.set(key, c);
+      continue;
+    }
+    const score = (row: { slug: string }) => {
+      let s = 0;
+      if (!row.slug.includes("__legacy__")) s += 4;
+      if (!/historic|former/i.test(row.slug)) s += 2;
+      if (row.slug.length < 40) s += 1;
+      return s;
+    };
+    if (score(c) > score(prev)) compByName.set(key, c);
+  }
+  const competitionsDeduped = [...compByName.values()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return {
     positions: PUBLIC_RANKING_POSITION_FILTERS.map((p) => ({ key: p.key, label: p.label })),
     nations,
-    clubs: clubRows,
-    competitions: compRows,
+    clubs,
+    competitions: competitionsDeduped,
     eras: ALLTIME_ERA_OPTIONS.map((e) => ({ key: e.key, label: e.label })),
     topOptions: [10, 25, 50, 100],
   };
+  });
 }

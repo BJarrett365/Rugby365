@@ -20,6 +20,7 @@ import {
   fixtures,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 import { calculatePlayerAge, normalizeSocialAccounts } from "./player-profile-utils";
 import { buildPublicPlayerIntro } from "./public-player-intro";
 import { getPlayerCareerStats } from "./player-stats";
@@ -78,6 +79,8 @@ export type PublicPlayerStatus =
   | "legend";
 
 export type PublicPlayerProfile = {
+  /** Internal id — used by compare / value timelines; not for public URLs. */
+  playerId: string;
   slug: string;
   name: string;
   fullName: string | null;
@@ -371,33 +374,37 @@ async function resolvePublicStatus(input: {
   }
 
   const db = getDb();
-  const [injury] = await db
-    .select({ id: playerInjuries.id })
-    .from(playerInjuries)
-    .where(
-      and(
-        eq(playerInjuries.playerId, input.playerId),
-        eq(playerInjuries.visibility, "public"),
-        eq(playerInjuries.verificationStatus, "confirmed"),
-        inArray(playerInjuries.status, ["injured", "out", "active"]),
-      ),
-    )
-    .limit(1);
-  if (injury) return "injured";
+  try {
+    const [injury] = await db
+      .select({ id: playerInjuries.id })
+      .from(playerInjuries)
+      .where(
+        and(
+          eq(playerInjuries.playerId, input.playerId),
+          eq(playerInjuries.visibility, "public"),
+          eq(playerInjuries.verificationStatus, "confirmed"),
+          inArray(playerInjuries.status, ["injured", "out", "active"]),
+        ),
+      )
+      .limit(1);
+    if (injury) return "injured";
 
-  const [suspension] = await db
-    .select({ id: playerSuspensions.id })
-    .from(playerSuspensions)
-    .where(
-      and(
-        eq(playerSuspensions.playerId, input.playerId),
-        eq(playerSuspensions.visibility, "public"),
-        eq(playerSuspensions.verificationStatus, "confirmed"),
-        inArray(playerSuspensions.status, ["suspended", "active"]),
-      ),
-    )
-    .limit(1);
-  if (suspension) return "suspended";
+    const [suspension] = await db
+      .select({ id: playerSuspensions.id })
+      .from(playerSuspensions)
+      .where(
+        and(
+          eq(playerSuspensions.playerId, input.playerId),
+          eq(playerSuspensions.visibility, "public"),
+          eq(playerSuspensions.verificationStatus, "confirmed"),
+          inArray(playerSuspensions.status, ["suspended", "active"]),
+        ),
+      )
+      .limit(1);
+    if (suspension) return "suspended";
+  } catch {
+    // Injury/suspension tables can be slow without indexes — don't block profiles.
+  }
 
   const cs = input.careerStatus;
   if (cs === "retired" || cs === "released" || cs === "legend") return cs;
@@ -539,6 +546,34 @@ export async function getPublicPlayerProfile(
     page?: number;
   } = {},
 ): Promise<PublicPlayerProfile | null> {
+  const preview = Boolean(options.preview);
+  const view: PublicPlayerView = options.view ?? "domestic";
+  const seasonFilter = (options.season ?? "current").trim() || "current";
+  const competitionFilter = (options.competition ?? "all").trim().toLowerCase() || "all";
+  const page = Math.max(1, options.page ?? 1);
+
+  // Preview / rare filter combos skip the shared cache.
+  if (preview || seasonFilter !== "current" || competitionFilter !== "all" || page !== 1 || view !== "domestic") {
+    return loadPublicPlayerProfile(slug, options);
+  }
+
+  return cachedPublic(
+    `player-profile:${slug}:${view}:${seasonFilter}:${competitionFilter}:${page}`,
+    PUBLIC_CACHE_TTL.playerOverview,
+    () => loadPublicPlayerProfile(slug, options),
+  );
+}
+
+async function loadPublicPlayerProfile(
+  slug: string,
+  options: {
+    preview?: boolean;
+    season?: string | null;
+    competition?: string | null;
+    view?: PublicPlayerView;
+    page?: number;
+  } = {},
+): Promise<PublicPlayerProfile | null> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.slug, slug)).limit(1);
   if (!player) return null;
@@ -641,28 +676,36 @@ export async function getPublicPlayerProfile(
     // Load all comps; this service scopes to domestic/international after load.
     loadPlayerAppearances(player.id, { view: "all", internationalTeamId: intlId }),
     resolveCurrentClubCompetitionName(clubId),
-    db
-      .select()
-      .from(playerInjuries)
-      .where(
-        and(
-          eq(playerInjuries.playerId, player.id),
-          eq(playerInjuries.visibility, "public"),
-          eq(playerInjuries.verificationStatus, "confirmed"),
-        ),
-      )
-      .orderBy(desc(playerInjuries.updatedAt)),
-    db
-      .select()
-      .from(playerSuspensions)
-      .where(
-        and(
-          eq(playerSuspensions.playerId, player.id),
-          eq(playerSuspensions.visibility, "public"),
-          eq(playerSuspensions.verificationStatus, "confirmed"),
-        ),
-      )
-      .orderBy(desc(playerSuspensions.updatedAt)),
+    Promise.race([
+      db
+        .select()
+        .from(playerInjuries)
+        .where(
+          and(
+            eq(playerInjuries.playerId, player.id),
+            eq(playerInjuries.visibility, "public"),
+            eq(playerInjuries.verificationStatus, "confirmed"),
+          ),
+        )
+        .orderBy(desc(playerInjuries.updatedAt))
+        .limit(20),
+      new Promise<[]>( (resolve) => setTimeout(() => resolve([]), 1500) ),
+    ]),
+    Promise.race([
+      db
+        .select()
+        .from(playerSuspensions)
+        .where(
+          and(
+            eq(playerSuspensions.playerId, player.id),
+            eq(playerSuspensions.visibility, "public"),
+            eq(playerSuspensions.verificationStatus, "confirmed"),
+          ),
+        )
+        .orderBy(desc(playerSuspensions.updatedAt))
+        .limit(20),
+      new Promise<[]>( (resolve) => setTimeout(() => resolve([]), 1500) ),
+    ]),
     db.select().from(playerLegends).where(eq(playerLegends.playerId, player.id)).limit(5),
   ]);
 
@@ -1038,6 +1081,16 @@ export async function getPublicPlayerProfile(
       contractTermLabel = `${startY} –`;
     }
   }
+  // Active squad players always have a contract; if we lack dates/type, show Unknown.
+  if (!contractTermLabel && !expiresLabel) {
+    const src = (player.contractSource ?? "").trim().toLowerCase();
+    if (src === "full_time" || src === "full-time") contractTermLabel = "Full-time";
+    else if (src === "part_time" || src === "part-time") contractTermLabel = "Part-time";
+    else if (src === "senior") contractTermLabel = "Senior";
+    else if (src === "amateur") contractTermLabel = "Amateur";
+    else if (src === "yes") contractTermLabel = "Yes";
+    else contractTermLabel = "Unknown";
+  }
   const contractDatesVerified = Boolean(player.contractVerifiedAt) || Boolean(contractExpiresOn);
   const reportedSalary =
     player.reportedSalaryGbp != null && Number.isFinite(Number(player.reportedSalaryGbp))
@@ -1250,6 +1303,7 @@ export async function getPublicPlayerProfile(
   }
 
   return {
+    playerId: player.id,
     slug: player.slug,
     name: player.name,
     fullName: player.fullName,

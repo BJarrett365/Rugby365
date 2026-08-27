@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCompetitionHubBySlug } from "@/lib/competition-admin-service";
 import { apiErrorResponse } from "@/lib/api-errors";
+import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -9,9 +10,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     const seasonLabel = searchParams.get("season") ?? undefined;
     const view = (searchParams.get("view") ?? "overall") as "overall" | "home" | "away";
 
-    const data = await getCompetitionHubBySlug(slug, { seasonLabel, view });
+    const data = await cachedPublic(
+      `competition-hub:${slug}:${seasonLabel ?? "default"}:${view}`,
+      PUBLIC_CACHE_TTL.competitionHub,
+      () => getCompetitionHubBySlug(slug, { seasonLabel, view }),
+    );
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": `public, s-maxage=${PUBLIC_CACHE_TTL.competitionHub}, stale-while-revalidate=${PUBLIC_CACHE_TTL.competitionHub * 2}`,
+      },
+    });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load competition");
   }

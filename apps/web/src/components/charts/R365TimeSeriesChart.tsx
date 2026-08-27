@@ -73,10 +73,15 @@ export function R365TimeSeriesChart({
 }: R365TimeSeriesChartProps) {
   const [hoveredIso, setHoveredIso] = useState<string | null>(null);
 
-  const sorted = useMemo(
-    () => [...points].filter((p) => Number.isFinite(p.value)).sort((a, b) => a.dateIso.localeCompare(b.dateIso)),
-    [points],
-  );
+  const sorted = useMemo(() => {
+    const byDate = new Map<string, R365TimeSeriesPoint>();
+    for (const p of points) {
+      if (!Number.isFinite(p.value)) continue;
+      // Last write wins when multiple snapshots share the same timestamp.
+      byDate.set(p.dateIso, p);
+    }
+    return [...byDate.values()].sort((a, b) => a.dateIso.localeCompare(b.dateIso));
+  }, [points]);
 
   const start = new Date(rangeStartIso);
   const end = new Date(rangeEndIso);
@@ -253,8 +258,8 @@ export function R365TimeSeriesChart({
             <path d={lineD} fill="none" stroke={lineColor} strokeWidth="2.2" strokeLinejoin="round" />
           ) : null}
 
-          {pts.map((pt) => (
-            <g key={pt.p.dateIso}>
+          {pts.map((pt, idx) => (
+            <g key={`${pt.p.dateIso}-${idx}`}>
               {showTooltip ? (
                 <circle
                   cx={pt.x}

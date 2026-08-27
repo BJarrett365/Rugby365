@@ -1,4 +1,8 @@
+"use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type SubNavItem = {
   id: string;
@@ -16,21 +20,42 @@ const SUB_NAV: SubNavItem[] = [
   { id: "rating", label: "Rating", href: "rating" },
 ];
 
-export function PlayerPublicSubNav({
+function withEmbedParams(href: string, embed: boolean, compareWith: string | null): string {
+  if (!embed && !compareWith) return href;
+  const url = new URL(href, "https://rugby365.local");
+  if (embed) url.searchParams.set("embed", "1");
+  if (compareWith) url.searchParams.set("compareWith", compareWith);
+  return `${url.pathname}${url.search}`;
+}
+
+function PlayerPublicSubNavInner({
   slug,
   active,
 }: {
   slug: string;
   active: string;
 }) {
+  const searchParams = useSearchParams();
+  const embed = searchParams.get("embed") === "1";
+  const compareWith = searchParams.get("compareWith")?.trim() || null;
+
+  const compareHref =
+    compareWith && compareWith !== slug
+      ? `/players/compare?player=${encodeURIComponent(slug)}&opponent=${encodeURIComponent(compareWith)}`
+      : `/players/compare?player=${encodeURIComponent(slug)}`;
+  const compareLinkProps = embed
+    ? ({ target: "_parent" as const, rel: "noopener" } as const)
+    : {};
+
   return (
     <nav className="pr-player-v2__nav" aria-label="Player sections">
       {SUB_NAV.map((item) => {
-        const href = item.href.startsWith("/")
+        const base = item.href.startsWith("/")
           ? item.href
           : item.href
             ? `/players/${slug}/${item.href}`
             : `/players/${slug}`;
+        const href = withEmbedParams(base, embed, compareWith);
         return (
           <Link key={item.id} href={href} className={item.id === active ? "is-active" : undefined}>
             {item.label}
@@ -38,16 +63,24 @@ export function PlayerPublicSubNav({
         );
       })}
       <Link
-        href={`/players/compare?player=${slug}`}
+        href={compareHref}
         className={active === "comparison" ? "is-active" : undefined}
+        {...compareLinkProps}
       >
         Comparison
       </Link>
-      <Link href={`/players/${slug}/news`} className={active === "news" ? "is-active" : undefined}>
+      <Link
+        href={withEmbedParams(`/players/${slug}/news`, embed, compareWith)}
+        className={active === "news" ? "is-active" : undefined}
+      >
         News
       </Link>
       <div className="pr-player-v2__actions">
-        <Link className="pr-player-v2__btn pr-player-v2__btn--primary" href={`/players/compare?player=${slug}`}>
+        <Link
+          className="pr-player-v2__btn pr-player-v2__btn--primary"
+          href={compareHref}
+          {...compareLinkProps}
+        >
           Compare
         </Link>
         <button
@@ -61,5 +94,27 @@ export function PlayerPublicSubNav({
         </button>
       </div>
     </nav>
+  );
+}
+
+export function PlayerPublicSubNav({
+  slug,
+  active,
+}: {
+  slug: string;
+  active: string;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <nav className="pr-player-v2__nav" aria-label="Player sections">
+          {SUB_NAV.map((item) => (
+            <span key={item.id}>{item.label}</span>
+          ))}
+        </nav>
+      }
+    >
+      <PlayerPublicSubNavInner slug={slug} active={active} />
+    </Suspense>
   );
 }

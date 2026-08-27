@@ -1,0 +1,19 @@
+{
+  "credentialsEnv": ["ALAMY_EMAIL", "ALAMY_PASSWORD"],
+  "lightboxes": [
+    {
+      "name": "Rugby365",
+      "lbId": "661de578-d179-4d84-aa3c-4ca115cf6a1d",
+      "url": "https://www.alamy.com/lightbox/details.aspx?lbId=661de578-d179-4d84-aa3c-4ca115cf6a1d",
+      "notes": "Main collection lightbox (was empty with 0 images when checked)."
+    },
+    {
+      "name": "Abongile Nonkontwana",
+      "lbId": "edb9e9d2-cc0b-4128-a260-cd2e635c7c6b",
+      "url": "https://www.alamy.com/lightbox/details.aspx?lbId=edb9e9d2-cc0b-4128-a260-cd2e635c7c6b",
+      "notes": "Player lightbox (1 image when checked)."
+    }
+  ],
+  "scrape": "set -a && source .env && set +a && npx tsx scripts/scrape-alamy-lightbox.ts --lbId=<id>",
+  "importInbox": "npx tsx --require ./scripts/stub-server-only.cjs scripts/import-alamy-inbox-images.ts"
+}

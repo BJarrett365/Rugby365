@@ -1,0 +1,524 @@
+/* Player overlay on the existing rugby pitch (no stadium/pitch import). */
+.pr-ma-player {
+  position: absolute;
+  z-index: 4;
+  width: 18%;
+  min-width: 72px;
+  max-width: 140px;
+  pointer-events: none;
+  transform: translate(-50%, var(--pr-ma-player-shift, -88%));
+  will-change: left, top;
+}
+.pr-ma-stage__pitch-wrap {
+  overflow: visible;
+}
+.pr-ma-player--goal {
+  left: 12%;
+  bottom: 6%;
+  top: auto;
+  width: 28%;
+  max-width: 180px;
+  z-index: 6;
+  transform: translate(0, var(--pr-ma-player-shift, -78%));
+}
+
+.m3d-ball--rugby {
+  width: 28%;
+  overflow: visible;
+  filter: drop-shadow(0 4px 6px oklch(0 0 0 / 0.45));
+}
+
+/* ---------------------------------------------------------------
+   Fixtures365 3D mascot — rendered poses + CSS motion
+   --------------------------------------------------------------- */
+.m3d {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  transform: scale(var(--m3d-scale, 1));
+  transform-origin: bottom center;
+  z-index: 2;
+}
+
+.m3d-figure {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 92%;
+  will-change: transform;
+  z-index: 2;
+}
+
+.m3d-img {
+  backface-visibility: hidden;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 18px 22px oklch(0 0 0 / 0.35));
+}
+
+.m3d-shadow {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  width: 46%;
+  height: 5%;
+  translate: -50% 0;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, oklch(0 0 0 / 0.45), transparent);
+  animation: m3d-shadow-pulse 2.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.m3d-ball {
+  position: absolute;
+  bottom: 0;
+  left: 74%;
+  width: 18%;
+  animation: m3d-ball-roll 2.6s ease-in-out infinite;
+  z-index: 3;
+}
+
+.m3d-shirt-print {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  translate: -50% 0;
+  pointer-events: none;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 2px oklch(0 0 0 / 0.85);
+  filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.5));
+}
+
+.m3d-shirt-number {
+  font-size: clamp(0.45rem, 2.8vw, 0.72rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.m3d-shirt-name {
+  max-width: 3.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(0.28rem, 1.5vw, 0.42rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Sprites artwork faces left; mirror figure for rightward travel */
+.m3d[data-facing="right"] .m3d-figure {
+  transform: scaleX(-1);
+}
+.m3d[data-facing="right"] .m3d-ball {
+  left: 74%;
+  right: auto;
+}
+.m3d[data-facing="left"] .m3d-figure {
+  transform: scaleX(1);
+}
+.m3d[data-facing="left"] .m3d-ball {
+  left: 26%;
+  right: auto;
+}
+
+@keyframes m3d-shadow-pulse {
+  0%, 100% { transform: scaleX(1); opacity: 0.55; }
+  50% { transform: scaleX(0.9); opacity: 0.4; }
+}
+
+@keyframes m3d-ball-roll {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6%) rotate(180deg); }
+}
+
+/* kick — rugby ball hops off the boot, stays on our pitch */
+.m3d[data-state="kick"] .m3d-ball {
+  animation: m3d-ball-punt var(--m3d-cycle, 0.92s) cubic-bezier(0.2, 0.5, 0.4, 1) infinite;
+}
+@keyframes m3d-ball-punt {
+  0%, 42% {
+    transform: translate(0, 0) rotate(-18deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(28%, -72%) rotate(50deg) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(8%, -18%) rotate(12deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* goal/celebrate keep the ball out of frame */
+.m3d[data-state="goal"] .m3d-ball,
+.m3d[data-state="celebrate"] .m3d-ball { display: none; }
+
+/* idle — gentle breathing bob */
+.m3d-idle {
+  animation: m3d-breathe 2.6s ease-in-out infinite;
+}
+@keyframes m3d-breathe {
+  0%, 100% { transform: translateY(0) scaleY(1) rotate(0deg); }
+  50% { transform: translateY(-1.2%) scaleY(1.012) rotate(-0.4deg); }
+}
+
+/* run — sprite-frame limb cycle + bounding body motion */
+.m3d-run {
+  animation: m3d-stride 0.6s linear infinite;
+}
+@keyframes m3d-stride {
+  0% { transform: translateY(0) rotate(-4deg); }
+  16.6% { transform: translateY(-4.5%) rotate(-6deg); }
+  33.3% { transform: translateY(-6%) rotate(-7deg); }
+  50% { transform: translateY(-1%) rotate(-4deg); }
+  66.6% { transform: translateY(-4.5%) rotate(-6deg); }
+  83.3% { transform: translateY(-6.5%) rotate(-7deg); }
+  100% { transform: translateY(0) rotate(-4deg); }
+}
+
+/* pose groups: all mounted, only the active one visible (no re-decode flicker) */
+.m3d-group {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms linear;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+.m3d-group[data-on="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+.m3d-group[data-on="false"] * {
+  animation-play-state: paused !important;
+}
+
+/* one <img> per run-cycle frame, cross-cut with steps timing */
+.m3d-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+.m3d-frame:first-child { opacity: 1; }
+.m3d-run .m3d-frame {
+  animation: m3d-frame-flip 0.6s steps(1, end) infinite;
+}
+.m3d-run .m3d-frame:nth-child(1) { animation-delay: 0s; }
+.m3d-run .m3d-frame:nth-child(2) { animation-delay: 0.1s; }
+.m3d-run .m3d-frame:nth-child(3) { animation-delay: 0.2s; }
+.m3d-run .m3d-frame:nth-child(4) { animation-delay: 0.3s; }
+.m3d-run .m3d-frame:nth-child(5) { animation-delay: 0.4s; }
+.m3d-run .m3d-frame:nth-child(6) { animation-delay: 0.5s; }
+@keyframes m3d-frame-flip {
+  0% { opacity: 1; }
+  16.66% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* 4-frame cycles (kick, celebrate, goal) */
+@keyframes m3d-flip4 {
+  0% { opacity: 1; }
+  25% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.m3d-kick .m3d-frame,
+.m3d-celebrate .m3d-frame,
+.m3d-goal .m3d-frame,
+.m3d-walk .m3d-frame,
+.m3d-walk-grump .m3d-frame {
+  animation: m3d-flip4 var(--m3d-cycle, 1s) steps(1, end) infinite;
+}
+.m3d-kick .m3d-frame:nth-child(1),
+.m3d-celebrate .m3d-frame:nth-child(1),
+.m3d-walk .m3d-frame:nth-child(1),
+.m3d-walk-grump .m3d-frame:nth-child(1),
+.m3d-goal .m3d-frame:nth-child(1) { animation-delay: 0s; }
+.m3d-kick .m3d-frame:nth-child(2),
+.m3d-celebrate .m3d-frame:nth-child(2),
+.m3d-walk .m3d-frame:nth-child(2),
+.m3d-walk-grump .m3d-frame:nth-child(2),
+.m3d-goal .m3d-frame:nth-child(2) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.25); }
+.m3d-kick .m3d-frame:nth-child(3),
+.m3d-celebrate .m3d-frame:nth-child(3),
+.m3d-walk .m3d-frame:nth-child(3),
+.m3d-walk-grump .m3d-frame:nth-child(3),
+.m3d-goal .m3d-frame:nth-child(3) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.5); }
+.m3d-kick .m3d-frame:nth-child(4),
+.m3d-celebrate .m3d-frame:nth-child(4),
+.m3d-walk .m3d-frame:nth-child(4),
+.m3d-walk-grump .m3d-frame:nth-child(4),
+.m3d-goal .m3d-frame:nth-child(4) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.75); }
+
+/* kick — plant, snap through, follow through, recover */
+.m3d-kick {
+  --m3d-cycle: 0.92s;
+  animation: m3d-strike 0.92s linear infinite;
+}
+@keyframes m3d-strike {
+  0% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-2.5%) rotate(4deg) scale(0.99); }
+  50% { transform: translateX(4%) rotate(-7deg) scale(1.03); }
+  75% { transform: translateX(2.5%) rotate(-3deg) translateY(-2%); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+/* celebrate — crouch, leap, peak, land */
+.m3d-celebrate {
+  --m3d-cycle: 1.2s;
+  animation: m3d-jump 1.2s linear infinite;
+}
+@keyframes m3d-jump {
+  0% { transform: translateY(0) rotate(0deg) scaleY(1); }
+  25% { transform: translateY(2.5%) scaleY(0.93) scaleX(1.05); }
+  50% { transform: translateY(-13%) rotate(2deg) scaleY(1.04) scaleX(0.98); }
+  75% { transform: translateY(-16%) rotate(-3deg); }
+  100% { transform: translateY(0) rotate(0deg) scaleY(1); }
+}
+
+/* goal — celebration frames plus a nodding head tilt */
+.m3d-goal {
+  --m3d-cycle: 1.35s;
+  animation: m3d-nod 1.35s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+@keyframes m3d-nod {
+  0% { transform: translateY(0) rotate(0deg); }
+  15% { transform: translateY(-2%) rotate(-4deg); }
+  30% { transform: translateY(0.8%) rotate(3deg); }
+  45% { transform: translateY(-9%) rotate(-2deg); }
+  60% { transform: translateY(-11%) rotate(4deg); }
+  80% { transform: translateY(-1%) rotate(-2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* wave — friendly lean */
+.m3d-wave {
+  animation: m3d-lean 1.8s ease-in-out infinite;
+}
+@keyframes m3d-lean {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(2.5deg) translateY(-1.5%); }
+}
+
+/* miss — head-drop slump */
+.m3d-miss {
+  animation: m3d-slump 2.4s ease-in-out infinite;
+}
+@keyframes m3d-slump {
+  0%, 100% { transform: translateY(0) rotate(0deg) scaleY(1); }
+  50% { transform: translateY(1.5%) rotate(1.5deg) scaleY(0.975); }
+}
+
+/* miss reactions: 2-frame cycles with distinct body motion */
+@keyframes m3d-flip2 {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+.m3d-miss-knees .m3d-frame,
+.m3d-miss-hands .m3d-frame,
+.m3d-miss-fist .m3d-frame {
+  animation: m3d-flip2 var(--m3d-cycle, 1.4s) steps(1, end) infinite;
+}
+.m3d-miss-knees .m3d-frame:nth-child(2),
+.m3d-miss-hands .m3d-frame:nth-child(2),
+.m3d-miss-fist .m3d-frame:nth-child(2) {
+  animation-delay: calc(var(--m3d-cycle, 1.4s) * 0.5);
+}
+
+/* 1 — falls to his knees, head in hands */
+.m3d-miss-knees {
+  --m3d-cycle: 2.4s;
+  animation: m3d-knees 2.4s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+@keyframes m3d-knees {
+  0% { transform: translateY(-4%) scaleY(1.02); }
+  14% { transform: translateY(1.5%) scaleY(0.98); }
+  50% { transform: translateY(0) rotate(-1.5deg); }
+  75% { transform: translateY(-1%) rotate(1.5deg); }
+  100% { transform: translateY(-4%) scaleY(1.02); }
+}
+
+/* 2 — head in hands, shaking it */
+.m3d-miss-hands {
+  --m3d-cycle: 1.6s;
+  animation: m3d-shake-head 1.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+@keyframes m3d-shake-head {
+  0%, 100% { transform: rotate(-1.6deg) translateX(-0.6%); }
+  25% { transform: rotate(1.6deg) translateX(0.8%); }
+  50% { transform: rotate(-1.8deg) translateX(-0.8%) translateY(0.6%); }
+  75% { transform: rotate(1.4deg) translateX(0.6%); }
+}
+
+/* 3 — fist pump into the ground */
+.m3d-miss-fist {
+  --m3d-cycle: 1.1s;
+  animation: m3d-fist 1.1s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+  transform-origin: 50% 95%;
+}
+@keyframes m3d-fist {
+  0% { transform: translateY(-3%) rotate(-2deg); }
+  45% { transform: translateY(-4%) rotate(-3deg); }
+  55% { transform: translateY(2%) rotate(2deg) scaleY(0.96); }
+  70% { transform: translateY(0.5%) rotate(1deg); }
+  100% { transform: translateY(-3%) rotate(-2deg); }
+}
+
+/* walk — trudging off the pitch */
+.m3d-walk {
+  --m3d-cycle: 1.05s;
+  animation: m3d-trudge 1.05s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+.m3d-walk-grump {
+  --m3d-cycle: 1.15s;
+  animation: m3d-trudge-grump 1.15s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+@keyframes m3d-trudge {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  25% { transform: translateY(-1.6%) rotate(0.5deg); }
+  50% { transform: translateY(0) rotate(-1deg); }
+  75% { transform: translateY(-1.6%) rotate(0.5deg); }
+}
+@keyframes m3d-trudge-grump {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg) scaleY(0.985); }
+  25% { transform: translateY(-1.4%) rotate(1deg); }
+  50% { transform: translateY(0.4%) rotate(-3deg) scaleY(0.98); }
+  75% { transform: translateY(-1.2%) rotate(1.6deg); }
+}
+
+/* --- match events: sending off + substitution --- */
+.f365-walk-off {
+  animation: f365-walk-off 4.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes f365-walk-off {
+  0% { transform: translateX(0); opacity: 1; }
+  85% { transform: translateX(-120%); opacity: 1; }
+  100% { transform: translateX(-150%); opacity: 0; }
+}
+.f365-walk-on {
+  animation: f365-walk-on 4.6s cubic-bezier(0.3, 0, 0.5, 1) forwards;
+}
+@keyframes f365-walk-on {
+  0% { transform: translateX(-160%) scaleX(-1); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translateX(0) scaleX(-1); opacity: 1; }
+}
+
+.f365-redcard {
+  animation: f365-redcard 1.8s ease-out infinite;
+}
+@keyframes f365-redcard {
+  0% { transform: rotate(-14deg) scale(0.6); opacity: 0; }
+  12% { transform: rotate(8deg) scale(1.12); opacity: 1; }
+  20% { transform: rotate(0deg) scale(1); opacity: 1; }
+  55% { opacity: 1; }
+  62% { opacity: 0.25; }
+  70% { opacity: 1; }
+  85% { opacity: 0.3; }
+  100% { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m3d-figure,
+  .m3d-frame,
+  .m3d-shadow,
+  .m3d-ball {
+    animation: none !important;
+  }
+}
+
+/* One-shot playback for match event queue (overrides infinite loops) */
+.f365-play-once .m3d-figure,
+.f365-play-once .m3d-figure *,
+.f365-play-once .m3d-shadow,
+.f365-play-once .m3d-ball,
+.f365-play-once .f365-walk-off,
+.f365-play-once .f365-jog-on,
+.f365-play-once .f365-redcard,
+.f365-play-once .f365-yellowcard,
+.f365-play-once .f365-net-reveal,
+.f365-play-once .f365-goal-banner,
+.f365-play-once .f365-goal-flash,
+.f365-play-once .f365-sub-bubble-off,
+.f365-play-once .f365-sub-bubble-on {
+  animation-iteration-count: 1 !important;
+}
+
+/* Substitution / walk-off — keep limb frames cycling for the full 4.6s slide */
+.f365-play-once .m3d-jog-on,
+.f365-play-once .m3d-clap-walk,
+.f365-play-once .m3d-walk,
+.f365-play-once .m3d-walk-grump {
+  animation-iteration-count: infinite !important;
+}
+.f365-play-once .m3d-jog-on .m3d-frame,
+.f365-play-once .m3d-clap-walk .m3d-frame,
+.f365-play-once .m3d-walk .m3d-frame,
+.f365-play-once .m3d-walk-grump .m3d-frame {
+  animation-iteration-count: infinite !important;
+}
+
+/* --- clapping walk off, happy jog on, booking head shake --- */
+.m3d-clap-walk {
+  --m3d-cycle: 1.05s;
+  animation: m3d-trudge 1.05s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+.m3d-jog-on {
+  --m3d-cycle: 0.78s;
+  animation: m3d-jog 0.78s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+@keyframes m3d-jog {
+  0%, 100% { transform: translateY(0) rotate(0.5deg); }
+  25% { transform: translateY(-3.2%) rotate(-1deg); }
+  50% { transform: translateY(0) rotate(0.5deg); }
+  75% { transform: translateY(-3.2%) rotate(-1deg); }
+}
+.m3d-clap-walk .m3d-frame,
+.m3d-jog-on .m3d-frame {
+  animation: m3d-flip4 var(--m3d-cycle, 1s) steps(1, end) infinite;
+}
+.m3d-clap-walk .m3d-frame:nth-child(1),
+.m3d-jog-on .m3d-frame:nth-child(1) { animation-delay: 0s; }
+.m3d-clap-walk .m3d-frame:nth-child(2),
+.m3d-jog-on .m3d-frame:nth-child(2) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.25); }
+.m3d-clap-walk .m3d-frame:nth-child(3),
+.m3d-jog-on .m3d-frame:nth-child(3) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.5); }
+.m3d-clap-walk .m3d-frame:nth-child(4),
+.m3d-jog-on .m3d-frame:nth-child(4) { animation-delay: calc(var(--m3d-cycle, 1s) * 0.75); }
+
+.m3d-booked {
+  --m3d-cycle: 0.9s;
+  animation: m3d-headshake 0.9s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+@keyframes m3d-headshake {
+  0%, 100% { transform: translateX(-0.8%) rotate(-0.8deg); }
+  50% { transform: translateX(0.8%) rotate(0.8deg); }
+}
+.m3d-booked .m3d-frame {
+  animation: m3d-flip2 var(--m3d-cycle, 0.9s) steps(1, end) infinite;
+}
+.m3d-booked .m3d-frame:nth-child(2) {
+  animation-delay: calc(var(--m3d-cycle, 0.9s) * 0.5);
+}

@@ -1,0 +1,11 @@
+[build]
+  base = "."
+  command = "npm run build -w @rugby365/web"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  SITE_GATE_ENABLED = "true"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

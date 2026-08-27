@@ -6,3 +6,8 @@ dist
 .DS_Store
 .env
 output/agent-sandbox
+media/alamy/inbox/*
+!media/alamy/inbox/README.md
+media/alamy/inbox/_imported/
+media/alamy/library/
+apps/web/public/media/alamy/

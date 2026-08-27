@@ -163,6 +163,7 @@ async function upsertPlayerCareerStints(
   ];
 
   for (const row of all) {
+    if (!row.teamName?.trim()) continue;
     const team = await resolveTeam({ name: row.teamName, createIfMissing: true });
     await db.insert(playerCareerStints).values({
       playerId,
@@ -179,6 +180,9 @@ async function upsertPlayerCareerStints(
       sourceUrl,
     });
   }
+
+  const { syncTransfersFromClubCareerStints } = await import("./career-transfer-sync-service");
+  await syncTransfersFromClubCareerStints(playerId);
 }
 
 async function applyWikipediaPlayerArchive(
@@ -197,9 +201,13 @@ async function applyWikipediaPlayerArchive(
   const fieldsUpdated: string[] = [];
 
   let clubTeamId: string | null = player.clubTeamId;
-  if (archive.currentTeam && !player.clubTeamId) {
-    const club = await resolveTeam({ name: archive.currentTeam, createIfMissing: !fillMissingOnly });
-    clubTeamId = club?.id ?? null;
+  const inferredCurrentClub =
+    archive.currentTeam?.trim() ||
+    archive.clubCareer?.filter((row) => row.teamName?.trim()).at(-1)?.teamName?.trim() ||
+    null;
+  if (inferredCurrentClub && (!player.clubTeamId || !player.clubName || /^unknown team\b/i.test(player.clubName))) {
+    const club = await resolveTeam({ name: inferredCurrentClub, createIfMissing: !fillMissingOnly });
+    clubTeamId = club?.id ?? clubTeamId;
     if (clubTeamId && clubTeamId !== player.clubTeamId) fieldsUpdated.push("clubTeamId");
   }
 
@@ -226,7 +234,9 @@ async function applyWikipediaPlayerArchive(
       wikidataId: player.wikidataId ?? archive.wikidataId ?? null,
       archiveSyncedAt: new Date(),
       positionName: player.positionName ?? positionName ?? null,
-      clubName: player.clubName ?? archive.currentTeam ?? null,
+      clubName: player.clubName && !/^unknown team\b/i.test(player.clubName)
+        ? player.clubName
+        : inferredCurrentClub ?? player.clubName ?? null,
       clubTeamId,
       countryName:
         player.countryName ??
@@ -345,7 +355,7 @@ async function applyWikipediaPlayerArchive(
       wikidataId: archive.wikidataId ?? null,
       archiveSyncedAt: new Date(),
       positionName: positionName ?? null,
-      clubName: archive.currentTeam ?? null,
+      clubName: inferredCurrentClub ?? archive.currentTeam ?? null,
       clubTeamId,
       countryName: archiveNationality,
       internationalTeamId,
@@ -370,6 +380,11 @@ async function applyWikipediaPlayerArchive(
   const [updated] = await db.update(players).set(patch).where(eq(players.id, playerId)).returning();
   if (upsertCareer) {
     await upsertPlayerCareerStints(updated.id, archive, archive.wikipediaUrl);
+  }
+  if ((archive.honours?.length ?? 0) > 0 && !fillMissingOnly) {
+    const { importWikipediaPlayerHonours } = await import("./player-wikipedia-honours-import");
+    const honoursResult = await importWikipediaPlayerHonours(updated.id, archive);
+    if (honoursResult.upserted > 0) fieldsUpdated.push(`honours:${honoursResult.upserted}`);
   }
   const { repairPlayerProfileFromSquads } = await import("./player-profile-fields");
   await repairPlayerProfileFromSquads(playerId);
