@@ -1,5 +1,5 @@
 ---
-description: Keep Rugby365 scoped to the rugby product — never mix Planet Sport deck or F1 work here
+description: Keep agents inside Rugby365 — no Planet Sport deck, F1, or cross-product Supabase/env unless user explicitly says so
 alwaysApply: true
 ---
 
@@ -9,17 +9,34 @@ alwaysApply: true
 
 **Workspace path:** `/Users/barriejarrett/Projects/Rugby365`
 
+## No cross-project work unless explicitly stated
+
+**Default: stay inside Rugby365 only.** Do not create, edit, copy, migrate, or commit files/data/env/Supabase config that belong to another product **unless the user explicitly says to cross projects** in that turn.
+
+Products are **not interchangeable**:
+
+| Product | Repo / home | Supabase / env |
+|---------|-------------|----------------|
+| **Rugby365** | this workspace | Rugby365 live DB only (`oguqhyggjbefrhzdxomk`) — see `docs/supabase-project-split.md` |
+| **planetf1-live** | sibling repo | its own F1 project — never rugby |
+| **planet-sport-deck** | sibling repo | Planet Sport Intelligence / deck — never rugby |
+| **Fixtures / Racing / Greyhounds / Teamtalk** | separate apps/schemas | cutover targets or schemas on Shared — never point Rugby365 app at them |
+
+Each product’s **Supabase project, env vars, keys, and migrations stay separate**. Never reuse another product’s URL/ref/keys “because they’re in the same org.”
+
 ## Do not create or commit here
 
 - Planet Sport investor / company-introduction decks or assets (`public/company-introduction/`, deck slides, competitive logos for the group deck)
 - Planet Sport Intelligence handoffs / build standards (`docs/planet-sport-*.md`)
 - PlanetF1 / OpenF1 / F1 live or historic app code and prompts
 - Files meant for `planet-sport-deck` or `planetf1-live`
+- Fixtures/Racing/Greyhounds/Teamtalk app code, env, or Supabase wiring (unless the user explicitly asks for that cross-product work)
 
 ## Before writing files
 
-1. Confirm the Cursor workspace root is **Rugby365**. If the task is F1 or Planet Sport deck/intelligence, **stop** and switch workspace (`cd` / move agent root) to the correct project first.
+1. Confirm the Cursor workspace root is **Rugby365**. If the task is F1, Planet Sport deck/intelligence, or another 365 product app, **stop** and switch workspace (`cd` / move agent root) to the correct project first — unless the user explicitly requested cross-project work.
 2. Legitimate “Planet Sport” mentions in this repo are only rugby product context (e.g. SDMS `planetsport.com` APIs, Planet Rugby media rights) — not group deck work.
+3. Before any Supabase write/migration/env change: confirm project id/URL matches Rugby365 (`oguqhyggjbefrhzdxomk`), not F1, deck, or other 365 cutover projects.
 
 ## Sibling projects (use those instead)
 
