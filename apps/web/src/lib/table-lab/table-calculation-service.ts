@@ -2476,7 +2476,9 @@ export async function calculateRugbyTable(
     });
 
     // Finished seasons: prefer curated synced standings over duplicate-heavy fixture calc.
-    if (built.liveFixtureCount === 0) {
+    // World Cup pool tables must stay on knockout-filtered fixtures (synced rows include
+    // QF/SF/F so P becomes 4–6 and form is null).
+    if (built.liveFixtureCount === 0 && !isWorldCup) {
       const standingView = standingViewForTableView(tableView);
       const synced = await trySyncedStandings(context.seasonId, standingView);
       if (synced?.length) {

@@ -30,7 +30,8 @@ import {
   type PublicKeyEvent,
 } from "./match-key-events";
 import { buildMatchEntityContext, type MatchEntityContext } from "./entity-lookup-service";
-import { findFixtureBySdmsMatchId, getFixtureById } from "./fixture-admin-service";
+import { findFixtureBySdmsMatchId, findFixtureBySlug, getFixtureById } from "./fixture-admin-service";
+import { isSdmsShapedMatchId } from "./match-schedule-utils";
 import { resolveReferee } from "./entity-admin-service";
 import {
   ensureMissingFixtureStaffMatchRatings,
@@ -118,7 +119,54 @@ export type MatchStaffLink = {
 };
 
 const MATCH_ENSURE_BUDGET_MS = 800;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const matchSelfHealInflight = new Set<string>();
+
+type CmsFixtureRow = NonNullable<Awaited<ReturnType<typeof getFixtureById>>>;
+
+async function resolveCmsFixtureForMatchCentre(matchId: string): Promise<CmsFixtureRow | null> {
+  const id = matchId.trim();
+  if (!id) return null;
+  if (UUID_RE.test(id)) {
+    const byId = await getFixtureById(id);
+    if (byId) return byId;
+  }
+  const byExternal = await findFixtureBySdmsMatchId(id);
+  if (byExternal) return (await getFixtureById(byExternal.id)) ?? null;
+  const bySlug = await findFixtureBySlug(id);
+  if (bySlug) return (await getFixtureById(bySlug.id)) ?? null;
+  return null;
+}
+
+function cmsDateKey(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+  return value.toISOString().slice(0, 10);
+}
+
+function cmsFixtureToSdmsDetail(fixture: CmsFixtureRow): SdmsMatchDetail {
+  const kickoff = fixture.kickoffAt ? new Date(fixture.kickoffAt) : null;
+  return {
+    match_id: fixture.externalMatchId || fixture.id,
+    date: cmsDateKey(fixture.matchDate) || (kickoff ? kickoff.toISOString().slice(0, 10) : ""),
+    time: kickoff ? kickoff.toISOString().slice(11, 16) : "",
+    status: fixture.status ?? "",
+    competition_id: fixture.competition?.id,
+    competition_name: fixture.competition?.name ?? "",
+    home_team_id: fixture.homeTeamId ?? undefined,
+    home_team_name: fixture.homeTeam?.name ?? "TBC",
+    home_team_slug: fixture.homeTeam?.slug ?? "",
+    home_team_score: fixture.homeScore ?? 0,
+    home_team_icon: fixture.homeTeam?.imageUrl ?? undefined,
+    away_team_id: fixture.awayTeamId ?? undefined,
+    away_team_name: fixture.awayTeam?.name ?? "TBC",
+    away_team_slug: fixture.awayTeam?.slug ?? "",
+    away_team_score: fixture.awayScore ?? 0,
+    away_team_icon: fixture.awayTeam?.imageUrl ?? undefined,
+    venue_name: fixture.venue?.name ?? fixture.venueName ?? undefined,
+    round: fixture.round ?? undefined,
+  };
+}
 
 function raceWithBudget<T>(work: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([
@@ -379,29 +427,45 @@ export async function getMatchDetailForPage(
     away: { attack: null, defend: null, kicking: null, errors: null, carries: null },
   } as Awaited<ReturnType<typeof fetchSdmsMatchPlayerStats>>;
 
-  const playerStatsPromise = needPlayerStats
-    ? Promise.race([
-        fetchSdmsMatchPlayerStats(matchId, { timeoutMs: SECONDARY_MS }),
-        new Promise<typeof emptyPlayerStats>((resolve) =>
-          setTimeout(() => resolve(emptyPlayerStats), 1_500),
-        ),
-      ])
-    : Promise.resolve(emptyPlayerStats);
+  const skipSdms = !isSdmsShapedMatchId(matchId);
+  let detail: SdmsMatchDetail | null = null;
+  let lineupsRaw: Awaited<ReturnType<typeof fetchSdmsLineups>> = null;
+  let matchStats: Awaited<ReturnType<typeof fetchSdmsMatchStats>> = null;
+  let previousMeetings: Awaited<ReturnType<typeof fetchSdmsPreviousMeetings>> = [];
+  let headToHead: Awaited<ReturnType<typeof fetchSdmsHeadToHead>> = [];
+  let playerStats = emptyPlayerStats;
+  let cmsFromFallback: CmsFixtureRow | null = null;
 
-  const [detail, lineupsRaw, matchStats, previousMeetings, headToHead, playerStats] = await Promise.all([
-    fetchSdmsMatchDetail(matchId, { timeoutMs: PAGE_MS }),
-    fetchSdmsLineups(matchId, { timeoutMs: SECONDARY_MS }),
-    fetchSdmsMatchStats(matchId, { timeoutMs: SECONDARY_MS }),
-    needMeetings
-      ? fetchSdmsPreviousMeetings(matchId, { timeoutMs: SECONDARY_MS })
-      : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsPreviousMeetings>>),
-    needMeetings
-      ? fetchSdmsHeadToHead(matchId, { timeoutMs: SECONDARY_MS })
-      : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsHeadToHead>>),
-    playerStatsPromise,
-  ]);
+  if (!skipSdms) {
+    const playerStatsPromise = needPlayerStats
+      ? Promise.race([
+          fetchSdmsMatchPlayerStats(matchId, { timeoutMs: SECONDARY_MS }),
+          new Promise<typeof emptyPlayerStats>((resolve) =>
+            setTimeout(() => resolve(emptyPlayerStats), 1_500),
+          ),
+        ])
+      : Promise.resolve(emptyPlayerStats);
+
+    [detail, lineupsRaw, matchStats, previousMeetings, headToHead, playerStats] = await Promise.all([
+      fetchSdmsMatchDetail(matchId, { timeoutMs: PAGE_MS }),
+      fetchSdmsLineups(matchId, { timeoutMs: SECONDARY_MS }),
+      fetchSdmsMatchStats(matchId, { timeoutMs: SECONDARY_MS }),
+      needMeetings
+        ? fetchSdmsPreviousMeetings(matchId, { timeoutMs: SECONDARY_MS })
+        : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsPreviousMeetings>>),
+      needMeetings
+        ? fetchSdmsHeadToHead(matchId, { timeoutMs: SECONDARY_MS })
+        : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsHeadToHead>>),
+      playerStatsPromise,
+    ]);
+  }
   __mark("sdms");
-  if (!detail) return null;
+
+  if (!detail) {
+    cmsFromFallback = await resolveCmsFixtureForMatchCentre(matchId);
+    if (!cmsFromFallback) return null;
+    detail = cmsFixtureToSdmsDetail(cmsFromFallback);
+  }
 
   if (previousMeetings.length > 0) {
     detail.last_five_meetings = previousMeetings;
@@ -420,14 +484,14 @@ export async function getMatchDetailForPage(
       )
     : null;
 
-  let cmsFixtureRow = await findFixtureBySdmsMatchId(matchId);
+  let cmsFixtureRow = cmsFromFallback ?? (await findFixtureBySdmsMatchId(matchId));
   __mark("findFixture");
   let entitySyncRan = false;
   let autoImported = false;
 
-  // Only upsert teams when this match isn't linked yet — avoid ~400ms DB round-trips
-  // on every soft-nav into an already-imported fixture.
-  if (!cmsFixtureRow?.homeTeamId || !cmsFixtureRow?.awayTeamId) {
+  if (cmsFromFallback) {
+    /* CMS-only Match Centre — skip SDMS team upsert / auto-import. */
+  } else if (!cmsFixtureRow?.homeTeamId || !cmsFixtureRow?.awayTeamId) {
     try {
       await ensureSdmsTeamsRegistered(detail);
     } catch (error) {
@@ -438,7 +502,9 @@ export async function getMatchDetailForPage(
     }
   }
 
-  if (!cmsFixtureRow) {
+  if (cmsFromFallback) {
+    cmsFixtureRow = cmsFromFallback;
+  } else if (!cmsFixtureRow) {
     try {
       // Auto-import can fan out into entity sync — never let it blow the RSC budget.
       const imported = await Promise.race([

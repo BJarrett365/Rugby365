@@ -61,6 +61,8 @@ type Props = {
    */
   anchoredMode?: boolean;
   anchoredDisplayName?: string | null;
+  /** Search by name only — skip competition / club cascade. */
+  searchOnly?: boolean;
 };
 
 function emptySide(competitionSlug = ""): SideState {
@@ -93,10 +95,12 @@ function PlayerSearchField({
   competitionPlayers,
   otherSlug,
   onPick,
+  label,
 }: {
   competitionPlayers: PlayerOption[];
   otherSlug: string;
   onPick: (hit: SearchHit) => void;
+  label?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState("");
@@ -192,7 +196,9 @@ function PlayerSearchField({
   return (
     <div ref={wrapRef} className="relative space-y-1.5">
       <label className="block space-y-1.5">
-        <span className="text-xs font-medium text-[var(--pr-mc-muted)]">Or search by name</span>
+        <span className="text-xs font-medium text-[var(--pr-mc-muted)]">
+          {label ?? "Or search by name"}
+        </span>
         <input
           type="search"
           value={query}
@@ -312,20 +318,25 @@ export function ComparePlayersPicker({
   initialPlayerB,
   anchoredMode = false,
   anchoredDisplayName = null,
+  searchOnly = false,
 }: Props) {
   const hubSlug = competitionSlug?.trim() ?? "";
   // Competition hub pages default to that competition; global menu defaults to Nations Championship.
   const defaultCompetitionSlug = hubSlug || NATIONS_CHAMPIONSHIP_COMPETITION_SLUG;
 
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
-  const [competitionsLoading, setCompetitionsLoading] = useState(true);
+  const [competitionsLoading, setCompetitionsLoading] = useState(!searchOnly);
   const [competitionsError, setCompetitionsError] = useState<string | null>(null);
 
-  const [sideA, setSideA] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
-  const [sideB, setSideB] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
+  const [sideA, setSideA] = useState<SideState>(() => emptySide(searchOnly ? "" : defaultCompetitionSlug));
+  const [sideB, setSideB] = useState<SideState>(() => emptySide(searchOnly ? "" : defaultCompetitionSlug));
   const [initialHydrated, setInitialHydrated] = useState(false);
 
   useEffect(() => {
+    if (searchOnly) {
+      setCompetitionsLoading(false);
+      return;
+    }
     let cancelled = false;
     setCompetitionsLoading(true);
     setCompetitionsError(null);
@@ -391,7 +402,7 @@ export function ComparePlayersPicker({
     return () => {
       cancelled = true;
     };
-  }, [hubSlug, competitionName]);
+  }, [hubSlug, competitionName, searchOnly]);
 
   useSideRoster(sideA.competitionSlug, setSideA);
   useSideRoster(sideB.competitionSlug, setSideB);
@@ -607,115 +618,124 @@ export function ComparePlayersPicker({
           {anchoredMode && side === "b" ? "Opponent" : `Player ${side.toUpperCase()}`}
         </p>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-[var(--pr-mc-muted)]">1. Competition</span>
-          <select
-            className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
-            value={state.competitionSlug}
-            disabled={competitionsLoading || competitionOptions.length === 0}
-            onChange={(e) => setCompetition(side, e.target.value)}
-          >
-            <option value="">
-              {competitionsLoading
-                ? "Loading competitions…"
-                : competitionsError
-                  ? "Failed to load competitions"
-                  : "Select a competition"}
-            </option>
-            {competitionOptions.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {searchOnly ? null : (
+          <>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--pr-mc-muted)]">1. Competition</span>
+              <select
+                className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
+                value={state.competitionSlug}
+                disabled={competitionsLoading || competitionOptions.length === 0}
+                onChange={(e) => setCompetition(side, e.target.value)}
+              >
+                <option value="">
+                  {competitionsLoading
+                    ? "Loading competitions…"
+                    : competitionsError
+                      ? "Failed to load competitions"
+                      : "Select a competition"}
+                </option>
+                {competitionOptions.map((c) => (
+                  <option key={c.id} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        {state.rosterLoading ? (
-          <p className="m-0 text-xs text-[var(--pr-mc-muted)]">Loading teams & players…</p>
-        ) : null}
-        {state.rosterError ? (
-          <p className="m-0 text-xs text-red-300">{state.rosterError}</p>
-        ) : null}
-        {competitionReady &&
-        !state.rosterLoading &&
-        !state.rosterError &&
-        state.teams.length === 0 ? (
-          <p className="m-0 text-xs text-[var(--pr-mc-muted)]">
-            No teams found — try search or another competition.
-          </p>
-        ) : null}
+            {state.rosterLoading ? (
+              <p className="m-0 text-xs text-[var(--pr-mc-muted)]">Loading teams & players…</p>
+            ) : null}
+            {state.rosterError ? (
+              <p className="m-0 text-xs text-red-300">{state.rosterError}</p>
+            ) : null}
+            {competitionReady &&
+            !state.rosterLoading &&
+            !state.rosterError &&
+            state.teams.length === 0 ? (
+              <p className="m-0 text-xs text-[var(--pr-mc-muted)]">
+                No teams found — try search or another competition.
+              </p>
+            ) : null}
+          </>
+        )}
 
         <PlayerSearchField
           competitionPlayers={state.players}
           otherSlug={other.playerSlug}
+          label={searchOnly ? "Search by name" : undefined}
           onPick={(hit) => pickFromSearch(side, hit)}
         />
 
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-[var(--pr-mc-grey)]">
-          <span className="h-px flex-1 bg-[var(--pr-mc-border)]" />
-          <span>or browse</span>
-          <span className="h-px flex-1 bg-[var(--pr-mc-border)]" />
-        </div>
+        {searchOnly ? null : (
+          <>
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-[var(--pr-mc-grey)]">
+              <span className="h-px flex-1 bg-[var(--pr-mc-border)]" />
+              <span>or browse</span>
+              <span className="h-px flex-1 bg-[var(--pr-mc-border)]" />
+            </div>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-[var(--pr-mc-muted)]">2. Team</span>
-          <select
-            className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
-            value={state.teamId}
-            disabled={!competitionReady || state.rosterLoading || teamOptions.length === 0}
-            onChange={(e) => setTeam(side, e.target.value)}
-          >
-            <option value="">
-              {!competitionReady
-                ? "Select a competition first"
-                : state.rosterLoading
-                  ? "Loading teams…"
-                  : teamOptions.length === 0
-                    ? "No teams available"
-                    : "Select a team"}
-            </option>
-            {teamOptions.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--pr-mc-muted)]">2. Team</span>
+              <select
+                className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
+                value={state.teamId}
+                disabled={!competitionReady || state.rosterLoading || teamOptions.length === 0}
+                onChange={(e) => setTeam(side, e.target.value)}
+              >
+                <option value="">
+                  {!competitionReady
+                    ? "Select a competition first"
+                    : state.rosterLoading
+                      ? "Loading teams…"
+                      : teamOptions.length === 0
+                        ? "No teams available"
+                        : "Select a team"}
+                </option>
+                {teamOptions.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-[var(--pr-mc-muted)]">3. Player</span>
-          <select
-            className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
-            value={
-              selectedInList
-                ? state.playerSlug
-                : showPickedOutsideList && state.picked
-                  ? state.picked.slug
-                  : ""
-            }
-            disabled={
-              !state.teamId || (sidePlayers.length === 0 && !showPickedOutsideList)
-            }
-            onChange={(e) => setPlayerSelect(side, e.target.value)}
-          >
-            <option value="">
-              {!state.teamId
-                ? "Select a team first"
-                : sidePlayers.length === 0
-                  ? "No players for this team"
-                  : "Select a player"}
-            </option>
-            {showPickedOutsideList && state.picked ? (
-              <option value={state.picked.slug}>{playerLabel(state.picked)}</option>
-            ) : null}
-            {sidePlayers.map((p) => (
-              <option key={p.id} value={p.slug} disabled={p.slug === other.playerSlug}>
-                {p.name}
-                {p.position ? ` · ${p.position}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--pr-mc-muted)]">3. Player</span>
+              <select
+                className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
+                value={
+                  selectedInList
+                    ? state.playerSlug
+                    : showPickedOutsideList && state.picked
+                      ? state.picked.slug
+                      : ""
+                }
+                disabled={
+                  !state.teamId || (sidePlayers.length === 0 && !showPickedOutsideList)
+                }
+                onChange={(e) => setPlayerSelect(side, e.target.value)}
+              >
+                <option value="">
+                  {!state.teamId
+                    ? "Select a team first"
+                    : sidePlayers.length === 0
+                      ? "No players for this team"
+                      : "Select a player"}
+                </option>
+                {showPickedOutsideList && state.picked ? (
+                  <option value={state.picked.slug}>{playerLabel(state.picked)}</option>
+                ) : null}
+                {sidePlayers.map((p) => (
+                  <option key={p.id} value={p.slug} disabled={p.slug === other.playerSlug}>
+                    {p.name}
+                    {p.position ? ` · ${p.position}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
 
         {state.playerSlug && state.picked ? (
           <p className="m-0 text-xs text-[var(--pr-mc-muted)]">
@@ -743,7 +763,9 @@ export function ComparePlayersPicker({
         </p>
       ) : (
         <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
-          {hubSlug
+          {searchOnly
+            ? "Search two players by name — no need to pick a club. Profiles open side by side."
+            : hubSlug
             ? `Both sides start on ${competitionName || "this competition"} — you can switch either side to another competition.`
             : "Defaults to Nations Championship — pick players from the same league or different ones."}
         </p>
@@ -763,7 +785,7 @@ export function ComparePlayersPicker({
       <div className="flex flex-wrap items-center gap-3">
         {canCompare ? (
           <Link
-            href={`/players/${encodeURIComponent(sideA.playerSlug)}/compare/${encodeURIComponent(sideB.playerSlug)}`}
+            href={`/players/compare?player=${encodeURIComponent(sideA.playerSlug)}&opponent=${encodeURIComponent(sideB.playerSlug)}`}
             className="cms-btn cms-btn--primary touch-target"
           >
             Open full compare

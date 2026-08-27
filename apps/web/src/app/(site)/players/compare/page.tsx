@@ -31,8 +31,8 @@ export default async function ComparePlayersPage({ searchParams }: PageProps) {
 
   if (anchoredFromProfile && playerA) {
     const [anchoredPlayer, opponentPlayer] = await Promise.all([
-      getCompareLitePlayer(playerA),
-      playerB ? getCompareLitePlayer(playerB) : Promise.resolve(null),
+      getCompareLitePlayer(playerA, { ensureValueHistory: false }),
+      playerB ? getCompareLitePlayer(playerB, { ensureValueHistory: false }) : Promise.resolve(null),
     ]);
 
     if (anchoredPlayer) {

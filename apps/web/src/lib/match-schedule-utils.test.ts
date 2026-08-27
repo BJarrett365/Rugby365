@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildPreviousMeetingHref,
   groupByCompetition,
+  isSdmsShapedMatchId,
+  matchDetailHref,
   type ScheduleCompetition,
+  type ScheduleFixture,
 } from "./match-schedule-utils";
 
 describe("buildPreviousMeetingHref", () => {
@@ -77,5 +80,50 @@ describe("groupByCompetition", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0]?.label).toBe("INTERNATIONAL");
     expect(groups[0]?.fixtures).toHaveLength(2);
+  });
+});
+
+describe("isSdmsShapedMatchId", () => {
+  it("accepts Planet Rugby / SDMS alphanumeric ids", () => {
+    expect(isSdmsShapedMatchId("294zg8oj")).toBe(true);
+    expect(isSdmsShapedMatchId("o6gd7xg6")).toBe(true);
+  });
+
+  it("rejects rugby-data integers, CMS uuids, and prefixed ids", () => {
+    expect(isSdmsShapedMatchId("9635")).toBe(false);
+    expect(isSdmsShapedMatchId("352b6ba0-311c-4e2d-af78-72aa52edf241")).toBe(false);
+    expect(isSdmsShapedMatchId("sdms:294zg8oj")).toBe(false);
+  });
+});
+
+describe("matchDetailHref", () => {
+  const base: ScheduleFixture = {
+    id: "cms-fixture-id",
+    slug: "biarritz-v-nissa",
+    competitionId: "352b6ba0-311c-4e2d-af78-72aa52edf241",
+    competitionName: "France Pro D2",
+    matchDate: "2026-08-27",
+    seasonLabel: "2026",
+    kickoffAt: "2026-08-27T18:00:00.000Z",
+    status: "full_time",
+    round: null,
+    venue: null,
+    homeScore: 10,
+    awayScore: 12,
+    homeTeam: { name: "Biarritz", slug: "biarritz-olympique" },
+    awayTeam: { name: "Nissa", slug: "nissa-rugby" },
+    source: "db",
+  };
+
+  it("uses the CMS fixture id when externalMatchId is rugby-data numeric", () => {
+    const href = matchDetailHref({ ...base, externalMatchId: "9635" });
+    expect(href).toBe(
+      "/matches/cms-fixture-id/france-pro-d2/352b6ba0-311c-4e2d-af78-72aa52edf241/biarritz-olympique-v-nissa-rugby/2026-08-27",
+    );
+  });
+
+  it("keeps SDMS ids in the match centre path", () => {
+    const href = matchDetailHref({ ...base, externalMatchId: "294zg8oj" });
+    expect(href?.startsWith("/matches/294zg8oj/")).toBe(true);
   });
 });

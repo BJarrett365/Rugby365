@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { CompetitionLiveTable } from "@/components/competitions/CompetitionLiveTable";
 import { LeagueTable } from "@/components/competitions/LeagueTable";
 import { PlayoffFixtures } from "@/components/competitions/PlayoffFixtures";
@@ -63,6 +64,8 @@ export function CompetitionTableClient({
   initialSeason?: string;
   initialView?: View;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [competitionId, setCompetitionId] = useState("");
   const [competitionName, setCompetitionName] = useState("");
   const [seasons, setSeasons] = useState<Season[]>([]);
@@ -226,7 +229,15 @@ export function CompetitionTableClient({
           <select
             className="cms-input w-full"
             value={seasonLabel}
-            onChange={(e) => setSeasonLabel(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setSeasonLabel(next);
+              const params = new URLSearchParams();
+              if (next) params.set("season", next);
+              if (view !== "overall") params.set("view", view);
+              const query = params.toString();
+              router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+            }}
             disabled={seasons.length === 0}
           >
             {seasons.length === 0 ? (

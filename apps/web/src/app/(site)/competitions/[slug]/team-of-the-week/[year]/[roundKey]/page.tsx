@@ -9,7 +9,7 @@ import {
   getTeamOfWeekEditionBundle,
   listPublishedEditionsForCompetition,
 } from "@/lib/team-of-week-service";
-import { presentTeamOfWeekBundle } from "@/lib/team-of-week-public";
+import { presentTeamOfWeekBundle, hydrateTotwLiveImages } from "@/lib/team-of-week-public";
 import "@/styles/team-of-week.css";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ export default async function TeamOfWeekRoundPage({
   const bundle = await getTeamOfWeekEditionBundle(edition.id);
   if (!bundle) notFound();
 
-  const view = presentTeamOfWeekBundle(bundle);
+  const view = await hydrateTotwLiveImages(presentTeamOfWeekBundle(bundle));
   const pickerSeasons = buildTotwPickerSeasons(allEditions);
 
   return (

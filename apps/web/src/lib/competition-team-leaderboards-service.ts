@@ -13,6 +13,7 @@ import {
   nationsChampionshipHemisphereForTeam,
 } from "./nations-championship-hemisphere";
 import { parseSeasonStartYear, usesDomesticSeasonCatalog } from "./season-label-utils";
+import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import { teamCodeForLeaderboard } from "./competition-player-stat-display";
 import type { HemisphereFilter } from "./competition-player-leaderboards-service";
 import {
@@ -222,16 +223,40 @@ function rankBoard(
   };
 }
 
+async function seasonIdsWithTeamStats(competitionId: string): Promise<Set<string>> {
+  const db = getDb();
+  const rows = await db
+    .selectDistinct({
+      statsSeasonId: teamMatchStats.seasonId,
+      fixtureSeasonId: fixtures.seasonId,
+    })
+    .from(teamMatchStats)
+    .innerJoin(fixtures, eq(teamMatchStats.fixtureId, fixtures.id))
+    .where(eq(fixtures.competitionId, competitionId));
+  const ids = new Set<string>();
+  for (const row of rows) {
+    if (row.statsSeasonId) ids.add(row.statsSeasonId);
+    if (row.fixtureSeasonId) ids.add(row.fixtureSeasonId);
+  }
+  return ids;
+}
+
 async function resolveSeasonForCompetition(competitionId: string, seasonLabel?: string) {
   const seasons = await listSeasonsForPicker(competitionId);
-  const active = seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
-  if (!seasonLabel?.trim()) return { seasons, season: active };
+  if (!seasonLabel?.trim()) {
+    const withStats = await seasonIdsWithTeamStats(competitionId);
+    const latestWithStats = seasons.find((season) => withStats.has(season.id)) ?? null;
+    const fallback = pickDefaultSeasonForPicker(seasons) ?? seasons[0] ?? null;
+    return { seasons, season: latestWithStats ?? fallback };
+  }
 
   const requested = seasonLabel.trim();
   const requestedYear = parseSeasonStartYear(requested);
   const match =
     seasons.find((s) => s.label === requested) ??
     seasons.find((s) => s.label.replace(/–/g, "-") === requested.replace(/–/g, "-")) ??
+    seasons.find((s) => (s.displayLabel ?? "") === requested) ??
+    seasons.find((s) => (s.displayLabel ?? "").replace(/–/g, "-") === requested.replace(/–/g, "-")) ??
     (requestedYear != null ? seasons.find((s) => s.year === requestedYear) : null) ??
     null;
   return { seasons, season: match };

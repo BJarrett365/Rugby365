@@ -350,27 +350,47 @@ export function buildMatchDetailPath(input: {
   return `/matches/${input.matchId}/${compSlug}/${input.competitionId}/${input.homeTeamSlug}-v-${input.awayTeamSlug}/${input.matchDate}`;
 }
 
+/** SDMS / Planet Rugby match ids are alphanumeric (e.g. 294zg8oj). Numeric-only ids are Rugby Data. */
+export function isSdmsShapedMatchId(id: string | null | undefined): boolean {
+  const value = String(id ?? "").trim();
+  if (!value || value.includes(":")) return false;
+  if (/^\d+$/.test(value)) return false;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return false;
+  return /[a-z]/i.test(value);
+}
+
+function planetRugbyMatchPath(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const path = new URL(url).pathname;
+    const parts = path.split("/").filter(Boolean);
+    const matchesIdx = parts.indexOf("matches");
+    const matchId = parts[matchesIdx + 1];
+    if (matchesIdx < 0 || !matchId || parts.length < matchesIdx + 6) return null;
+    if (!isSdmsShapedMatchId(matchId)) return null;
+    return `/${parts.slice(matchesIdx).join("/")}`;
+  } catch {
+    return null;
+  }
+}
+
 /** Prefer Planet Rugby Match Centre URL over commentary when a PR match URL is stored. */
 export function matchDetailHref(fixture: ScheduleFixture): string | null {
-  if (fixture.planetRugbyUrl) {
-    try {
-      const path = new URL(fixture.planetRugbyUrl).pathname;
-      const parts = path.split("/").filter(Boolean);
-      const matchesIdx = parts.indexOf("matches");
-      if (matchesIdx >= 0 && parts[matchesIdx + 1] && parts.length >= matchesIdx + 6) {
-        return `/${parts.slice(matchesIdx).join("/")}`;
-      }
-    } catch {
-      /* ignore bad URLs */
-    }
-  }
+  const fromPlanetRugby = planetRugbyMatchPath(fixture.planetRugbyUrl);
+  if (fromPlanetRugby) return fromPlanetRugby;
 
-  const matchId =
-    fixture.externalMatchId ??
-    (fixture.source === "sdms" ? fixture.id.replace(/^sdms:/, "") : null);
+  const sdmsId = isSdmsShapedMatchId(fixture.externalMatchId)
+    ? fixture.externalMatchId!.trim()
+    : fixture.source === "sdms" && isSdmsShapedMatchId(fixture.id.replace(/^sdms:/, ""))
+      ? fixture.id.replace(/^sdms:/, "")
+      : null;
+  const matchId = sdmsId ?? (fixture.source === "sdms" ? null : fixture.id);
   const homeSlug = fixture.homeTeam?.slug || slugifySegment(fixture.homeTeam?.name ?? "");
   const awaySlug = fixture.awayTeam?.slug || slugifySegment(fixture.awayTeam?.name ?? "");
-  const compId = fixture.sdmsCompetitionId ?? fixture.competitionId;
+  const compId =
+    (fixture.sdmsCompetitionId && isSdmsShapedMatchId(fixture.sdmsCompetitionId)
+      ? fixture.sdmsCompetitionId
+      : null) ?? fixture.competitionId;
   if (!matchId || !homeSlug || !awaySlug || !compId || !fixture.competitionName || !fixture.matchDate) {
     return null;
   }
