@@ -21,6 +21,7 @@ import { CoachAwardsCard } from "./CoachAwardsCard";
 import { CoachMedalRecordCard } from "./CoachMedalRecordCard";
 import { HonourAwardIcon, HonourTrophyIcon } from "@/components/honours/HonourIcons";
 import { isCoachAssessment } from "@/lib/coach-field-provenance";
+import { coachHeroNameLines } from "@/lib/coach-display-name";
 
 function formatCoachResultDateMobile(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -92,29 +93,12 @@ function stars(rating: number | null): string {
   return `${"★".repeat(full)}${half ? "½" : ""}${"☆".repeat(empty)}`;
 }
 
-/** Two-line hero name matching approved composition (e.g. JOHAN "RASSIE" / ERASMUS). */
 function heroNameLines(profile: PublicCoachProfile): { line1: string; line2: string } {
-  const knownAs = profile.knownAs?.trim();
-  const fullName = profile.fullName?.trim();
-  if (knownAs && fullName) {
-    const parts = fullName.split(/\s+/).filter(Boolean);
-    const last = parts.at(-1) ?? "";
-    const first = parts.slice(0, -1).join(" ");
-    if (first && last) {
-      return {
-        line1: `${first} "${knownAs}"`.toUpperCase(),
-        line2: last.toUpperCase(),
-      };
-    }
-  }
-  const words = profile.displayName.trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 2) {
-    return {
-      line1: words.slice(0, -1).join(" "),
-      line2: words[words.length - 1]!,
-    };
-  }
-  return { line1: profile.displayName, line2: "" };
+  return coachHeroNameLines({
+    name: profile.name,
+    knownAs: profile.knownAs,
+    fullName: profile.fullName,
+  });
 }
 
 const NAV: Array<{ id: string; label: string; href?: string }> = [

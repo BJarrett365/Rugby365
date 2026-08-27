@@ -4,17 +4,20 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { GroupedTeamSelect } from "@/components/admin/GroupedTeamSelect";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { coachHeroNameLines } from "@/lib/coach-display-name";
 import type { TeamPickerGroup } from "@/lib/team-picker-groups";
 
 type CoachRow = {
   id: string;
   name: string;
   slug: string;
+  fullName: string | null;
+  knownAs: string | null;
   nationality: string | null;
-  birthDate: string | null;
-  bioSummary: string | null;
-  wikipediaUrl: string | null;
-  sourceProvider: string;
+  imageUrl: string | null;
+  currentTeamName: string | null;
+  currentRoleLabel: string | null;
+  isCurrent: boolean;
   coachedCountries: string[];
 };
 
@@ -30,14 +33,22 @@ export default function CoachesAdminPage() {
   const [attention, setAttention] = useState<AttentionRow[]>([]);
   const [showAttentionOnly, setShowAttentionOnly] = useState(false);
   const [teamGroups, setTeamGroups] = useState<TeamPickerGroup[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [countryTeamId, setCountryTeamId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [assigningTeams, setAssigningTeams] = useState(false);
   const [assignMessage, setAssignMessage] = useState("");
 
+  useEffect(() => {
+    const t = window.setTimeout(() => setSearch(searchInput.trim()), 250);
+    return () => window.clearTimeout(t);
+  }, [searchInput]);
+
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (countryTeamId) params.set("countryTeamId", countryTeamId);
@@ -48,7 +59,12 @@ export default function CoachesAdminPage() {
     ]);
     const data = await listRes.json();
     const attentionData = await attentionRes.json();
-    setCoaches(data.coaches ?? []);
+    if (!listRes.ok) {
+      setCoaches([]);
+      setLoadError(data.error ?? "Failed to list coaches");
+    } else {
+      setCoaches(data.coaches ?? []);
+    }
     setAttention(attentionData.coaches ?? []);
     setLoading(false);
   }, [search, countryTeamId]);
@@ -95,6 +111,8 @@ export default function CoachesAdminPage() {
   const visibleCoaches = showAttentionOnly
     ? coaches.filter((c) => attentionById.has(c.id))
     : coaches;
+  const currentCoaches = visibleCoaches.filter((c) => c.isCurrent);
+  const otherCoaches = visibleCoaches.filter((c) => !c.isCurrent);
 
   return (
     <>
@@ -144,7 +162,7 @@ export default function CoachesAdminPage() {
                 key={row.id}
                 className="flex flex-wrap items-center justify-between gap-2 text-sm border-b border-zinc-800/60 pb-2"
               >
-                <Link href={`/admin/coaches/${row.id}/edit`} className="text-emerald-400">
+                <Link href={`/admin/coaches/${row.id}`} className="text-emerald-400">
                   {row.name}
                 </Link>
                 <span className="flex flex-wrap gap-1">
@@ -165,12 +183,12 @@ export default function CoachesAdminPage() {
 
       <div className="cms-card mb-4 grid gap-4 md:grid-cols-2">
         <label className="block text-sm text-zinc-400">
-          Search by name or nationality
+          Search by name, known as, or nationality
           <input
             className="cms-input w-full mt-1"
-            placeholder="Name or nationality…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Johan, Rassie, South Africa…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </label>
         <label className="block text-sm text-zinc-400">
@@ -187,59 +205,82 @@ export default function CoachesAdminPage() {
         </label>
       </div>
       {assignMessage ? <p className="text-sm text-zinc-400 mb-4">{assignMessage}</p> : null}
+      {loadError ? <p className="text-sm text-red-400 mb-4">{loadError}</p> : null}
       {loading ? (
         <p className="text-sm text-zinc-500">Loading…</p>
       ) : visibleCoaches.length === 0 ? (
-        <p className="text-sm text-zinc-500">No coaches found.</p>
+        <p className="text-sm text-zinc-500">{loadError ? "Could not load coaches." : "No coaches found."}</p>
       ) : (
-        <div className="cms-card overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-zinc-500 border-b border-zinc-800">
-                <th className="py-2 pr-3">Name</th>
-                <th className="py-2 pr-3">Nationality</th>
-                <th className="py-2 pr-3">Coached countries</th>
-                <th className="py-2 pr-3">Attention</th>
-                <th className="py-2 pr-3">DOB</th>
-                <th className="py-2 pr-3">Source</th>
-                <th className="py-2 pr-3">Bio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleCoaches.map((coach) => (
-                <tr key={coach.id} className="border-b border-zinc-800/60">
-                  <td className="py-2 pr-3">
-                    <Link href={`/admin/coaches/${coach.id}/edit`} className="text-emerald-400">
-                      {coach.name}
-                    </Link>
-                  </td>
-                  <td className="py-2 pr-3 text-zinc-400">{coach.nationality ?? "—"}</td>
-                  <td className="py-2 pr-3 text-zinc-400">
-                    {coach.coachedCountries?.length ? coach.coachedCountries.join(", ") : "—"}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <span className="flex flex-wrap gap-1">
-                      {(attentionById.get(coach.id) ?? []).slice(0, 2).map((reason) => (
-                        <span
-                          key={reason}
-                          className="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide bg-amber-950 text-amber-300 border border-amber-800"
-                        >
-                          {reason}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-3 text-zinc-400">{coach.birthDate ?? "—"}</td>
-                  <td className="py-2 pr-3 text-zinc-400">{coach.sourceProvider ?? "—"}</td>
-                  <td className="py-2 pr-3 text-zinc-500 max-w-xs truncate">
-                    {coach.bioSummary ?? "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <article className="pr-coach-profile cms-coach-dir">
+          {currentCoaches.length > 0 ? (
+            <section>
+              <p className="cms-coach-dir__kicker">Current coaches</p>
+              <div className="cms-coach-dir__grid">
+                {currentCoaches.map((coach) => (
+                  <CoachDirCard key={coach.id} coach={coach} reasons={attentionById.get(coach.id) ?? []} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+          {otherCoaches.length > 0 ? (
+            <section>
+              <p className="cms-coach-dir__kicker">{currentCoaches.length > 0 ? "All coaches" : "Coaches"}</p>
+              <div className="cms-coach-dir__grid">
+                {otherCoaches.map((coach) => (
+                  <CoachDirCard key={coach.id} coach={coach} reasons={attentionById.get(coach.id) ?? []} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </article>
       )}
     </>
+  );
+}
+
+function CoachDirCard({
+  coach,
+  reasons,
+}: {
+  coach: CoachRow;
+  reasons: string[];
+}) {
+  const lines = coachHeroNameLines({
+    name: coach.name,
+    knownAs: coach.knownAs,
+    fullName: coach.fullName,
+  });
+  const roleLine = [coach.currentRoleLabel, coach.currentTeamName || coach.coachedCountries[0]]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <article className="cms-coach-dir-card">
+      <Link href={`/admin/coaches/${coach.id}`} className="cms-coach-dir-card__main">
+        <div className="cms-coach-dir-card__image">
+          {coach.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coach.imageUrl} alt={coach.name} />
+          ) : (
+            <div className="cms-coach-dir-card__silhouette" aria-hidden />
+          )}
+        </div>
+        <div className="cms-coach-dir-card__identity">
+          <h2>
+            <span className="pr-coach-hero__name-line">{lines.line1}</span>
+            {lines.line2 ? <span className="pr-coach-hero__name-line">{lines.line2}</span> : null}
+          </h2>
+          <p className="cms-coach-dir-card__nat">{coach.nationality ?? "—"}</p>
+          {roleLine ? <p className="cms-coach-dir-card__role">{roleLine}</p> : null}
+          {reasons.length > 0 ? (
+            <span className="cms-coach-dir-card__flag">{reasons[0]}</span>
+          ) : null}
+        </div>
+      </Link>
+      <div className="cms-coach-dir-card__actions">
+        <Link href={`/admin/coaches/${coach.id}/edit`}>Edit CMS</Link>
+        <Link href={`/coaches/${encodeURIComponent(coach.slug)}`}>Public profile</Link>
+      </div>
+    </article>
   );
 }

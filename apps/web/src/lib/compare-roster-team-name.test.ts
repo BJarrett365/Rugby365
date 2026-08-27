@@ -22,5 +22,6 @@ describe("isRealCompareRosterTeamName", () => {
     expect(isRealCompareRosterTeamName("Champions")).toBe(false);
     expect(isRealCompareRosterTeamName("N/A")).toBe(false);
     expect(isRealCompareRosterTeamName("Pool A")).toBe(false);
+    expect(isRealCompareRosterTeamName("Unknown team 65566c57f615")).toBe(false);
   });
 });

@@ -142,6 +142,9 @@ async function selectStaffRows(whereClause?: ReturnType<typeof eq>) {
 
 export type CoachListRow = typeof coaches.$inferSelect & {
   coachedCountries: string[];
+  currentTeamName: string | null;
+  currentRoleLabel: string | null;
+  isCurrent: boolean;
 };
 
 export type CoachListFilters = {
@@ -157,7 +160,15 @@ export async function listCoaches(filters?: string | CoachListFilters): Promise<
   const conditions = [];
   if (normalized.search?.trim()) {
     const q = `%${normalized.search.trim()}%`;
-    conditions.push(or(ilike(coaches.name, q), ilike(coaches.nationality, q)));
+    conditions.push(
+      or(
+        ilike(coaches.name, q),
+        ilike(coaches.nationality, q),
+        ilike(coaches.fullName, q),
+        ilike(coaches.knownAs, q),
+        ilike(coaches.slug, q),
+      ),
+    );
   }
 
   let coachRows: (typeof coaches.$inferSelect)[];
@@ -196,6 +207,9 @@ export async function listCoaches(filters?: string | CoachListFilters): Promise<
           .select({
             coachId: teamCoachingStaff.coachId,
             teamName: teams.name,
+            isCurrent: teamCoachingStaff.isCurrent,
+            isPrimaryCoach: teamCoachingStaff.isPrimaryCoach,
+            role: teamCoachingStaff.role,
           })
           .from(teamCoachingStaff)
           .innerJoin(teams, eq(teamCoachingStaff.teamId, teams.id))
@@ -203,16 +217,43 @@ export async function listCoaches(filters?: string | CoachListFilters): Promise<
       : [];
 
   const countriesByCoach = new Map<string, string[]>();
+  const currentByCoach = new Map<string, { teamName: string; role: string; primary: boolean }>();
   for (const row of assignmentRows) {
     const bucket = countriesByCoach.get(row.coachId) ?? [];
     if (!bucket.includes(row.teamName)) bucket.push(row.teamName);
     countriesByCoach.set(row.coachId, bucket);
+    if (!row.isCurrent) continue;
+    const existing = currentByCoach.get(row.coachId);
+    if (!existing || (row.isPrimaryCoach && !existing.primary)) {
+      currentByCoach.set(row.coachId, {
+        teamName: row.teamName,
+        role: row.role,
+        primary: Boolean(row.isPrimaryCoach),
+      });
+    }
   }
 
-  return coachRows.map((coach) => ({
-    ...coach,
-    coachedCountries: (countriesByCoach.get(coach.id) ?? []).sort((a, b) => a.localeCompare(b)),
-  }));
+  return coachRows
+    .map((coach) => {
+      const current = currentByCoach.get(coach.id);
+      return {
+        ...coach,
+        coachedCountries: (countriesByCoach.get(coach.id) ?? []).sort((a, b) => a.localeCompare(b)),
+        currentTeamName: current?.teamName ?? null,
+        currentRoleLabel: current ? coachingRoleLabel(current.role as CoachingRole) : null,
+        isCurrent: Boolean(current),
+      };
+    })
+    .sort((a, b) => {
+      if (a.isCurrent !== b.isCurrent) return a.isCurrent ? -1 : 1;
+      const aImg = a.imageUrl ? 1 : 0;
+      const bImg = b.imageUrl ? 1 : 0;
+      if (aImg !== bImg) return bImg - aImg;
+      const aUpdated = a.profileUpdatedAt ? new Date(a.profileUpdatedAt).getTime() : 0;
+      const bUpdated = b.profileUpdatedAt ? new Date(b.profileUpdatedAt).getTime() : 0;
+      if (aUpdated !== bUpdated) return bUpdated - aUpdated;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 export async function resolveCoach(input: {

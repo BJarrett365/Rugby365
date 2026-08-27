@@ -95,6 +95,8 @@ function scoreTeam(row: DuplicateEntityRow): number {
   if (!isJunkTeamSlug(row.slug)) score += 12;
   if (row.slug.length <= 32) score += 4;
   if (isJunkTeamSlug(row.slug)) score -= 80;
+  if (row.slug.includes("__legacy__")) score -= 40;
+  if (row.slug.startsWith("orphan-") || /^unknown\b/i.test(row.name)) score -= 100;
   if (/^\{\{/.test(row.name)) score -= 50;
   if (/^t=/i.test(row.name)) score -= 8;
   // Prefer short franchise labels over historic union / sponsor / cite variants.

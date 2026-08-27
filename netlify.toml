@@ -12,7 +12,7 @@
   NODE_VERSION = "22"
   # Ensure TypeScript and other build-time deps install on Netlify.
   NPM_FLAGS = "--include=dev"
-  SITE_GATE_ENABLED = "true"
+  SITE_GATE_ENABLED = "false"
   # Avoid OOM on Netlify builders during Next compile.
   NODE_OPTIONS = "--max-old-space-size=6144"
 

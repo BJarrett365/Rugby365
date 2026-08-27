@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CompareTeamsResult } from "@/components/teams/CompareTeamsResult";
 import { NATIONS_CHAMPIONSHIP_COMPETITION_SLUG } from "@/lib/nations-championship-hemisphere";
+import { isRugbyWorldCupSlug } from "@/lib/rugby-world-cup-pools";
 
 type CompetitionOption = { id: string; slug: string; name: string };
 type TeamOption = { id: string; name: string; slug: string; shortName: string | null };
@@ -12,6 +13,7 @@ type Side = "a" | "b";
 
 type SideState = {
   competitionSlug: string;
+  seasonLabel: string;
   teamSlug: string;
   teams: TeamOption[];
   rosterLoading: boolean;
@@ -26,6 +28,7 @@ type Props = {
 function emptySide(competitionSlug = ""): SideState {
   return {
     competitionSlug,
+    seasonLabel: "",
     teamSlug: "",
     teams: [],
     rosterLoading: false,
@@ -35,6 +38,7 @@ function emptySide(competitionSlug = ""): SideState {
 
 function useSideTeams(
   competitionSlug: string,
+  seasonLabel: string,
   setSide: (updater: (prev: SideState) => SideState) => void,
 ) {
   useEffect(() => {
@@ -61,8 +65,11 @@ function useSideTeams(
 
     void (async () => {
       try {
+        const params = new URLSearchParams();
+        if (seasonLabel.trim()) params.set("season", seasonLabel.trim());
+        const qs = params.toString();
         const res = await fetch(
-          `/api/competitions/by-slug/${encodeURIComponent(slug)}/compare-roster`,
+          `/api/competitions/by-slug/${encodeURIComponent(slug)}/compare-roster${qs ? `?${qs}` : ""}`,
           { cache: "no-store" },
         );
         const json = (await res.json().catch(() => ({}))) as {
@@ -91,7 +98,7 @@ function useSideTeams(
     return () => {
       cancelled = true;
     };
-  }, [competitionSlug, setSide]);
+  }, [competitionSlug, seasonLabel, setSide]);
 }
 
 export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) {
@@ -101,6 +108,7 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [competitionsLoading, setCompetitionsLoading] = useState(true);
   const [competitionsError, setCompetitionsError] = useState<string | null>(null);
+  const [seasonsBySlug, setSeasonsBySlug] = useState<Record<string, Array<{ label: string; year: number }>>>({});
   const [sideA, setSideA] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
   const [sideB, setSideB] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
 
@@ -157,8 +165,32 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
     };
   }, [hubSlug, competitionName]);
 
-  useSideTeams(sideA.competitionSlug, setSideA);
-  useSideTeams(sideB.competitionSlug, setSideB);
+  useEffect(() => {
+    const slugs = [...new Set([sideA.competitionSlug, sideB.competitionSlug].filter(isRugbyWorldCupSlug))];
+    if (slugs.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const next: Record<string, Array<{ label: string; year: number }>> = {};
+      await Promise.all(
+        slugs.map(async (slug) => {
+          const res = await fetch(`/api/competitions/by-slug/${encodeURIComponent(slug)}`, { cache: "no-store" });
+          const json = (await res.json().catch(() => ({}))) as {
+            seasons?: Array<{ label: string; year: number }>;
+          };
+          next[slug] = (json.seasons ?? []).filter((s) => s.year <= 2023 || s.label);
+        }),
+      );
+      if (!cancelled) {
+        setSeasonsBySlug((prev) => ({ ...prev, ...next }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sideA.competitionSlug, sideB.competitionSlug]);
+
+  useSideTeams(sideA.competitionSlug, sideA.seasonLabel, setSideA);
+  useSideTeams(sideB.competitionSlug, sideB.seasonLabel, setSideB);
 
   const canCompare = Boolean(sideA.teamSlug && sideB.teamSlug && sideA.teamSlug !== sideB.teamSlug);
 
@@ -194,12 +226,18 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
     const apply = (prev: SideState): SideState => ({
       ...prev,
       competitionSlug: slug,
+      seasonLabel: "",
       teamSlug: "",
       teams: [],
       rosterError: null,
     });
     if (side === "a") setSideA(apply);
     else setSideB(apply);
+  };
+
+  const setSeason = (side: Side, seasonLabel: string) => {
+    if (side === "a") setSideA((prev) => ({ ...prev, seasonLabel, teamSlug: "" }));
+    else setSideB((prev) => ({ ...prev, seasonLabel, teamSlug: "" }));
   };
 
   const setTeam = (side: Side, teamSlug: string) => {
@@ -237,6 +275,24 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
           </select>
         </label>
 
+        {isRugbyWorldCupSlug(state.competitionSlug) ? (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-[var(--pr-mc-muted)]">2. World Cup</span>
+            <select
+              className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)]"
+              value={state.seasonLabel}
+              onChange={(e) => setSeason(side, e.target.value)}
+            >
+              <option value="">All World Cups (unique nations)</option>
+              {(seasonsBySlug[state.competitionSlug] ?? []).map((season) => (
+                <option key={season.label} value={season.label}>
+                  {season.year || season.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
         {state.rosterLoading ? (
           <p className="m-0 text-xs text-[var(--pr-mc-muted)]">Loading teams…</p>
         ) : null}
@@ -245,7 +301,9 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
         ) : null}
 
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-[var(--pr-mc-muted)]">2. Team</span>
+          <span className="text-xs font-medium text-[var(--pr-mc-muted)]">
+            {isRugbyWorldCupSlug(state.competitionSlug) ? "3. Team" : "2. Team"}
+          </span>
           <select
             className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50"
             value={state.teamSlug}

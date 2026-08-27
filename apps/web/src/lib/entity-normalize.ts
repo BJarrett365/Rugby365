@@ -107,6 +107,7 @@ export function isJunkTeamSlug(slug: string): boolean {
     slug.includes("ref-name") ||
     slug.includes("url-https") ||
     slug.includes("access-date") ||
+    slug.startsWith("orphan-") ||
     slug.length > 60
   );
 }

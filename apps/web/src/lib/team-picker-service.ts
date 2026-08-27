@@ -1,8 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import {
   competitionSeasons,
   competitions,
-  fixtures,
   standingRows,
   teams,
 } from "@rugby365/db";
@@ -81,7 +80,7 @@ export async function listTeamPickerData(query?: TeamPickerQuery): Promise<TeamP
 
   const db = getDb();
 
-  const [teamRows, competitionRows, standingLinks, fixtureRows] = await Promise.all([
+  const [teamRows, competitionRows, standingLinks, fixtureLinks] = await Promise.all([
     db
       .select({
         id: teams.id,
@@ -112,13 +111,17 @@ export async function listTeamPickerData(query?: TeamPickerQuery): Promise<TeamP
       .from(standingRows)
       .innerJoin(competitionSeasons, eq(standingRows.seasonId, competitionSeasons.id))
       .innerJoin(competitions, eq(competitionSeasons.competitionId, competitions.id)),
-    db
-      .select({
-        homeTeamId: fixtures.homeTeamId,
-        awayTeamId: fixtures.awayTeamId,
-        competitionId: fixtures.competitionId,
-      })
-      .from(fixtures),
+    // Distinct team/competition pairs only — pulling every fixture row (~37k after
+    // the 1987 backfill) saturates the 4-connection pool and stalls CMS list pages.
+    db.execute<{ team_id: string; competition_id: string }>(sql`
+      SELECT home_team_id AS team_id, competition_id
+      FROM fixtures
+      WHERE home_team_id IS NOT NULL AND competition_id IS NOT NULL
+      UNION
+      SELECT away_team_id, competition_id
+      FROM fixtures
+      WHERE away_team_id IS NOT NULL AND competition_id IS NOT NULL
+    `),
   ]);
 
   const compById = new Map(competitionRows.map((row) => [row.id, row]));
@@ -135,20 +138,17 @@ export async function listTeamPickerData(query?: TeamPickerQuery): Promise<TeamP
     });
   }
 
-  for (const row of fixtureRows) {
-    if (!row.competitionId) continue;
-    const meta = compById.get(row.competitionId);
+  for (const row of fixtureLinks) {
+    if (!row.competition_id || !row.team_id) continue;
+    const meta = compById.get(row.competition_id);
     if (!meta) continue;
-    for (const teamId of [row.homeTeamId, row.awayTeamId]) {
-      if (!teamId) continue;
-      linkMap.set(linkKey(teamId, row.competitionId), {
-        teamId,
-        competitionId: row.competitionId,
-        competitionName: meta.name,
-        competitionType: meta.competitionType,
-        competitionSlug: meta.slug,
-      });
-    }
+    linkMap.set(linkKey(row.team_id, row.competition_id), {
+      teamId: row.team_id,
+      competitionId: row.competition_id,
+      competitionName: meta.name,
+      competitionType: meta.competitionType,
+      competitionSlug: meta.slug,
+    });
   }
 
   const links = [...linkMap.values()];

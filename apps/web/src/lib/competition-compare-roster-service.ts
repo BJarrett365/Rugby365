@@ -12,6 +12,14 @@ import {
   getCompetitionBySlug,
   getCompetitionStandingsBySlug,
 } from "./competition-admin-service";
+import { fixtureBelongsToSeason, seasonKindFromCompetitionType } from "./fixture-season-resolve";
+import { teamDedupKey } from "./entity-normalize";
+import { canonicalStandingsTeamName } from "./table-lab/standings-fixture-dedupe";
+import {
+  isRugbyWorldCupParticipantName,
+  isRugbyWorldCupSlug,
+  resolveRugbyWorldCupYear,
+} from "./rugby-world-cup-pools";
 
 export type CompareRosterTeam = {
   id: string;
@@ -37,18 +45,40 @@ export type CompetitionCompareRoster = {
 
 export { isRealCompareRosterTeamName } from "./compare-roster-team-name";
 
-function dedupeTeamsById(list: CompareRosterTeam[]): CompareRosterTeam[] {
-  const seen = new Set<string>();
-  const out: CompareRosterTeam[] = [];
+function dedupeTeamsByCanonicalIdentity(list: CompareRosterTeam[]): CompareRosterTeam[] {
+  const groups = new Map<string, CompareRosterTeam[]>();
   for (const team of list) {
-    if (seen.has(team.id)) continue;
-    seen.add(team.id);
-    out.push(team);
+    const key = teamDedupKey(canonicalStandingsTeamName(team.name));
+    const bucket = groups.get(key) ?? [];
+    bucket.push(team);
+    groups.set(key, bucket);
   }
-  return out;
+  return [...groups.values()]
+    .map((candidates) => {
+      const sorted = [...candidates].sort((a, b) => {
+        const aLegacy = a.slug.includes("__legacy__") ? 1 : 0;
+        const bLegacy = b.slug.includes("__legacy__") ? 1 : 0;
+        if (aLegacy !== bLegacy) return aLegacy - bLegacy;
+        const aOrphan = a.slug.startsWith("orphan-") ? 1 : 0;
+        const bOrphan = b.slug.startsWith("orphan-") ? 1 : 0;
+        if (aOrphan !== bOrphan) return aOrphan - bOrphan;
+        if (a.slug.length !== b.slug.length) return a.slug.length - b.slug.length;
+        return a.slug.localeCompare(b.slug);
+      });
+      const winner = sorted[0]!;
+      return {
+        ...winner,
+        name: canonicalStandingsTeamName(winner.name),
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-async function listTeamsFromFixtures(competitionId: string): Promise<CompareRosterTeam[]> {
+async function listTeamsFromFixtures(
+  competitionId: string,
+  season?: { id: string; year: number } | null,
+  competitionType?: string | null,
+): Promise<CompareRosterTeam[]> {
   const db = getDb();
   const rows = await db
     .select({
@@ -57,10 +87,13 @@ async function listTeamsFromFixtures(competitionId: string): Promise<CompareRost
       externalMatchId: fixtures.externalMatchId,
       stage: fixtures.stage,
       round: fixtures.round,
+      seasonId: fixtures.seasonId,
+      kickoffAt: fixtures.kickoffAt,
     })
     .from(fixtures)
     .where(eq(fixtures.competitionId, competitionId));
 
+  const seasonKind = seasonKindFromCompetitionType(competitionType);
   const ids = new Set<string>();
   for (const row of rows) {
     const external = row.externalMatchId ?? "";
@@ -71,6 +104,19 @@ async function listTeamsFromFixtures(competitionId: string): Promise<CompareRost
       row.round === "stats_seed"
     ) {
       continue;
+    }
+    if (season) {
+      if (
+        !fixtureBelongsToSeason({
+          fixtureSeasonId: row.seasonId,
+          kickoffAt: row.kickoffAt,
+          seasonId: season.id,
+          seasonYear: season.year,
+          seasonKind,
+        })
+      ) {
+        continue;
+      }
     }
     if (row.homeTeamId) ids.add(row.homeTeamId);
     if (row.awayTeamId) ids.add(row.awayTeamId);
@@ -98,11 +144,22 @@ async function listTeamsFromFixtures(competitionId: string): Promise<CompareRost
 
 export async function getCompetitionCompareRosterBySlug(
   slug: string,
+  options: { seasonLabel?: string } = {},
 ): Promise<CompetitionCompareRoster | null> {
   const competition = await getCompetitionBySlug(slug);
   if (!competition) return null;
 
-  const standingsData = await getCompetitionStandingsBySlug(competition.slug);
+  const standingsData = await getCompetitionStandingsBySlug(competition.slug, {
+    seasonLabel: options.seasonLabel,
+  });
+  const season = standingsData?.season ?? null;
+  const rwcYear = isRugbyWorldCupSlug(competition.slug)
+    ? resolveRugbyWorldCupYear({
+        seasonYear: options.seasonLabel ? season?.year : null,
+        seasonLabel: options.seasonLabel ?? null,
+      })
+    : null;
+
   const standingTeams: CompareRosterTeam[] = (standingsData?.standings ?? [])
     .filter((row) => Boolean(row.teamId && row.teamName))
     .filter((row) => isRealCompareRosterTeamName(row.teamName!))
@@ -113,16 +170,21 @@ export async function getCompetitionCompareRosterBySlug(
       shortName: row.teamShortName ?? null,
     }));
 
-  const fixtureTeams = (await listTeamsFromFixtures(competition.id)).filter((t) =>
-    isRealCompareRosterTeamName(t.name),
-  );
+  const fixtureTeams = (
+    await listTeamsFromFixtures(
+      competition.id,
+      options.seasonLabel && season ? { id: season.id, year: season.year } : null,
+      competition.competitionType,
+    )
+  ).filter((t) => isRealCompareRosterTeamName(t.name));
 
-  // Prefer standings when they have real clubs/nations; always merge fixtures so
-  // draw placeholders that only appear in one source are filtered consistently,
-  // and real nations from fixtures are not dropped when standings are bracket-heavy.
-  const teamsList = dedupeTeamsById(
+  let teamsList = dedupeTeamsByCanonicalIdentity(
     [...standingTeams, ...fixtureTeams].sort((a, b) => a.name.localeCompare(b.name)),
   );
+
+  if (isRugbyWorldCupSlug(competition.slug)) {
+    teamsList = teamsList.filter((team) => isRugbyWorldCupParticipantName(team.name, rwcYear));
+  }
 
   if (teamsList.length === 0) {
     return {

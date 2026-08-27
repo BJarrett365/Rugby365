@@ -9,12 +9,16 @@ import {
   fixtures,
   playerMatchPerformanceStats,
   playerMatchRatings,
+  playerRadarCaches,
   playerSeasonStats,
   playerSuspensions,
   playerTeamMemberships,
   playerTransfers,
+  shirtLibraryCompetitionPages,
   standingRows,
   teamMatchStats,
+  teamOfWeekEditions,
+  teamShirts,
 } from "@rugby365/db";
 import { getDb } from "./db";
 import {
@@ -163,6 +167,63 @@ export async function migrateSeasonId(fromSeasonId: string, toSeasonId: string) 
         .where(eq(playerSeasonStats.id, row.id));
     }
   }
+
+  // CASCADE-on-season tables the original merge missed — deleting the loser
+  // season would otherwise wipe Team of the Week, kits, and radar caches.
+  const keeperTotwKeys = new Set(
+    (
+      await db
+        .select({
+          competitionId: teamOfWeekEditions.competitionId,
+          roundKey: teamOfWeekEditions.roundKey,
+        })
+        .from(teamOfWeekEditions)
+        .where(eq(teamOfWeekEditions.seasonId, toSeasonId))
+    ).map((r) => `${r.competitionId}:${r.roundKey}`),
+  );
+  const loserTotw = await db
+    .select()
+    .from(teamOfWeekEditions)
+    .where(eq(teamOfWeekEditions.seasonId, fromSeasonId));
+  for (const row of loserTotw) {
+    if (keeperTotwKeys.has(`${row.competitionId}:${row.roundKey}`)) {
+      await db.delete(teamOfWeekEditions).where(eq(teamOfWeekEditions.id, row.id));
+    } else {
+      await db
+        .update(teamOfWeekEditions)
+        .set({ seasonId: toSeasonId })
+        .where(eq(teamOfWeekEditions.id, row.id));
+    }
+  }
+
+  await db
+    .update(teamShirts)
+    .set({ seasonId: toSeasonId })
+    .where(eq(teamShirts.seasonId, fromSeasonId));
+  await db
+    .update(playerRadarCaches)
+    .set({ seasonId: toSeasonId })
+    .where(eq(playerRadarCaches.seasonId, fromSeasonId));
+
+  const keeperShirtPages = await db
+    .select({ competitionId: shirtLibraryCompetitionPages.competitionId })
+    .from(shirtLibraryCompetitionPages)
+    .where(eq(shirtLibraryCompetitionPages.seasonId, toSeasonId));
+  const keeperShirtPageComps = new Set(keeperShirtPages.map((r) => r.competitionId));
+  const loserShirtPages = await db
+    .select()
+    .from(shirtLibraryCompetitionPages)
+    .where(eq(shirtLibraryCompetitionPages.seasonId, fromSeasonId));
+  for (const row of loserShirtPages) {
+    if (keeperShirtPageComps.has(row.competitionId)) {
+      await db.delete(shirtLibraryCompetitionPages).where(eq(shirtLibraryCompetitionPages.id, row.id));
+    } else {
+      await db
+        .update(shirtLibraryCompetitionPages)
+        .set({ seasonId: toSeasonId })
+        .where(eq(shirtLibraryCompetitionPages.id, row.id));
+    }
+  }
 }
 
 async function migrateCompetitionId(fromId: string, toId: string) {
@@ -197,6 +258,48 @@ async function migrateCompetitionId(fromId: string, toId: string) {
     .update(playerSeasonStats)
     .set({ competitionId: toId })
     .where(eq(playerSeasonStats.competitionId, fromId));
+
+  const keeperTotw = await db
+    .select({ seasonId: teamOfWeekEditions.seasonId, roundKey: teamOfWeekEditions.roundKey })
+    .from(teamOfWeekEditions)
+    .where(eq(teamOfWeekEditions.competitionId, toId));
+  const keeperTotwRound = new Set(keeperTotw.map((r) => `${r.seasonId}:${r.roundKey}`));
+  const loserTotw = await db
+    .select()
+    .from(teamOfWeekEditions)
+    .where(eq(teamOfWeekEditions.competitionId, fromId));
+  for (const row of loserTotw) {
+    if (keeperTotwRound.has(`${row.seasonId}:${row.roundKey}`)) {
+      await db.delete(teamOfWeekEditions).where(eq(teamOfWeekEditions.id, row.id));
+    } else {
+      await db
+        .update(teamOfWeekEditions)
+        .set({ competitionId: toId })
+        .where(eq(teamOfWeekEditions.id, row.id));
+    }
+  }
+
+  await db.update(teamShirts).set({ competitionId: toId }).where(eq(teamShirts.competitionId, fromId));
+
+  const keeperPages = await db
+    .select({ seasonId: shirtLibraryCompetitionPages.seasonId })
+    .from(shirtLibraryCompetitionPages)
+    .where(eq(shirtLibraryCompetitionPages.competitionId, toId));
+  const keeperPageSeasons = new Set(keeperPages.map((r) => r.seasonId));
+  const loserPages = await db
+    .select()
+    .from(shirtLibraryCompetitionPages)
+    .where(eq(shirtLibraryCompetitionPages.competitionId, fromId));
+  for (const row of loserPages) {
+    if (keeperPageSeasons.has(row.seasonId)) {
+      await db.delete(shirtLibraryCompetitionPages).where(eq(shirtLibraryCompetitionPages.id, row.id));
+    } else {
+      await db
+        .update(shirtLibraryCompetitionPages)
+        .set({ competitionId: toId })
+        .where(eq(shirtLibraryCompetitionPages.id, row.id));
+    }
+  }
 }
 
 async function mergeCompetitionPair(keeper: CompRow, loser: CompRow) {
@@ -376,6 +479,45 @@ export async function mergeDuplicateCompetitions(options?: {
     }
   }
 
+  return summary;
+}
+
+/** Merge `slug__legacy__*` clones into the live `slug` row only. */
+export async function mergeLegacyClonesForBaseSlug(
+  baseSlug: string,
+  options?: { dryRun?: boolean },
+): Promise<CompetitionDedupeSummary> {
+  const dryRun = options?.dryRun ?? false;
+  const groups = await findLegacySlugCompetitionGroups();
+  const group = groups.find((g) =>
+    g.rows.some((r) => r.slug === baseSlug || r.slug.startsWith(`${baseSlug}__legacy__`)),
+  );
+  const summary: CompetitionDedupeSummary = {
+    groups: 0,
+    merged: 0,
+    deleted: 0,
+    details: [],
+  };
+  if (!group) return summary;
+  const keeper = group.rows.find((r) => r.slug === baseSlug) ?? group.rows[0];
+  if (!keeper) return summary;
+  const pending = group.rows.filter((r) => r.id !== keeper.id);
+  if (!pending.length) return summary;
+  summary.groups = 1;
+  summary.merged = 1;
+  summary.deleted = pending.length;
+  summary.details.push({
+    canonicalName: group.canonicalName,
+    keptId: keeper.id,
+    keptSlug: keeper.slug,
+    removedIds: pending.map((l) => l.id),
+  });
+  if (dryRun) return summary;
+  // Merge the richest clone first so TotW / stats land on the keeper before empty shells.
+  pending.sort((a, b) => b.fixtureCount - a.fixtureCount);
+  for (const loser of pending) {
+    await mergeCompetitionPair(keeper, loser);
+  }
   return summary;
 }
 

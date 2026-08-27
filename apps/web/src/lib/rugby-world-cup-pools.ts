@@ -125,6 +125,28 @@ export function rugbyWorldCupPoolsForYear(year: number | null | undefined): Rugb
   return POOLS_BY_YEAR[year] ?? [];
 }
 
+/** Nation keys that appeared in a given World Cup, or every finals since 1987. */
+export function rugbyWorldCupParticipantKeys(year?: number | null): Set<string> {
+  const years =
+    year != null && POOLS_BY_YEAR[year]
+      ? [year]
+      : Object.keys(POOLS_BY_YEAR).map((value) => Number(value));
+  const keys = new Set<string>();
+  for (const y of years) {
+    for (const pool of POOLS_BY_YEAR[y] ?? []) {
+      for (const name of pool.teams) keys.add(teamKey(name));
+    }
+  }
+  return keys;
+}
+
+export function isRugbyWorldCupParticipantName(
+  teamName: string,
+  year?: number | null,
+): boolean {
+  return rugbyWorldCupParticipantKeys(year).has(teamKey(teamName));
+}
+
 export function rugbyWorldCupPoolForTeam(
   year: number | null | undefined,
   teamName: string,

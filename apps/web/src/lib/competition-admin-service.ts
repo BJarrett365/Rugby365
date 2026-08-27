@@ -35,6 +35,7 @@ import {
 } from "./season-list-utils";
 import { lookupCompetitionChampion } from "./competition-champions-catalog";
 import { isPlayoffRound } from "./rugby-round-utils";
+import { resolveTeamNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
 
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
 
@@ -632,7 +633,7 @@ export async function getSeasonStandings(seasonId: string, view: StandingView = 
     .where(and(eq(standingRows.seasonId, seasonId), eq(standingRows.view, view)))
     .orderBy(asc(standingRows.rank));
 
-  return rows;
+  return rows.filter((row) => Boolean(row.teamName) && !/^unknown\b/i.test(row.teamName));
 }
 
 export async function getCompetitionStandingsBySlug(
@@ -720,6 +721,15 @@ export async function listCompetitionFixtures(
 
   return rows
     .filter((f) => {
+      const external = f.externalMatchId ?? "";
+      if (
+        external.startsWith("rwc-wiki-statistics:") ||
+        external.startsWith("rwc-opta-leaderboard:") ||
+        f.stage === "stats_seed" ||
+        f.round === "stats_seed"
+      ) {
+        return false;
+      }
       if (season && seasonYear != null) {
         if (
           !fixtureBelongsToSeason({
@@ -741,19 +751,24 @@ export async function listCompetitionFixtures(
       }
       return true;
     })
-    .map((f) => ({
-      id: f.id,
-      slug: f.slug,
-      kickoffAt: f.kickoffAt,
-      status: f.status,
-      round: f.round,
-      homeTeam: f.homeTeamId ? (teamById[f.homeTeamId] ?? null) : null,
-      awayTeam: f.awayTeamId ? (teamById[f.awayTeamId] ?? null) : null,
-      homeScore: f.homeScore,
-      awayScore: f.awayScore,
-      venueName: f.venueName,
-      planetRugbyUrl: f.planetRugbyUrl,
-    }));
+    .map((f) => {
+      const rawHome = f.homeTeamId ? (teamById[f.homeTeamId] ?? "") : "";
+      const rawAway = f.awayTeamId ? (teamById[f.awayTeamId] ?? "") : "";
+      const resolved = resolveTeamNamesFromFixtureSlug(f.slug, rawHome, rawAway);
+      return {
+        id: f.id,
+        slug: f.slug,
+        kickoffAt: f.kickoffAt,
+        status: f.status,
+        round: f.round,
+        homeTeam: resolved.homeName || null,
+        awayTeam: resolved.awayName || null,
+        homeScore: f.homeScore,
+        awayScore: f.awayScore,
+        venueName: f.venueName,
+        planetRugbyUrl: f.planetRugbyUrl,
+      };
+    });
 }
 
 export async function listPlayoffFixtures(
@@ -778,19 +793,24 @@ export async function listPlayoffFixtures(
       .orderBy(asc(fixtures.kickoffAt));
 
     if (rows.length) {
-      return rows.map((f) => ({
-        id: f.id,
-        slug: f.slug,
-        kickoffAt: f.kickoffAt,
-        status: f.status,
-        round: f.round ?? f.stage,
-        homeTeam: f.homeTeamId ? (teamById[f.homeTeamId] ?? null) : null,
-        awayTeam: f.awayTeamId ? (teamById[f.awayTeamId] ?? null) : null,
-        homeScore: f.homeScore,
-        awayScore: f.awayScore,
-        venueName: f.venueName,
-        planetRugbyUrl: f.planetRugbyUrl,
-      }));
+      return rows.map((f) => {
+        const rawHome = f.homeTeamId ? (teamById[f.homeTeamId] ?? "") : "";
+        const rawAway = f.awayTeamId ? (teamById[f.awayTeamId] ?? "") : "";
+        const resolved = resolveTeamNamesFromFixtureSlug(f.slug, rawHome, rawAway);
+        return {
+          id: f.id,
+          slug: f.slug,
+          kickoffAt: f.kickoffAt,
+          status: f.status,
+          round: f.round ?? f.stage,
+          homeTeam: resolved.homeName || null,
+          awayTeam: resolved.awayName || null,
+          homeScore: f.homeScore,
+          awayScore: f.awayScore,
+          venueName: f.venueName,
+          planetRugbyUrl: f.planetRugbyUrl,
+        };
+      });
     }
   }
 

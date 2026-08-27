@@ -6,6 +6,7 @@ export function isRealCompareRosterTeamName(name: string): boolean {
   const n = name.trim();
   if (!n) return false;
   const lower = n.toLowerCase();
+  if (/^unknown\b/i.test(n) || /^orphan-/i.test(n)) return false;
 
   if (
     /^(n\/a|tbd|tba|winners|runners-?up|champions|losers|bye)$/i.test(n) ||
