@@ -36,7 +36,7 @@ import {
 } from "./season-list-utils";
 import { lookupCompetitionChampion } from "./competition-champions-catalog";
 import { isPlayoffRound } from "./rugby-round-utils";
-import { resolveTeamNamesFromFixtureSlug } from "./table-lab/standings-fixture-dedupe";
+import { resolveTeamNamesFromFixtureSlug, pickCanonicalFixturesForStandings } from "./table-lab/standings-fixture-dedupe";
 import { applyUrcLineageSeasonLabels } from "./urc-lineage";
 
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
@@ -841,7 +841,7 @@ export async function listCompetitionFixtures(
 
   const type = options.type ?? "all";
 
-  return rows
+  const mapped = rows
     .filter((f) => {
       const external = f.externalMatchId ?? "";
       if (
@@ -891,6 +891,17 @@ export async function listCompetitionFixtures(
         planetRugbyUrl: f.planetRugbyUrl,
       };
     });
+
+  return pickCanonicalFixturesForStandings(mapped, (fixture) => ({
+    id: fixture.id,
+    slug: fixture.slug,
+    status: fixture.status,
+    homeScore: fixture.homeScore ?? 0,
+    awayScore: fixture.awayScore ?? 0,
+    homeName: fixture.homeTeam ?? "",
+    awayName: fixture.awayTeam ?? "",
+    kickoffAt: fixture.kickoffAt,
+  })).sort((a, b) => (b.kickoffAt?.getTime() ?? 0) - (a.kickoffAt?.getTime() ?? 0));
 }
 
 export async function listPlayoffFixtures(
@@ -915,7 +926,7 @@ export async function listPlayoffFixtures(
       .orderBy(asc(fixtures.kickoffAt));
 
     if (rows.length) {
-      return rows.map((f) => {
+      const mapped = rows.map((f) => {
         const rawHome = f.homeTeamId ? (teamById[f.homeTeamId] ?? "") : "";
         const rawAway = f.awayTeamId ? (teamById[f.awayTeamId] ?? "") : "";
         const resolved = resolveTeamNamesFromFixtureSlug(f.slug, rawHome, rawAway);
@@ -933,6 +944,16 @@ export async function listPlayoffFixtures(
           planetRugbyUrl: f.planetRugbyUrl,
         };
       });
+      return pickCanonicalFixturesForStandings(mapped, (fixture) => ({
+        id: fixture.id,
+        slug: fixture.slug,
+        status: fixture.status,
+        homeScore: fixture.homeScore ?? 0,
+        awayScore: fixture.awayScore ?? 0,
+        homeName: fixture.homeTeam ?? "",
+        awayName: fixture.awayTeam ?? "",
+        kickoffAt: fixture.kickoffAt,
+      })).sort((a, b) => (a.kickoffAt?.getTime() ?? 0) - (b.kickoffAt?.getTime() ?? 0));
     }
   }
 

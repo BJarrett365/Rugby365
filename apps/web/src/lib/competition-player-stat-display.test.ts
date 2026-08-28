@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatLeaderboardPlayerName,
+  nationalTeamNickname,
   teamCodeForLeaderboard,
 } from "./competition-player-stat-display";
 
@@ -8,6 +9,18 @@ describe("formatLeaderboardPlayerName", () => {
   it("formats as initial + surname", () => {
     expect(formatLeaderboardPlayerName("Will Jordan")).toBe("W. Jordan");
     expect(formatLeaderboardPlayerName("Jamison Gibson-Park")).toBe("J. Gibson-Park");
+  });
+});
+
+describe("nationalTeamNickname", () => {
+  it("returns famous international nicknames in uppercase", () => {
+    expect(nationalTeamNickname("New Zealand")).toBe("ALL BLACKS");
+    expect(nationalTeamNickname("South Africa")).toBe("SPRINGBOKS");
+    expect(nationalTeamNickname("Australia")).toBe("WALLABIES");
+  });
+
+  it("skips a nickname that is just the country name", () => {
+    expect(nationalTeamNickname("England")).toBeNull();
   });
 });
 

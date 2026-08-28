@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, lt } from "drizzle-orm";
 import { fixtures } from "@rugby365/db";
-import type { SdmsMatchDetail } from "@rugby365/import-sdk";
+import { fetchSdmsMatchDetail, type SdmsMatchDetail } from "@rugby365/import-sdk";
 import { getDb } from "./db";
 import { listFieldLocks } from "./provider-mapping-service";
 import { isFieldLocked } from "./data-integration-overwrite";
@@ -158,4 +158,76 @@ export async function syncFixtureLiveStateFromSdms(
   }
 
   return { updated: true, patch };
+}
+
+/**
+ * Copy finished SDMS scorelines onto CMS rows that are still "scheduled"
+ * after kickoff. Live cron only covers today; without this, a missed
+ * match-day sync (e.g. Currie Cup Bulls vs Stormers XXIII) stays 0–0 and
+ * is hidden from competition results.
+ */
+export async function syncStaleScheduledScoresFromSdms(options?: {
+  lookbackDays?: number;
+  olderThanMinutes?: number;
+  limit?: number;
+}): Promise<{ checked: number; updated: number; errors: string[] }> {
+  const lookbackDays = options?.lookbackDays ?? 14;
+  const olderThanMinutes = options?.olderThanMinutes ?? 90;
+  const limit = options?.limit ?? 8;
+  const now = Date.now();
+  const cutoff = new Date(now - olderThanMinutes * 60_000);
+  const lookbackStart = new Date(now - lookbackDays * 24 * 60 * 60_000);
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      id: fixtures.id,
+      externalMatchId: fixtures.externalMatchId,
+    })
+    .from(fixtures)
+    .where(
+      and(
+        eq(fixtures.status, "scheduled"),
+        isNotNull(fixtures.externalMatchId),
+        isNotNull(fixtures.kickoffAt),
+        lt(fixtures.kickoffAt, cutoff),
+        gte(fixtures.kickoffAt, lookbackStart),
+      ),
+    )
+    .orderBy(desc(fixtures.kickoffAt))
+    .limit(Math.max(limit * 3, 12));
+
+  const byExternal = new Map<string, string[]>();
+  for (const row of rows) {
+    const externalId = row.externalMatchId?.trim();
+    if (!externalId) continue;
+    const list = byExternal.get(externalId) ?? [];
+    list.push(row.id);
+    byExternal.set(externalId, list);
+    if (byExternal.size >= limit) break;
+  }
+
+  let updated = 0;
+  const errors: string[] = [];
+  for (const [externalId, ids] of byExternal) {
+    try {
+      const detail = await fetchSdmsMatchDetail(externalId);
+      if (!detail) continue;
+      const siblings = await db
+        .select({ id: fixtures.id })
+        .from(fixtures)
+        .where(eq(fixtures.externalMatchId, externalId));
+      const targetIds = [...new Set([...ids, ...siblings.map((row) => row.id)])];
+      for (const fixtureId of targetIds) {
+        const result = await syncFixtureLiveStateFromSdms(fixtureId, detail);
+        if (result.updated) updated += 1;
+      }
+    } catch (error) {
+      errors.push(
+        `${externalId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return { checked: byExternal.size, updated, errors };
 }

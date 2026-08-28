@@ -164,15 +164,26 @@ const RUGBY_DATA_CLUB_ALIASES: Record<string, string> = {
   "as beziers": "beziers",
   asbh: "beziers",
   "biarritz olympique": "biarritz",
+  "stormers xxiii": "stormers",
+  "bulls xv": "bulls",
+  "blue bulls xv": "bulls",
+  "blue bulls": "bulls",
+  "sharks xv": "sharks",
 };
 
+const SPONSOR_PREFIX =
+  /^(dhl|vodacom|toyota|airlink|sanlam|suzuki|fidelity adt|fidelity|hollywoodbets|carling)\s+/;
+
 export function teamNameKey(name: string | null | undefined): string {
-  const base = (name ?? "")
+  let base = (name ?? "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+  while (SPONSOR_PREFIX.test(base)) {
+    base = base.replace(SPONSOR_PREFIX, "").trim();
+  }
   return RUGBY_DATA_CLUB_ALIASES[base] ?? base;
 }
 

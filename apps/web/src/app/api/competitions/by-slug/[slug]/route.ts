@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     const view = (searchParams.get("view") ?? "overall") as "overall" | "home" | "away";
 
     const data = await cachedPublic(
-      `competition-hub:${slug}:${seasonLabel ?? "default"}:${view}`,
+      `competition-hub-v2:${slug}:${seasonLabel ?? "default"}:${view}`,
       PUBLIC_CACHE_TTL.competitionHub,
       () => getCompetitionHubBySlug(slug, { seasonLabel, view }),
     );

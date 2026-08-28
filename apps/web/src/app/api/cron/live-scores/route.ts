@@ -3,6 +3,7 @@ import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { addDaysToDateKey, dateKeyLocal } from "@/lib/match-schedule-utils";
 import { apiErrorResponse } from "@/lib/api-errors";
 import { syncRugbyDataFixturesForDate } from "@/lib/rugby-data-day-sync-service";
+import { syncStaleScheduledScoresFromSdms } from "@/lib/fixture-live-score-sync";
 import { invalidatePublicCache } from "@/lib/public-data-cache";
 
 /**
@@ -38,11 +39,20 @@ export async function GET(req: Request) {
       });
       results.push(result);
     }
-    if (results.some((r) => r.scoresUpdated > 0 || r.statusesUpdated > 0)) {
+    const stale = await syncStaleScheduledScoresFromSdms({
+      lookbackDays: 14,
+      olderThanMinutes: 90,
+      limit: 8,
+    });
+    if (
+      results.some((r) => r.scoresUpdated > 0 || r.statusesUpdated > 0) ||
+      stale.updated > 0
+    ) {
       invalidatePublicCache("fixtures:schedule:");
+      invalidatePublicCache("competition-hub");
     }
 
-    return NextResponse.json({ ok: true, results, at: new Date().toISOString() });
+    return NextResponse.json({ ok: true, results, stale, at: new Date().toISOString() });
   } catch (e) {
     return apiErrorResponse(e, "Live score sync failed");
   }

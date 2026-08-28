@@ -118,6 +118,14 @@ describe("rugby-data-day-sync helpers", () => {
     expect(teamNameKey("Angouleme")).toBe(teamNameKey("Soyaux Angoulême"));
   });
 
+  it("aliases Currie Cup XV / XXIII sides onto the franchise key", () => {
+    expect(teamNameKey("DHL Stormers XXIII")).toBe(teamNameKey("Stormers"));
+    expect(teamNameKey("Stormers XXIII")).toBe(teamNameKey("Stormers"));
+    expect(teamNameKey("Bulls XV")).toBe(teamNameKey("Bulls"));
+    expect(teamNameKey("Vodacom Bulls XV")).toBe(teamNameKey("Bulls"));
+    expect(teamNameKey("Hollywoodbets Sharks XV")).toBe(teamNameKey("Sharks"));
+  });
+
   it("matches CMS rows by Rugby Data externalMatchId", () => {
     const picked = pickRugbyDataSyncCandidateByExternalId(
       [

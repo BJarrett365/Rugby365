@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
   isProvisional,
+  pickDefaultRankingSeason,
+  previousRankByPriorAverage,
   rankingPositionGroup,
   rating10To100,
   refereeDifficultyAdjustment,
   tournamentRatingFromMatches,
+  computeRefereeFormScore,
+  padRefereeFormSeries,
+  isRankingRetired,
+  mergeRefereeClubs,
+  collectRefereeAppointmentClubs,
+  foldRefereeIdentity,
+  isUnknownRankingOfficial,
 } from "./competition-ranking-math";
 
 describe("rating10To100", () => {
@@ -44,5 +53,153 @@ describe("isProvisional", () => {
   it("requires two matches by default", () => {
     expect(isProvisional(1)).toBe(true);
     expect(isProvisional(2)).toBe(false);
+  });
+});
+
+describe("pickDefaultRankingSeason", () => {
+  it("skips a future active season with no results", () => {
+    const seasons = [
+      { id: "2027", year: 2027, isActive: true },
+      { id: "2023", year: 2023, isActive: false },
+      { id: "2019", year: 2019, isActive: false },
+    ];
+    expect(pickDefaultRankingSeason(seasons, new Set(["2023", "2019"]))?.id).toBe("2023");
+  });
+});
+
+describe("computeRefereeFormScore", () => {
+  it("rates a close World Cup final in the high 80s–90s", () => {
+    const score = computeRefereeFormScore({
+      rating100: 78,
+      homeScore: 27,
+      awayScore: 24,
+      yellowCards: 3,
+      redCards: 0,
+      penaltyEvents: 14,
+      round: "Final",
+    });
+    expect(score).toBeGreaterThanOrEqual(86);
+    expect(score).toBeLessThanOrEqual(96);
+  });
+
+  it("pads last-five form with a gentle decline", () => {
+    expect(padRefereeFormSeries([92, 88])).toEqual([92, 88, 84, 81, 78]);
+  });
+});
+
+describe("countryFromWikipediaExtract", () => {
+  it("reads nationality from a Wikipedia lead", async () => {
+    const { countryFromWikipediaExtract } = await import("./wikipedia-page-image");
+    expect(
+      countryFromWikipediaExtract(
+        "Wayne Barnes (born 20 April 1979) is an English former international rugby union referee.",
+      ),
+    ).toBe("England");
+  });
+});
+
+describe("isRankingRetired", () => {
+  it("flags retired and legend career status", () => {
+    expect(isRankingRetired({ careerStatus: "retired", name: "John Smit" })).toBe(true);
+    expect(isRankingRetired({ careerStatus: "legend", name: "John Smit" })).toBe(true);
+    expect(isRankingRetired({ careerStatus: "active", name: "John Smit" })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "active", name: "John Smit retired" })).toBe(true);
+    expect(isRankingRetired({ name: "Wayne Barnes" })).toBe(true);
+    expect(isRankingRetired({ name: "Andrew Brace", seasonYear: 2023 })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "active", name: "John Kirwan", seasonYear: 1987 })).toBe(true);
+  });
+});
+
+describe("mergeRefereeClubs", () => {
+  it("keeps last club first and de-dupes the rest", () => {
+    expect(
+      mergeRefereeClubs(
+        { lastClub: "RFU", clubs: ["RFU"] },
+        { lastClub: "Old Patesians", clubs: ["Old Patesians", "Gloucestershire RFU"] },
+      ),
+    ).toEqual({
+      lastClub: "Old Patesians",
+      clubs: ["Old Patesians", "RFU", "Gloucestershire RFU"],
+    });
+  });
+
+  it("lets appointment clubs overwrite a union fallback as last club", () => {
+    expect(
+      mergeRefereeClubs(
+        { lastClub: "RFU", clubs: ["RFU"] },
+        { lastClub: "Sharks", clubs: ["Sharks", "Leicester Tigers", "Harlequins"] },
+      ),
+    ).toEqual({
+      lastClub: "Sharks",
+      clubs: ["Sharks", "RFU", "Leicester Tigers", "Harlequins"],
+    });
+  });
+});
+
+describe("collectRefereeAppointmentClubs", () => {
+  it("uses the most recent club as last and de-dupes by slug", () => {
+    const set = collectRefereeAppointmentClubs([
+      { name: "Leicester Tigers", slug: "leicester-tigers", lastSeen: "2026-05-09" },
+      { name: "Sharks", slug: "coastal-sharks", lastSeen: "2026-08-11T17:00:00Z" },
+      { name: "Leicester Tigers", slug: "leicester-tigers", lastSeen: "2024-01-01" },
+      { name: "Harlequins", slug: "harlequins", lastSeen: "2026-05-16" },
+    ]);
+    expect(set.lastClub).toBe("Sharks");
+    expect(set.clubs).toEqual(["Sharks", "Harlequins", "Leicester Tigers"]);
+  });
+
+  it("collapses hyphen/accent variants and keeps a live slug", () => {
+    const set = collectRefereeAppointmentClubs([
+      { name: "Bordeaux-Bègles", slug: null, lastSeen: "2017-01-21" },
+      { name: "Bordeaux Begles", slug: "bordeaux-begles-do6l3o6y", lastSeen: "2016-01-01" },
+    ]);
+    expect(set.clubs).toEqual(["Bordeaux-Bègles"]);
+    expect(set.hits[0]?.slug).toBe("bordeaux-begles-do6l3o6y");
+  });
+});
+
+describe("foldRefereeIdentity", () => {
+  it("treats duplicate Matthew Carley rows as one referee", () => {
+    expect(foldRefereeIdentity("Matthew Carley (RFU)")).toBe("matthew carley");
+    expect(foldRefereeIdentity("Matthew Carley (England)")).toBe("matthew carley");
+    expect(foldRefereeIdentity("Matt Carley")).toBe("matthew carley");
+  });
+});
+
+describe("isUnknownRankingOfficial", () => {
+  it("drops placeholder referee rows", () => {
+    expect(isUnknownRankingOfficial("Referee Unknown")).toBe(true);
+    expect(isUnknownRankingOfficial("Wayne Barnes")).toBe(false);
+  });
+});
+
+describe("parseRefereeClubsFromWikitext", () => {
+  it("reads union and amateur clubs from an infobox", async () => {
+    const { parseRefereeClubsFromWikitext } = await import("./wikipedia-page-image");
+    expect(
+      parseRefereeClubsFromWikitext(`{{Infobox rugby biography
+| union = [[Gloucestershire Rugby Football Union|Gloucestershire RFU]]
+| ru_amateurclubs1 = [[Old Patesians RFC|Old Patesians]]
+}}
+
+== Career ==
+`),
+    ).toEqual({
+      lastClub: "Old Patesians",
+      clubs: ["Old Patesians", "Gloucestershire RFU"],
+    });
+  });
+});
+
+describe("previousRankByPriorAverage", () => {
+  it("ranks by the average of all but the newest rating", () => {
+    const map = previousRankByPriorAverage([
+      { playerId: "a", ratings: [90, 80] },
+      { playerId: "b", ratings: [85, 90] },
+      { playerId: "c", ratings: [99] },
+    ]);
+    expect(map.get("b")).toBe(1);
+    expect(map.get("a")).toBe(2);
+    expect(map.has("c")).toBe(false);
   });
 });

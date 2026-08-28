@@ -4,7 +4,6 @@ import { PublicPlayerRankingsBoardView } from "@/components/rankings/PublicPlaye
 import {
   RANKING_POSITION_GROUPS,
   buildPlayerRankingsTitle,
-  normalizeRankingTop,
   type PlayerRankingMode,
 } from "@/lib/player-ranking-engine";
 import {
@@ -36,7 +35,7 @@ export async function generateMetadata({
     RANKING_POSITION_GROUPS.find((g) => g.key === position)?.label ?? null;
   const title = buildPlayerRankingsTitle({
     mode,
-    top: normalizeRankingTop(one(sp.top)),
+    top: 10,
     positionLabel,
     nationLabel: one(sp.nation),
     clubLabel: one(sp.club),
@@ -62,7 +61,7 @@ export default async function PlayerRankingsPage({
     nation: one(sp.nation),
     club: one(sp.club),
     competition: one(sp.competition),
-    top: normalizeRankingTop(one(sp.top)),
+    top: 10,
     era: one(sp.era),
   };
 

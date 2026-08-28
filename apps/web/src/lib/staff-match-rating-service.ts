@@ -236,8 +236,16 @@ async function resolveCurrentTeamCoachId(teamId: string | null): Promise<string 
   return ranked[0]?.coachId ?? null;
 }
 
+export type StaffLinkOptions = {
+  /** When false, do not attach today's team staff to historical fixtures. */
+  fillCurrentCoaches?: boolean;
+};
+
 /** Fill missing fixture coach/referee FKs from team staff + referee name (for ratings + Ranking Lab). */
-export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof fixtures.$inferSelect | null> {
+export async function ensureFixtureStaffLinks(
+  fixtureId: string,
+  options: StaffLinkOptions = {},
+): Promise<typeof fixtures.$inferSelect | null> {
   const db = getDb();
   const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
   if (!fixture) return null;
@@ -248,15 +256,17 @@ export async function ensureFixtureStaffLinks(fixtureId: string): Promise<typeof
     refereeId?: string;
   } = {};
 
-  if (!fixture.homeCoachId) {
-    const id = await resolveCurrentTeamCoachId(fixture.homeTeamId);
-    if (id) patch.homeCoachId = id;
+  if (options.fillCurrentCoaches !== false) {
+    if (!fixture.homeCoachId) {
+      const id = await resolveCurrentTeamCoachId(fixture.homeTeamId);
+      if (id) patch.homeCoachId = id;
+    }
+    if (!fixture.awayCoachId) {
+      const id = await resolveCurrentTeamCoachId(fixture.awayTeamId);
+      if (id) patch.awayCoachId = id;
+    }
   }
-  if (!fixture.awayCoachId) {
-    const id = await resolveCurrentTeamCoachId(fixture.awayTeamId);
-    if (id) patch.awayCoachId = id;
-  }
-  if (!fixture.refereeId && fixture.refereeName?.trim()) {
+  if (!fixture.refereeId && fixture.refereeName?.trim() && !/^unknown|^tbc$|^tba$|to be announced/i.test(fixture.refereeName.trim())) {
     const resolved = await resolveReferee({
       name: fixture.refereeName,
       createIfMissing: true,
@@ -326,12 +336,15 @@ export async function ensureMissingFixtureStaffMatchRatings(fixtureId: string): 
 }
 
 /** Calculate coach + referee match ratings for a completed fixture. */
-export async function calculateAndPersistFixtureStaffMatchRatings(fixtureId: string): Promise<{
+export async function calculateAndPersistFixtureStaffMatchRatings(
+  fixtureId: string,
+  options: StaffLinkOptions = {},
+): Promise<{
   coachesCalculated: number;
   refereeCalculated: number;
 }> {
   const db = getDb();
-  const fixture = await ensureFixtureStaffLinks(fixtureId);
+  const fixture = await ensureFixtureStaffLinks(fixtureId, options);
   if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
     return { coachesCalculated: 0, refereeCalculated: 0 };
   }
@@ -480,6 +493,7 @@ const FINISHED_FIXTURE_STATUSES = [
 export async function backfillStaffMatchRatingsForCompetitionSeason(
   competitionId: string,
   seasonId: string,
+  options: StaffLinkOptions = {},
 ): Promise<{
   fixturesProcessed: number;
   coachesCalculated: number;
@@ -557,7 +571,7 @@ export async function backfillStaffMatchRatingsForCompetitionSeason(
 
     if (!missingRefereeRating && !missingCoachRatings) continue;
 
-    const result = await calculateAndPersistFixtureStaffMatchRatings(fixture.id);
+    const result = await calculateAndPersistFixtureStaffMatchRatings(fixture.id, options);
     fixturesProcessed += 1;
     coachesCalculated += result.coachesCalculated;
     refereeCalculated += result.refereeCalculated;

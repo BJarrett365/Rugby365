@@ -1,38 +1,27 @@
+"use client";
+
 import Link from "next/link";
-import { TeamCrest } from "@/components/matches/TeamCrest";
-import { formatRatingMovementDelta, rankingHref } from "@/lib/player-ranking-engine";
+import {
+  FormBlocks,
+  MovementCell,
+  PerformanceValue,
+  PlayerRankingsColgroup,
+  RankNumber,
+  RankingsAvatar,
+  RankingsBoardFooter,
+  RankingsCrest,
+  RankingsFilterSelect,
+  RankingsFlag,
+  RankingStatusBadge,
+  RankingsUpdatedStamp,
+  RatingValue,
+  SeasonCalendarIcon,
+} from "@/components/rankings/RankingsBoardPrimitives";
+import { PLAYER_RANKING_ELIGIBILITY, rankingHref } from "@/lib/player-ranking-engine";
 import type {
   PublicRankingBoard,
   RankingFilterOptions,
 } from "@/lib/public-player-rankings-product-service";
-
-function FormBlocks({
-  blocks,
-  formScore,
-}: {
-  blocks: Array<{ rating: number; band: string }>;
-  formScore: number | null;
-}) {
-  if (!blocks.length && formScore == null) {
-    return <span className="pr-rankings__dash">—</span>;
-  }
-  const title = [
-    blocks.length ? `Last 5: ${blocks.map((b) => b.rating.toFixed(1)).join(" · ")}` : null,
-    formScore != null ? `Form Score: ${formScore}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-  return (
-    <span className="pr-rankings__form" title={title}>
-      {blocks.map((b, i) => (
-        <span key={`${b.rating}-${i}`} className={`pr-rankings__form-block is-${b.band}`} />
-      ))}
-      {formScore != null ? (
-        <span className="pr-rankings__form-score">{Math.round(formScore)}</span>
-      ) : null}
-    </span>
-  );
-}
 
 function PeakImpactCell({
   peakRating,
@@ -64,53 +53,13 @@ function PeakImpactCell({
   );
 }
 
-function MovementCell({
-  movement,
-  previousRank,
-  movementDelta,
-}: {
-  movement: "up" | "down" | "flat" | null;
-  previousRank: number | null;
-  movementDelta: number | null;
-}) {
-  const deltaLabel = formatRatingMovementDelta(movementDelta);
-  if (deltaLabel != null && movementDelta != null) {
-    const dir =
-      movementDelta > 0.05 ? "up" : movementDelta < -0.05 ? "down" : "flat";
-    const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "—";
-    return (
-      <span
-        className={`pr-rankings__move is-${dir}`}
-        title={
-          previousRank != null
-            ? `Was #${previousRank} · Form trend ${deltaLabel}`
-            : `Form trend vs prior window: ${deltaLabel}`
-        }
-      >
-        {dir === "flat" ? `— ${deltaLabel}` : `${arrow} ${deltaLabel}`}
-      </span>
-    );
-  }
-  if (movement == null) return <span className="pr-rankings__dash">—</span>;
-  if (movement === "flat") {
-    return (
-      <span className="pr-rankings__move is-flat" title={previousRank != null ? `Was #${previousRank}` : undefined}>
-        —
-      </span>
-    );
-  }
-  if (movement === "up") {
-    return (
-      <span className="pr-rankings__move is-up" title={previousRank != null ? `Was #${previousRank}` : undefined}>
-        ↑
-      </span>
-    );
-  }
-  return (
-    <span className="pr-rankings__move is-down" title={previousRank != null ? `Was #${previousRank}` : undefined}>
-      ↓
-    </span>
-  );
+function seasonYearLabel(iso: string | null): string {
+  const year = iso ? new Date(iso).getFullYear() : new Date().getFullYear();
+  return Number.isFinite(year) ? String(year) : String(new Date().getFullYear());
+}
+
+function autoSubmit(form: HTMLFormElement | null) {
+  form?.requestSubmit();
 }
 
 export function PublicPlayerRankingsBoardView({
@@ -122,138 +71,133 @@ export function PublicPlayerRankingsBoardView({
 }) {
   const f = board.filters;
   const isAllTime = board.mode === "alltime";
+  const eligibilityNote = `Rankings are calculated by the ${
+    isAllTime ? "R365 Legend Score Model" : "R365 Rating Model"
+  }. Minimum eligibility: ${PLAYER_RANKING_ELIGIBILITY.minMinutes} minutes or ${PLAYER_RANKING_ELIGIBILITY.minAppearances} appearances in the last ${PLAYER_RANKING_ELIGIBILITY.rollingMonths} months.`;
 
   return (
     <div className="pr-rankings">
       <header className="pr-rankings__hero">
-        <p className="pr-rankings__kicker">RUGBY365 PLAYER RANKINGS</p>
-        <div className="pr-rankings__mode" role="tablist" aria-label="Ranking mode">
-          <Link
-            href={rankingHref({
-              mode: "current",
-              position: f.position,
-              nation: f.nation,
-              club: f.club,
-              competition: f.competition,
-              top: f.top,
-            })}
-            className={`pr-rankings__mode-btn${f.mode === "current" ? " is-active" : ""}`}
-            role="tab"
-            aria-selected={f.mode === "current"}
-          >
-            Current Players
-          </Link>
-          <Link
-            href={rankingHref({
-              mode: "alltime",
-              position: f.position,
-              nation: f.nation,
-              club: f.club,
-              competition: f.competition,
-              top: f.top,
-              era: f.era,
-            })}
-            className={`pr-rankings__mode-btn${f.mode === "alltime" ? " is-active" : ""}`}
-            role="tab"
-            aria-selected={f.mode === "alltime"}
-          >
-            All-Time Players
-          </Link>
-        </div>
+        <h1 className="pr-rankings__kicker">
+          PLAYER RANKINGS
+          <span className="pr-rankings__info-icon" aria-hidden>
+            i
+          </span>
+        </h1>
       </header>
 
-      <form className="pr-rankings__filters" method="get">
+      <form
+        className="pr-rankings__board-form"
+        method="get"
+        onChange={(e) => autoSubmit(e.currentTarget)}
+      >
         <input type="hidden" name="mode" value={f.mode} />
-        <label>
-          Position
-          <select name="position" defaultValue={f.position ?? ""}>
-            <option value="">Overall</option>
-            {options.positions.map((p) => (
-              <option key={p.key} value={p.key}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Country
-          <select name="nation" defaultValue={f.nation ?? ""}>
-            <option value="">All countries</option>
-            {options.nations.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Club
-          <select name="club" defaultValue={f.club ?? ""}>
-            <option value="">All clubs</option>
-            {options.clubs.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Competition
-          <select name="competition" defaultValue={f.competition ?? ""}>
-            <option value="">All competitions</option>
-            {options.competitions.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {isAllTime ? (
-          <label>
-            Era
-            <select name="era" defaultValue={f.era ?? "all"}>
-              {options.eras.map((e) => (
-                <option key={e.key} value={e.key}>
-                  {e.label}
+        <div className="pr-rankings__toolbar">
+          <div className="pr-rankings__toolbar-main">
+            <div className="pr-rankings__tabs" role="tablist" aria-label="Ranking mode">
+              <Link
+                href={rankingHref({
+                  mode: "current",
+                  position: f.position,
+                  nation: f.nation,
+                  club: f.club,
+                  competition: f.competition,
+                  top: 10,
+                })}
+                className={`pr-rankings__tab${f.mode === "current" ? " is-active" : ""}`}
+                role="tab"
+                aria-selected={f.mode === "current"}
+              >
+                Overall
+              </Link>
+              <Link
+                href={rankingHref({
+                  mode: "alltime",
+                  position: f.position,
+                  nation: f.nation,
+                  club: f.club,
+                  competition: f.competition,
+                  top: 10,
+                  era: f.era,
+                })}
+                className={`pr-rankings__tab${f.mode === "alltime" ? " is-active" : ""}`}
+                role="tab"
+                aria-selected={f.mode === "alltime"}
+              >
+                All-Time
+              </Link>
+            </div>
+            <RankingsFilterSelect name="position" label="Position" defaultValue={f.position ?? ""}>
+              <option value="">All positions</option>
+              {options.positions.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
                 </option>
               ))}
-            </select>
-          </label>
-        ) : (
-          <label>
-            Season
-            <select name="season" defaultValue="current" disabled>
-              <option value="current">Current</option>
-            </select>
-          </label>
-        )}
-        <label>
-          Top
-          <select name="top" defaultValue={String(f.top)}>
-            {options.topOptions.map((n) => (
-              <option key={n} value={n}>
-                Top {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="pr-rankings__apply">
-          Apply
-        </button>
-      </form>
+            </RankingsFilterSelect>
+            <RankingsFilterSelect name="nation" label="Country" defaultValue={f.nation ?? ""}>
+              <option value="">All countries</option>
+              {options.nations.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </RankingsFilterSelect>
+            <RankingsFilterSelect name="club" label="Club" defaultValue={f.club ?? ""}>
+              <option value="">All clubs</option>
+              {options.clubs.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </RankingsFilterSelect>
+            <RankingsFilterSelect
+              name="competition"
+              label="Competition"
+              defaultValue={f.competition ?? ""}
+            >
+              <option value="">All competitions</option>
+              {options.competitions.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </RankingsFilterSelect>
+            {isAllTime ? (
+              <RankingsFilterSelect name="era" label="Era" defaultValue={f.era ?? "all"}>
+                {options.eras.map((e) => (
+                  <option key={e.key} value={e.key}>
+                    {e.label}
+                  </option>
+                ))}
+              </RankingsFilterSelect>
+            ) : null}
+          </div>
+          <RankingsFilterSelect
+            className="pr-rankings__filter--season"
+            name="season"
+            label={`Season ${isAllTime ? "All" : seasonYearLabel(board.calculatedAt)}`}
+            icon={<SeasonCalendarIcon />}
+            defaultValue="current"
+            disabled={f.mode === "current"}
+          >
+            <option value="current">Season {seasonYearLabel(board.calculatedAt)}</option>
+          </RankingsFilterSelect>
+        </div>
 
-      <div className="pr-rankings__title-block">
-        <h1 className="pr-rankings__title">{board.title}</h1>
-        <p className="pr-rankings__info" title={board.eligibilityNote}>
-          Rankings are calculated by the{" "}
-          {isAllTime ? "R365 Legend Score Model" : "R365 Rating Model"}
-          {board.calculatedAt
-            ? ` · Updated ${new Date(board.calculatedAt).toLocaleString("en-GB")}`
-            : null}
-          {board.fromSnapshot ? " · Snapshot" : null}
-          {board.pool > 0 ? ` · Pool ${board.pool}` : null}
-        </p>
-      </div>
+        <div className="pr-rankings__title-row">
+          <h2 className="pr-rankings__title">{board.title}</h2>
+          <div className="pr-rankings__title-tools">
+            <label className="pr-rankings__top">
+              <span className="sr-only">Board size</span>
+              <select name="top" defaultValue="10">
+                <option value="10">Top 10</option>
+              </select>
+            </label>
+            <RankingsUpdatedStamp iso={board.calculatedAt} />
+          </div>
+        </div>
+      </form>
 
       {board.status === "under_development" ? (
         <section className="pr-rankings__empty">
@@ -283,55 +227,43 @@ export function PublicPlayerRankingsBoardView({
           ) : null}
           <div className="pr-rankings__table-wrap">
             <table className="pr-rankings__table">
+              <PlayerRankingsColgroup />
               <thead>
                 <tr>
-                  <th>Rank</th>
+                  <th className="is-num is-rank">Rank</th>
                   <th>Player</th>
                   <th>Club</th>
                   <th>Country</th>
-                  <th>R365 Rating</th>
-                  <th>{isAllTime ? "Peak / Impact" : "Current Form"}</th>
-                  <th>International</th>
-                  <th>Club Perf.</th>
-                  <th>Position</th>
-                  <th>Movement</th>
+                  <th className="is-num">R365 Rating /100</th>
+                  <th className="is-form">{isAllTime ? "Peak / Impact" : "Current Form (Last 5)"}</th>
+                  <th className="is-num">International Performance</th>
+                  <th className="is-num">Club Performance</th>
+                  <th className="is-num">Position Performance</th>
+                  <th className="is-move">Movement (vs last week)</th>
                 </tr>
               </thead>
               <tbody>
-                {board.rows.map((row) => (
+                {board.rows.slice(0, 10).map((row) => (
                   <tr key={row.playerId} title={row.breakdownTitle}>
-                    <td>
-                      <span
-                        className={`pr-rankings__rank${row.rank === 1 && !row.provisional ? " is-gold" : ""}${row.provisional ? " is-provisional" : ""}`}
-                      >
-                        {row.rankDisplay}
-                      </span>
+                    <td className="is-num">
+                      <RankNumber rank={row.rank} provisional={row.provisional} />
                     </td>
                     <td>
                       <Link href={`/players/${row.slug}`} className="pr-rankings__player">
-                        {row.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.imageUrl} alt="" className="pr-rankings__avatar" />
-                        ) : (
-                          <span className="pr-rankings__avatar is-placeholder" aria-hidden>
-                            {row.name.slice(0, 1)}
-                          </span>
-                        )}
+                        <RankingsAvatar src={row.imageUrl} name={row.name} />
                         <span className="pr-rankings__player-name">{row.name}</span>
-                        {row.provisional ? (
-                          <span className="pr-rankings__badge">PROVISIONAL</span>
-                        ) : null}
+                        <RankingStatusBadge provisional={row.provisional} retired={row.retired} />
                       </Link>
                     </td>
                     <td>
-                      {row.teamName && row.teamSlug ? (
+                      {row.teamName && row.teamName !== "Unassigned" && row.teamSlug ? (
                         <Link href={`/teams/${row.teamSlug}`} className="pr-rankings__entity">
-                          <TeamCrest name={row.teamName} imageUrl={row.teamImageUrl} size="xs" />
+                          <RankingsCrest src={row.teamImageUrl} name={row.teamName} />
                           <span>{row.teamName}</span>
                         </Link>
-                      ) : row.teamName ? (
+                      ) : row.teamName && row.teamName !== "Unassigned" ? (
                         <span className="pr-rankings__entity">
-                          <TeamCrest name={row.teamName} imageUrl={row.teamImageUrl} size="xs" />
+                          <RankingsCrest src={row.teamImageUrl} name={row.teamName} />
                           <span>{row.teamName}</span>
                         </span>
                       ) : (
@@ -342,20 +274,12 @@ export function PublicPlayerRankingsBoardView({
                       {row.nationName ? (
                         row.nationSlug ? (
                           <Link href={`/teams/${row.nationSlug}`} className="pr-rankings__entity">
-                            <TeamCrest
-                              name={row.nationName}
-                              imageUrl={row.nationImageUrl}
-                              size="xs"
-                            />
+                            <RankingsFlag src={row.nationImageUrl} name={row.nationName} />
                             <span>{row.nationName}</span>
                           </Link>
                         ) : (
                           <span className="pr-rankings__entity">
-                            <TeamCrest
-                              name={row.nationName}
-                              imageUrl={row.nationImageUrl}
-                              size="xs"
-                            />
+                            <RankingsFlag src={row.nationImageUrl} name={row.nationName} />
                             <span>{row.nationName}</span>
                           </span>
                         )
@@ -363,42 +287,37 @@ export function PublicPlayerRankingsBoardView({
                         <span className="pr-rankings__dash">—</span>
                       )}
                     </td>
-                    <td>
-                      <span className="pr-rankings__rating" title={row.breakdownTitle}>
-                        {row.r365Rating != null ? row.r365Rating.toFixed(1) : "—"}
-                      </span>
+                    <td className="is-num">
+                      <RatingValue value={row.r365Rating} />
                     </td>
-                    <td>
+                    <td className="is-form">
                       {isAllTime ? (
                         <PeakImpactCell
                           peakRating={row.peakRating ?? row.positionPerformance}
                           impactScore={row.impactScore ?? row.rankingScore}
                         />
                       ) : (
-                        <FormBlocks blocks={row.formBlocks} formScore={row.formScore} />
+                        <FormBlocks blocks={row.formBlocks} />
                       )}
                     </td>
-                    <td className="pr-rankings__num">
-                      {row.internationalPerformance != null
-                        ? Math.round(row.internationalPerformance)
-                        : "—"}
+                    <td className="is-num">
+                      <PerformanceValue value={row.internationalPerformance} />
                     </td>
-                    <td className="pr-rankings__num">
-                      {row.clubPerformance != null ? Math.round(row.clubPerformance) : "—"}
+                    <td className="is-num">
+                      <PerformanceValue value={row.clubPerformance} />
                     </td>
-                    <td className="pr-rankings__num">
-                      {isAllTime
-                        ? row.peakRating != null
-                          ? Math.round(row.peakRating)
-                          : row.positionPerformance != null
-                            ? Math.round(row.positionPerformance)
-                            : "—"
-                        : row.positionPerformance != null
-                          ? Math.round(row.positionPerformance)
-                          : "—"}
+                    <td className="is-num">
+                      <PerformanceValue
+                        value={
+                          isAllTime
+                            ? (row.peakRating ?? row.positionPerformance)
+                            : row.positionPerformance
+                        }
+                      />
                     </td>
-                    <td>
+                    <td className="is-move">
                       <MovementCell
+                        rank={row.rank}
                         movement={row.movement}
                         previousRank={row.previousRank}
                         movementDelta={row.movementDelta ?? null}
@@ -409,9 +328,7 @@ export function PublicPlayerRankingsBoardView({
               </tbody>
             </table>
           </div>
-          <p className="pr-rankings__legend">
-            Movement vs previous snapshot · Green ↑ improved · Red ↓ dropped · — unchanged / new
-          </p>
+          <RankingsBoardFooter eligibilityNote={eligibilityNote} />
         </section>
       )}
     </div>

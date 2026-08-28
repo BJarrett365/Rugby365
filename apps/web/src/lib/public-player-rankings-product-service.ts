@@ -42,13 +42,18 @@ import {
   normalizeRankingTop,
   parseLastFiveFormBlocks,
   pickCareerClubName,
+  rankingCountryFlagUrl,
   rankingMovement,
   resolveRankingPositionGroup,
   shortCompetitionLabel,
+  usableRankingCountryName,
   type PlayerRankingBoardFilters,
   type PlayerRankingMode,
   type ScoredMember,
 } from "./player-ranking-engine";
+import { parseNationalityFromBirthPlace } from "@rugby365/import-sdk";
+import { isRankingRetired } from "./competition-ranking-math";
+import { isKnownInternationalCountryName } from "./international-team-classify";
 
 type NationBadge = { name: string; slug: string; imageUrl: string | null };
 
@@ -90,6 +95,7 @@ export type PublicRankingBoardRow = {
   eligibleAppearances: number | null;
   modelVersion: string;
   breakdownTitle: string;
+  retired: boolean;
 };
 
 export type PublicRankingBoard = {
@@ -367,24 +373,23 @@ async function persistBoardSnapshot(input: {
   }
 }
 
-async function previousRanksForFilter(filters: PlayerRankingBoardFilters): Promise<Map<string, number>> {
+async function previousRanksForFilter(
+  filters: PlayerRankingBoardFilters,
+  source: "current" | "previous",
+): Promise<Map<string, number>> {
   const db = getDb();
   const filterKey = buildRankingFilterKey(filters);
   try {
-    const [prev] = await db
+    const snaps = await db
       .select({
         payload: playerRankingBoardSnapshots.payload,
       })
       .from(playerRankingBoardSnapshots)
-      .where(
-        and(
-          eq(playerRankingBoardSnapshots.filterKey, filterKey),
-          eq(playerRankingBoardSnapshots.isCurrent, false),
-        ),
-      )
+      .where(eq(playerRankingBoardSnapshots.filterKey, filterKey))
       .orderBy(desc(playerRankingBoardSnapshots.calculatedAt))
-      .limit(1);
+      .limit(source === "current" ? 1 : 2);
 
+    const prev = source === "current" ? snaps[0] : snaps[1];
     const map = new Map<string, number>();
     const rows = (prev?.payload as { rows?: PublicRankingBoardRow[] } | null)?.rows;
     if (!Array.isArray(rows)) return map;
@@ -395,6 +400,36 @@ async function previousRanksForFilter(filters: PlayerRankingBoardFilters): Promi
   } catch {
     return new Map();
   }
+}
+
+function hydrateBoardMovement(
+  board: PublicRankingBoard,
+  prevRanks: Map<string, number>,
+): PublicRankingBoard {
+  return {
+    ...board,
+    rows: board.rows.map((row) => {
+      const nationName = usableRankingCountryName(row.nationName);
+      const flag = rankingCountryFlagUrl(nationName);
+      const previousRank = row.previousRank ?? prevRanks.get(row.playerId) ?? null;
+      const rankMove = rankingMovement(row.rank, previousRank);
+      return {
+        ...row,
+        teamName: row.teamName === "Unassigned" ? null : row.teamName,
+        nationName,
+        nationImageUrl: flag ?? row.nationImageUrl,
+        previousRank,
+        movement: rankMove ?? row.movement,
+        retired: Boolean(row.retired),
+      };
+    }),
+  };
+}
+
+function ratingOnHundred(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  const scaled = value > 10 ? value : value * 10;
+  return Math.round(Math.min(99, Math.max(0, scaled)));
 }
 
 /** Newest-first overall ratings from history (0–100 scale preferred). */
@@ -471,13 +506,15 @@ function resolveBoardClub(input: {
   teamSlug: string | null;
   teamImageUrl: string | null;
   teamId: string | null;
+  teamCountryName: string | null;
   careerClub: string | null;
-  crestByName: Map<string, { id: string; slug: string; imageUrl: string | null }>;
+  crestByName: Map<string, { id: string; slug: string; imageUrl: string | null; countryName: string | null }>;
 }): {
   teamId: string | null;
   teamName: string | null;
   teamSlug: string | null;
   teamImageUrl: string | null;
+  teamCountryName: string | null;
 } {
   const fromTeam = cleanRankingClubName(input.teamName);
   const fromClub = cleanRankingClubName(input.clubName);
@@ -486,18 +523,21 @@ function resolveBoardClub(input: {
   if (!name) {
     return {
       teamId: null,
-      teamName: "Unassigned",
+      teamName: null,
       teamSlug: null,
       teamImageUrl: null,
+      teamCountryName: null,
     };
   }
   const crest = input.crestByName.get(name.toLowerCase());
+  const countryName = input.teamCountryName ?? crest?.countryName ?? null;
   if (fromTeam && input.teamImageUrl) {
     return {
       teamId: input.teamId,
       teamName: name,
       teamSlug: input.teamSlug,
       teamImageUrl: input.teamImageUrl,
+      teamCountryName: countryName,
     };
   }
   if (crest) {
@@ -506,6 +546,7 @@ function resolveBoardClub(input: {
       teamName: name,
       teamSlug: crest.slug,
       teamImageUrl: crest.imageUrl ?? input.teamImageUrl,
+      teamCountryName: crest.countryName ?? countryName,
     };
   }
   return {
@@ -513,6 +554,7 @@ function resolveBoardClub(input: {
     teamName: name,
     teamSlug: fromTeam ? input.teamSlug : null,
     teamImageUrl: fromTeam ? input.teamImageUrl : null,
+    teamCountryName: countryName,
   };
 }
 
@@ -574,6 +616,9 @@ async function loadNationBadgeByCountryName(
 
 function resolveNationBadge(input: {
   countryName: string | null;
+  nationCode?: string | null;
+  birthPlace?: string | null;
+  clubCountryName?: string | null;
   internationalTeamId: string | null;
   nationById: Map<string, NationBadge>;
   nationByName: Map<string, NationBadge>;
@@ -582,21 +627,30 @@ function resolveNationBadge(input: {
     input.internationalTeamId != null
       ? input.nationById.get(input.internationalTeamId)
       : null;
-  const byName = input.countryName
-    ? input.nationByName.get(input.countryName.trim().toLowerCase())
-    : null;
-  const nationName = input.countryName?.trim() || intl?.name || byName?.name || null;
+  const intlCountry = isKnownInternationalCountryName(intl?.name) ? intl?.name ?? null : null;
+  const fromBirth = parseNationalityFromBirthPlace(input.birthPlace ?? undefined);
+  const clubCountry =
+    rankingCountryFlagUrl(input.clubCountryName) != null
+      ? usableRankingCountryName(input.clubCountryName)
+      : null;
+  const country =
+    usableRankingCountryName(input.countryName) ||
+    usableRankingCountryName(intlCountry) ||
+    usableRankingCountryName(fromBirth) ||
+    clubCountry;
+  const byName = country ? input.nationByName.get(country.trim().toLowerCase()) : null;
+  const flag = rankingCountryFlagUrl(country, input.nationCode);
   return {
-    nationName,
+    nationName: country,
     nationSlug: intl?.slug ?? byName?.slug ?? null,
-    nationImageUrl: intl?.imageUrl ?? byName?.imageUrl ?? null,
+    nationImageUrl: flag ?? intl?.imageUrl ?? byName?.imageUrl ?? null,
   };
 }
 
 async function loadCrestByClubName(
   clubNames: string[],
-): Promise<Map<string, { id: string; slug: string; imageUrl: string | null }>> {
-  const map = new Map<string, { id: string; slug: string; imageUrl: string | null }>();
+): Promise<Map<string, { id: string; slug: string; imageUrl: string | null; countryName: string | null }>> {
+  const map = new Map<string, { id: string; slug: string; imageUrl: string | null; countryName: string | null }>();
   const names = [...new Set(clubNames.map((n) => n.trim()).filter(Boolean))];
   if (!names.length) return map;
   const aliases: Record<string, string[]> = {
@@ -636,6 +690,7 @@ async function loadCrestByClubName(
         name: teams.name,
         slug: teams.slug,
         imageUrl: teams.imageUrl,
+        countryName: teams.countryName,
       })
       .from(teams)
       .where(
@@ -649,14 +704,26 @@ async function loadCrestByClubName(
           sql`${teams.slug} not like '%flagicon%'`,
         ),
       )
-      .orderBy(sql`case when ${teams.imageUrl} is not null then 0 else 1 end`, teams.name);
+      .orderBy(
+        sql`case when ${teams.countryName} is not null then 0 else 1 end`,
+        sql`case when ${teams.imageUrl} is not null then 0 else 1 end`,
+        teams.name,
+      );
 
     for (const r of rows) {
       const key = r.name.trim().toLowerCase();
+      const next = { id: r.id, slug: r.slug, imageUrl: r.imageUrl, countryName: r.countryName };
       if (!map.has(key)) {
-        map.set(key, { id: r.id, slug: r.slug, imageUrl: r.imageUrl });
-      } else if (!map.get(key)?.imageUrl && r.imageUrl) {
-        map.set(key, { id: r.id, slug: r.slug, imageUrl: r.imageUrl });
+        map.set(key, next);
+      } else {
+        const cur = map.get(key)!;
+        if ((!cur.imageUrl && r.imageUrl) || (!cur.countryName && r.countryName)) {
+          map.set(key, {
+            ...cur,
+            imageUrl: cur.imageUrl ?? r.imageUrl,
+            countryName: cur.countryName ?? r.countryName,
+          });
+        }
       }
     }
     // Mirror aliased names onto requested club labels
@@ -765,6 +832,8 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
       name: players.name,
       imageUrl: players.imageUrl,
       countryName: players.countryName,
+      nationCode: players.nationCode,
+      birthPlace: players.birthPlace,
       positionName: players.positionName,
       clubName: players.clubName,
       clubTeamId: players.clubTeamId,
@@ -785,6 +854,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
       teamName: teams.name,
       teamSlug: teams.slug,
       teamImageUrl: teams.imageUrl,
+      teamCountryName: teams.countryName,
     })
     .from(playerRatings)
     .innerJoin(players, eq(players.id, playerRatings.playerId))
@@ -929,7 +999,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   const sorted = [...scored].sort((a, b) => b.score - a.score);
   const rankMap = denseRankWithTies(sorted);
   const pool = candidates.length;
-  const prevRanks = await previousRanksForFilter(filters);
+  const prevRanks = await previousRanksForFilter(filters, "current");
   const candidateIds = candidates.map((c) => c.row.id);
   const [ratingSeries, careerClubs, galleryImages] = await Promise.all([
     loadRatingSeriesByPlayer(candidateIds),
@@ -963,8 +1033,21 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
           peakRating: null,
         },
       );
+      const club = resolveBoardClub({
+        teamName: c.row.teamName,
+        clubName: c.row.clubName,
+        teamSlug: c.row.teamSlug,
+        teamImageUrl: c.row.teamImageUrl,
+        teamId: c.row.clubTeamId,
+        teamCountryName: c.row.teamCountryName ?? null,
+        careerClub: careerClubs.get(c.row.id) ?? null,
+        crestByName,
+      });
       const nation = resolveNationBadge({
         countryName: c.row.countryName,
+        nationCode: c.row.nationCode,
+        birthPlace: c.row.birthPlace,
+        clubCountryName: club.teamCountryName,
         internationalTeamId: c.row.internationalTeamId,
         nationById,
         nationByName,
@@ -973,31 +1056,21 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         padTo: 5,
         formScore: c.row.form ?? r365,
       });
-      const intlPerf =
+      const intlPerf = ratingOnHundred(
         c.row.reputation != null && Number.isFinite(c.row.reputation)
-          ? Math.round(c.row.reputation * 10) / 10
+          ? c.row.reputation
           : c.row.internationalTeamId != null && r365 != null
-            ? Math.round(Math.min(99, r365 * 0.92 + 4) * 10) / 10
+            ? Math.min(99, r365 * 0.92 + 4)
             : r365 != null
-              ? Math.round(Math.min(99, r365 * 0.9) * 10) / 10
-              : null;
-      const clubPerf =
+              ? Math.min(99, r365 * 0.9)
+              : null,
+      );
+      const clubPerf = ratingOnHundred(
         c.row.seasonRating != null && Number.isFinite(c.row.seasonRating)
-          ? Math.round(c.row.seasonRating * 10) / 10
-          : r365 != null
-            ? Math.round(r365 * 10) / 10
-            : null;
-      const posPerf =
-        c.positionScore != null ? Math.round(c.positionScore * 10) / 10 : null;
-      const club = resolveBoardClub({
-        teamName: c.row.teamName,
-        clubName: c.row.clubName,
-        teamSlug: c.row.teamSlug,
-        teamImageUrl: c.row.teamImageUrl,
-        teamId: c.row.clubTeamId,
-        careerClub: careerClubs.get(c.row.id) ?? null,
-        crestByName,
-      });
+          ? c.row.seasonRating
+          : r365,
+      );
+      const posPerf = ratingOnHundred(c.positionScore);
 
       return {
         rank: rank ?? 0,
@@ -1036,6 +1109,7 @@ async function buildCurrentBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         eligibleMinutes: c.minutes,
         eligibleAppearances: c.appearances,
         modelVersion: PLAYER_RANK_CURRENT_MODEL,
+        retired: isRankingRetired({ careerStatus: c.row.careerStatus, name: c.row.name }),
         breakdownTitle: [
           `R365 Ranking Score ${Math.round(c.score * 10) / 10}`,
           posPerf != null ? `Position ${posPerf}` : null,
@@ -1119,6 +1193,8 @@ async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<Pu
       name: players.name,
       imageUrl: players.imageUrl,
       countryName: players.countryName,
+      nationCode: players.nationCode,
+      birthPlace: players.birthPlace,
       positionName: players.positionName,
       clubName: players.clubName,
       clubTeamId: players.clubTeamId,
@@ -1133,6 +1209,7 @@ async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<Pu
       teamName: teams.name,
       teamSlug: teams.slug,
       teamImageUrl: teams.imageUrl,
+      teamCountryName: teams.countryName,
       form: playerRatings.formScore,
       lastFive: playerRatings.lastFiveMatchRatings,
       seasonRating: playerRatings.seasonRating,
@@ -1254,7 +1331,7 @@ async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<Pu
   const sorted = [...scored].sort((a, b) => b.score - a.score);
   const rankMap = denseRankWithTies(sorted);
   const pool = candidates.length;
-  const prevRanks = await previousRanksForFilter(filters);
+  const prevRanks = await previousRanksForFilter(filters, "current");
   const candidateIds = candidates.map((c) => c.row.id);
   const [ratingSeries, careerClubs, galleryImages] = await Promise.all([
     loadRatingSeriesByPlayer(candidateIds),
@@ -1304,37 +1381,29 @@ async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<Pu
           r365Rating: r365,
         },
       );
-      const nation = resolveNationBadge({
-        countryName: c.row.countryName ?? c.row.legendCountry ?? null,
-        internationalTeamId: c.row.internationalTeamId,
-        nationById,
-        nationByName,
-      });
-      const intlPerf =
-        c.row.internationalScore != null && Number.isFinite(c.row.internationalScore)
-          ? Math.round(c.row.internationalScore * 10) / 10
-          : c.row.reputation != null && Number.isFinite(c.row.reputation)
-            ? Math.round(c.row.reputation * 10) / 10
-            : r365 != null
-              ? Math.round(Math.min(99, r365 * 0.9) * 10) / 10
-              : null;
-      const clubPerf =
-        c.row.clubScore != null && Number.isFinite(c.row.clubScore)
-          ? Math.round(c.row.clubScore * 10) / 10
-          : c.row.seasonRating != null && Number.isFinite(c.row.seasonRating)
-            ? Math.round(c.row.seasonRating * 10) / 10
-            : r365 != null
-              ? Math.round(r365 * 10) / 10
-              : null;
       const club = resolveBoardClub({
         teamName: c.row.teamName,
         clubName: c.row.clubName,
         teamSlug: c.row.teamSlug,
         teamImageUrl: c.row.teamImageUrl,
         teamId: c.row.clubTeamId,
+        teamCountryName: c.row.teamCountryName ?? null,
         careerClub: careerClubs.get(c.row.id) ?? null,
         crestByName,
       });
+      const nation = resolveNationBadge({
+        countryName: c.row.countryName ?? c.row.legendCountry ?? null,
+        nationCode: c.row.nationCode,
+        birthPlace: c.row.birthPlace,
+        clubCountryName: club.teamCountryName,
+        internationalTeamId: c.row.internationalTeamId,
+        nationById,
+        nationByName,
+      });
+      const intlPerf = ratingOnHundred(
+        c.row.internationalScore ?? c.row.reputation ?? (r365 != null ? r365 * 0.9 : null),
+      );
+      const clubPerf = ratingOnHundred(c.row.clubScore ?? c.row.seasonRating ?? r365);
 
       return {
         rank: rank ?? 0,
@@ -1373,6 +1442,7 @@ async function buildAllTimeBoard(filters: PlayerRankingBoardFilters): Promise<Pu
         eligibleMinutes: null,
         eligibleAppearances: null,
         modelVersion: PLAYER_RANK_ALLTIME_MODEL,
+        retired: true,
         breakdownTitle: [
           `Legend Score ${impact}`,
           peak != null ? `Peak ${peak}` : null,
@@ -1495,13 +1565,17 @@ export async function getPublicPlayerRankingsBoard(
   };
 
   const filterKey = buildRankingFilterKey(filters);
-  const memKey = `rankings:board:${filterKey}`;
+  const expectedModel =
+    filters.mode === "alltime" ? PLAYER_RANK_ALLTIME_MODEL : PLAYER_RANK_CURRENT_MODEL;
+  const memKey = `rankings:board:${expectedModel}:${filterKey}`;
 
   const load = async (): Promise<PublicRankingBoard> => {
     if (!input.forceRebuild) {
       const snap = await loadCurrentSnapshot(filterKey);
-      if (snap && snapshotFresh(snap.calculatedAt)) {
-        return boardFromSnapshot(filters.mode, filters, filterKey, snap);
+      if (snap && snapshotFresh(snap.calculatedAt) && snap.modelVersion === expectedModel) {
+        const board = boardFromSnapshot(filters.mode, filters, filterKey, snap);
+        const prevRanks = await previousRanksForFilter(filters, "previous");
+        return hydrateBoardMovement(board, prevRanks);
       }
     }
 

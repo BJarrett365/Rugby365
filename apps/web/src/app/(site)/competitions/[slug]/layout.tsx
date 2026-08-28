@@ -16,7 +16,7 @@ export default async function CompetitionLayout({
   if (!competition) notFound();
 
   return (
-    <div>
+    <div className="competition-layout">
       <PageHeader
         eyebrow="Competition"
         title={competition.name}

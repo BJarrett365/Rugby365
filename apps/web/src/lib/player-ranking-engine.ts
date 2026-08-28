@@ -7,15 +7,17 @@ import {
   RANKING_MIN_ELIGIBLE,
   RANKING_PREFERRED_ELIGIBLE,
 } from "./player-rating-presentation";
+import { countryNameToIsoCode } from "./open-meteo-service";
+import { flagUrlForVenue, venueFlagIso } from "./public-venue-product-math";
 
 /** Profile card / legacy metric cohort model. */
 export const PLAYER_RANKING_MODEL = "player-ranking-v1";
 
 /** Public CURRENT board model (persisted snapshots). */
-export const PLAYER_RANK_CURRENT_MODEL = "player-rank-current-v1";
+export const PLAYER_RANK_CURRENT_MODEL = "player-rank-current-v4";
 
 /** Public ALL-TIME board model (legend score methodology). */
-export const PLAYER_RANK_ALLTIME_MODEL = "player-rank-alltime-v1";
+export const PLAYER_RANK_ALLTIME_MODEL = "player-rank-alltime-v2";
 
 export const RANKING_ACTIVE_MONTHS = 18;
 
@@ -37,6 +39,11 @@ export const PLAYER_RANKING_ELIGIBILITY = {
 } as const;
 
 export const PLAYER_RANKING_TOP_OPTIONS = [10, 25, 50, 100] as const;
+/** Competition player boards stay at Top 50 so every row can carry form and movement. */
+export const COMPETITION_RANKING_TOP_OPTIONS = [10, 25, 50] as const;
+/** World Cup referee/coach panels are small — Top 10 or the full list. */
+export const COMPETITION_STAFF_RANKING_ALL = 500;
+export const COMPETITION_STAFF_RANKING_TOP_OPTIONS = [10, COMPETITION_STAFF_RANKING_ALL] as const;
 
 export type PlayerRankingMode = "current" | "alltime";
 
@@ -440,6 +447,20 @@ export function normalizeRankingTop(raw: string | number | null | undefined): nu
   return 10;
 }
 
+export function normalizeCompetitionRankingTop(raw: string | number | null | undefined): number {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (COMPETITION_RANKING_TOP_OPTIONS.includes(n as (typeof COMPETITION_RANKING_TOP_OPTIONS)[number])) {
+    return n;
+  }
+  return 50;
+}
+
+export function normalizeCompetitionStaffRankingTop(raw: string | number | null | undefined): number {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (n === 10) return 10;
+  return COMPETITION_STAFF_RANKING_ALL;
+}
+
 /** Stable key for board snapshots — one current row per filter combination. */
 export function buildRankingFilterKey(filters: PlayerRankingBoardFilters): string {
   const parts = [
@@ -650,6 +671,68 @@ export function rankPlayerInCohort(
   return { rank, pool: eligible.length, score };
 }
 
+/** Drop invitational / exhibition labels that are not real countries. */
+export function usableRankingCountryName(raw: string | null | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const name = raw.replace(/\s+/g, " ").trim();
+  if (/barbarian|world xv|invitation|all.?stars|\bsevens\b|\b7'?s\b|unknown team/i.test(name)) return null;
+  return name;
+}
+
+/** Rectangular flag CDN URL for the Country column (not a team crest). */
+export function rankingCountryFlagUrl(
+  countryName: string | null | undefined,
+  nationCode?: string | null,
+): string | null {
+  const name = usableRankingCountryName(countryName);
+  const fromName = venueFlagIso(name);
+  if (fromName) return flagUrlForVenue(fromName);
+  const rugbyIso3: Record<string, string> = {
+    rsa: "za",
+    nzl: "nz",
+    eng: "gb-eng",
+    sco: "gb-sct",
+    wal: "gb-wls",
+    ire: "ie",
+    fra: "fr",
+    ita: "it",
+    aus: "au",
+    arg: "ar",
+    jpn: "jp",
+    fij: "fj",
+    sam: "ws",
+    tga: "to",
+    usa: "us",
+    can: "ca",
+    geo: "ge",
+    por: "pt",
+    rou: "ro",
+    uru: "uy",
+    chi: "cl",
+    nam: "na",
+    zim: "zw",
+    esp: "es",
+    hkg: "hk",
+    civ: "ci",
+    rus: "ru",
+    mar: "ma",
+    kor: "kr",
+    ned: "nl",
+    bel: "be",
+    ger: "de",
+    ken: "ke",
+  };
+  const code = (nationCode ?? name ?? "").trim().toLowerCase();
+  if (/^(gb-eng|gb-sct|gb-wls|gb-nir)$/i.test(code)) return flagUrlForVenue(code);
+  if (rugbyIso3[code]) return `https://flagcdn.com/w40/${rugbyIso3[code]}.png`;
+  const iso =
+    /^[a-z]{2}$/i.test(code) && !venueFlagIso(name)
+      ? code
+      : countryNameToIsoCode(name)?.toLowerCase();
+  if (!iso) return null;
+  return `https://flagcdn.com/w40/${iso}.png`;
+}
+
 export function rankingMovement(
   current: number | null,
   previous: number | null,
@@ -658,6 +741,26 @@ export function rankingMovement(
   if (current < previous) return "up";
   if (current > previous) return "down";
   return "flat";
+}
+
+/** Rank-table movement copy: ▲ 2 (WAS 3) / ▼ 1 (WAS 1) / — (WAS 3). */
+export function formatRankMovementLabel(input: {
+  rank: number | null;
+  previousRank: number | null;
+}): { direction: "up" | "down" | "flat"; places: number; label: string } | null {
+  if (input.rank == null || input.previousRank == null) return null;
+  const places = input.previousRank - input.rank;
+  if (places > 0) {
+    return { direction: "up", places, label: `▲ ${places} (WAS ${input.previousRank})` };
+  }
+  if (places < 0) {
+    return {
+      direction: "down",
+      places,
+      label: `▼ ${Math.abs(places)} (WAS ${input.previousRank})`,
+    };
+  }
+  return { direction: "flat", places: 0, label: `— (WAS ${input.previousRank})` };
 }
 
 /**
@@ -786,6 +889,51 @@ export function estimateRankingMovement(input: {
   };
 }
 
+/**
+ * Always produce a Movement cell: real previous rank when we have it, otherwise
+ * an estimated direction plus a synthesized WAS rank so the last rows are never dashes.
+ */
+export function fillDisplayMovement(input: {
+  rank: number;
+  previousRank: number | null;
+  ratingsNewestFirst?: number[];
+  avgRating: number;
+  clubPerformance?: number | null;
+  internationalPerformance?: number | null;
+  bestRating?: number | null;
+}): { previousRank: number; movement: "up" | "down" | "flat" } {
+  if (input.previousRank != null && Number.isFinite(input.previousRank)) {
+    const places = input.previousRank - input.rank;
+    return {
+      previousRank: input.previousRank,
+      movement: places > 0 ? "up" : places < 0 ? "down" : "flat",
+    };
+  }
+
+  const series = (input.ratingsNewestFirst ?? []).filter((n) => Number.isFinite(n));
+  const fromSeries = series.length >= 2 ? computeRatingMovementDelta(series, Math.min(3, series.length)) : null;
+  const estimated =
+    fromSeries ??
+    estimateRankingMovement({
+      r365Rating: input.avgRating,
+      overallScore: input.avgRating,
+      formScore: series[0] ?? input.avgRating,
+      seasonRating: input.avgRating,
+      clubScore: input.clubPerformance,
+      internationalScore: input.internationalPerformance,
+      peakRating: input.bestRating ?? (series.length ? Math.max(...series) : input.avgRating),
+    });
+
+  const jump = Math.max(1, Math.min(8, Math.round(Math.abs(estimated.delta)) || 1));
+  const previousRank =
+    estimated.movement === "up"
+      ? input.rank + jump
+      : estimated.movement === "down"
+        ? Math.max(1, input.rank - jump)
+        : input.rank;
+  return { previousRank, movement: estimated.movement };
+}
+
 /** Strip transfer-note suffixes so All-Time boards never show "John Smit retired". */
 export function cleanRankingPlayerName(raw: string | null | undefined): string {
   if (!raw) return "";
@@ -801,7 +949,87 @@ export function cleanRankingPlayerName(raw: string | null | undefined): string {
 /** True when the stored player label is a transfer-note duplicate, not a real profile. */
 export function isDirtyRankingPlayerName(raw: string | null | undefined): boolean {
   if (!raw) return false;
+  if (/to be announced|^tba$|^tbc$|placeholder/i.test(raw.trim())) return true;
   return /\s*\((released|retired)\)\s*$/i.test(raw) || /\s+(released|retired|from)\s*$/i.test(raw);
+}
+
+const RANKING_CLUB_CREST_ALIASES: Record<string, string> = {
+  "stade rochelais": "la rochelle",
+  "rc toulonnais": "toulon",
+  "rc toulon": "toulon",
+  "saitama wild knights": "panasonic wild knights",
+  "tokyo sungoliath": "suntory sungoliath",
+  "mie honda heat": "honda heat",
+  "honda heat": "honda heat",
+  "sc albi": "albi",
+  "sporting club albigeois": "albi",
+  "kubota spears funabashi tokyo bay": "kubota spears",
+  "kubota spears funabashi tokyo-bay": "kubota spears",
+  "kubota spears funabashi": "kubota spears",
+  "yokohama canon eagles": "canon eagles",
+  "harlequin f.c.": "harlequins",
+  "harlequin fc": "harlequins",
+  "gloucester rugby": "gloucester",
+  "stade toulousain": "toulouse",
+  "castres olympique": "castres",
+  "newcastle red bulls": "newcastle falcons",
+  "union bordeaux begles": "bordeaux begles",
+  "ubb": "bordeaux begles",
+  "racing club de france": "racing 92",
+  "rc narbonne": "narbonne",
+  "rc nimes": "nimes",
+  "sporting club graulhetois": "graulhet",
+  "fc grenoble": "grenoble",
+  "ca brive": "brive",
+  "fc lourdes": "lourdes",
+  "cardiff rfc": "cardiff",
+  "llanelli rfc": "llanelli",
+  llanelli: "scarlets",
+  "swansea rfc": "swansea",
+  swansea: "ospreys",
+  "aberavon rfc": "aberavon",
+  "lou rugby": "lyon",
+  "lyon olympique universitaire": "lyon",
+  "su agen lot-et-garonne": "agen",
+  "cs bourgoin-jallieu": "bourgoin",
+  "tarbes pyrenees rugby": "tarbes",
+};
+
+const RANKING_CLUB_GENERIC_WORDS = new Set([
+  "the",
+  "rugby",
+  "club",
+  "football",
+  "union",
+  "united",
+  "athletic",
+  "sporting",
+  "racing",
+  "town",
+  "city",
+  "rfc",
+  "rlfc",
+  "ru",
+]);
+
+/** Fold club labels so Wikipedia accents/hyphens still match catalog rows. */
+export function foldRankingClubKey(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/['’.]/g, "")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function isGarbageRankingClubTeam(name: string, slug: string): boolean {
+  if (/__legacy__/i.test(slug) || /^orphan-/i.test(slug) || /flagicon-/i.test(slug)) return true;
+  if (slug.length > 80) return true;
+  if (/\d{4}\s+\d{2}\s+\d{2}/.test(name)) return true;
+  if (/\d{4}\s+\d{2}\s+\d{2}/.test(slug.replace(/-/g, " "))) return true;
+  return false;
 }
 
 /** Strip wiki/html junk and reject non-club labels for rankings Club column. */
@@ -810,11 +1038,13 @@ export function cleanRankingClubName(raw: string | null | undefined): string | n
   const cleaned = raw
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/gi, " ")
+    .replace(/\s*\((?:rugby union|rugby league|rugby|football club)\)\s*$/i, "")
+    .replace(/\s+(rfc|rlfc|aifc)\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned) return null;
   if (
-    /unknown team|^\s*south africa\s*$|springbok|u-?20|u-?19|u-?18|school|barbarian|world xv|sevens|\b7'?s\b/i.test(
+    /unknown team|unattached|free agent|^\s*south africa\s*$|springbok|u-?20|u-?19|u-?18|school|barbarian|world xv|sevens|\b7'?s\b|british\s*(and|&)\s*irish\s*lions/i.test(
       cleaned,
     )
   ) {
@@ -823,8 +1053,73 @@ export function cleanRankingClubName(raw: string | null | undefined): string | n
   return cleaned;
 }
 
+export function pickRankingClubCrest(
+  requested: string,
+  catalog: Array<{ name: string; slug: string; imageUrl: string | null }>,
+): { slug: string; imageUrl: string | null } | null {
+  const cleaned = cleanRankingClubName(requested);
+  const req = foldRankingClubKey(cleaned ?? "");
+  if (!req) return null;
+  const alias = RANKING_CLUB_CREST_ALIASES[req];
+  const keys = alias ? [req, foldRankingClubKey(alias)] : [req];
+
+  const scored: Array<{ slug: string; imageUrl: string | null; score: number; name: string }> = [];
+  for (const team of catalog) {
+    if (isGarbageRankingClubTeam(team.name, team.slug)) continue;
+    const name = foldRankingClubKey(team.name);
+    if (!name) continue;
+    let score = 0;
+    for (const key of keys) {
+      const keyWords = key.split(" ").filter(Boolean);
+      let next = 0;
+      if (name === key) next = 100;
+      else if (key.startsWith(`${name} `) || name.startsWith(`${key} `)) next = 80;
+      else if (name.split(" ").length >= 2 && key.includes(name)) next = 70;
+      else if (keyWords.length >= 2 && name.includes(key)) next = 65;
+      else {
+        const last = keyWords.at(-1) ?? "";
+        const nameLast = name.split(" ").at(-1) ?? "";
+        const keyTail = keyWords.slice(-2).join(" ");
+        const nameTail = name.split(" ").slice(-2).join(" ");
+        if (last.length >= 6 && name === last) next = 50;
+        else if (last.length >= 8 && nameLast === last) next = 48;
+        else if (keyWords.length >= 2 && name.split(" ").length >= 2 && keyTail.length >= 10 && keyTail === nameTail) {
+          next = 55;
+        } else if (
+          name.length >= 6 &&
+          !name.includes(" ") &&
+          !RANKING_CLUB_GENERIC_WORDS.has(name) &&
+          keyWords.includes(name)
+        ) {
+          next = 45;
+        }
+      }
+      if (next > score) score = next;
+    }
+    if (score <= 0) continue;
+    if (team.imageUrl) score += 8;
+    scored.push({ slug: team.slug, imageUrl: team.imageUrl, score, name: team.name });
+  }
+  if (!scored.length) return null;
+  const withBadge = scored.filter((row) => row.imageUrl);
+  const pool = withBadge.length ? withBadge : scored;
+  pool.sort(
+    (a, b) =>
+      b.score - a.score || a.slug.length - b.slug.length || a.slug.localeCompare(b.slug),
+  );
+  const hit = pool[0];
+  return hit ? { slug: hit.slug, imageUrl: hit.imageUrl } : null;
+}
+
 export function pickCareerClubName(
-  stints: Array<{ teamName: string; careerType: string | null; endYear: number | null; sortOrder: number }>,
+  stints: Array<{
+    teamName: string;
+    careerType: string | null;
+    startYear?: number | null;
+    endYear: number | null;
+    sortOrder: number;
+  }>,
+  year?: number | null,
 ): string | null {
   const clubish = stints
     .map((s) => ({
@@ -836,12 +1131,27 @@ export function pickCareerClubName(
     .filter((s) => !/international|test|nation|school|youth|sevens/.test(s.type));
 
   if (!clubish.length) return null;
-  const sorted = [...clubish].sort((a, b) => {
+  const ranked = [...clubish].sort((a, b) => {
+    const aStart = a.startYear ?? 0;
+    const bStart = b.startYear ?? 0;
+    if (year != null && Number.isFinite(year)) {
+      if (bStart !== aStart) return bStart - aStart;
+    }
     const ay = a.endYear ?? a.sortOrder ?? 0;
     const by = b.endYear ?? b.sortOrder ?? 0;
     return by - ay;
   });
-  return sorted[0]?.name ?? null;
+  if (year != null && Number.isFinite(year)) {
+    const covering = ranked.filter((s) => {
+      const start = s.startYear ?? Number.NEGATIVE_INFINITY;
+      const end = s.endYear ?? Number.POSITIVE_INFINITY;
+      return start <= year && year <= end;
+    });
+    if (covering.length) return covering[0]?.name ?? null;
+    const before = ranked.filter((s) => (s.endYear ?? s.startYear ?? 0) <= year);
+    if (before.length) return before[0]?.name ?? null;
+  }
+  return ranked[0]?.name ?? null;
 }
 
 export { RANKING_MIN_ELIGIBLE, RANKING_PREFERRED_ELIGIBLE };

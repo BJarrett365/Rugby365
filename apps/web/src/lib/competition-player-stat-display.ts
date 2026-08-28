@@ -14,6 +14,7 @@ const INTERNATIONAL_TEAM_CODES: Record<string, string> = {
   portugal: "POR",
   romania: "ROU",
   samoa: "SAM",
+  "western samoa": "SAM",
   scotland: "SCO",
   "south africa": "RSA",
   tonga: "TGA",
@@ -24,8 +25,72 @@ const INTERNATIONAL_TEAM_CODES: Record<string, string> = {
   zimbabwe: "ZIM",
   canada: "CAN",
   "united states": "USA",
+  "united states of america": "USA",
   spain: "ESP",
+  namibia: "NAM",
+  "ivory coast": "CIV",
+  "cote divoire": "CIV",
+  "cote d'ivoire": "CIV",
+  russia: "RUS",
+  morocco: "MAR",
+  "south korea": "KOR",
+  netherlands: "NED",
+  belgium: "BEL",
+  germany: "GER",
+  kenya: "KEN",
 };
+
+/** Famous national-team nicknames shown under the country name on team boards. */
+const INTERNATIONAL_TEAM_NICKNAMES: Record<string, string> = {
+  "new zealand": "All Blacks",
+  "south africa": "Springboks",
+  australia: "Wallabies",
+  argentina: "Pumas",
+  france: "Les Bleus",
+  wales: "The Dragons",
+  scotland: "The Thistles",
+  italy: "Azzurri",
+  fiji: "Flying Fijians",
+  samoa: "Manu Samoa",
+  "western samoa": "Manu Samoa",
+  tonga: "Ikale Tahi",
+  japan: "Brave Blossoms",
+  georgia: "Lelos",
+  romania: "The Oaks",
+  canada: "Canucks",
+  "united states": "Eagles",
+  "united states of america": "Eagles",
+  namibia: "Welwitschias",
+  uruguay: "Los Teros",
+  portugal: "Os Lobos",
+  chile: "Los Cóndores",
+  spain: "Los Leones",
+  zimbabwe: "Sables",
+  "ivory coast": "Les Éléphants",
+  "cote divoire": "Les Éléphants",
+  "cote d'ivoire": "Les Éléphants",
+  "hong kong": "Dragons",
+  russia: "Bears",
+};
+
+/** Display nickname under the team name (ALL BLACKS, SPRINGBOKS, …). */
+export function nationalTeamNickname(
+  teamName: string | null | undefined,
+  shortName?: string | null,
+): string | null {
+  const name = teamName?.trim();
+  if (!name) return null;
+  const mapped = INTERNATIONAL_TEAM_NICKNAMES[name.toLowerCase()];
+  if (mapped) {
+    if (mapped.toLowerCase() === name.toLowerCase()) return null;
+    return mapped.toUpperCase();
+  }
+  const short = shortName?.trim();
+  if (short && short.length > 3 && short.toLowerCase() !== name.toLowerCase()) {
+    return short.toUpperCase();
+  }
+  return null;
+}
 
 /** Domestic / franchise nicknames used on Currie Cup / URC-style boards. */
 const CLUB_TEAM_CODES: Record<string, string> = {
@@ -94,6 +159,11 @@ function codeFromTeamName(teamName: string): string {
     if (initials.length >= 2) return initials.slice(0, 3);
   }
   return teamName.trim().replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase() || "—";
+}
+
+export function isInternationalLeaderboardTeam(teamName: string | null | undefined): boolean {
+  if (!teamName) return false;
+  return Boolean(INTERNATIONAL_TEAM_CODES[teamName.trim().toLowerCase()]);
 }
 
 export function teamCodeForLeaderboard(input: {
