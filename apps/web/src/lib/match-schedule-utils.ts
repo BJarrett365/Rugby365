@@ -200,6 +200,39 @@ export function pickInitialDateKey(_fixtures: ScheduleFixture[], today = new Dat
   return dateKeyLocal(today);
 }
 
+/** Latest YYYY-MM-DD in `dates` on or before `limitKey` (inclusive). */
+export function latestDateOnOrBefore(dates: Iterable<string>, limitKey: string): string | null {
+  let latest: string | null = null;
+  for (const key of dates) {
+    if (key > limitKey) continue;
+    if (!latest || key > latest) latest = key;
+  }
+  return latest;
+}
+
+/** Prefer the last match day in a month; if the month is current/past, stay on or before today. */
+export function preferredDateInMonth(
+  year: number,
+  monthIndex: number,
+  matchDateKeys: Iterable<string> | null | undefined,
+  todayKey: string,
+): string {
+  const mm = String(monthIndex + 1).padStart(2, "0");
+  const prefix = `${year}-${mm}-`;
+  const inMonth = [...(matchDateKeys ?? [])].filter((key) => key.startsWith(prefix)).sort();
+  if (inMonth.length) {
+    const pastOrToday = inMonth.filter((key) => key <= todayKey);
+    const pool = pastOrToday.length ? pastOrToday : inMonth;
+    return pool[pool.length - 1]!;
+  }
+  const today = parseDateKey(todayKey);
+  const day =
+    year === today.getFullYear() && monthIndex === today.getMonth() ? today.getDate() : 1;
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  const safeDay = Math.min(day, lastDay);
+  return `${year}-${mm}-${String(safeDay).padStart(2, "0")}`;
+}
+
 export function formatDateHeader(key: string): string {
   const d = parseDateKey(key);
   return d

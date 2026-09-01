@@ -7,6 +7,7 @@ import {
   formatDateHeader,
   formatStripDay,
   parseDateKey,
+  preferredDateInMonth,
 } from "./match-schedule-utils";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -154,16 +155,14 @@ export function MatchDatePicker({
   }, [matchDateKeys, selectedYear]);
 
   const jumpToMonth = (monthIndex: number) => {
-    const today = new Date();
-    const day =
-      selectedYear === today.getFullYear() && monthIndex === today.getMonth()
-        ? today.getDate()
-        : 1;
-    const lastDay = new Date(selectedYear, monthIndex + 1, 0).getDate();
-    const safeDay = Math.min(day, lastDay);
-    const mm = String(monthIndex + 1).padStart(2, "0");
-    const dd = String(safeDay).padStart(2, "0");
-    onSelect(`${selectedYear}-${mm}-${dd}`);
+    onSelect(
+      preferredDateInMonth(
+        selectedYear,
+        monthIndex,
+        matchDateKeys,
+        todayKey || dateKeyLocal(new Date()),
+      ),
+    );
   };
 
   const rootClass = [

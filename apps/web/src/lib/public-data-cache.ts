@@ -19,6 +19,20 @@ const store = new Map<string, CacheEntry<unknown>>();
 
 const DEFAULT_TTL_SECONDS = 60;
 
+/**
+ * Netlify's Next plugin sets `Netlify-Vary` to RSC query keys only
+ * (`_rsc`, `__nextDataReq`). Without this, `/api/fixtures/schedule?date=`
+ * and `/api/fixtures/dates?start=` share one CDN body — every day shows
+ * today's empty list.
+ */
+export function publicJsonCacheHeaders(ttlSeconds: number, swrSeconds?: number): HeadersInit {
+  const swr = swrSeconds ?? ttlSeconds * 2;
+  return {
+    "Cache-Control": `public, s-maxage=${ttlSeconds}, stale-while-revalidate=${swr}`,
+    "Netlify-Vary": "query",
+  };
+}
+
 export const PUBLIC_CACHE_TTL = {
   playerOverview: 120,
   playerDirectory: 60,

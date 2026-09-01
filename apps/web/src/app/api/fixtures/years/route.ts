@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { listFixtureCalendarYears } from "@/lib/planet-rugby-live-fixtures-service";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
+
+export const dynamic = "force-dynamic";
 
 /** Calendar years that have at least one CMS fixture — Live Centre year picker. */
 export async function GET() {
@@ -14,9 +16,7 @@ export async function GET() {
     return NextResponse.json(
       { years },
       {
-        headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
-        },
+        headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.fixturesMeta, 300),
       },
     );
   } catch (e) {

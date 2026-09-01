@@ -1,11 +1,30 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FixturesScheduleBoard } from "@/components/matches/FixturesScheduleBoard";
 import { PublicFixturesTabs } from "@/components/matches/PublicFixturesTabs";
 
 /** Public Live Centre — scores, fixtures and match schedule. */
 export default function MatchesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="pr-mc-fixtures-page">
+          <p className="text-zinc-500 text-sm py-8 text-center">Loading fixtures…</p>
+        </div>
+      }
+    >
+      <MatchesPageInner />
+    </Suspense>
+  );
+}
+
+function MatchesPageInner() {
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view") === "results" ? "results" : "fixtures";
+
   return (
     <div className="pr-mc-fixtures-page">
       <nav className="pr-mc-breadcrumbs" aria-label="Breadcrumb">
@@ -28,9 +47,9 @@ export default function MatchesPage() {
         </Link>
       </header>
 
-      <PublicFixturesTabs active="fixtures" />
+      <PublicFixturesTabs active={view} />
 
-      <FixturesScheduleBoard variant="public" />
+      <FixturesScheduleBoard variant="public" view={view} />
     </div>
   );
 }

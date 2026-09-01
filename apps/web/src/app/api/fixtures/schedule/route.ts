@@ -3,8 +3,9 @@ import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { dateKeyLocal } from "@/lib/match-schedule-utils";
 import { getScheduleForDate } from "@/lib/planet-rugby-live-fixtures-service";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 26;
 
 export async function GET(req: Request) {
@@ -30,9 +31,7 @@ export async function GET(req: Request) {
     return NextResponse.json(
       { date: dateKey, ...result },
       {
-        headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
-        },
+        headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.fixturesSchedule, 60),
       },
     );
   } catch (e) {

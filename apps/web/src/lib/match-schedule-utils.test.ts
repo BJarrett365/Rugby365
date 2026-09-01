@@ -5,7 +5,9 @@ import {
   groupByCompetition,
   isFinished,
   isSdmsShapedMatchId,
+  latestDateOnOrBefore,
   matchDetailHref,
+  preferredDateInMonth,
   publicMatchRoundLabel,
   type ScheduleCompetition,
   type ScheduleFixture,
@@ -138,6 +140,23 @@ describe("matchDetailHref", () => {
   it("keeps SDMS ids in the match centre path", () => {
     const href = matchDetailHref({ ...base, externalMatchId: "294zg8oj" });
     expect(href?.startsWith("/matches/294zg8oj/")).toBe(true);
+  });
+});
+
+describe("latestDateOnOrBefore", () => {
+  it("picks the last result day on or before today", () => {
+    expect(
+      latestDateOnOrBefore(["2026-08-21", "2026-08-30", "2026-09-05"], "2026-09-01"),
+    ).toBe("2026-08-30");
+    expect(latestDateOnOrBefore(["2026-09-05"], "2026-09-01")).toBeNull();
+  });
+});
+
+describe("preferredDateInMonth", () => {
+  it("jumps to the last August match day instead of the 1st", () => {
+    expect(
+      preferredDateInMonth(2026, 7, ["2026-08-01", "2026-08-21", "2026-08-30"], "2026-09-01"),
+    ).toBe("2026-08-30");
   });
 });
 

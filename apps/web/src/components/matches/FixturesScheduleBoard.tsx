@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MatchDatePicker } from "./MatchDatePicker";
 import { MatchMediaIcon, type MatchMediaIconVariant } from "./MatchMediaIcons";
 import { TeamCrest } from "./TeamCrest";
@@ -13,6 +13,7 @@ import {
   groupByCompetition,
   isFinished,
   kickoffDateKey,
+  latestDateOnOrBefore,
   matchDetailHref,
   matchStatusShort,
   monthBoundsFromYearMonth,
@@ -482,6 +483,7 @@ export function FixturesScheduleBoard({
   selectedFixtureId,
   onSelectFixture,
   initialFixtureId,
+  view = "fixtures",
 }: {
   admin?: boolean;
   /** Public Planet Rugby list layout. Default keeps existing admin/operator behaviour. */
@@ -492,6 +494,8 @@ export function FixturesScheduleBoard({
   onSelectFixture?: (fixture: ScheduleFixture) => void;
   /** Jump the date strip to this fixture's kickoff day on first load. */
   initialFixtureId?: string;
+  /** Public Live Centre: Results opens the latest completed match day. */
+  view?: "fixtures" | "results";
 }) {
   const isPublic = variant === "public";
   // null until mount so SSR HTML matches the client's first paint (avoids TZ hydration drift).
@@ -507,11 +511,24 @@ export function FixturesScheduleBoard({
   const [liveCount, setLiveCount] = useState(0);
   const [error, setError] = useState("");
   const [browserTimeZone, setBrowserTimeZone] = useState("Europe/London");
+  const resultsJumpedRef = useRef(false);
 
   useEffect(() => {
     setBrowserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London");
     setSelectedDateKey(dateKeyLocal(new Date()));
   }, []);
+
+  useEffect(() => {
+    resultsJumpedRef.current = false;
+  }, [view]);
+
+  useEffect(() => {
+    if (view !== "results" || resultsJumpedRef.current || datesWithMatches.size === 0) return;
+    const latest = latestDateOnOrBefore(datesWithMatches, dateKeyLocal(new Date()));
+    if (!latest) return;
+    resultsJumpedRef.current = true;
+    if (latest !== selectedDateKey) setSelectedDateKey(latest);
+  }, [view, datesWithMatches, selectedDateKey]);
 
   const seasonYear =
     (selectedDateKey ? seasonFromDateKey(selectedDateKey) : null) ?? String(new Date().getFullYear());

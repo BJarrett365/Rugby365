@@ -32,7 +32,7 @@ export function PublicFixturesTabs({ active }: { active: PublicFixturesTab }) {
   return (
     <nav className="pr-mc-fixtures-tabs" aria-label="Fixtures sections">
       {tab("fixtures", "Fixtures", "/matches")}
-      {tab("results", "Results", null)}
+      {tab("results", "Results", "/matches?view=results")}
       {tab("tables", "Tables", "/tables")}
       {tab("transfers", "Transfers", "/transfers")}
     </nav>

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { DEFAULT_FIXTURES_TIMEZONE } from "@rugby365/import-sdk";
 import { getFixtureDatesInRange } from "@/lib/planet-rugby-live-fixtures-service";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
@@ -32,9 +34,7 @@ export async function GET(req: Request) {
         dates,
       },
       {
-        headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
-        },
+        headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.fixturesMeta, 300),
       },
     );
   } catch (e) {
