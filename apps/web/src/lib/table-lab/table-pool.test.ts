@@ -46,6 +46,7 @@ describe("rugby world cup pools", () => {
         bonusPoints: 2,
         points: 18,
         form: "WWWWL",
+        teamImageUrl: "https://flagcdn.com/w40/fr.png",
       },
       {
         rank: 2,
@@ -65,6 +66,7 @@ describe("rugby world cup pools", () => {
     const poolA = groups.find((g) => g.id === "A");
     expect(poolA?.formSlots).toBe(4);
     expect(poolA?.rows[0]?.teamName).toBe("France");
+    expect(poolA?.rows[0]?.teamImageUrl).toBe("https://flagcdn.com/w40/fr.png");
     // Newest-first form WWWWL → LWWWW; keeping oldest 4 pool games drops the QF L → WWWW.
     expect(poolA?.rows[0]?.formSequence).toEqual(["W", "W", "W", "W"]);
     expect(poolA?.rows.some((r) => r.teamName === "Namibia")).toBe(true);

@@ -9,6 +9,7 @@ import type {
   CompetitionPlayerStatsPayload,
   HemisphereFilter,
 } from "@/lib/competition-player-leaderboards-service";
+import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
 
 const HEMISPHERE_OPTIONS: Array<{ value: HemisphereFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -116,7 +117,9 @@ export function CompetitionPlayerStatsClient({
     const params = new URLSearchParams({ limit: "15" });
     if (seasonLabel) params.set("season", seasonLabel);
     if (hemisphere !== "all") params.set("hemisphere", hemisphere);
-    const res = await fetch(`/api/competitions/by-slug/${slug}/player-stats?${params}`);
+    const res = await fetch(`/api/competitions/by-slug/${slug}/player-stats?${params}`, {
+      cache: "no-store",
+    });
     const json = (await res.json()) as CompetitionPlayerStatsPayload & { error?: string };
     if (!res.ok) {
       setError(json.error ?? "Failed to load player stats");
@@ -124,9 +127,15 @@ export function CompetitionPlayerStatsClient({
       setLoading(false);
       return;
     }
-    setData(json);
     if (json.seasons?.length) setSeasons(json.seasons);
-    if (json.season?.label && json.season.label !== seasonLabel) {
+    if (seasonLabel && !returnedSeasonMatchesRequest(seasonLabel, json.season)) {
+      setError("Failed to load player stats for this season");
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    setData(json);
+    if (!seasonLabel && json.season?.label) {
       setSeasonLabel(json.season.label);
     }
     const advancedPrimaryEmpty = (json.boards ?? [])
@@ -138,7 +147,8 @@ export function CompetitionPlayerStatsClient({
 
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      if (json.season?.label) url.searchParams.set("season", json.season.label);
+      const nextSeason = seasonLabel || json.season?.label;
+      if (nextSeason) url.searchParams.set("season", nextSeason);
       else url.searchParams.delete("season");
       if (hemisphere !== "all") url.searchParams.set("hemisphere", hemisphere);
       else url.searchParams.delete("hemisphere");

@@ -751,6 +751,7 @@ async function trySyncedStandings(
       bonusPoints: row.bonusPoints,
       leaguePoints: row.points,
       formSequence,
+      teamImageUrl: row.teamImageUrl ?? null,
     };
   });
   if (!isHealthyStandingsRows(mapped)) return null;

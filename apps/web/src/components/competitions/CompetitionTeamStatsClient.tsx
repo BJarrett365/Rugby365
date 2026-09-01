@@ -8,6 +8,7 @@ import type {
   CompetitionTeamLeaderboardBoard,
   CompetitionTeamStatsPayload,
 } from "@/lib/competition-team-leaderboards-service";
+import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
 
 const HEMISPHERE_OPTIONS: Array<{ value: HemisphereFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -96,10 +97,18 @@ export function CompetitionTeamStatsClient({
     const params = new URLSearchParams({ limit: "15" });
     if (seasonLabel) params.set("season", seasonLabel);
     if (hemisphere !== "all") params.set("hemisphere", hemisphere);
-    const res = await fetch(`/api/competitions/by-slug/${slug}/team-stats?${params}`);
+    const res = await fetch(`/api/competitions/by-slug/${slug}/team-stats?${params}`, {
+      cache: "no-store",
+    });
     const json = (await res.json()) as CompetitionTeamStatsPayload & { error?: string };
     if (!res.ok) {
       setError(json.error ?? "Failed to load team stats");
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    if (seasonLabel && !returnedSeasonMatchesRequest(seasonLabel, json.season)) {
+      setError("Failed to load team stats for this season");
       setData(null);
       setLoading(false);
       return;

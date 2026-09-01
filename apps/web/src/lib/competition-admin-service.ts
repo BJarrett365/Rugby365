@@ -746,6 +746,7 @@ export async function getSeasonStandings(seasonId: string, view: StandingView | 
       teamName: teams.name,
       teamSlug: teams.slug,
       teamShortName: teams.shortName,
+      teamImageUrl: teams.imageUrl,
     })
     .from(standingRows)
     .innerJoin(teams, eq(standingRows.teamId, teams.id))

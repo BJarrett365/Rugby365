@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/api-errors";
 import { getCompetitionRankingsBySlug } from "@/lib/competition-rankings-service";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -22,7 +24,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
         }),
     );
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.rankingsBoard, PUBLIC_CACHE_TTL.rankingsBoard * 2),
+    });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load competition rankings");
   }

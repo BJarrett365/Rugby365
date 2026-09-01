@@ -16,6 +16,7 @@ import {
   standingRowsToTableRows,
 } from "@/lib/table-lab/table-pool-shared";
 import type { RugbyTableResult } from "@/lib/table-lab/table-types";
+import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
 
 type View = "overall" | "home" | "away";
 
@@ -40,6 +41,7 @@ type Standing = {
   bonusPoints: number;
   points: number;
   form: string | null;
+  teamImageUrl?: string | null;
 };
 
 type PlayoffFixture = {
@@ -80,37 +82,58 @@ export function CompetitionTableClient({
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     const params = new URLSearchParams({ view });
     if (seasonLabel) params.set("season", seasonLabel);
+    const fetchOpts: RequestInit = { cache: "no-store" };
 
-    const liveRes = await fetch(`/api/competitions/by-slug/${slug}/live-table?${params}`);
-    const liveData = await liveRes.json();
+    try {
+      let liveRes: Response | null = null;
+      let liveData: {
+        season?: { label?: string; year?: number; originalLabel?: string };
+        seasons?: Season[];
+        competition?: { id?: string; name?: string };
+        result?: RugbyTableResult | null;
+        error?: string;
+      } = {};
+      try {
+        liveRes = await fetch(`/api/competitions/by-slug/${slug}/live-table?${params}`, {
+          ...fetchOpts,
+          signal: AbortSignal.timeout(12_000),
+        });
+        liveData = await liveRes.json();
+      } catch {
+        liveData = {};
+      }
+      const liveSeasonOk = returnedSeasonMatchesRequest(seasonLabel, liveData.season);
+      const liveHasRows = Boolean(
+        liveData.result?.poolGroups?.length ||
+          (Array.isArray(liveData.result?.rows) && liveData.result.rows.length > 0),
+      );
 
-    // Live-table path now dedupes fixtures / skips polluted synced rows.
-    if (
-      liveRes.ok &&
-      (liveData.result?.poolGroups?.length ||
-        (Array.isArray(liveData.result?.rows) && liveData.result.rows.length > 0))
-    ) {
-      setCompetitionId(liveData.competition?.id ?? "");
-      setCompetitionName(liveData.competition?.name ?? slug);
-      setSeasons(liveData.seasons ?? []);
-      if (!seasonLabel && liveData.season?.label) setSeasonLabel(liveData.season.label);
-      setLiveResult(liveData.result as RugbyTableResult);
-      setStandings([]);
-      setPlayoffFixtures([]);
-      setLoading(false);
-      return;
-    }
+      if (liveRes?.ok && liveSeasonOk && liveHasRows) {
+        setCompetitionId(liveData.competition?.id ?? "");
+        setCompetitionName(liveData.competition?.name ?? slug);
+        setSeasons(liveData.seasons ?? []);
+        if (!seasonLabel && liveData.season?.label) setSeasonLabel(liveData.season.label);
+        setLiveResult(liveData.result as RugbyTableResult);
+        setStandings([]);
+        setPlayoffFixtures([]);
+        return;
+      }
 
-    // Fallback to synced standings when live calc has no rows.
-    const res = await fetch(`/api/competitions/by-slug/${slug}/standings?${params}`);
-    const data = await res.json();
-    if (res.ok) {
+      const res = await fetch(`/api/competitions/by-slug/${slug}/standings?${params}`, fetchOpts);
+      const data = await res.json();
+      if (!res.ok || !returnedSeasonMatchesRequest(seasonLabel, data.season)) {
+        setSeasons(data.seasons ?? liveData.seasons ?? []);
+        setError(liveData.error ?? data.error ?? "Failed to load table");
+        setLiveResult(null);
+        setStandings([]);
+        return;
+      }
+
       setCompetitionId(data.competition?.id ?? "");
       setCompetitionName(data.competition?.name ?? slug);
-      setSeasons(data.seasons ?? []);
+      setSeasons(data.seasons ?? liveData.seasons ?? []);
       if (!seasonLabel && data.season?.label) setSeasonLabel(data.season.label);
       const nextStandings = (data.standings ?? []).map((r: Record<string, unknown>) => ({
         rank: r.rank as number,
@@ -124,9 +147,9 @@ export function CompetitionTableClient({
         bonusPoints: r.bonusPoints as number,
         points: r.points as number,
         form: (r.form as string | null) ?? null,
+        teamImageUrl: (r.teamImageUrl as string | null) ?? null,
       }));
 
-      // World Cup: always present pool tables even when falling back to synced standings.
       if (isRugbyWorldCupSlug(slug)) {
         const year = resolveRugbyWorldCupYear({
           seasonYear: data.season?.year,
@@ -134,16 +157,14 @@ export function CompetitionTableClient({
         });
         const pools = rugbyWorldCupPoolsForYear(year);
         if (pools.length) {
-          const poolGroups = splitRowsIntoWorldCupPools(
-            standingRowsToTableRows(nextStandings),
-            pools,
-          );
+          const tableRows = standingRowsToTableRows(nextStandings);
+          const poolGroups = splitRowsIntoWorldCupPools(tableRows, pools);
           setLiveResult({
             definition: { id: "live_table", name: "Live table", shortName: "Live" } as RugbyTableResult["definition"],
             available: true,
             confidence: "medium",
             dataCoveragePct: 100,
-            rows: standingRowsToTableRows(nextStandings),
+            rows: tableRows,
             poolGroups,
             formMatchCount: poolGroups[0]?.formSlots,
             warnings: [],
@@ -155,7 +176,6 @@ export function CompetitionTableClient({
           });
           setStandings([]);
           setPlayoffFixtures([]);
-          setLoading(false);
           return;
         }
       }
@@ -174,12 +194,13 @@ export function CompetitionTableClient({
           awayScore: row.awayScore as number,
         })),
       );
-    } else {
-      setError(liveData.error ?? data.error ?? "Failed to load table");
+    } catch {
+      setError("Failed to load table");
       setLiveResult(null);
       setStandings([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [slug, seasonLabel, view]);
 
   useEffect(() => {

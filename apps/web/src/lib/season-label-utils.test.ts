@@ -6,6 +6,7 @@ import {
   formatSeasonRangeLabel,
   normalizeSeasonLabel,
   parseSeasonStartYear,
+  returnedSeasonMatchesRequest,
   seasonStatusForStartYear,
 } from "./season-label-utils";
 
@@ -24,6 +25,18 @@ describe("season-label-utils", () => {
     expect(parseSeasonStartYear(null)).toBeNull();
     expect(parseSeasonStartYear(undefined)).toBeNull();
     expect(parseSeasonStartYear("")).toBeNull();
+  });
+
+  it("matches World Cup year queries to picker labels", () => {
+    expect(
+      returnedSeasonMatchesRequest("1987", { label: "1987", year: 1987, originalLabel: "1987–88" }),
+    ).toBe(true);
+    expect(
+      returnedSeasonMatchesRequest("1987", { label: "1987–88", year: 1987 }),
+    ).toBe(true);
+    expect(
+      returnedSeasonMatchesRequest("1987", { label: "2027", year: 2027, originalLabel: "2027–28" }),
+    ).toBe(false);
   });
 
   it("normalizes labels to 2025\u201326 format", () => {

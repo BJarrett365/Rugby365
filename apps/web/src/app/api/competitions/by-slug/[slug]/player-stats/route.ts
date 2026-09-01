@@ -4,6 +4,9 @@ import {
   getCompetitionPlayerStatsBySlug,
   type HemisphereFilter,
 } from "@/lib/competition-player-leaderboards-service";
+import { publicJsonCacheHeaders, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -23,7 +26,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       limit: Number.isFinite(limit) ? limit : undefined,
     });
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.competitionHub, PUBLIC_CACHE_TTL.competitionHub * 2),
+    });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load competition player stats");
   }

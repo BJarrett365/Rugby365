@@ -1,6 +1,8 @@
 "use client";
 
 import { FormDots } from "@/components/competitions/FormDots";
+import { TeamCrest } from "@/components/matches/TeamCrest";
+import { rankingCountryFlagUrl } from "@/lib/player-ranking-engine";
 import type {
   RugbyTableHemisphereGroup,
   RugbyTablePoolGroup,
@@ -101,6 +103,11 @@ function StandingsTable({
                     </td>
                   ) : null}
                   <td className="live-table__team">
+                    <TeamCrest
+                      name={row.teamName}
+                      imageUrl={row.teamImageUrl || rankingCountryFlagUrl(row.teamName)}
+                      size="xs"
+                    />
                     <span className="live-table__team-name">{row.teamName}</span>
                     <LiveScoreBadge row={row} />
                     {row.liveMatchClock ? (

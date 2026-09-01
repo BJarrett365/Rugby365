@@ -35,6 +35,7 @@ import {
   normalizeCompetitionStaffRankingTop,
   parseLastFiveFormBlocks,
 } from "@/lib/player-ranking-engine";
+import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
 
 type Tab = "players" | "teams" | "referees" | "coaches";
 
@@ -502,10 +503,18 @@ export function CompetitionRankingsClient({
     setError(null);
     const params = new URLSearchParams({ limit: String(top) });
     if (seasonLabel) params.set("season", seasonLabel);
-    const res = await fetch(`/api/competitions/by-slug/${slug}/rankings?${params}`);
+    const res = await fetch(`/api/competitions/by-slug/${slug}/rankings?${params}`, {
+      cache: "no-store",
+    });
     const json = (await res.json()) as CompetitionRankingsPayload & { error?: string };
     if (!res.ok) {
       setError(json.error ?? "Failed to load rankings");
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    if (seasonLabel && !returnedSeasonMatchesRequest(seasonLabel, json.season)) {
+      setError("Failed to load rankings for this season");
       setData(null);
       setLoading(false);
       return;

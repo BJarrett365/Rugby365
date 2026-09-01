@@ -15,7 +15,8 @@ import {
 } from "@/lib/table-lab/table-urc-pool-service";
 import type { RugbyTableView } from "@/lib/table-lab/table-types";
 import { urcCompetitionDisplayNameForYear } from "@/lib/urc-lineage";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
+import { attachTeamImagesToTableResult } from "@/lib/table-lab/table-team-images";
 
 function resolveSeasonId(
   seasons: Array<{ id: string; label: string; year: number; isActive: boolean }>,
@@ -34,9 +35,11 @@ function resolveSeasonId(
   return match?.id ?? seasons.find((s) => s.isActive)?.id ?? seasons[0]!.id;
 }
 
-function cacheControlForSeason(isActive: boolean | undefined): string {
+export const dynamic = "force-dynamic";
+
+function cacheControlForSeason(isActive: boolean | undefined): HeadersInit {
   const ttl = isActive ? PUBLIC_CACHE_TTL.competitionTableLive : PUBLIC_CACHE_TTL.competitionTableHistoric;
-  return `public, s-maxage=${ttl}, stale-while-revalidate=${ttl * 2}`;
+  return publicJsonCacheHeaders(ttl, ttl * 2);
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -110,7 +113,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
             seasons,
             season,
             view: viewParam === "home" || viewParam === "away" ? viewParam : "overall",
-            result: poolFast,
+            result: await attachTeamImagesToTableResult(poolFast),
           };
         }
       }
@@ -135,12 +138,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
         seasonYear: season?.year,
       });
 
+      const withImages = await attachTeamImagesToTableResult(enriched);
+
       return {
         competition: { id: competition.id, slug: competition.slug, name: displayName },
         seasons,
         season,
         view: viewParam === "home" || viewParam === "away" ? viewParam : "overall",
-        result: enriched,
+        result: withImages,
       };
     };
 
@@ -158,9 +163,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     if (!payload) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     return NextResponse.json(payload, {
-      headers: {
-        "Cache-Control": cacheControlForSeason(payload.season?.isActive),
-      },
+      headers: cacheControlForSeason(payload.season?.isActive),
     });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load live table");

@@ -81,6 +81,32 @@ export function parseSeasonStartYear(label: string | null | undefined): number |
   return null;
 }
 
+/** True when an API payload's season is the one the client asked for. */
+export function returnedSeasonMatchesRequest(
+  requested: string | null | undefined,
+  returned:
+    | {
+        label?: string | null;
+        year?: number | null;
+        displayLabel?: string | null;
+        originalLabel?: string | null;
+      }
+    | null
+    | undefined,
+): boolean {
+  if (!requested?.trim()) return true;
+  if (!returned) return false;
+  const req = requested.trim();
+  const candidates = [returned.label, returned.displayLabel, returned.originalLabel]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .map((value) => value.trim());
+  if (candidates.includes(req)) return true;
+  const reqNorm = req.replace(/\u2013/g, "-");
+  if (candidates.some((value) => value.replace(/\u2013/g, "-") === reqNorm)) return true;
+  const reqYear = parseSeasonStartYear(req);
+  return reqYear != null && returned.year === reqYear;
+}
+
 export function normalizeSeasonLabel(label: string): string | null {
   const startYear = parseSeasonStartYear(label);
   return startYear == null ? null : formatSeasonRangeLabel(startYear);

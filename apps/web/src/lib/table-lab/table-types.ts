@@ -79,6 +79,8 @@ export type RugbyTableStandingRow = {
   liveCurrentScore?: string | null;
   liveMatchClock?: string | null;
   liveStatus?: string | null;
+  /** Nation flag / club crest for public tables. */
+  teamImageUrl?: string | null;
 };
 
 export type RugbyTableView = "all" | "home" | "away" | "neutral";

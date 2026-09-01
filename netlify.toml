@@ -20,8 +20,14 @@
   package = "@netlify/plugin-nextjs"
 
 # Next plugin varies CDN cache on RSC keys only. Fixture APIs must vary on
-# date/start/end/year or every day serves today's empty schedule.
+# date/start/end/year or every day serves today's empty schedule. Competition
+# APIs must vary on season/view or 1987 tables get the 2027 payload.
 [[headers]]
   for = "/api/fixtures/*"
+  [headers.values]
+    Netlify-Vary = "query"
+
+[[headers]]
+  for = "/api/competitions/*"
   [headers.values]
     Netlify-Vary = "query"

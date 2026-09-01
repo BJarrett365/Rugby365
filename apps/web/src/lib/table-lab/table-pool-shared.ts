@@ -81,6 +81,7 @@ export function standingRowsToTableRows(
     bonusPoints: number;
     points: number;
     form: string | null;
+    teamImageUrl?: string | null;
   }>,
 ): RugbyTableStandingRow[] {
   return rows.map((row) => {
@@ -104,6 +105,7 @@ export function standingRowsToTableRows(
       bonusPoints: row.bonusPoints,
       leaguePoints: row.points,
       formSequence,
+      teamImageUrl: row.teamImageUrl ?? null,
     };
   });
 }

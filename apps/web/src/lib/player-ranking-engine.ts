@@ -687,6 +687,7 @@ export function rankingCountryFlagUrl(
   const name = usableRankingCountryName(countryName);
   const fromName = venueFlagIso(name);
   if (fromName) return flagUrlForVenue(fromName);
+  if (name && /ivory coast|c[oô]te d.?ivoire/i.test(name)) return flagUrlForVenue("ci");
   const rugbyIso3: Record<string, string> = {
     rsa: "za",
     nzl: "nz",

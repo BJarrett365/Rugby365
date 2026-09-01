@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCompetitionHubBySlug } from "@/lib/competition-admin-service";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { cachedPublic, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
@@ -17,9 +19,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     );
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": `public, s-maxage=${PUBLIC_CACHE_TTL.competitionHub}, stale-while-revalidate=${PUBLIC_CACHE_TTL.competitionHub * 2}`,
-      },
+      headers: publicJsonCacheHeaders(PUBLIC_CACHE_TTL.competitionHub, PUBLIC_CACHE_TTL.competitionHub * 2),
     });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load competition");

@@ -1,6 +1,8 @@
 "use client";
 
 import { FormDots } from "@/components/competitions/FormDots";
+import { TeamCrest } from "@/components/matches/TeamCrest";
+import { rankingCountryFlagUrl } from "@/lib/player-ranking-engine";
 import { parseStandingForm } from "@/lib/standing-form";
 
 type StandingRow = {
@@ -15,6 +17,7 @@ type StandingRow = {
   bonusPoints: number;
   points: number;
   form: string | null;
+  teamImageUrl?: string | null;
 };
 
 export function LeagueTable({
@@ -57,7 +60,16 @@ export function LeagueTable({
             return (
             <tr key={r.teamSlug} className="border-b border-zinc-800/60">
               <td className="py-2.5 pr-2 font-mono text-zinc-500">{r.rank}</td>
-              <td className="py-2.5 pr-3 font-medium text-zinc-100">{r.teamName}</td>
+              <td className="py-2.5 pr-3 font-medium text-zinc-100">
+                <span className="inline-flex items-center gap-2">
+                  <TeamCrest
+                    name={r.teamName}
+                    imageUrl={r.teamImageUrl || rankingCountryFlagUrl(r.teamName)}
+                    size="xs"
+                  />
+                  {r.teamName}
+                </span>
+              </td>
               {showForm && !compact && (
                 <td className="py-2.5 pr-3">
                   <FormDots form={r.form} slots={5} pad />
