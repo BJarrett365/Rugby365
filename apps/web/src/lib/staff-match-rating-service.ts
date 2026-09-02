@@ -30,6 +30,7 @@ import {
   REFEREE_MATCH_RATING_MODEL,
   computeCoachMatchRating,
   computeRefereeMatchRating,
+  shouldFillCurrentCoachesForKickoff,
   staffPerformanceTrend,
   type StaffMatchSide,
 } from "./staff-match-rating-math";
@@ -295,7 +296,10 @@ export async function ensureMissingFixtureStaffMatchRatings(fixtureId: string): 
   triggered: boolean;
 }> {
   const db = getDb();
-  await ensureFixtureStaffLinks(fixtureId);
+  const [existing] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  await ensureFixtureStaffLinks(fixtureId, {
+    fillCurrentCoaches: shouldFillCurrentCoachesForKickoff(existing?.kickoffAt),
+  });
   const [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
   if (!fixture || !isFixtureRatingsPublished(fixture.status)) {
     return { coachesCalculated: 0, refereeCalculated: 0, triggered: false };

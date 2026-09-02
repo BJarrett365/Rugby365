@@ -321,6 +321,7 @@ export function PublicPlayerRankingsBoardView({
                         movement={row.movement}
                         previousRank={row.previousRank}
                         movementDelta={row.movementDelta ?? null}
+                        retired={row.retired}
                       />
                     </td>
                   </tr>

@@ -986,7 +986,29 @@ const RANKING_CLUB_CREST_ALIASES: Record<string, string> = {
   "fc grenoble": "grenoble",
   "ca brive": "brive",
   "fc lourdes": "lourdes",
-  "cardiff rfc": "cardiff",
+  "asm clermont auvergne": "clermont",
+  "clermont auvergne": "clermont",
+  "cardiff rfc": "cardiff rugby",
+  cardiff: "cardiff rugby",
+  "cardiff blues": "cardiff rugby",
+  "stade francais paris": "stade francais",
+  "usa perpignan": "perpignan",
+  "exeter chiefs": "exeter chiefs",
+  "bristol bears": "bristol",
+  "aviron bayonnais": "bayonne",
+  bayonnais: "bayonne",
+  "as beziers herault": "beziers",
+  "us dax": "dax",
+  "us colomiers": "colomiers",
+  "newport gwent dragons": "dragons",
+  "newport rfc": "dragons",
+  "celtic warriors": "celtic warriors",
+  "pontypridd rfc": "pontypridd",
+  "south wales police rfc": "south wales police",
+  "golden lions": "golden lions",
+  "northern transvaal": "bulls",
+  "blue bulls": "bulls",
+  "western province": "stormers",
   "llanelli rfc": "llanelli",
   llanelli: "scarlets",
   "swansea rfc": "swansea",
@@ -997,6 +1019,32 @@ const RANKING_CLUB_CREST_ALIASES: Record<string, string> = {
   "su agen lot-et-garonne": "agen",
   "cs bourgoin-jallieu": "bourgoin",
   "tarbes pyrenees rugby": "tarbes",
+  rfu: "rugby football union",
+  irfu: "irish rugby football union",
+  ffr: "france",
+  wru: "wales",
+  sru: "scotland",
+  "sa rugby": "south africa",
+  "new zealand rugby": "new zealand",
+  "rugby australia": "australia",
+  "georgia rugby union": "georgia",
+  jrfu: "japan",
+  uar: "argentina",
+  "usa rugby": "united states",
+  "fiji rugby": "fiji",
+  "samoa rugby": "samoa",
+  "rugby canada": "canada",
+  "korea rugby": "south korea",
+  "free state": "free state cheetahs",
+  "london wasps": "wasps",
+  "sundays well": "sundays well rfc",
+  "old patesians": "old patesians rfc",
+  jiki: "rc jiki",
+  "queensland reds": "reds",
+  "bruff r.f.c.": "bruff",
+  "kwazulu natal": "sharks",
+  "kwa zulu natal": "sharks",
+  "gloucestershire rfu": "gloucestershire",
 };
 
 const RANKING_CLUB_GENERIC_WORDS = new Set([
@@ -1033,6 +1081,9 @@ export function isGarbageRankingClubTeam(name: string, slug: string): boolean {
   if (slug.length > 80) return true;
   if (/\d{4}\s+\d{2}\s+\d{2}/.test(name)) return true;
   if (/\d{4}\s+\d{2}\s+\d{2}/.test(slug.replace(/-/g, " "))) return true;
+  if (/\b(head of|director of|elite player|player development|performance director)\b/i.test(name)) {
+    return true;
+  }
   return false;
 }
 
@@ -1077,7 +1128,12 @@ export function pickRankingClubCrest(
       const keyWords = key.split(" ").filter(Boolean);
       let next = 0;
       if (name === key) next = 100;
-      else if (key.startsWith(`${name} `) || name.startsWith(`${key} `)) next = 80;
+      else if (
+        key.length >= 5 &&
+        (key.startsWith(`${name} `) || name.startsWith(`${key} `))
+      ) {
+        next = 80;
+      }
       else if (name.split(" ").length >= 2 && key.includes(name)) next = 70;
       else if (keyWords.length >= 2 && name.includes(key)) next = 65;
       else {
@@ -1113,6 +1169,33 @@ export function pickRankingClubCrest(
   );
   const hit = pool[0];
   return hit ? { slug: hit.slug, imageUrl: hit.imageUrl } : null;
+}
+
+/** True when a URL is a badge/crest, not a ground photo or person shot. */
+export function looksLikeCrestAssetUrl(url: string | null | undefined): boolean {
+  if (!url?.trim()) return false;
+  const u = url.toLowerCase();
+  if (/wiktionary|commons-logo|wikipedia-logo|house|portrait|headshot|\/players?\//.test(u)) {
+    return false;
+  }
+  if (/cloudfront|rugbyunion\/teams|crest-references/.test(u)) return true;
+  if (/logo|crest|badge|shield|emblem/.test(u)) return true;
+  return /\.svg($|\?)/i.test(url);
+}
+
+/**
+ * Club images on the Players board should keep stored team artwork.
+ * Only referee union matching uses the stricter crest-asset check.
+ */
+export function usableRankingClubImageUrl(
+  url: string | null | undefined,
+  options?: { strictCrest?: boolean },
+): string | null {
+  if (!url?.trim()) return null;
+  if (options?.strictCrest) return looksLikeCrestAssetUrl(url) ? url : null;
+  const u = url.toLowerCase();
+  if (/wiktionary|commons-logo|wikipedia-logo|headshot|portrait|\/players?\//.test(u)) return null;
+  return url;
 }
 
 export function pickCareerClubName(

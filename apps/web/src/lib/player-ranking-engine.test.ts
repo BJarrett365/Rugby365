@@ -19,6 +19,8 @@ import {
   isEligibleForCurrentRanking,
   pickCareerClubName,
   pickRankingClubCrest,
+  looksLikeCrestAssetUrl,
+  usableRankingClubImageUrl,
   pluralizePositionLabel,
   rankPlayerInCohort,
   resolveRankingPoolStatus,
@@ -376,5 +378,32 @@ describe("player-ranking-engine", () => {
       ...catalog,
       { name: "Panasonic Wild Knights", slug: "panasonic-wild-knights", imageUrl: "https://cdn.example/knights.png" },
     ])?.imageUrl).toContain("knights.png");
+    expect(
+      pickRankingClubCrest("RFU", [
+        ...catalog,
+        { name: "RFU Head of Elite Player Development", slug: "rfu-head-of-elite-player-development", imageUrl: null },
+        { name: "Rugby Football Union", slug: "rugby-football-union", imageUrl: "https://cdn.example/rfu.png" },
+      ])?.imageUrl,
+    ).toContain("rfu.png");
+    expect(
+      pickRankingClubCrest("Sundays Well", [
+        ...catalog,
+        { name: "Sundays Well RFC", slug: "sundays-well-rfc", imageUrl: "https://cdn.example/sw.png" },
+      ])?.imageUrl,
+    ).toContain("sw.png");
+    expect(looksLikeCrestAssetUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Sundays_Well_houses.jpg")).toBe(
+      false,
+    );
+    expect(looksLikeCrestAssetUrl("https://upload.wikimedia.org/wikipedia/en/thumb/c/ca/Irish_Rugby_Football_Union_logo.svg")).toBe(
+      true,
+    );
+    expect(
+      usableRankingClubImageUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Suntory_Sungoliath.jpg"),
+    ).toContain("Suntory_Sungoliath");
+    expect(
+      usableRankingClubImageUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Suntory_Sungoliath.jpg", {
+        strictCrest: true,
+      }),
+    ).toBeNull();
   });
 });

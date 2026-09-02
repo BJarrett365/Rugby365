@@ -214,6 +214,16 @@ export function foldRefereeIdentity(name: string): string {
   return foldPersonKey(stripped).replace(/^matt /, "matthew ");
 }
 
+/** Drop union/nation suffixes Wikipedia left on appointed-official names. */
+export function cleanRankingRefereeName(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return raw
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s*\((?:RFU|IRFU|WRU|SRU|FFR|FIR|UAR|JRFU|England|Ireland|Wales|Scotland|France|Italy|New Zealand|Australia|South Africa|Argentina|Georgia|Japan|USA|United States|Canada|Samoa|Fiji|Namibia|Uruguay|Korea|South Korea)\)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const REFEREE_NATIONALITY_FALLBACK: Record<string, string> = {
   "wayne barnes": "England",
   "luke pearce": "England",
@@ -222,45 +232,93 @@ const REFEREE_NATIONALITY_FALLBACK: Record<string, string> = {
   "chris white": "England",
   "tony spreadbury": "England",
   "steve lander": "England",
+  "ed morrison": "England",
+  "fred howard": "England",
+  "roger quittenton": "England",
+  "brian campsall": "England",
+  "dave pearson": "England",
   "ben okeeffe": "New Zealand",
   "ben o'keeffe": "New Zealand",
   "paul williams": "New Zealand",
   "glen jackson": "New Zealand",
   "steve walsh": "New Zealand",
+  "dave bishop": "New Zealand",
+  "keith lawrence": "New Zealand",
+  "colin hawke": "New Zealand",
+  "paddy obrien": "New Zealand",
+  "paul honiss": "New Zealand",
+  "kelvin deaker": "New Zealand",
+  "bryce lawrence": "New Zealand",
+  "chris pollock": "New Zealand",
   "andrew brace": "Ireland",
   "alain rolland": "Ireland",
   "george clancy": "Ireland",
   "donal courtney": "Ireland",
   "john lacey": "Ireland",
+  "david burnett": "Ireland",
+  "stephen hilditch": "Ireland",
+  "owen doyle": "Ireland",
+  "david mchugh": "Ireland",
+  "alan lewis": "Ireland",
   "jaco peyper": "South Africa",
   "craig joubert": "South Africa",
   "jonathan kaplan": "South Africa",
   "andre watson": "South Africa",
+  "ian rogers": "South Africa",
+  "stef neethling": "South Africa",
+  "marius jonker": "South Africa",
   "angus gardner": "Australia",
   "nic berry": "Australia",
   "stuart dickinson": "Australia",
+  "kerry fitzgerald": "Australia",
+  "robert fordham": "Australia",
+  "wayne erickson": "Australia",
+  "andrew cole": "Australia",
+  "peter marshall": "Australia",
+  "alexander macneill": "Australia",
+  "sandy macneill": "Australia",
+  "barry leask": "Australia",
   "mathieu raynal": "France",
   "romain poite": "France",
   "joel jyhaud": "France",
   "joel jutge": "France",
+  "joel dume": "France",
+  "jerome garces": "France",
+  "pascal gauzere": "France",
+  "guy maurette": "France",
+  "rene hourquet": "France",
+  "patrick robin": "France",
   "nigel owens": "Wales",
   "nigel whitehouse": "Wales",
   "derek bevan": "Wales",
+  "clive norling": "Wales",
+  "les peard": "Wales",
+  "clayton thomas": "Wales",
+  "nigel williams": "Wales",
   "nika amashukeli": "Georgia",
   "mike adamson": "Scotland",
   "ian ramage": "Scotland",
   "jim fleming": "Scotland",
-  "jerome garces": "France",
-  "pascal gauzere": "France",
-  "chris pollock": "New Zealand",
+  "brian anderson": "Scotland",
+  "ken mccartney": "Scotland",
   "jp doyle": "England",
   "j p doyle": "England",
+  "don reordan": "United States",
+  "efrahim sklar": "Argentina",
+  "efraim sklar": "Argentina",
+  "pablo de luca": "Argentina",
+  "liakini colati": "Fiji",
+  "felise vito": "Samoa",
+  "george gadjovich": "Canada",
+  "han moon-soo": "South Korea",
+  "han moon soo": "South Korea",
+  "naoki saito": "Japan",
 };
 
 export function refereeNationalityFallback(name: string | null | undefined): string | null {
   if (!name?.trim()) return null;
-  const key = foldPersonKey(name);
-  return REFEREE_NATIONALITY_FALLBACK[key] ?? null;
+  const identity = foldRefereeIdentity(name);
+  return REFEREE_NATIONALITY_FALLBACK[identity] ?? REFEREE_NATIONALITY_FALLBACK[foldPersonKey(name)] ?? null;
 }
 
 export type RefereeClubSet = {
@@ -269,34 +327,140 @@ export type RefereeClubSet = {
 };
 
 const REFEREE_CLUB_FALLBACK: Record<string, RefereeClubSet> = {
-  "wayne barnes": { lastClub: "Old Patesians", clubs: ["Old Patesians", "Gloucestershire RFU"] },
+  "wayne barnes": { lastClub: "Old Patesians", clubs: ["Old Patesians", "Gloucestershire RFU", "RFU"] },
   "luke pearce": { lastClub: "RFU", clubs: ["RFU"] },
   "matthew carley": { lastClub: "RFU", clubs: ["RFU"] },
   "karl dickson": { lastClub: "Harlequins", clubs: ["Harlequins", "RFU"] },
+  "chris white": { lastClub: "RFU", clubs: ["RFU"] },
+  "tony spreadbury": { lastClub: "RFU", clubs: ["RFU"] },
+  "steve lander": { lastClub: "RFU", clubs: ["RFU"] },
+  "ed morrison": { lastClub: "RFU", clubs: ["RFU"] },
+  "fred howard": { lastClub: "RFU", clubs: ["RFU"] },
+  "roger quittenton": { lastClub: "RFU", clubs: ["RFU"] },
+  "brian campsall": { lastClub: "RFU", clubs: ["RFU"] },
+  "dave pearson": { lastClub: "RFU", clubs: ["RFU"] },
+  "jp doyle": { lastClub: "RFU", clubs: ["RFU"] },
   "ben okeeffe": { lastClub: "Bay of Plenty", clubs: ["Bay of Plenty", "New Zealand Rugby"] },
   "paul williams": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "glen jackson": { lastClub: "Bay of Plenty", clubs: ["Bay of Plenty", "New Zealand Rugby"] },
+  "steve walsh": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "dave bishop": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "keith lawrence": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "colin hawke": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "paddy obrien": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "paul honiss": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "kelvin deaker": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "bryce lawrence": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "chris pollock": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
   "andrew brace": { lastClub: "Sundays Well", clubs: ["Sundays Well", "IRFU"] },
+  "alain rolland": { lastClub: "Blackrock", clubs: ["Blackrock", "Moseley", "IRFU"] },
+  "george clancy": { lastClub: "Bruff RFC", clubs: ["Bruff RFC", "IRFU"] },
+  "john lacey": { lastClub: "Shannon", clubs: ["Clanwilliam", "Sundays Well", "Shannon", "IRFU"] },
+  "david burnett": { lastClub: "IRFU", clubs: ["IRFU"] },
+  "stephen hilditch": { lastClub: "IRFU", clubs: ["IRFU"] },
+  "owen doyle": { lastClub: "IRFU", clubs: ["IRFU"] },
+  "david mchugh": { lastClub: "IRFU", clubs: ["IRFU"] },
+  "alan lewis": { lastClub: "Wanderers", clubs: ["Wanderers", "IRFU"] },
   "jaco peyper": { lastClub: "Free State", clubs: ["Free State", "SA Rugby"] },
+  "craig joubert": { lastClub: "KwaZulu-Natal", clubs: ["KwaZulu-Natal", "SA Rugby"] },
+  "jonathan kaplan": { lastClub: "SA Rugby", clubs: ["SA Rugby"] },
+  "andre watson": { lastClub: "SA Rugby", clubs: ["SA Rugby"] },
+  "ian rogers": { lastClub: "SA Rugby", clubs: ["SA Rugby"] },
+  "stef neethling": { lastClub: "SA Rugby", clubs: ["SA Rugby"] },
+  "marius jonker": { lastClub: "SA Rugby", clubs: ["SA Rugby"] },
   "angus gardner": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
   "nic berry": { lastClub: "Queensland Reds", clubs: ["Queensland Reds", "Rugby Australia"] },
+  "stuart dickinson": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "kerry fitzgerald": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "robert fordham": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "wayne erickson": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "andrew cole": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "peter marshall": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "alexander macneill": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
+  "barry leask": { lastClub: "Rugby Australia", clubs: ["Rugby Australia"] },
   "mathieu raynal": { lastClub: "FFR", clubs: ["FFR"] },
-  "nika amashukeli": { lastClub: "Georgia Rugby Union", clubs: ["Georgia Rugby Union"] },
-  "nigel owens": { lastClub: "WRU", clubs: ["WRU"] },
-  "craig joubert": { lastClub: "KwaZulu-Natal", clubs: ["KwaZulu-Natal", "SA Rugby"] },
-  "alain rolland": { lastClub: "IRFU", clubs: ["IRFU"] },
-  "george clancy": { lastClub: "IRFU", clubs: ["IRFU"] },
   "romain poite": { lastClub: "FFR", clubs: ["FFR"] },
-  "glen jackson": { lastClub: "Bay of Plenty", clubs: ["Bay of Plenty", "New Zealand Rugby"] },
+  "joel jutge": { lastClub: "FFR", clubs: ["FFR"] },
+  "joel dume": { lastClub: "FFR", clubs: ["FFR"] },
   "jerome garces": { lastClub: "FFR", clubs: ["FFR"] },
   "pascal gauzere": { lastClub: "FFR", clubs: ["FFR"] },
-  "john lacey": { lastClub: "IRFU", clubs: ["IRFU"] },
-  "chris pollock": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
-  "jp doyle": { lastClub: "RFU", clubs: ["RFU"] },
+  "guy maurette": { lastClub: "FFR", clubs: ["FFR"] },
+  "rene hourquet": { lastClub: "FFR", clubs: ["FFR"] },
+  "patrick robin": { lastClub: "FFR", clubs: ["FFR"] },
+  "nika amashukeli": { lastClub: "Georgia Rugby Union", clubs: ["Georgia Rugby Union"] },
+  "nigel owens": { lastClub: "WRU", clubs: ["WRU"] },
+  "derek bevan": { lastClub: "WRU", clubs: ["WRU"] },
+  "clive norling": { lastClub: "WRU", clubs: ["WRU"] },
+  "les peard": { lastClub: "WRU", clubs: ["WRU"] },
+  "clayton thomas": { lastClub: "WRU", clubs: ["WRU"] },
+  "nigel williams": { lastClub: "WRU", clubs: ["WRU"] },
+  "jim fleming": { lastClub: "SRU", clubs: ["SRU"] },
+  "brian anderson": { lastClub: "SRU", clubs: ["SRU"] },
+  "ken mccartney": { lastClub: "SRU", clubs: ["SRU"] },
+  "don reordan": { lastClub: "USA Rugby", clubs: ["USA Rugby"] },
+  "efrahim sklar": { lastClub: "UAR", clubs: ["UAR"] },
+  "pablo de luca": { lastClub: "UAR", clubs: ["UAR"] },
+  "liakini colati": { lastClub: "Fiji Rugby", clubs: ["Fiji Rugby"] },
+  "felise vito": { lastClub: "Samoa Rugby", clubs: ["Samoa Rugby"] },
+  "george gadjovich": { lastClub: "Rugby Canada", clubs: ["Rugby Canada"] },
+  "han moon-soo": { lastClub: "Korea Rugby", clubs: ["Korea Rugby"] },
+  "naoki saito": { lastClub: "JRFU", clubs: ["JRFU"] },
 };
+
+const FOOTBALL_CLUB_KEYS = new Set([
+  "arsenal",
+  "manchester united",
+  "manchester city",
+  "chelsea",
+  "liverpool",
+  "tottenham",
+  "newcastle united",
+  "blackburn rovers",
+  "nottingham forest",
+  "sunderland",
+  "portsmouth",
+  "fulham",
+  "burnley",
+  "birmingham city",
+  "bristol city",
+  "preston north end",
+  "oldham athletic",
+  "bradford city",
+  "swindon town",
+  "bolton wanderers",
+  "hibernian",
+  "celtic",
+  "rangers",
+  "shelbourne",
+  "shamrock rovers",
+  "sligo rovers",
+  "st patricks athletic",
+  "chesterfield",
+  "cardiff city",
+]);
+
+export function isGarbageRefereeClubName(name: string | null | undefined): boolean {
+  const cleaned = name?.replace(/\s+/g, " ").trim() ?? "";
+  if (!cleaned) return true;
+  if (/[|=]/.test(cleaned)) return true;
+  if (/^→/.test(cleaned) || /\bloan\b/i.test(cleaned)) return true;
+  if (/\b(caps\d*|goals\d*|youthyears\d*|youthclubs\d*)\b/i.test(cleaned)) return true;
+  return FOOTBALL_CLUB_KEYS.has(foldRankingClubKey(cleaned)) || /aer lingus|british airways/i.test(cleaned);
+}
+
+export function sanitizeRefereeClubSet(
+  set: RefereeClubSet | null | undefined,
+): RefereeClubSet | null {
+  if (!set) return null;
+  const merged = mergeRefereeClubs(set);
+  if (!merged.lastClub && !merged.clubs.length) return null;
+  return merged;
+}
 
 export function refereeClubFallback(name: string | null | undefined): RefereeClubSet | null {
   if (!name?.trim()) return null;
-  return REFEREE_CLUB_FALLBACK[foldPersonKey(name)] ?? null;
+  const identity = foldRefereeIdentity(name);
+  return REFEREE_CLUB_FALLBACK[identity] ?? REFEREE_CLUB_FALLBACK[foldPersonKey(name)] ?? null;
 }
 
 export function mergeRefereeClubs(
@@ -306,7 +470,7 @@ export function mergeRefereeClubs(
   const seen = new Set<string>();
   const push = (raw: string | null | undefined) => {
     const name = raw?.replace(/\s+/g, " ").trim();
-    if (!name) return;
+    if (!name || isGarbageRefereeClubName(name)) return;
     const key = foldPersonKey(name);
     if (!key || seen.has(key)) return;
     seen.add(key);
@@ -317,7 +481,9 @@ export function mergeRefereeClubs(
     if (!set) continue;
     for (const club of set.clubs) push(club);
     push(set.lastClub);
-    if (set.lastClub?.trim()) lastClub = set.lastClub.replace(/\s+/g, " ").trim();
+    if (set.lastClub?.trim() && !isGarbageRefereeClubName(set.lastClub)) {
+      lastClub = set.lastClub.replace(/\s+/g, " ").trim();
+    }
   }
   if (lastClub) {
     const lastKey = foldPersonKey(lastClub);
@@ -327,6 +493,19 @@ export function mergeRefereeClubs(
     };
   }
   return { lastClub: clubs[0] ?? null, clubs };
+}
+
+export function preferClubWithCrest(
+  set: RefereeClubSet,
+  hasCrest: (name: string) => boolean,
+): RefereeClubSet {
+  if (set.lastClub && hasCrest(set.lastClub)) return set;
+  const crested = set.clubs.find((name) => hasCrest(name));
+  if (!crested) return set;
+  return {
+    lastClub: crested,
+    clubs: [crested, ...set.clubs.filter((name) => foldPersonKey(name) !== foldPersonKey(crested))],
+  };
 }
 
 export type RefereeAppointmentClubHit = {
@@ -400,26 +579,44 @@ const RETIRED_REFEREE_KEYS = new Set([
   "romain poite",
   "joel jutge",
   "joel jyhaud",
+  "joel dume",
   "george clancy",
   "donal courtney",
   "john lacey",
   "ian ramage",
   "jim fleming",
+  "ed morrison",
+  "clive norling",
+  "kerry fitzgerald",
+  "dave bishop",
+  "owen doyle",
+  "stephen hilditch",
+  "jerome garces",
+  "pascal gauzere",
+  "glen jackson",
+  "jp doyle",
+  "chris pollock",
 ]);
+
+export function rankingCareerStatusFromSocial(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const status = (raw as { rankingCareerStatus?: unknown }).rankingCareerStatus;
+  if (typeof status !== "string" || !status.trim()) return null;
+  return status.trim().toLowerCase();
+}
 
 export function isRankingRetired(input: {
   careerStatus?: string | null;
   name?: string | null;
-  seasonYear?: number | null;
 }): boolean {
   const status = (input.careerStatus ?? "").trim().toLowerCase();
-  if (status === "retired" || status === "legend" || status === "deceased" || status === "inactive") {
+  // "legend" is an editorial honour for current and former players (Kolisi, Etzebeth).
+  // Only persist RETIRED when the person has actually stopped.
+  if (status === "retired" || status === "deceased" || status === "inactive") {
     return true;
   }
   if (/\bretired\b/i.test(input.name ?? "")) return true;
-  if (input.name && RETIRED_REFEREE_KEYS.has(foldPersonKey(input.name))) return true;
-  // World Cup archives through 2011 are historical — those players/refs are retired now.
-  if (input.seasonYear != null && input.seasonYear <= 2011) return true;
+  if (input.name && RETIRED_REFEREE_KEYS.has(foldRefereeIdentity(input.name))) return true;
   return false;
 }
 

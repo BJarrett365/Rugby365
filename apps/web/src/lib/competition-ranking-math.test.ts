@@ -15,6 +15,12 @@ import {
   collectRefereeAppointmentClubs,
   foldRefereeIdentity,
   isUnknownRankingOfficial,
+  cleanRankingRefereeName,
+  isGarbageRefereeClubName,
+  sanitizeRefereeClubSet,
+  refereeNationalityFallback,
+  refereeClubFallback,
+  preferClubWithCrest,
 } from "./competition-ranking-math";
 
 describe("rating10To100", () => {
@@ -114,14 +120,16 @@ describe("countryFromWikipediaExtract", () => {
 });
 
 describe("isRankingRetired", () => {
-  it("flags retired and legend career status", () => {
+  it("flags stored retired status, not editorial legends who still play", () => {
     expect(isRankingRetired({ careerStatus: "retired", name: "John Smit" })).toBe(true);
-    expect(isRankingRetired({ careerStatus: "legend", name: "John Smit" })).toBe(true);
-    expect(isRankingRetired({ careerStatus: "active", name: "John Smit" })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "legend", name: "Siya Kolisi" })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "active", name: "Antoine Dupont" })).toBe(false);
     expect(isRankingRetired({ careerStatus: "active", name: "John Smit retired" })).toBe(true);
     expect(isRankingRetired({ name: "Wayne Barnes" })).toBe(true);
-    expect(isRankingRetired({ name: "Andrew Brace", seasonYear: 2023 })).toBe(false);
-    expect(isRankingRetired({ careerStatus: "active", name: "John Kirwan", seasonYear: 1987 })).toBe(true);
+    expect(isRankingRetired({ name: "Andrew Brace" })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "active", name: "John Kirwan" })).toBe(false);
+    expect(isRankingRetired({ careerStatus: "retired", name: "John Kirwan" })).toBe(true);
+    expect(isRankingRetired({ careerStatus: "deceased", name: "Jonah Lomu" })).toBe(true);
   });
 });
 
@@ -179,12 +187,53 @@ describe("foldRefereeIdentity", () => {
     expect(foldRefereeIdentity("Matthew Carley (England)")).toBe("matthew carley");
     expect(foldRefereeIdentity("Matt Carley")).toBe("matthew carley");
   });
+
+  it("strips union suffixes from appointed-official names", () => {
+    expect(cleanRankingRefereeName("Joël Dume (France)")).toBe("Joël Dume");
+    expect(cleanRankingRefereeName("Matthew Carley (RFU)")).toBe("Matthew Carley");
+  });
 });
 
 describe("isUnknownRankingOfficial", () => {
   it("drops placeholder referee rows", () => {
     expect(isUnknownRankingOfficial("Referee Unknown")).toBe(true);
     expect(isUnknownRankingOfficial("Wayne Barnes")).toBe(false);
+  });
+});
+
+describe("referee archive identity", () => {
+  it("maps historical World Cup officials to the correct nation and club", () => {
+    expect(refereeNationalityFallback("Stephen Hilditch")).toBe("Ireland");
+    expect(refereeNationalityFallback("Joël Dume (France)")).toBe("France");
+    expect(refereeNationalityFallback("Jonathan Kaplan")).toBe("South Africa");
+    expect(refereeNationalityFallback("Luke Pearce")).toBe("England");
+    expect(refereeClubFallback("Andrew Brace")?.lastClub).toBe("Sundays Well");
+    expect(refereeClubFallback("Wayne Barnes")?.lastClub).toBe("Old Patesians");
+    expect(refereeClubFallback("Kerry Fitzgerald")?.lastClub).toBe("Rugby Australia");
+    expect(refereeNationalityFallback("Barry Leask")).toBe("Australia");
+  });
+
+  it("drops footballer Wikipedia leftovers from referee clubs", () => {
+    expect(isGarbageRefereeClubName("Arsenal |caps1 = 1 |goals1 = 0")).toBe(true);
+    expect(isGarbageRefereeClubName("Manchester United")).toBe(true);
+    expect(isGarbageRefereeClubName("Sundays Well")).toBe(false);
+    expect(
+      sanitizeRefereeClubSet({
+        lastClub: "| youthyears1 = 1988–1989 |youthclubs1 = Arsenal",
+        clubs: ["Arsenal |caps1 = 1 |goals1 = 0", "Sundays Well"],
+      }),
+    ).toEqual({ lastClub: "Sundays Well", clubs: ["Sundays Well"] });
+  });
+});
+
+describe("preferClubWithCrest", () => {
+  it("promotes a badged club when last club has no crest", () => {
+    expect(
+      preferClubWithCrest(
+        { lastClub: "Old Patesians", clubs: ["Old Patesians", "Gloucestershire RFU", "RFU"] },
+        (name) => name === "RFU",
+      ),
+    ).toEqual({ lastClub: "RFU", clubs: ["RFU", "Old Patesians", "Gloucestershire RFU"] });
   });
 });
 
@@ -203,6 +252,32 @@ describe("parseRefereeClubsFromWikitext", () => {
       lastClub: "Old Patesians",
       clubs: ["Old Patesians", "Gloucestershire RFU"],
     });
+  });
+
+  it("rejects association-football infoboxes", async () => {
+    const { parseRefereeClubsFromWikitext, isRugbyRefereeExtract, wikipediaTitleCandidates } =
+      await import("./wikipedia-page-image");
+    expect(
+      parseRefereeClubsFromWikitext(`{{Infobox football biography
+| clubs1 = [[Arsenal F.C.|Arsenal]]
+| caps1 = 1
+| goals1 = 0
+| clubs2 = [[Manchester United F.C.|Manchester United]]
+}}`),
+    ).toEqual({ lastClub: null, clubs: [] });
+    expect(
+      isRugbyRefereeExtract(
+        "Andrew Cole is an English former professional footballer who played as a striker.",
+      ),
+    ).toBe(false);
+    expect(
+      isRugbyRefereeExtract(
+        "Wayne Barnes (born 20 April 1979) is an English former international rugby union referee.",
+      ),
+    ).toBe(true);
+    expect(wikipediaTitleCandidates("Owen Doyle", "referee")[0]).toBe("Owen Doyle (rugby union)");
+    expect(wikipediaTitleCandidates("Tomas Francis", "player")[0]).toBe("Tomas Francis");
+    expect(wikipediaTitleCandidates("Jonathan Davies", "player")[0]).toBe("Jonathan Davies (rugby union)");
   });
 });
 

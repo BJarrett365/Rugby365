@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeCoachMatchRating,
   computeRefereeMatchRating,
+  shouldFillCurrentCoachesForKickoff,
   staffPerformanceTrend,
 } from "./staff-match-rating-math";
 
@@ -60,5 +61,15 @@ describe("staffPerformanceTrend", () => {
 
   it("detects upward movement", () => {
     expect(staffPerformanceTrend(6.5, 7.2)).toEqual({ trend: "up", change: 0.7 });
+  });
+});
+
+describe("shouldFillCurrentCoachesForKickoff", () => {
+  it("fills recent fixtures and skips archive World Cups", () => {
+    const now = new Date("2026-09-02T12:00:00Z");
+    expect(shouldFillCurrentCoachesForKickoff(new Date("2026-08-01T12:00:00Z"), now)).toBe(true);
+    expect(shouldFillCurrentCoachesForKickoff(new Date("1987-06-20T12:00:00Z"), now)).toBe(false);
+    expect(shouldFillCurrentCoachesForKickoff(new Date("2023-10-28T12:00:00Z"), now)).toBe(false);
+    expect(shouldFillCurrentCoachesForKickoff(null, now)).toBe(false);
   });
 });

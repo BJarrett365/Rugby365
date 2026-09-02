@@ -237,12 +237,24 @@ export function MovementCell({
   movement,
   previousRank,
   movementDelta,
+  retired,
 }: {
   rank?: number | null;
   movement: "up" | "down" | "flat" | null;
   previousRank: number | null;
   movementDelta?: number | null;
+  retired?: boolean;
 }) {
+  if (retired) {
+    const was = previousRank ?? rank ?? null;
+    return (
+      <span className="pr-rankings__move is-retired">
+        <span className="pr-rankings__move-delta">RETIRED</span>
+        {was != null ? <span className="pr-rankings__move-was">(WAS {was})</span> : null}
+      </span>
+    );
+  }
+
   const ranked = formatRankMovementLabel({
     rank: rank ?? null,
     previousRank,

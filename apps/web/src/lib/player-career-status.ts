@@ -48,7 +48,7 @@ export type ParsedPlayerName = {
   statusHint: PlayerCareerStatus | null;
 };
 
-const CAREER_STATUS_SUFFIX_RE = /\s*\((released|retired)\)\s*$/i;
+const CAREER_STATUS_SUFFIX_RE = /\s*\(?\s*(released|retired)\s*\)?\s*$/i;
 
 /** Strip Wikipedia debris and optional (released)/(retired) suffix from a raw player label. */
 export function parsePlayerNameAndStatus(raw: string): ParsedPlayerName {

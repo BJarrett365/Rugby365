@@ -6150,6 +6150,12 @@
   color: #d1d5db;
 }
 
+.pr-rankings__move.is-retired .pr-rankings__move-delta {
+  color: #cbd5e1;
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
 .pr-rankings__peak {
   display: inline-flex;
   align-items: baseline;

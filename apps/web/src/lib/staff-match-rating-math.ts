@@ -212,3 +212,14 @@ export function staffPerformanceTrend(
   if (change > 0) return { trend: "up", change };
   return { trend: "down", change };
 }
+
+/** Only attach today's national coaches to recent fixtures — never archive World Cups. */
+export const CURRENT_COACH_BACKFILL_WINDOW_MS = 1000 * 60 * 60 * 24 * 400;
+
+export function shouldFillCurrentCoachesForKickoff(
+  kickoffAt: Date | null | undefined,
+  now = new Date(),
+): boolean {
+  if (!kickoffAt) return false;
+  return now.getTime() - kickoffAt.getTime() < CURRENT_COACH_BACKFILL_WINDOW_MS;
+}

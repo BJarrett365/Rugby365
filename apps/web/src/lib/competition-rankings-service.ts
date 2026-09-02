@@ -27,6 +27,7 @@ import {
   average,
   isProvisional,
   isRankingRetired,
+  rankingCareerStatusFromSocial,
   isUnknownRankingOfficial,
   pickDefaultRankingSeason,
   previousRankByPriorAverage,
@@ -37,8 +38,11 @@ import {
   refereeNationalityFallback,
   refereeClubFallback,
   mergeRefereeClubs,
+  sanitizeRefereeClubSet,
+  preferClubWithCrest,
   collectRefereeAppointmentClubs,
   foldRefereeIdentity,
+  cleanRankingRefereeName,
   computeRefereeFormScore,
   padRefereeFormSeries,
   tournamentRatingFromMatches,
@@ -80,7 +84,9 @@ import {
   pickRankingClubCrest,
   rankingCountryFlagUrl,
   usableRankingCountryName,
+  usableRankingClubImageUrl,
 } from "./player-ranking-engine";
+import { resolveTeamCrestImageUrl } from "./crest-library-service";
 
 const clubTeams = alias(teams, "ranking_club_teams");
 const ratingHomeTeams = alias(teams, "ranking_home_teams");
@@ -103,7 +109,10 @@ function clubsFromRefereeSocial(raw: unknown): { lastClub: string | null; clubs:
   const ranking = (raw as { rankingClubs?: { lastClub?: string; clubs?: string[] } }).rankingClubs;
   if (!ranking) return null;
   const clubs = (ranking.clubs ?? []).map((c) => c.trim()).filter(Boolean);
-  return { lastClub: ranking.lastClub?.trim() || clubs.at(-1) || null, clubs };
+  return sanitizeRefereeClubSet({
+    lastClub: ranking.lastClub?.trim() || clubs.at(-1) || null,
+    clubs,
+  });
 }
 
 function rankingNationLabel(
@@ -315,26 +324,120 @@ async function loadTournamentClubNames(
 
 async function loadClubCrestsByName(
   names: string[],
-): Promise<Map<string, { slug: string; imageUrl: string | null }>> {
-  const map = new Map<string, { slug: string; imageUrl: string | null }>();
+  options?: { allowInternational?: boolean; strictCrest?: boolean },
+): Promise<Map<string, { slug: string | null; imageUrl: string | null }>> {
+  const map = new Map<string, { slug: string | null; imageUrl: string | null }>();
   const unique = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
   if (!unique.length) return map;
   const db = getDb();
   const rows = await db
     .select({
+      id: teams.id,
       name: teams.name,
       slug: teams.slug,
       imageUrl: teams.imageUrl,
     })
     .from(teams)
     .where(sql`${teams.slug} not like '%__legacy__%'`);
-  const catalog = rows.filter((row) => !isInternationalLeaderboardTeam(row.name));
+  const catalog = options?.allowInternational
+    ? rows
+    : rows.filter((row) => !isInternationalLeaderboardTeam(row.name));
+  const strictCrest = Boolean(options?.strictCrest);
   for (const requested of unique) {
     const hit = pickRankingClubCrest(requested, catalog);
-    if (!hit) continue;
-    map.set(requested.toLowerCase(), hit);
+    let imageUrl = usableRankingClubImageUrl(hit?.imageUrl, { strictCrest });
+    if (!imageUrl && hit?.slug) {
+      const team = catalog.find((row) => row.slug === hit.slug);
+      if (team?.id) {
+        const library = await resolveTeamCrestImageUrl(team.id);
+        imageUrl = usableRankingClubImageUrl(library, { strictCrest });
+      }
+    }
+    if (!imageUrl && options?.allowInternational) {
+      const nationGuess =
+        ({
+          rfu: "England",
+          irfu: "Ireland",
+          ffr: "France",
+          wru: "Wales",
+          sru: "Scotland",
+          "sa rugby": "South Africa",
+          "new zealand rugby": "New Zealand",
+          "rugby australia": "Australia",
+          "georgia rugby union": "Georgia",
+          jrfu: "Japan",
+          uar: "Argentina",
+          "usa rugby": "United States",
+          "fiji rugby": "Fiji",
+          "samoa rugby": "Samoa",
+          "rugby canada": "Canada",
+          "korea rugby": "South Korea",
+        } as Record<string, string>)[requested.toLowerCase()] ?? requested;
+      imageUrl = rankingCountryFlagUrl(nationGuess);
+    }
+    if (!hit && !imageUrl) continue;
+    map.set(requested.toLowerCase(), { slug: hit?.slug ?? null, imageUrl: imageUrl ?? null });
   }
   return map;
+}
+
+async function loadRankingPlayerPhotos(
+  playerIds: string[],
+  names: string[],
+): Promise<{ byId: Map<string, string>; byName: Map<string, string> }> {
+  const byId = new Map<string, string>();
+  const byName = new Map<string, string>();
+  if (!playerIds.length) return { byId, byName };
+  const db = getDb();
+  try {
+    const gallery = await db.execute(sql`
+      SELECT DISTINCT ON (player_id)
+        player_id,
+        image_url
+      FROM player_images
+      WHERE player_id IN (${sql.join(
+        playerIds.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})
+        AND archived_at IS NULL
+        AND image_url IS NOT NULL
+        AND status IN ('approved', 'candidate')
+      ORDER BY player_id,
+        CASE role WHEN 'primary' THEN 0 WHEN 'legend' THEN 1 WHEN 'portrait' THEN 2 ELSE 3 END,
+        confidence_score DESC NULLS LAST
+    `);
+    const list =
+      (gallery as unknown as { rows?: Array<{ player_id: string; image_url: string }> }).rows ??
+      (gallery as unknown as Array<{ player_id: string; image_url: string }>);
+    for (const row of list) {
+      if (row.image_url) byId.set(row.player_id, row.image_url);
+    }
+  } catch {
+    // Gallery table is optional on older local DBs.
+  }
+  const uniqueNames = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
+  if (uniqueNames.length) {
+    const siblings = await db
+      .select({
+        name: players.name,
+        imageUrl: players.imageUrl,
+        badgeImageUrl: players.badgeImageUrl,
+      })
+      .from(players)
+      .where(
+        and(
+          inArray(players.name, uniqueNames),
+          sql`coalesce(${players.imageUrl}, ${players.badgeImageUrl}, '') <> ''`,
+        ),
+      );
+    for (const row of siblings) {
+      const url = row.imageUrl || row.badgeImageUrl;
+      if (!url) continue;
+      const key = row.name.trim().toLowerCase();
+      if (!byName.has(key)) byName.set(key, url);
+    }
+  }
+  return { byId, byName };
 }
 
 async function loadClubYearRatings(
@@ -608,7 +711,7 @@ export async function getCompetitionRankingsBySlug(
       ? "Ranked from Rugby World Cup match ratings this tournament only. Club is the club listed for this World Cup when known; country is the nation they played for."
       : "Ranked by average Rugby365 match rating in this competition season. Club is the player’s club side; country is the national team. Club performance uses club ratings from the same calendar year when available.",
     referees: isWorldCup
-      ? "Referee rankings use Rugby365 match ratings from this Rugby World Cup only. Club is omitted because World Cup appointments are between nations, not clubs."
+      ? "Referee rankings use Rugby365 match ratings from this Rugby World Cup only. Club is the referee’s home club or union."
       : "Current form (last 5) is weighted: match performance 35%, decision accuracy 25%, penalty consistency 15%, card management 10%, game control 10%, recent appointments 5%. Tournament rating also includes knockout difficulty. Provisional until 2 matches.",
     coaches: isWorldCup
       ? "Coach rankings use Rugby365 match ratings from this Rugby World Cup only. Team is the national side they coached in this tournament."
@@ -887,6 +990,7 @@ export async function getCompetitionRankingsBySlug(
       playerName: players.name,
       playerSlug: players.slug,
       playerImageUrl: players.imageUrl,
+      playerBadgeImageUrl: players.badgeImageUrl,
       teamId: playerMatchRatings.teamId,
       teamName: teams.name,
       teamSlug: teams.slug,
@@ -898,6 +1002,7 @@ export async function getCompetitionRankingsBySlug(
       playerCountryName: players.countryName,
       nationCode: players.nationCode,
       careerStatus: players.careerStatus,
+      socialAccounts: players.socialAccounts,
       seasonRating: playerRatings.seasonRating,
       overallRating: playerRatings.playerRating,
       positionName: playerMatchRatings.positionName,
@@ -946,6 +1051,7 @@ export async function getCompetitionRankingsBySlug(
     playerCountryName: string | null;
     nationCode: string | null;
     careerStatus: string | null;
+    socialAccounts: unknown;
     resolvedNation: string | null;
     seasonRating: number | null;
     overallRating: number | null;
@@ -981,7 +1087,7 @@ export async function getCompetitionRankingsBySlug(
       playerId: row.playerId,
       playerName: row.playerName,
       playerSlug: row.playerSlug,
-      playerImageUrl: row.playerImageUrl,
+      playerImageUrl: row.playerImageUrl || row.playerBadgeImageUrl,
       teamId: row.teamId,
       teamName: row.teamName,
       teamSlug: row.teamSlug,
@@ -991,7 +1097,8 @@ export async function getCompetitionRankingsBySlug(
       clubImageUrl: clubName ? row.clubTeamImageUrl : null,
       playerCountryName: row.playerCountryName,
       nationCode: row.nationCode,
-      careerStatus: row.careerStatus,
+      careerStatus: rankingCareerStatusFromSocial(row.socialAccounts) ?? row.careerStatus,
+      socialAccounts: row.socialAccounts,
       resolvedNation,
       seasonRating: row.seasonRating,
       overallRating: row.overallRating,
@@ -999,6 +1106,9 @@ export async function getCompetitionRankingsBySlug(
       ratings: [],
     };
     existing.ratings.push(r100);
+    if (!existing.playerImageUrl && (row.playerImageUrl || row.playerBadgeImageUrl)) {
+      existing.playerImageUrl = row.playerImageUrl || row.playerBadgeImageUrl;
+    }
     if (row.teamId) {
       existing.teamId = row.teamId;
       if (!isUnknownStandingsTeamName(row.teamName)) {
@@ -1024,12 +1134,19 @@ export async function getCompetitionRankingsBySlug(
   }
 
   const uniquePlayerIds = [...new Set([...playerMap.values()].map((p) => p.playerId))];
-  const [careerClubs, tournamentClubs, clubYearRatings] = await Promise.all([
+  const uniquePlayerNames = [...new Set([...playerMap.values()].map((p) => p.playerName))];
+  const [careerClubs, tournamentClubs, clubYearRatings, rankingPhotos] = await Promise.all([
     isWorldCup ? Promise.resolve(new Map<string, string>()) : loadCareerClubNames(uniquePlayerIds, season.year),
     loadTournamentClubNames(competition.id, season.id),
     loadClubYearRatings(uniquePlayerIds, competition.id, season.year),
+    loadRankingPlayerPhotos(uniquePlayerIds, uniquePlayerNames),
   ]);
   for (const p of playerMap.values()) {
+    p.playerImageUrl =
+      p.playerImageUrl ||
+      rankingPhotos.byId.get(p.playerId) ||
+      rankingPhotos.byName.get(p.playerName.trim().toLowerCase()) ||
+      null;
     const tournament = tournamentClubs.get(p.playerId);
     const career = careerClubs.get(p.playerId);
     const next = isWorldCup ? (tournament ?? null) : (p.clubName ?? tournament ?? career);
@@ -1145,9 +1262,8 @@ export async function getCompetitionRankingsBySlug(
       trend: filled.movement,
       recentRatings: p.ratings.slice(0, 5),
       retired: isRankingRetired({
-        careerStatus: p.careerStatus,
+        careerStatus: rankingCareerStatusFromSocial(p.socialAccounts) ?? p.careerStatus,
         name: p.playerName,
-        seasonYear: season.year,
       }),
     };
   };
@@ -1265,6 +1381,7 @@ export async function getCompetitionRankingsBySlug(
     bonuses: number[];
     cardsIssued: number;
     storedClubs: { lastClub: string | null; clubs: string[] } | null;
+    careerStatus: string | null;
   };
   const refMap = new Map<string, RefAgg>();
   for (const row of refRows) {
@@ -1291,7 +1408,7 @@ export async function getCompetitionRankingsBySlug(
     });
     const existing = refMap.get(row.refereeId) ?? {
       refereeId: row.refereeId,
-      refereeName: row.refereeName,
+      refereeName: cleanRankingRefereeName(row.refereeName) || row.refereeName,
       refereeSlug: row.refereeSlug,
       refereeImageUrl: row.refereeImageUrl,
       countryName: row.countryName,
@@ -1301,6 +1418,7 @@ export async function getCompetitionRankingsBySlug(
       bonuses: [],
       cardsIssued: 0,
       storedClubs: clubsFromRefereeSocial(row.socialAccounts),
+      careerStatus: rankingCareerStatusFromSocial(row.socialAccounts),
     };
     existing.ratings100.push(r100);
     existing.formScores.push(formScore);
@@ -1330,15 +1448,12 @@ export async function getCompetitionRankingsBySlug(
       );
   const refClubSets = new Map(
     refPool.map((r) => {
-      if (isWorldCup) {
-        return [r.refereeId, { lastClub: null as string | null, clubs: [] as string[] }] as const;
-      }
       const career = refereeAppointmentClubs.get(r.refereeId);
       return [
         r.refereeId,
         mergeRefereeClubs(
-          career?.clubs.length ? null : refereeClubFallback(r.refereeName),
-          career?.clubs.length ? null : r.storedClubs,
+          refereeClubFallback(r.refereeName),
+          r.storedClubs,
           career?.clubs.length ? { lastClub: career.lastClub, clubs: career.clubs } : null,
         ),
       ] as const;
@@ -1346,6 +1461,7 @@ export async function getCompetitionRankingsBySlug(
   );
   const refCrests = await loadClubCrestsByName(
     [...refClubSets.values()].flatMap((set) => set.clubs),
+    { allowInternational: true, strictCrest: true },
   );
   for (const career of refereeAppointmentClubs.values()) {
     for (const [name, crest] of career.crests) {
@@ -1368,7 +1484,10 @@ export async function getCompetitionRankingsBySlug(
       const canonical = nationName ? nationCatalog.get(nationName.toLowerCase()) : null;
       const nationRow = canonical ? nationRowById.get(canonical.id) : null;
       const recentForm = padRefereeFormSeries(r.formScores.slice(0, 5));
-      const clubSet = refClubSets.get(r.refereeId) ?? { lastClub: null, clubs: [] };
+      const clubSet = preferClubWithCrest(
+        refClubSets.get(r.refereeId) ?? { lastClub: null, clubs: [] },
+        (name) => Boolean(refCrests.get(name.toLowerCase())?.imageUrl),
+      );
       const lastClub = clubSet.lastClub;
       const lastCrest = lastClub ? refCrests.get(lastClub.toLowerCase()) : null;
       const otherClubs = clubSet.clubs
@@ -1401,7 +1520,10 @@ export async function getCompetitionRankingsBySlug(
         trend: rankingTrend(r.formScores.slice(0, 3), r.formScores.slice(3)),
         recentRatings: recentForm,
         cardsIssued: r.cardsIssued || null,
-        retired: isRankingRetired({ name: r.refereeName, seasonYear: season.year }),
+        retired: isRankingRetired({
+          name: r.refereeName,
+          careerStatus: r.careerStatus,
+        }),
       };
     })
     .sort((a, b) => {
@@ -1438,6 +1560,7 @@ export async function getCompetitionRankingsBySlug(
       teamSlug: teams.slug,
       teamShortName: teams.shortName,
       teamImageUrl: teams.imageUrl,
+      socialAccounts: coaches.socialAccounts,
       side: coachMatchRatings.side,
       rating: coachMatchRatings.rating,
       ratingStatus: coachMatchRatings.ratingStatus,
@@ -1484,6 +1607,7 @@ export async function getCompetitionRankingsBySlug(
     teamSlug: string | null;
     teamShortName: string | null;
     teamImageUrl: string | null;
+    careerStatus: string | null;
     ratings100: number[];
     wins: number;
     matches: number;
@@ -1541,6 +1665,7 @@ export async function getCompetitionRankingsBySlug(
       teamSlug: inferredTeam.teamSlug ?? null,
       teamShortName: inferredTeam.teamShortName ?? null,
       teamImageUrl: inferredTeam.teamImageUrl ?? null,
+      careerStatus: rankingCareerStatusFromSocial(row.socialAccounts),
       ratings100: [],
       wins: 0,
       matches: 0,
@@ -1606,7 +1731,10 @@ export async function getCompetitionRankingsBySlug(
         previousRank: coachPrev.get(c.coachId) ?? null,
         trend: rankingTrend(c.ratings100.slice(0, 3), c.ratings100.slice(3)),
         recentRatings: padRefereeFormSeries(c.ratings100.slice(0, 5)),
-        retired: isRankingRetired({ name: c.coachName }),
+        retired: isRankingRetired({
+          name: c.coachName,
+          careerStatus: c.careerStatus,
+        }),
       };
     })
     .sort((a, b) => {

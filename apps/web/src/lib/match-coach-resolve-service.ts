@@ -12,6 +12,7 @@ import {
   teamDedupKey,
 } from "./entity-normalize";
 import { ensureFixtureStaffLinks } from "./staff-match-rating-service";
+import { shouldFillCurrentCoachesForKickoff } from "./staff-match-rating-math";
 
 /** Known current head coaches when CMS staff rows are missing. */
 const TEAM_HEAD_COACH_DEFAULTS: Record<
@@ -337,19 +338,22 @@ export async function ensureFixtureMatchCoaches(fixtureId: string): Promise<{
   homeCoachId: string | null;
   awayCoachId: string | null;
 }> {
-  await ensureFixtureStaffLinks(fixtureId);
-
   const db = getDb();
   let [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
   if (!fixture) return { homeCoachId: null, awayCoachId: null };
 
+  const fillCurrent = shouldFillCurrentCoachesForKickoff(fixture.kickoffAt);
+  await ensureFixtureStaffLinks(fixtureId, { fillCurrentCoaches: fillCurrent });
+  [fixture] = await db.select().from(fixtures).where(eq(fixtures.id, fixtureId)).limit(1);
+  if (!fixture) return { homeCoachId: null, awayCoachId: null };
+
   const patch: { homeCoachId?: string; awayCoachId?: string } = {};
 
-  if (!fixture.homeCoachId) {
+  if (fillCurrent && !fixture.homeCoachId) {
     const id = await ensureTeamHeadCoach(fixture.homeTeamId);
     if (id) patch.homeCoachId = id;
   }
-  if (!fixture.awayCoachId) {
+  if (fillCurrent && !fixture.awayCoachId) {
     const id = await ensureTeamHeadCoach(fixture.awayTeamId);
     if (id) patch.awayCoachId = id;
   }

@@ -15,9 +15,7 @@ import {
   refereeOccupationFor,
 } from "./referee-identity-utils";
 import {
-  fetchWikipediaThumbnails,
-  thumbnailForName,
-  wikipediaTitleCandidates,
+  fetchWikipediaRefereeEnrichment,
 } from "./wikipedia-page-image";
 
 export type { PublicRefereeMatch };
@@ -175,8 +173,8 @@ export async function getPublicRefereeProfile(
 
   let imageUrl = row.imageUrl;
   if (!imageUrl?.trim()) {
-    const thumbs = await fetchWikipediaThumbnails(wikipediaTitleCandidates(row.name, "referee"));
-    imageUrl = thumbnailForName(thumbs, row.name, "referee");
+    const wiki = await fetchWikipediaRefereeEnrichment([row.name]);
+    imageUrl = wiki.get(row.name)?.imageUrl ?? null;
   }
 
   const description =

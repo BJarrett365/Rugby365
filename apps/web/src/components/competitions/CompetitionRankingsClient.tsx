@@ -171,6 +171,7 @@ function PlayerTable({ rows }: { rows: CompetitionPlayerRankingRow[] }) {
                     rank={entry.rank}
                     movement={trendToMovement(entry.trend)}
                     previousRank={entry.previousRank}
+                    retired={entry.retired}
                   />
                 </td>
               </tr>
@@ -359,6 +360,7 @@ function RefereesTable({ rows }: { rows: CompetitionRefereeRankingRow[] }) {
                     rank={row.rank}
                     movement={trendToMovement(row.trend)}
                     previousRank={row.previousRank}
+                    retired={row.retired}
                   />
                 </td>
               </tr>
@@ -473,6 +475,7 @@ function CoachesTable({ rows }: { rows: CompetitionCoachRankingRow[] }) {
                     rank={row.rank}
                     movement={trendToMovement(row.trend)}
                     previousRank={row.previousRank}
+                    retired={row.retired}
                   />
                 </td>
               </tr>

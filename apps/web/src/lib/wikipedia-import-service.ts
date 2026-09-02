@@ -48,9 +48,19 @@ export type ApplyWikipediaPlayerOptions = {
   upsertCareer?: boolean;
 };
 
+function foldPersonName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 function namesLikelyMatch(playerName: string, archiveName: string): boolean {
-  const a = playerName.trim().toLowerCase();
-  const b = archiveName.trim().toLowerCase();
+  const a = foldPersonName(playerName);
+  const b = foldPersonName(archiveName);
+  if (!a || !b) return false;
   if (a === b) return true;
   if (b.includes(a) || a.includes(b)) return true;
   const aParts = a.split(/\s+/);
@@ -398,6 +408,11 @@ async function applyWikipediaPlayerArchive(
   const [updated] = await db.update(players).set(patch).where(eq(players.id, playerId)).returning();
   if (upsertCareer) {
     await upsertPlayerCareerStints(updated.id, archive, archive.wikipediaUrl);
+    const careerCount =
+      (archive.clubCareer?.length ?? 0) +
+      (archive.cupCareer?.length ?? 0) +
+      (archive.internationalCareer?.length ?? 0);
+    if (careerCount > 0) fieldsUpdated.push(`career:${careerCount}`);
   }
   if ((archive.honours?.length ?? 0) > 0 && !fillMissingOnly) {
     const { importWikipediaPlayerHonours } = await import("./player-wikipedia-honours-import");
@@ -428,7 +443,7 @@ function normalizeWikipediaPlayerUrl(raw: string): string | null {
 export async function enrichPlayerFromWikipedia(
   playerId: string,
   playerName?: string,
-  options?: { fillMissingOnly?: boolean; sourceUrl?: string },
+  options?: { fillMissingOnly?: boolean; sourceUrl?: string; upsertCareer?: boolean },
 ): Promise<PlayerArchiveEnrichResult> {
   const db = getDb();
   const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
@@ -497,7 +512,7 @@ export async function enrichPlayerFromWikipedia(
       const applied = await applyWikipediaPlayerArchive(playerId, parsed, {
         mergeLiveFields: true,
         fillMissingOnly,
-        upsertCareer: !fillMissingOnly,
+        upsertCareer: options?.upsertCareer ?? !fillMissingOnly,
       });
       const careerStints =
         (parsed.clubCareer?.length ?? 0) +
@@ -508,14 +523,18 @@ export async function enrichPlayerFromWikipedia(
         enriched: applied.fieldsUpdated.length > 0 || !fillMissingOnly,
         playerId,
         wikipediaUrl: parsed.wikipediaUrl,
-        careerStints: fillMissingOnly ? undefined : careerStints,
+        careerStints,
         fieldsUpdated: applied.fieldsUpdated,
         reason:
           applied.fieldsUpdated.length === 0
             ? "matched_no_new_data"
             : undefined,
       };
-    } catch {
+    } catch (error) {
+      console.error(
+        `wikipedia parse/apply failed for ${name} (${title}):`,
+        error instanceof Error ? error.message : error,
+      );
       continue;
     }
   }

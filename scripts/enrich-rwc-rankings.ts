@@ -7,13 +7,13 @@
 import { eq, sql } from "drizzle-orm";
 import { competitions, coaches, players, referees, teams } from "@rugby365/db";
 import { getDb } from "../apps/web/src/lib/db";
-import { mergePlayerRecords, mergeTeamRecords } from "../apps/web/src/lib/entity-dedup-service";
+import { mergePlayerRecords, mergeRefereeRecords, mergeTeamRecords } from "../apps/web/src/lib/entity-dedup-service";
 import { isInternationalLeaderboardTeam } from "../apps/web/src/lib/competition-player-stat-display";
 import {
   importRwcSquadClubsForYear,
   RWC_SQUAD_CLUB_YEARS,
 } from "../apps/web/src/lib/rwc-squad-club-import-service";
-import { pickRankingClubCrest } from "../apps/web/src/lib/player-ranking-engine";
+import { pickRankingClubCrest, foldRankingClubKey, looksLikeCrestAssetUrl } from "../apps/web/src/lib/player-ranking-engine";
 import {
   canonicalStandingsTeamName,
   isUnknownStandingsTeamName,
@@ -22,13 +22,22 @@ import {
 } from "../apps/web/src/lib/table-lab/standings-fixture-dedupe";
 import {
   fetchWikipediaClubLogos,
-  fetchWikipediaPersonCountries,
-  fetchWikipediaRefereeClubs,
+  fetchWikipediaPlayerHeadshots,
+  fetchWikipediaRefereeEnrichment,
   fetchWikipediaThumbnails,
+  fetchLanguageWikipediaHeadshots,
   thumbnailForName,
   wikipediaTitleCandidates,
   fetchWikidataThumbnail,
+  fetchWikidataLogo,
 } from "../apps/web/src/lib/wikipedia-page-image";
+import {
+  foldRefereeIdentity,
+  mergeRefereeClubs,
+  refereeClubFallback,
+  refereeNationalityFallback,
+  sanitizeRefereeClubSet,
+} from "../apps/web/src/lib/competition-ranking-math";
 
 function slugify(name: string): string {
   return name
@@ -119,6 +128,13 @@ async function enrichClubCrests() {
     "Kubota Spears",
     "Kubota Spears Funabashi Tokyo Bay",
     "Kubota Spears Funabashi Tokyo-Bay",
+    "Tokyo Sungoliath",
+    "Suntory Sungoliath",
+    "Saitama Wild Knights",
+    "Panasonic Wild Knights",
+    "Yokohama Canon Eagles",
+    "Canon Eagles",
+    "Toyota Verblitz",
   ];
   const missing: string[] = [];
   for (const row of [...clubRows, ...extraKnown.map((club) => ({ club }))]) {
@@ -139,7 +155,13 @@ async function enrichClubCrests() {
   let updated = 0;
   let created = 0;
   for (const clubName of missing) {
-    const url = thumbnailForName(thumbs, clubName, "club");
+    let url = thumbnailForName(thumbs, clubName, "club");
+    if (!url) {
+      for (const title of wikipediaTitleCandidates(clubName, "club")) {
+        url = await fetchWikidataLogo(title);
+        if (url) break;
+      }
+    }
     if (!url) continue;
     const existing = pickRankingClubCrest(clubName, catalog);
     if (existing) {
@@ -168,6 +190,228 @@ async function enrichClubCrests() {
   console.log(`club crests missing=${missing.length} updated=${updated} created=${created}`);
 }
 
+const REFEREE_CLUB_WIKI_TITLES: Record<string, string[]> = {
+  rfu: ["Rugby Football Union"],
+  irfu: ["Irish Rugby Football Union"],
+  ffr: ["French Rugby Federation"],
+  wru: ["Welsh Rugby Union"],
+  sru: ["Scottish Rugby Union"],
+  "sa rugby": ["South African Rugby Union"],
+  "new zealand rugby": ["New Zealand Rugby"],
+  "rugby australia": ["Rugby Australia"],
+  "georgia rugby union": ["Georgia Rugby Union", "Georgian Rugby Union"],
+  jrfu: ["Japan Rugby Football Union"],
+  uar: ["Argentine Rugby Union"],
+  "usa rugby": ["USA Rugby"],
+  "fiji rugby": ["Fiji Rugby Union"],
+  "samoa rugby": ["Samoa Rugby Union"],
+  "rugby canada": ["Rugby Canada"],
+  "korea rugby": ["Korea Rugby Union"],
+  "sundays well": ["Sundays Well RFC"],
+  "old patesians": ["Old Patesians RFC"],
+  "london wasps": ["Wasps RFC", "London Wasps"],
+  wasps: ["Wasps RFC"],
+  "free state": ["Free State Cheetahs"],
+  "free state cheetahs": ["Free State Cheetahs"],
+  jiki: ["RC Jiki"],
+  "rc jiki": ["RC Jiki"],
+  "bay of plenty": ["Bay of Plenty Rugby Union"],
+  "queensland reds": ["Queensland Reds"],
+  reds: ["Queensland Reds"],
+  harlequins: ["Harlequin F.C."],
+  "bedford blues": ["Bedford Blues"],
+  "racing metro": ["Racing 92"],
+  "racing métro": ["Racing 92"],
+  blackrock: ["Blackrock College RFC"],
+  moseley: ["Moseley Rugby Football Club"],
+  bruff: ["Bruff RFC"],
+  "bruff r.f.c.": ["Bruff RFC"],
+  shannon: ["Shannon RFC"],
+  "saracens f.c.": ["Saracens F.C."],
+  saracens: ["Saracens F.C."],
+  "gloucestershire rfu": ["Gloucestershire Rugby Football Union"],
+  "kwazulu-natal": ["Sharks (rugby union)", "Natal Sharks"],
+  "kwa-zulu natal": ["Sharks (rugby union)"],
+  "clanwilliam": ["Clanwilliam RFC"],
+  highfield: ["Highfield R.F.C."],
+  ballincollig: ["Ballincollig RFC"],
+  wanderers: ["Wanderers F.C. (rugby union)", "Wanderers RFC"],
+};
+
+function wikiTitlesForRefereeClub(name: string): string[] {
+  const key = foldRankingClubKey(name);
+  const aliases = REFEREE_CLUB_WIKI_TITLES[key] ?? [];
+  return [...new Set([...aliases, name, `${name} RFC`, ...wikipediaTitleCandidates(name, "club")])];
+}
+
+async function applyClubLogoToCatalog(
+  db: ReturnType<typeof getDb>,
+  catalog: Array<{ id: string; name: string; slug: string; imageUrl: string | null }>,
+  clubName: string,
+  url: string,
+): Promise<"updated" | "created" | null> {
+  const existing = pickRankingClubCrest(clubName, catalog);
+  if (existing) {
+    const team = catalog.find((t) => t.slug === existing.slug);
+    if (team && !looksLikeCrestAssetUrl(team.imageUrl)) {
+      await db.update(teams).set({ imageUrl: url }).where(eq(teams.id, team.id));
+      team.imageUrl = url;
+      return "updated";
+    }
+    return null;
+  }
+  let slug = slugify(clubName);
+  if (catalog.some((t) => t.slug === slug)) slug = `${slug}-wiki`;
+  const inserted = await db
+    .insert(teams)
+    .values({
+      name: clubName,
+      slug,
+      imageUrl: url,
+      sourceProvider: "wikipedia",
+      teamType: "club",
+      wikipediaUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(clubName.replace(/ /g, "_"))}`,
+    })
+    .returning({ id: teams.id });
+  catalog.push({ id: inserted[0]?.id ?? "new", name: clubName, slug, imageUrl: url });
+  return "created";
+}
+
+async function enrichRefereeClubCrests() {
+  const db = getDb();
+  const [competition] = await db
+    .select({ id: competitions.id })
+    .from(competitions)
+    .where(eq(competitions.slug, "rugby-world-cup"))
+    .limit(1);
+  if (!competition) return;
+  const rows = await db.execute<{ name: string; social_accounts: unknown }>(sql`
+    SELECT DISTINCT r.name, r.social_accounts
+    FROM referees r
+    JOIN fixtures f ON f.referee_id = r.id
+    WHERE f.competition_id = ${competition.id}
+  `);
+  const clubNames = new Set<string>();
+  for (const row of rows) {
+    const stored =
+      row.social_accounts && typeof row.social_accounts === "object"
+        ? (row.social_accounts as { rankingClubs?: { lastClub?: string; clubs?: string[] } }).rankingClubs
+        : null;
+    const merged = mergeRefereeClubs(
+      refereeClubFallback(row.name),
+      stored ? { lastClub: stored.lastClub ?? null, clubs: stored.clubs ?? [] } : null,
+    );
+    for (const club of merged.clubs) clubNames.add(club);
+    if (merged.lastClub) clubNames.add(merged.lastClub);
+  }
+  for (const titles of Object.values(REFEREE_CLUB_WIKI_TITLES)) {
+    for (const title of titles) clubNames.add(title);
+  }
+
+  const catalog = await db
+    .select({ id: teams.id, name: teams.name, slug: teams.slug, imageUrl: teams.imageUrl })
+    .from(teams)
+    .where(sql`${teams.slug} not like '%__legacy__%'`);
+  const missing = [...clubNames].filter(
+    (name) => !looksLikeCrestAssetUrl(pickRankingClubCrest(name, catalog)?.imageUrl),
+  );
+  const titles = [...new Set(missing.flatMap((name) => wikiTitlesForRefereeClub(name)))];
+  const logos = await fetchWikipediaClubLogos(titles);
+  const thumbs = await fetchWikipediaThumbnails(titles);
+  for (const [title, url] of logos) thumbs.set(title, url);
+
+  let updated = 0;
+  let created = 0;
+  for (const clubName of missing) {
+    const wikiTitles = wikiTitlesForRefereeClub(clubName);
+    const candidates = wikiTitles
+      .map((title) => thumbs.get(title) ?? thumbnailForName(thumbs, title, "club"))
+      .filter((value): value is string => looksLikeCrestAssetUrl(value));
+    let url = candidates[0] ?? null;
+    if (!url) {
+      for (const title of wikiTitles) {
+        const logo = await fetchWikidataLogo(title);
+        if (looksLikeCrestAssetUrl(logo)) {
+          url = logo;
+          break;
+        }
+      }
+    }
+    if (!url) continue;
+    const canonicalName = REFEREE_CLUB_WIKI_TITLES[foldRankingClubKey(clubName)]?.[0] ?? clubName;
+    const result = await applyClubLogoToCatalog(db, catalog, canonicalName, url);
+    if (result === "updated") updated += 1;
+    if (result === "created") created += 1;
+  }
+  console.log(`referee club crests missing=${missing.length} updated=${updated} created=${created}`);
+}
+
+async function copyExistingPlayerPhotos() {
+  const db = getDb();
+  await db.execute(sql`
+    UPDATE players
+    SET image_url = badge_image_url
+    WHERE (image_url IS NULL OR length(trim(image_url)) = 0)
+      AND badge_image_url IS NOT NULL
+      AND length(trim(badge_image_url)) > 0
+  `);
+  await db.execute(sql`
+    UPDATE players p
+    SET image_url = g.image_url
+    FROM (
+      SELECT DISTINCT ON (player_id)
+        player_id,
+        image_url
+      FROM player_images
+      WHERE archived_at IS NULL
+        AND image_url IS NOT NULL
+        AND status IN ('approved', 'candidate')
+      ORDER BY player_id,
+        CASE role WHEN 'primary' THEN 0 WHEN 'legend' THEN 1 WHEN 'portrait' THEN 2 ELSE 3 END,
+        confidence_score DESC NULLS LAST
+    ) g
+    WHERE p.id = g.player_id
+      AND (p.image_url IS NULL OR length(trim(p.image_url)) = 0)
+  `);
+  await db.execute(sql`
+    UPDATE players p
+    SET image_url = src.image_url
+    FROM (
+      SELECT DISTINCT ON (lower(trim(name)))
+        id,
+        name,
+        image_url
+      FROM players
+      WHERE image_url IS NOT NULL
+        AND length(trim(image_url)) > 0
+      ORDER BY lower(trim(name)), id
+    ) src
+    WHERE p.id <> src.id
+      AND lower(trim(p.name)) = lower(trim(src.name))
+      AND (p.image_url IS NULL OR length(trim(p.image_url)) = 0)
+  `);
+  await db.execute(sql`
+    UPDATE players p
+    SET image_url = src.image_url
+    FROM (
+      SELECT DISTINCT ON (lower(trim(pl.name)))
+        pl.name,
+        pi.image_url
+      FROM player_images pi
+      JOIN players pl ON pl.id = pi.player_id
+      WHERE pi.archived_at IS NULL
+        AND pi.image_url IS NOT NULL
+        AND pi.status IN ('approved', 'candidate')
+      ORDER BY lower(trim(pl.name)),
+        CASE pi.role WHEN 'primary' THEN 0 WHEN 'legend' THEN 1 WHEN 'portrait' THEN 2 ELSE 3 END,
+        pi.confidence_score DESC NULLS LAST
+    ) src
+    WHERE lower(trim(p.name)) = lower(trim(src.name))
+      AND (p.image_url IS NULL OR length(trim(p.image_url)) = 0)
+  `);
+  console.log("copied existing player photos from gallery, badge, and duplicate rows");
+}
+
 async function enrichPlayerImages(year?: number) {
   const db = getDb();
   const [competition] = await db
@@ -190,29 +434,60 @@ async function enrichPlayerImages(year?: number) {
       AND (p.image_url IS NULL OR length(trim(p.image_url)) = 0)
       ${yearFilter}
   `);
-  const titles = rows.flatMap((row) =>
-    wikipediaTitleCandidates(
-      row.name,
-      "player",
-      row.birth_date ? Number.parseInt(String(row.birth_date).slice(0, 4), 10) : null,
-    ),
+  const headshots = await fetchWikipediaPlayerHeadshots(
+    rows.map((row) => ({
+      name: row.name,
+      birthYear: row.birth_date ? Number.parseInt(String(row.birth_date).slice(0, 4), 10) : null,
+    })),
   );
-  const thumbs = await fetchWikipediaThumbnails(titles);
+  const leftoverNames = rows.filter((row) => !headshots.get(row.name)).map((row) => row.name);
+  const translated = leftoverNames.length ? await fetchLanguageWikipediaHeadshots(leftoverNames, ["fr"]) : new Map();
   let updated = 0;
   for (const row of rows) {
-    let url = thumbnailForName(thumbs, row.name, "player");
-    if (!url) {
-      const year = row.birth_date ? Number.parseInt(String(row.birth_date).slice(0, 4), 10) : null;
-      for (const title of wikipediaTitleCandidates(row.name, "player", year)) {
-        url = await fetchWikidataThumbnail(title);
-        if (url) break;
-      }
-    }
+    const url = headshots.get(row.name) ?? translated.get(row.name) ?? null;
     if (!url) continue;
     await db.update(players).set({ imageUrl: url }).where(eq(players.id, row.id));
     updated += 1;
   }
   console.log(`player images missing=${rows.length} updated=${updated}`);
+}
+
+function isWeakRefereeNation(value: string | null | undefined): boolean {
+  if (!value?.trim()) return true;
+  return /county |northern cape|kwa.?zulu|ulster|leinster|munster|connacht|antrim/i.test(value);
+}
+
+async function mergeSuffixedRwcReferees() {
+  const db = getDb();
+  const rows = await db.execute<{ id: string; name: string }>(sql`
+    SELECT DISTINCT r.id, r.name
+    FROM referees r
+    JOIN fixtures f ON f.referee_id = r.id
+    JOIN competitions c ON c.id = f.competition_id
+    WHERE c.slug = 'rugby-world-cup'
+  `);
+  const byCanonical = new Map<string, { id: string; name: string }[]>();
+  for (const row of rows) {
+    const key = foldRefereeIdentity(row.name);
+    if (!key) continue;
+    const list = byCanonical.get(key) ?? [];
+    list.push(row);
+    byCanonical.set(key, list);
+  }
+  let merged = 0;
+  for (const [, group] of byCanonical) {
+    if (group.length < 2) continue;
+    const canonical =
+      group.find((row) => foldRefereeIdentity(row.name) === row.name.toLowerCase()) ??
+      group.find((row) => !/\([^)]+\)$/.test(row.name)) ??
+      group[0]!;
+    const dups = group.filter((row) => row.id !== canonical.id).map((row) => row.id);
+    if (!dups.length) continue;
+    await mergeRefereeRecords(canonical.id, dups);
+    merged += dups.length;
+    console.log(`merged ${dups.length} → ${canonical.name}`);
+  }
+  console.log(`rwc referee identity merges=${merged}`);
 }
 
 async function enrichRefereeProfiles() {
@@ -223,6 +498,7 @@ async function enrichRefereeProfiles() {
     .where(eq(competitions.slug, "rugby-world-cup"))
     .limit(1);
   if (!competition) return;
+  await mergeSuffixedRwcReferees();
   const rows = await db.execute<{
     id: string;
     name: string;
@@ -233,48 +509,65 @@ async function enrichRefereeProfiles() {
   }>(sql`
     SELECT DISTINCT r.id, r.name, r.image_url, r.country_name, r.nationality, r.social_accounts
     FROM referees r
-    JOIN referee_match_ratings rmr ON rmr.referee_id = r.id
-    WHERE rmr.competition_id = ${competition.id}
+    JOIN fixtures f ON f.referee_id = r.id
+    WHERE f.competition_id = ${competition.id}
   `);
-  const needImage = rows.filter((row) => !row.image_url);
-  const needCountry = rows.filter((row) => !row.country_name && !row.nationality);
-  const titles = rows.flatMap((row) => wikipediaTitleCandidates(row.name, "referee"));
-  const thumbs = needImage.length ? await fetchWikipediaThumbnails(titles) : new Map<string, string>();
-  const countries = needCountry.length
-    ? await fetchWikipediaPersonCountries(titles)
+  const wiki = await fetchWikipediaRefereeEnrichment(rows.map((row) => row.name));
+  const missingImageNames = rows.filter((row) => !row.image_url).map((row) => row.name);
+  const translated = missingImageNames.length
+    ? await fetchLanguageWikipediaHeadshots(missingImageNames, ["fr"])
     : new Map<string, string>();
-  const wikiClubs = await fetchWikipediaRefereeClubs(rows.map((row) => row.name));
   let images = 0;
   let countriesUpdated = 0;
   let clubsUpdated = 0;
   for (const row of rows) {
+    const page = wiki.get(row.name);
+    const fallbackNation = refereeNationalityFallback(row.name);
+    const wikiNation = page?.country ?? null;
+    const currentNation = row.country_name || row.nationality;
+    const nation =
+      fallbackNation ??
+      wikiNation ??
+      (isWeakRefereeNation(currentNation) ? null : currentNation);
+    const clubs = sanitizeRefereeClubSet(
+      mergeRefereeClubs(refereeClubFallback(row.name), page?.clubs ?? null),
+    );
+    const existing =
+      row.social_accounts && typeof row.social_accounts === "object"
+        ? (row.social_accounts as Record<string, unknown>)
+        : {};
     const patch: {
       imageUrl?: string;
       countryName?: string;
       nationality?: string;
       socialAccounts?: Record<string, unknown>;
     } = {};
-    if (!row.image_url) {
-      const url = thumbnailForName(thumbs, row.name, "referee");
-      if (url) patch.imageUrl = url;
+    if (!row.image_url && page?.imageUrl) patch.imageUrl = page.imageUrl;
+    if (
+      row.image_url &&
+      /andy_cole|eoin_doyle|footballer|soccer/i.test(row.image_url)
+    ) {
+      patch.imageUrl = null;
     }
-    if (!row.country_name && !row.nationality) {
-      const country = thumbnailForName(countries, row.name, "referee");
-      if (country) {
-        patch.countryName = country;
-        patch.nationality = country;
-      }
+    if (!row.image_url && !patch.imageUrl && page?.wikipediaTitle) {
+      const wikidata = await fetchWikidataThumbnail(page.wikipediaTitle);
+      if (wikidata) patch.imageUrl = wikidata;
     }
-    const clubs = wikiClubs.get(row.name);
+    if (!row.image_url && !patch.imageUrl) {
+      patch.imageUrl = translated.get(row.name) || undefined;
+    }
+    if (nation && nation !== currentNation) {
+      patch.countryName = nation;
+      patch.nationality = nation;
+    }
+    const nextAccounts = { ...existing };
     if (clubs?.clubs.length) {
-      const existing =
-        row.social_accounts && typeof row.social_accounts === "object"
-          ? (row.social_accounts as Record<string, unknown>)
-          : {};
-      patch.socialAccounts = {
-        ...existing,
-        rankingClubs: { lastClub: clubs.lastClub, clubs: clubs.clubs },
-      };
+      nextAccounts.rankingClubs = { lastClub: clubs.lastClub, clubs: clubs.clubs };
+    } else {
+      delete nextAccounts.rankingClubs;
+    }
+    if (JSON.stringify(nextAccounts) !== JSON.stringify(existing)) {
+      patch.socialAccounts = nextAccounts;
     }
     if (!Object.keys(patch).length) continue;
     await db.update(referees).set(patch).where(eq(referees.id, row.id));
@@ -304,9 +597,10 @@ async function enrichCoachImages() {
   `);
   const titles = rows.flatMap((row) => wikipediaTitleCandidates(row.name, "coach"));
   const thumbs = await fetchWikipediaThumbnails(titles);
+  const translated = await fetchLanguageWikipediaHeadshots(rows.map((row) => row.name), ["fr"]);
   let updated = 0;
   for (const row of rows) {
-    const url = thumbnailForName(thumbs, row.name, "coach");
+    const url = thumbnailForName(thumbs, row.name, "coach") ?? translated.get(row.name) ?? null;
     if (!url) continue;
     await db.update(coaches).set({ imageUrl: url }).where(eq(coaches.id, row.id));
     updated += 1;
@@ -336,12 +630,25 @@ async function main() {
   const playersOnly = process.argv.includes("--players-only");
   const yearArg = process.argv.find((arg) => arg.startsWith("--year="));
   const year = yearArg ? Number(yearArg.split("=")[1]) : undefined;
+  if (process.argv.includes("--coaches-only")) {
+    await enrichCoachImages();
+    return;
+  }
   if (staffOnly || gapsOnly || playersOnly) {
-    if (gapsOnly || playersOnly) await enrichPlayerImages(year);
+    if (gapsOnly || playersOnly) {
+      await copyExistingPlayerPhotos();
+      await enrichPlayerImages(year);
+      if (playersOnly) await enrichClubCrests();
+    }
     if (!playersOnly) {
       await enrichRefereeProfiles();
+      await enrichRefereeClubCrests();
       await enrichCoachImages();
     }
+    return;
+  }
+  if (process.argv.includes("--referee-crests-only")) {
+    await enrichRefereeClubCrests();
     return;
   }
   if (!imagesOnly && !crestsOnly) {
@@ -356,7 +663,9 @@ async function main() {
   }
   if (!crestsOnly) await mergeDuplicateMostert();
   await enrichClubCrests();
+  await enrichRefereeClubCrests();
   if (!crestsOnly) {
+    await copyExistingPlayerPhotos();
     await enrichPlayerImages(year);
     await enrichRefereeProfiles();
     await enrichCoachImages();

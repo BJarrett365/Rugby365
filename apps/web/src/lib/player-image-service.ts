@@ -389,7 +389,7 @@ export async function registerAlamyImagesForPlayer(
           imageUrl: row.imageUrl,
           primaryImageId: row.id,
           primaryImageApprovedAt: now(),
-          updatedAt: now(),
+          profileUpdatedAt: now(),
         })
         .where(eq(players.id, playerId));
       setPrimary = false;
@@ -492,7 +492,7 @@ export async function registerSpringboksOfficialImage(
         imageUrl: url,
         primaryImageId: imageId,
         primaryImageApprovedAt: now(),
-        updatedAt: now(),
+        profileUpdatedAt: now(),
       })
       .where(eq(players.id, playerId));
   }
@@ -850,7 +850,7 @@ export async function copyApprovedHeadshotFromNameTwin(playerId: string): Promis
       imageUrl: twin.imageUrl,
       primaryImageId: imageId,
       primaryImageApprovedAt: now(),
-      updatedAt: now(),
+      profileUpdatedAt: now(),
     })
     .where(eq(players.id, playerId));
   return true;
@@ -908,7 +908,7 @@ export async function registerWikipediaHeadshotIfMissing(
       imageUrl,
       primaryImageId: imageId,
       primaryImageApprovedAt: now(),
-      updatedAt: now(),
+      profileUpdatedAt: now(),
     })
     .where(eq(players.id, playerId));
   return true;
