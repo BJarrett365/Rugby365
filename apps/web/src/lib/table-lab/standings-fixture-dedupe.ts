@@ -1,4 +1,5 @@
 import { isLiveFixtureStatus } from "./live-table-service";
+import { rugbyChampionshipParticipantKeys } from "../rugby-championship-lineage";
 
 const COMPLETED_STATUSES = new Set(["full_time", "finished", "completed", "ft"]);
 
@@ -34,8 +35,14 @@ const CLUB_TEAM_ALIASES: Record<string, string> = {
   "llanelli scarlets": "Scarlets",
   "blue bulls": "Bulls",
   "natal sharks": "Sharks",
+  "dhl stormers": "Stormers",
+  "dhl-stormers": "Stormers",
+  dhl: "Stormers",
+  glasgow: "Glasgow Warriors",
   "hollywood sharks": "Sharks",
   "hollywood cardiffs": "Cardiff Rugby",
+  cardiff: "Cardiff Rugby",
+  "cardiff blues": "Cardiff Rugby",
   "hawkes bay": "Hawke's Bay",
   "hawke s bay": "Hawke's Bay",
   "hawke's bay": "Hawke's Bay",
@@ -135,9 +142,12 @@ export function isHealthyStandingsRows(
   return true;
 }
 
-export function isRugbyChampionshipParticipant(teamName: string): boolean {
+export function isRugbyChampionshipParticipant(
+  teamName: string,
+  year?: number | null,
+): boolean {
   const key = canonicalStandingsTeamName(teamName).toLowerCase();
-  return RUGBY_CHAMPIONSHIP_TEAM_KEYS.has(key);
+  return rugbyChampionshipParticipantKeys(year).has(key);
 }
 
 export function isUnknownStandingsTeamName(name: string | null | undefined): boolean {

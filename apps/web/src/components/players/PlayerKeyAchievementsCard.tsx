@@ -5,10 +5,11 @@ import type { PublicPlayerKeyAchievementTile } from "@/lib/public-player-overvie
 export type PlayerKeyAchievementsCardProps = {
   slug: string;
   tiles: PublicPlayerKeyAchievementTile[];
+  viewAllHref?: string;
 };
 
 /** KEY ACHIEVEMENTS widget — trophies/honours from CMS; never invents titles. */
-export function PlayerKeyAchievementsCard({ slug, tiles }: PlayerKeyAchievementsCardProps) {
+export function PlayerKeyAchievementsCard({ slug, tiles, viewAllHref }: PlayerKeyAchievementsCardProps) {
   const shown = tiles.slice(0, 4);
 
   return (
@@ -48,7 +49,7 @@ export function PlayerKeyAchievementsCard({ slug, tiles }: PlayerKeyAchievements
         </div>
       )}
       <div className="pr-player-v2__card-foot">
-        <Link className="pr-player-v2__card-link" href={`/players/${slug}/career#honours`}>
+        <Link className="pr-player-v2__card-link" href={viewAllHref ?? `/players/${slug}/career#honours`}>
           View all achievements &gt;
         </Link>
       </div>

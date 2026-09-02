@@ -3067,6 +3067,25 @@
   font-weight: 600;
 }
 
+.pr-player-v2__rm-match-line--crests {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.pr-player-v2__rm-match-line--crests > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-player-v2__rm-match-line--crests .pr-team-crest {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 .pr-player-v2__rm-comp {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7896,5 +7915,305 @@ html.pr-embed-mode body {
 @media (max-width: 560px) {
   .pr-compare-shot__summary {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Referee career statistics (stats tab) ─── */
+.pr-ref-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.pr-ref-stats__title {
+  margin: 0.15rem 0 0.1rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.pr-ref-stats__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.pr-ref-stats__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  background: var(--pv2-card);
+  border: 1px solid var(--pv2-border);
+  border-radius: 0.55rem;
+  min-width: 0;
+}
+
+.pr-ref-stats__icon {
+  color: #4ade80;
+  display: inline-flex;
+}
+
+.pr-ref-stats__kpi strong {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-ref-stats__kpi span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pv2-muted);
+}
+
+.pr-ref-stats__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.75fr) minmax(16rem, 0.8fr);
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.pr-ref-stats__panel {
+  min-height: 100%;
+}
+
+.pr-ref-stats__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.72rem;
+  padding: 0.15rem 0 0.1rem;
+}
+
+.pr-ref-stats__bar {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 10.5rem) minmax(0, 1fr) 2.4rem;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.pr-ref-stats__bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #e5e7eb;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.pr-ref-stats__bar-label svg {
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.pr-ref-stats__bar-track {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.pr-ref-stats__bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #4ade80;
+}
+
+.pr-ref-stats__bar strong {
+  text-align: right;
+  color: #fff;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-ref-stats__axis {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 10.5rem) minmax(0, 1fr) 2.4rem;
+  gap: 0.55rem;
+  color: var(--pv2-muted);
+  font-size: 0.62rem;
+  margin-top: 0.15rem;
+}
+
+.pr-ref-stats__axis-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-ref-stats__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.55rem 0.15rem 0.35rem;
+}
+
+.pr-ref-stats__cards p {
+  display: grid;
+  grid-template-columns: 2.1rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.85rem;
+  row-gap: 0.1rem;
+  margin: 0;
+  align-items: center;
+}
+
+.pr-ref-stats__card-chip {
+  grid-row: 1 / span 2;
+  width: 1.55rem;
+  height: 2.15rem;
+  border-radius: 0.28rem;
+}
+
+.pr-ref-stats__card-chip--y {
+  background: #facc15;
+}
+
+.pr-ref-stats__card-chip--r {
+  background: #ef4444;
+}
+
+.pr-ref-stats__cards strong {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-ref-stats__cards p > span:last-child {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--pv2-muted);
+}
+
+.pr-ref-stats__accuracy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pr-ref-stats__ring {
+  position: relative;
+  width: 11.5rem;
+  height: 11.5rem;
+  margin: 0.35rem auto 0.2rem;
+}
+
+.pr-ref-stats__ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pr-ref-stats__ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.pr-ref-stats__ring-fill {
+  stroke: #4ade80;
+}
+
+.pr-ref-stats__ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pr-ref-stats__ring-value strong {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+
+.pr-ref-stats__ring-value span {
+  margin-top: 0.28rem;
+  max-width: 6.2rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pv2-muted);
+}
+
+.pr-ref-stats__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0;
+  color: #4ade80;
+  font-size: 0.68rem;
+}
+
+.pr-ref-stats__footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.15rem 0 0;
+  color: var(--pv2-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.pr-ref-stats__footnote span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.12rem;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 0.62rem;
+  font-style: italic;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  .pr-ref-stats__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pr-ref-stats__accuracy {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .pr-ref-stats__kpis,
+  .pr-ref-stats__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pr-ref-stats__bar,
+  .pr-ref-stats__axis {
+    grid-template-columns: minmax(7.5rem, 1fr) minmax(0, 1.2fr) 2.2rem;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .pr-ref-stats__kpis,
+  .pr-ref-stats__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pr-ref-stats__accuracy {
+    grid-column: auto;
   }
 }

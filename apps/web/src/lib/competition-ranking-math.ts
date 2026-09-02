@@ -1,6 +1,7 @@
 /** Pure helpers for competition tournament rankings (players / coaches / referees). */
 
 import { foldRankingClubKey } from "./player-ranking-engine";
+import { isRugbyWorldCupSlug } from "./rugby-world-cup-pools";
 
 export type RankingTrend = "up" | "down" | "flat" | "new" | "provisional";
 
@@ -249,6 +250,11 @@ const REFEREE_NATIONALITY_FALLBACK: Record<string, string> = {
   "mike adamson": "Scotland",
   "ian ramage": "Scotland",
   "jim fleming": "Scotland",
+  "jerome garces": "France",
+  "pascal gauzere": "France",
+  "chris pollock": "New Zealand",
+  "jp doyle": "England",
+  "j p doyle": "England",
 };
 
 export function refereeNationalityFallback(name: string | null | undefined): string | null {
@@ -281,6 +287,11 @@ const REFEREE_CLUB_FALLBACK: Record<string, RefereeClubSet> = {
   "george clancy": { lastClub: "IRFU", clubs: ["IRFU"] },
   "romain poite": { lastClub: "FFR", clubs: ["FFR"] },
   "glen jackson": { lastClub: "Bay of Plenty", clubs: ["Bay of Plenty", "New Zealand Rugby"] },
+  "jerome garces": { lastClub: "FFR", clubs: ["FFR"] },
+  "pascal gauzere": { lastClub: "FFR", clubs: ["FFR"] },
+  "john lacey": { lastClub: "IRFU", clubs: ["IRFU"] },
+  "chris pollock": { lastClub: "New Zealand Rugby", clubs: ["New Zealand Rugby"] },
+  "jp doyle": { lastClub: "RFU", clubs: ["RFU"] },
 };
 
 export function refereeClubFallback(name: string | null | undefined): RefereeClubSet | null {
@@ -468,6 +479,18 @@ export function rankingPositionGroup(positionName: string | null | undefined): R
   if (n.includes("wing") || n === "11" || n === "14") return "wings";
   if (n.includes("full") || n === "15") return "full_backs";
   return "unknown";
+}
+
+/** Query-string value for the rankings season picker (World Cup uses the calendar year). */
+export function rankingSeasonQueryValue(
+  competitionSlug: string,
+  season: { year?: number | null; label?: string | null } | null | undefined,
+): string {
+  if (!season) return "";
+  if (isRugbyWorldCupSlug(competitionSlug) && season.year != null && Number.isFinite(season.year)) {
+    return String(season.year);
+  }
+  return (season.label ?? "").trim();
 }
 
 /** Prefer the latest tournament that already has results over a future "active" season. */

@@ -34,6 +34,8 @@ export type PlayerRecentMatchRow = {
   awayTeamName: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  homeCrestUrl?: string | null;
+  awayCrestUrl?: string | null;
   /** Official score line for MATCH column, e.g. "Leinster 28 - 17 Toulouse". */
   matchLabel: string;
   competitionName: string | null;

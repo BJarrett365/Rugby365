@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TeamCrest } from "@/components/matches/TeamCrest";
 import type { PlayerRecentMatchRow } from "@/lib/player-recent-matches-service";
 
 function formatDate(iso: string | null): string {
@@ -25,12 +26,29 @@ function CardCounts({ yellow, red }: { yellow: number; red: number }) {
   );
 }
 
+function MatchSides({ m }: { m: PlayerRecentMatchRow }) {
+  const home = m.homeTeamName?.trim();
+  const away = m.awayTeamName?.trim();
+  if (!home || !away) return <span className="pr-player-v2__rm-match-line">{m.matchLabel}</span>;
+  return (
+    <span className="pr-player-v2__rm-match-line pr-player-v2__rm-match-line--crests">
+      <TeamCrest name={home} imageUrl={m.homeCrestUrl} size="xs" />
+      <span>
+        {home}
+        {m.homeScore != null && m.awayScore != null ? ` ${m.homeScore} - ${m.awayScore} ` : " vs "}
+        {away}
+      </span>
+      <TeamCrest name={away} imageUrl={m.awayCrestUrl} size="xs" />
+    </span>
+  );
+}
+
 function MatchRowCells({ m }: { m: PlayerRecentMatchRow }) {
   return (
     <>
       <span className="pr-player-v2__rm-date">{formatDate(m.kickoffAt)}</span>
       <span className="pr-player-v2__rm-match">
-        <span className="pr-player-v2__rm-match-line">{m.matchLabel}</span>
+        <MatchSides m={m} />
         {m.result ? (
           <span
             className={`pr-player-v2__result-chip pr-player-v2__form-chip--square pr-player-v2__form-chip--${m.result.toLowerCase()}`}
@@ -56,10 +74,17 @@ function MatchRowCells({ m }: { m: PlayerRecentMatchRow }) {
 export type PlayerRecentMatchesCardProps = {
   slug: string;
   matches: PlayerRecentMatchRow[];
+  viewAllHref?: string;
+  showViewAll?: boolean;
 };
 
 /** RECENT MATCHES — display only; rows from getPlayerRecentMatches. */
-export function PlayerRecentMatchesCard({ slug, matches }: PlayerRecentMatchesCardProps) {
+export function PlayerRecentMatchesCard({
+  slug,
+  matches,
+  viewAllHref,
+  showViewAll = true,
+}: PlayerRecentMatchesCardProps) {
   return (
     <div className="pr-player-v2__card pr-player-v2__widget-card pr-player-v2__matches-card">
       <div className="pr-player-v2__card-head">
@@ -96,14 +121,16 @@ export function PlayerRecentMatchesCard({ slug, matches }: PlayerRecentMatchesCa
         </div>
       )}
 
-      <div className="pr-player-v2__matches-foot">
-        <Link
-          className="pr-player-v2__matches-all-btn"
-          href={`/players/${slug}/stats?view=matches`}
-        >
-          View all matches
-        </Link>
-      </div>
+      {showViewAll ? (
+        <div className="pr-player-v2__matches-foot">
+          <Link
+            className="pr-player-v2__matches-all-btn"
+            href={viewAllHref ?? `/players/${slug}/stats?view=matches`}
+          >
+            View all matches
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

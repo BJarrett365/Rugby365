@@ -10,6 +10,9 @@ export type PlayerAiScoutSummaryCardProps = {
   recommendationLabel?: string | null;
   rriScore?: number | null;
   rriBand?: string | null;
+  title?: string;
+  reportHref?: string;
+  reportLabel?: string;
 };
 
 function titleCaseInsight(label: string): string {
@@ -31,6 +34,9 @@ export function PlayerAiScoutSummaryCard({
   recommendationLabel,
   rriScore,
   rriBand,
+  title = "AI Scout Summary",
+  reportHref,
+  reportLabel = "Read full scout report >",
 }: PlayerAiScoutSummaryCardProps) {
   const hasBody =
     Boolean(summary?.trim()) ||
@@ -41,7 +47,7 @@ export function PlayerAiScoutSummaryCard({
   return (
     <div className="pr-player-v2__card pr-player-v2__widget-card pr-player-v2__scout-card">
       <div className="pr-player-v2__card-head">
-        <h2>AI Scout Summary</h2>
+        <h2>{title}</h2>
         {provisional && hasBody ? (
           <span className="pr-player-v2__scout-badge" title="Derived from structured intelligence scores">
             Provisional
@@ -90,8 +96,8 @@ export function PlayerAiScoutSummaryCard({
       )}
 
       <div className="pr-player-v2__card-foot">
-        <Link className="pr-player-v2__card-link" href={`/players/${slug}/intelligence`}>
-          Read full scout report &gt;
+        <Link className="pr-player-v2__card-link" href={reportHref ?? `/players/${slug}/intelligence`}>
+          {reportLabel}
         </Link>
       </div>
     </div>

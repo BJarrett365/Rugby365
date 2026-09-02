@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isProvisional,
   pickDefaultRankingSeason,
+  rankingSeasonQueryValue,
   previousRankByPriorAverage,
   rankingPositionGroup,
   rating10To100,
@@ -64,6 +65,20 @@ describe("pickDefaultRankingSeason", () => {
       { id: "2019", year: 2019, isActive: false },
     ];
     expect(pickDefaultRankingSeason(seasons, new Set(["2023", "2019"]))?.id).toBe("2023");
+  });
+});
+
+describe("rankingSeasonQueryValue", () => {
+  it("writes the World Cup calendar year even when the label is a range", () => {
+    expect(
+      rankingSeasonQueryValue("rugby-world-cup", { year: 2023, label: "2023–24" }),
+    ).toBe("2023");
+  });
+
+  it("keeps club season labels as-is", () => {
+    expect(
+      rankingSeasonQueryValue("premiership", { year: 2024, label: "2024–25" }),
+    ).toBe("2024–25");
   });
 });
 

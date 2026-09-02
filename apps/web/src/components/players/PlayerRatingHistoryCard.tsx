@@ -20,6 +20,8 @@ export type PlayerRatingHistoryCardProps = {
   points: PlayerOverviewRatingPoint[];
   /** Pre-extracted overall ability series from the service (preferred). */
   overallSeries?: RatingHistoryPoint[];
+  fullHistoryHref?: string;
+  showMetricSelect?: boolean;
 };
 
 function formatRating(v: number): string {
@@ -31,6 +33,8 @@ export function PlayerRatingHistoryCard({
   slug,
   points,
   overallSeries,
+  fullHistoryHref,
+  showMetricSelect = true,
 }: PlayerRatingHistoryCardProps) {
   const [metric, setMetric] = useState<RatingHistoryMetricKey>("overall");
 
@@ -83,20 +87,22 @@ export function PlayerRatingHistoryCard({
       <div className="pr-player-v2__card-head">
         <h2>Rating History</h2>
         <div className="pr-player-v2__widget-head-actions">
-          <label className="pr-player-v2__widget-select">
-            <span className="sr-only">Rating metric</span>
-            <select
-              value={metric}
-              onChange={(e) => setMetric(e.target.value as RatingHistoryMetricKey)}
-            >
-              {RATING_HISTORY_METRIC_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Link className="pr-player-v2__card-link" href={`/players/${slug}/rating`}>
+          {showMetricSelect ? (
+            <label className="pr-player-v2__widget-select">
+              <span className="sr-only">Rating metric</span>
+              <select
+                value={metric}
+                onChange={(e) => setMetric(e.target.value as RatingHistoryMetricKey)}
+              >
+                {RATING_HISTORY_METRIC_OPTIONS.map((opt) => (
+                  <option key={opt.key} value={opt.key}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <Link className="pr-player-v2__card-link" href={fullHistoryHref ?? `/players/${slug}/rating`}>
             Full history &gt;
           </Link>
         </div>
