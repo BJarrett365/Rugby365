@@ -90,7 +90,7 @@ function toCard(row: HubSeasonRow): PublicTableCompetitionCard {
 }
 
 export async function listPublicCompetitionTables(): Promise<PublicTableCompetitionCard[]> {
-  return cachedPublic("tables:hub:v3", PUBLIC_CACHE_TTL.tablesHub, async () => {
+  return cachedPublic("tables:hub:v5", PUBLIC_CACHE_TTL.tablesHub, async () => {
     const db = getDb();
 
     // Active/latest seasons that already have overall standings.
@@ -137,7 +137,8 @@ export async function listPublicCompetitionTables(): Promise<PublicTableCompetit
     );
 
     // World Cup often has fixtures + live pool calc but no overall standing_rows,
-    // so it was invisible on /tables. Include fixture-backed World Cup seasons.
+    // so it was invisible on /tables. One grouped scan — not a per-season subquery
+    // against unindexed fixtures.season_id, which hung the public hub in Chrome.
     const fixtureBacked = await db.execute(sql`
       SELECT
         c.id AS competition_id,
@@ -151,26 +152,27 @@ export async function listPublicCompetitionTables(): Promise<PublicTableCompetit
         cs.slug AS season_slug,
         cs.is_active,
         cs.year,
-        (
-          SELECT count(DISTINCT team_id)::int
-          FROM (
-            SELECT f.home_team_id AS team_id
-            FROM fixtures f
-            WHERE f.season_id = cs.id AND f.home_team_id IS NOT NULL
-            UNION
-            SELECT f.away_team_id
-            FROM fixtures f
-            WHERE f.season_id = cs.id AND f.away_team_id IS NOT NULL
-          ) teams
-        ) AS team_count
+        count(DISTINCT team_id)::int AS team_count
       FROM competitions c
       INNER JOIN competition_seasons cs ON cs.competition_id = c.id
+      INNER JOIN (
+        SELECT season_id, home_team_id AS team_id
+        FROM fixtures
+        WHERE season_id IS NOT NULL AND home_team_id IS NOT NULL
+        UNION
+        SELECT season_id, away_team_id
+        FROM fixtures
+        WHERE season_id IS NOT NULL AND away_team_id IS NOT NULL
+      ) teams ON teams.season_id = cs.id
       WHERE (
         c.competition_type = 'world_cup'
         OR c.slug = 'rugby-world-cup'
         OR c.slug LIKE 'rugby-world-cup__legacy__%'
       )
-      AND EXISTS (SELECT 1 FROM fixtures f WHERE f.season_id = cs.id)
+      GROUP BY
+        c.id, c.name, c.slug, c.competition_type, c.country_name, c.region,
+        cs.id, cs.label, cs.slug, cs.is_active, cs.year
+      HAVING count(DISTINCT team_id) > 0
       ORDER BY c.name ASC, cs.year DESC NULLS LAST
     `);
 

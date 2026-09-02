@@ -794,9 +794,126 @@ async function maybeMirrorPlayerImageToSupabase(input: {
 }
 
 /**
- * Automated discovery hook.
- * Never replaces an approved primary image — only adds candidates.
+ * When a transfer/duplicate row has no photo, reuse an approved headshot
+ * already stored on another player with the same display name.
  */
+export async function copyApprovedHeadshotFromNameTwin(playerId: string): Promise<boolean> {
+  const db = getDb();
+  const [self] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+  if (!self || self.imageUrl?.trim()) return false;
+
+  const twins = await db
+    .select({
+      id: players.id,
+      imageUrl: players.imageUrl,
+    })
+    .from(players)
+    .where(and(eq(players.name, self.name), ne(players.id, playerId)));
+  const twin = twins.find((row) => row.imageUrl?.trim());
+  if (!twin?.imageUrl) return false;
+
+  const [existing] = await db
+    .select({ id: playerImages.id })
+    .from(playerImages)
+    .where(and(eq(playerImages.playerId, playerId), eq(playerImages.imageUrl, twin.imageUrl)))
+    .limit(1);
+  let imageId = existing?.id ?? null;
+  if (!imageId) {
+    const [inserted] = await db
+      .insert(playerImages)
+      .values({
+        playerId,
+        imageUrl: twin.imageUrl,
+        canonicalUrl: twin.imageUrl,
+        sourceProvider: "name_twin",
+        caption: `Profile photo of ${self.name}`,
+        altText: self.name,
+        licence: "unknown",
+        imageType: "headshot",
+        role: "primary",
+        confidence: "high",
+        confidenceScore: 80,
+        status: "approved",
+        isPublic: true,
+        isAiGenerated: false,
+        approvedAt: now(),
+        discoveredAt: now(),
+        updatedAt: now(),
+      })
+      .returning({ id: playerImages.id });
+    imageId = inserted?.id ?? null;
+  }
+
+  await db
+    .update(players)
+    .set({
+      imageUrl: twin.imageUrl,
+      primaryImageId: imageId,
+      primaryImageApprovedAt: now(),
+      updatedAt: now(),
+    })
+    .where(eq(players.id, playerId));
+  return true;
+}
+
+export async function registerWikipediaHeadshotIfMissing(
+  playerId: string,
+  imageUrl: string,
+  playerName: string,
+): Promise<boolean> {
+  const db = getDb();
+  const [self] = await db
+    .select({ imageUrl: players.imageUrl })
+    .from(players)
+    .where(eq(players.id, playerId))
+    .limit(1);
+  if (self?.imageUrl?.trim()) return false;
+
+  const [existing] = await db
+    .select({ id: playerImages.id })
+    .from(playerImages)
+    .where(and(eq(playerImages.playerId, playerId), eq(playerImages.imageUrl, imageUrl)))
+    .limit(1);
+  let imageId = existing?.id ?? null;
+  if (!imageId) {
+    const [inserted] = await db
+      .insert(playerImages)
+      .values({
+        playerId,
+        imageUrl,
+        canonicalUrl: imageUrl,
+        sourceProvider: "wikipedia",
+        caption: `Wikipedia / Wikimedia Commons photo of ${playerName}`,
+        altText: playerName,
+        credit: "Wikimedia Commons",
+        licence: "creative_commons",
+        imageType: "headshot",
+        role: "primary",
+        confidence: "high",
+        confidenceScore: 90,
+        status: "approved",
+        isPublic: true,
+        isAiGenerated: false,
+        approvedAt: now(),
+        discoveredAt: now(),
+        updatedAt: now(),
+      })
+      .returning({ id: playerImages.id });
+    imageId = inserted?.id ?? null;
+  }
+
+  await db
+    .update(players)
+    .set({
+      imageUrl,
+      primaryImageId: imageId,
+      primaryImageApprovedAt: now(),
+      updatedAt: now(),
+    })
+    .where(eq(players.id, playerId));
+  return true;
+}
+
 export async function refreshPlayerPlanetRugbyImages(playerId: string, reason: string) {
   const ctx = await getPlayerImageContext(playerId);
   const result = await findPlanetRugbyImagesForPlayer(playerId);

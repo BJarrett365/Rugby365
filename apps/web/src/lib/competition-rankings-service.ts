@@ -13,6 +13,7 @@ import {
   players,
   refereeMatchRatings,
   referees,
+  teamMatchStats,
   teams,
 } from "@rugby365/db";
 import { getDb } from "./db";
@@ -50,6 +51,18 @@ import {
   nationalTeamNickname,
   teamCodeForLeaderboard,
 } from "./competition-player-stat-display";
+import { scoringRulesForCompetitionSlug } from "./table-lab/competition-scoring-rules-catalog";
+import { matchLeaguePoints } from "./table-lab/rugby-table-metrics-service";
+import {
+  isRugbyWorldCupParticipantName,
+  isRugbyWorldCupSlug,
+  isWorldCupKnockoutStage,
+} from "./rugby-world-cup-pools";
+import {
+  isRugbyChampionshipLineageSlug,
+  rugbyChampionshipCompetitionDisplayNameForYear,
+  rugbyChampionshipTableNote,
+} from "./rugby-championship-lineage";
 import {
   canonicalStandingsTeamName,
   isUnknownStandingsTeamName,
@@ -138,6 +151,7 @@ function isUsableRefereeAppointmentTeam(input: {
 
 async function loadRefereeCareerAppointmentClubs(
   board: Array<{ refereeId: string; refereeName: string }>,
+  scope?: { competitionId: string; seasonId: string },
 ): Promise<
   Map<
     string,
@@ -172,6 +186,13 @@ async function loadRefereeCareerAppointmentClubs(
   }
   const uniqueIds = [...new Set(aliasToBoard.keys())];
   if (!uniqueIds.length) return map;
+  const scopeFilter = scope
+    ? and(
+        inArray(fixtures.refereeId, uniqueIds),
+        eq(fixtures.competitionId, scope.competitionId),
+        eq(fixtures.seasonId, scope.seasonId),
+      )
+    : inArray(fixtures.refereeId, uniqueIds);
   const rows = await db
     .select({
       refereeId: fixtures.refereeId,
@@ -183,7 +204,7 @@ async function loadRefereeCareerAppointmentClubs(
     })
     .from(fixtures)
     .innerJoin(teams, sql`${teams.id} in (${fixtures.homeTeamId}, ${fixtures.awayTeamId})`)
-    .where(inArray(fixtures.refereeId, uniqueIds))
+    .where(scopeFilter)
     .groupBy(fixtures.refereeId, teams.id, teams.name, teams.slug, teams.imageUrl, teams.teamType);
 
   const byReferee = new Map<
@@ -491,6 +512,7 @@ export type CompetitionRankingsPayload = {
     players: string;
     referees: string;
     coaches: string;
+    teams: string;
   };
   playersByPosition: CompetitionPlayerPositionBoard[];
   playersOverall: CompetitionPlayerRankingRow[];
@@ -574,17 +596,33 @@ export async function getCompetitionRankingsBySlug(
     options.seasonLabel,
   );
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 500);
+  const isWorldCup =
+    isRugbyWorldCupSlug(competition.slug) || competition.competitionType === "world_cup";
+  const isRugbyChampionship = isRugbyChampionshipLineageSlug(competition.slug);
+  const competitionName =
+    isRugbyChampionship && season
+      ? rugbyChampionshipCompetitionDisplayNameForYear(season.year)
+      : competition.name;
   const notes = {
-    players:
-      "Ranked by average Rugby365 match rating in this competition season. Club is the player’s club side; country is the national team. Club performance uses club ratings from the same calendar year when available.",
-    referees:
-      "Current form (last 5) is weighted: match performance 35%, decision accuracy 25%, penalty consistency 15%, card management 10%, game control 10%, recent appointments 5%. Tournament rating also includes knockout difficulty. Provisional until 2 matches.",
-    coaches:
-      "Tournament rating = average match rating (/100). Wins and win-rate shown for context. Provisional until 2 matches. Full expectation-adjusted model expands as more squad-strength data is wired.",
+    players: isWorldCup
+      ? "Ranked from Rugby World Cup match ratings this tournament only. Club is the club listed for this World Cup when known; country is the nation they played for."
+      : "Ranked by average Rugby365 match rating in this competition season. Club is the player’s club side; country is the national team. Club performance uses club ratings from the same calendar year when available.",
+    referees: isWorldCup
+      ? "Referee rankings use Rugby365 match ratings from this Rugby World Cup only. Club is omitted because World Cup appointments are between nations, not clubs."
+      : "Current form (last 5) is weighted: match performance 35%, decision accuracy 25%, penalty consistency 15%, card management 10%, game control 10%, recent appointments 5%. Tournament rating also includes knockout difficulty. Provisional until 2 matches.",
+    coaches: isWorldCup
+      ? "Coach rankings use Rugby365 match ratings from this Rugby World Cup only. Team is the national side they coached in this tournament."
+      : "Tournament rating = average match rating (/100). Wins and win-rate shown for context. Provisional until 2 matches. Full expectation-adjusted model expands as more squad-strength data is wired.",
+    teams: isWorldCup
+      ? "Pool-stage table only (knockout matches excluded). World Rugby points: 4 for a win, 2 for a draw, 1 try bonus (4+ tries), 1 losing bonus (defeat by 7 or fewer)."
+      : isRugbyChampionship && season
+        ? (rugbyChampionshipTableNote(season.year) ??
+          "Simple points table from finished matches in this competition season.")
+        : "Simple points table from finished matches in this competition season.",
   };
 
   const empty: CompetitionRankingsPayload = {
-    competition: { id: competition.id, slug: competition.slug, name: competition.name },
+    competition: { id: competition.id, slug: competition.slug, name: competitionName },
     seasons,
     season: season
       ? { id: season.id, label: season.label, year: season.year, isActive: season.isActive }
@@ -601,6 +639,10 @@ export async function getCompetitionRankingsBySlug(
   if (!season) return empty;
 
   const db = getDb();
+  const scoringRules = scoringRulesForCompetitionSlug(
+    competition.slug,
+    competition.competitionType,
+  );
 
   // ── Teams (from finished fixtures) ───────────────────────────────────────
   const fixtureRows = await db
@@ -611,6 +653,7 @@ export async function getCompetitionRankingsBySlug(
       homeScore: fixtures.homeScore,
       awayScore: fixtures.awayScore,
       status: fixtures.status,
+      stage: fixtures.stage,
       round: fixtures.round,
       slug: fixtures.slug,
       kickoffAt: fixtures.kickoffAt,
@@ -647,7 +690,10 @@ export async function getCompetitionRankingsBySlug(
           .where(inArray(teams.id, teamIds));
   const teamMeta = new Map(teamMetaRows.map((t) => [t.id, t]));
   const canonicalTeamByName = pickCanonicalTeamIdByName(teamMetaRows);
-  const finishedFixtures = pickCanonicalFixturesForStandings(fixtureRows, (fx) => {
+  const tableFixtureRows = isWorldCup
+    ? fixtureRows.filter((fx) => !isWorldCupKnockoutStage(fx.stage, fx.round))
+    : fixtureRows;
+  const finishedFixtures = pickCanonicalFixturesForStandings(tableFixtureRows, (fx) => {
     const home = teamMeta.get(fx.homeTeamId ?? "")?.name ?? "";
     const away = teamMeta.get(fx.awayTeamId ?? "")?.name ?? "";
     const resolved = resolveTeamNamesFromFixtureSlug(fx.slug, home, away);
@@ -676,6 +722,7 @@ export async function getCompetitionRankingsBySlug(
     lost: number;
     pf: number;
     pa: number;
+    points: number;
   };
   const teamMap = new Map<string, TeamAgg>();
   function touchTeam(id: string | null) {
@@ -697,9 +744,31 @@ export async function getCompetitionRankingsBySlug(
       lost: 0,
       pf: 0,
       pa: 0,
+      points: 0,
     };
     teamMap.set(id, row);
     return row;
+  }
+
+  const tryRows =
+    finishedFixtures.length === 0
+      ? []
+      : await db
+          .select({
+            fixtureId: teamMatchStats.fixtureId,
+            teamId: teamMatchStats.teamId,
+            tries: teamMatchStats.tries,
+          })
+          .from(teamMatchStats)
+          .where(
+            inArray(
+              teamMatchStats.fixtureId,
+              finishedFixtures.map((fx) => fx.id),
+            ),
+          );
+  const triesByFixtureTeam = new Map<string, number>();
+  for (const row of tryRows) {
+    triesByFixtureTeam.set(`${row.fixtureId}:${row.teamId}`, row.tries);
   }
 
   for (const fx of finishedFixtures) {
@@ -714,6 +783,16 @@ export async function getCompetitionRankingsBySlug(
     home.pa += as;
     away.pf += as;
     away.pa += hs;
+    const homeTries = fx.homeTeamId
+      ? (triesByFixtureTeam.get(`${fx.id}:${fx.homeTeamId}`) ?? null)
+      : null;
+    const awayTries = fx.awayTeamId
+      ? (triesByFixtureTeam.get(`${fx.id}:${fx.awayTeamId}`) ?? null)
+      : null;
+    const homePts = matchLeaguePoints(hs, as, homeTries, scoringRules);
+    const awayPts = matchLeaguePoints(as, hs, awayTries, scoringRules);
+    home.points += homePts.leaguePoints;
+    away.points += awayPts.leaguePoints;
     if (hs > as) {
       home.won += 1;
       away.lost += 1;
@@ -726,7 +805,7 @@ export async function getCompetitionRankingsBySlug(
     }
   }
 
-  const teamsRanked = [...teamMap.values()]
+  const rankedAll = [...teamMap.values()]
     .reduce<TeamAgg[]>((acc, t) => {
       const name = canonicalStandingsTeamName(t.teamName);
       if (isUnknownStandingsTeamName(name)) return acc;
@@ -739,6 +818,7 @@ export async function getCompetitionRankingsBySlug(
         existing.lost += t.lost;
         existing.pf += t.pf;
         existing.pa += t.pa;
+        existing.points += t.points;
         return acc;
       }
       const canonMeta = canonical ? teamMeta.get(canonical.id) : undefined;
@@ -755,14 +835,20 @@ export async function getCompetitionRankingsBySlug(
     }, [])
     .map((t) => ({
       ...t,
-      points: t.won * 4 + t.draw * 2,
       pointsDiff: t.pf - t.pa,
-    }))
-    .sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      if (b.pointsDiff !== a.pointsDiff) return b.pointsDiff - a.pointsDiff;
-      return a.teamName.localeCompare(b.teamName);
-    });
+    }));
+  const rankedParticipants = isWorldCup
+    ? rankedAll.filter((t) =>
+        isRugbyWorldCupParticipantName(canonicalStandingsTeamName(t.teamName), season.year),
+      )
+    : rankedAll;
+  const teamsRanked = (
+    isWorldCup && rankedParticipants.length >= 8 ? rankedParticipants : rankedAll
+  ).sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.pointsDiff !== a.pointsDiff) return b.pointsDiff - a.pointsDiff;
+    return a.teamName.localeCompare(b.teamName);
+  });
 
   const teamRankById = new Map<string, number>();
   const teamRows: CompetitionTeamRankingRow[] = teamsRanked.map((t, i) => {
@@ -831,13 +917,15 @@ export async function getCompetitionRankingsBySlug(
     .leftJoin(teams, eq(playerMatchRatings.teamId, teams.id))
     .leftJoin(clubTeams, eq(players.clubTeamId, clubTeams.id))
     .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
-    .leftJoin(fixtures, eq(playerMatchRatings.fixtureId, fixtures.id))
+    .innerJoin(fixtures, eq(playerMatchRatings.fixtureId, fixtures.id))
     .leftJoin(ratingHomeTeams, eq(fixtures.homeTeamId, ratingHomeTeams.id))
     .leftJoin(ratingAwayTeams, eq(fixtures.awayTeamId, ratingAwayTeams.id))
     .where(
       and(
         eq(playerMatchRatings.competitionId, competition.id),
         eq(playerMatchRatings.seasonId, season.id),
+        eq(fixtures.competitionId, competition.id),
+        eq(fixtures.seasonId, season.id),
         isNotNull(playerMatchRatings.rating),
       ),
     )
@@ -936,19 +1024,15 @@ export async function getCompetitionRankingsBySlug(
   }
 
   const uniquePlayerIds = [...new Set([...playerMap.values()].map((p) => p.playerId))];
-  const isWorldCup =
-    competition.slug === "rugby-world-cup" || competition.competitionType === "world_cup";
   const [careerClubs, tournamentClubs, clubYearRatings] = await Promise.all([
-    loadCareerClubNames(uniquePlayerIds, season.year),
+    isWorldCup ? Promise.resolve(new Map<string, string>()) : loadCareerClubNames(uniquePlayerIds, season.year),
     loadTournamentClubNames(competition.id, season.id),
     loadClubYearRatings(uniquePlayerIds, competition.id, season.year),
   ]);
   for (const p of playerMap.values()) {
     const tournament = tournamentClubs.get(p.playerId);
     const career = careerClubs.get(p.playerId);
-    const next = isWorldCup
-      ? (tournament ?? career ?? p.clubName)
-      : (p.clubName ?? tournament ?? career);
+    const next = isWorldCup ? (tournament ?? null) : (p.clubName ?? tournament ?? career);
     if (next && next !== p.clubName) {
       p.clubSlug = null;
       p.clubImageUrl = null;
@@ -1136,13 +1220,15 @@ export async function getCompetitionRankingsBySlug(
     })
     .from(refereeMatchRatings)
     .innerJoin(referees, eq(refereeMatchRatings.refereeId, referees.id))
-    .leftJoin(fixtures, eq(refereeMatchRatings.fixtureId, fixtures.id))
+    .innerJoin(fixtures, eq(refereeMatchRatings.fixtureId, fixtures.id))
     .leftJoin(ratingHomeTeams, eq(fixtures.homeTeamId, ratingHomeTeams.id))
     .leftJoin(ratingAwayTeams, eq(fixtures.awayTeamId, ratingAwayTeams.id))
     .where(
       and(
         eq(refereeMatchRatings.competitionId, competition.id),
         eq(refereeMatchRatings.seasonId, season.id),
+        eq(fixtures.competitionId, competition.id),
+        eq(fixtures.seasonId, season.id),
       ),
     )
     .orderBy(desc(fixtures.kickoffAt));
@@ -1229,11 +1315,24 @@ export async function getCompetitionRankingsBySlug(
   }
 
   const refPool = [...refMap.values()];
-  const refereeAppointmentClubs = await loadRefereeCareerAppointmentClubs(
-    refPool.map((r) => ({ refereeId: r.refereeId, refereeName: r.refereeName })),
-  );
+  const refereeAppointmentClubs = isWorldCup
+    ? new Map<
+        string,
+        {
+          lastClub: string | null;
+          clubs: string[];
+          crests: Map<string, { slug: string; imageUrl: string | null }>;
+        }
+      >()
+    : await loadRefereeCareerAppointmentClubs(
+        refPool.map((r) => ({ refereeId: r.refereeId, refereeName: r.refereeName })),
+        { competitionId: competition.id, seasonId: season.id },
+      );
   const refClubSets = new Map(
     refPool.map((r) => {
+      if (isWorldCup) {
+        return [r.refereeId, { lastClub: null as string | null, clubs: [] as string[] }] as const;
+      }
       const career = refereeAppointmentClubs.get(r.refereeId);
       return [
         r.refereeId,
@@ -1360,13 +1459,15 @@ export async function getCompetitionRankingsBySlug(
     .from(coachMatchRatings)
     .innerJoin(coaches, eq(coachMatchRatings.coachId, coaches.id))
     .leftJoin(teams, eq(coachMatchRatings.teamId, teams.id))
-    .leftJoin(fixtures, eq(coachMatchRatings.fixtureId, fixtures.id))
+    .innerJoin(fixtures, eq(coachMatchRatings.fixtureId, fixtures.id))
     .leftJoin(ratingHomeTeams, eq(fixtures.homeTeamId, ratingHomeTeams.id))
     .leftJoin(ratingAwayTeams, eq(fixtures.awayTeamId, ratingAwayTeams.id))
     .where(
       and(
         eq(coachMatchRatings.competitionId, competition.id),
         eq(coachMatchRatings.seasonId, season.id),
+        eq(fixtures.competitionId, competition.id),
+        eq(fixtures.seasonId, season.id),
       ),
     )
     .orderBy(desc(fixtures.kickoffAt));
@@ -1392,7 +1493,7 @@ export async function getCompetitionRankingsBySlug(
     const r10 = effectiveStaffRating(row);
     const r100 = rating10To100(r10);
     if (r100 == null) continue;
-    const inferredTeam =
+    const storedTeam =
       row.teamId && row.teamName
         ? {
             teamId: row.teamId,
@@ -1401,21 +1502,33 @@ export async function getCompetitionRankingsBySlug(
             teamShortName: row.teamShortName,
             teamImageUrl: row.teamImageUrl,
           }
-        : row.side === "away"
-          ? {
-              teamId: row.awayTeamId,
-              teamName: row.awayTeamName,
-              teamSlug: row.awayTeamSlug,
-              teamShortName: row.awayTeamShortName,
-              teamImageUrl: row.awayTeamImageUrl,
-            }
-          : {
-              teamId: row.homeTeamId,
-              teamName: row.homeTeamName,
-              teamSlug: row.homeTeamSlug,
-              teamShortName: row.homeTeamShortName,
-              teamImageUrl: row.homeTeamImageUrl,
-            };
+        : null;
+    const fixtureTeam =
+      row.side === "away"
+        ? {
+            teamId: row.awayTeamId,
+            teamName: row.awayTeamName,
+            teamSlug: row.awayTeamSlug,
+            teamShortName: row.awayTeamShortName,
+            teamImageUrl: row.awayTeamImageUrl,
+          }
+        : {
+            teamId: row.homeTeamId,
+            teamName: row.homeTeamName,
+            teamSlug: row.homeTeamSlug,
+            teamShortName: row.homeTeamShortName,
+            teamImageUrl: row.homeTeamImageUrl,
+          };
+    const inferredTeam = isWorldCup
+      ? isInternationalLeaderboardTeam(fixtureTeam.teamName ?? "")
+        ? fixtureTeam
+        : isInternationalLeaderboardTeam(storedTeam?.teamName ?? "")
+          ? storedTeam
+          : fixtureTeam.teamName
+            ? fixtureTeam
+            : storedTeam
+      : (storedTeam ?? fixtureTeam);
+    if (!inferredTeam) continue;
     const existing = coachMap.get(row.coachId) ?? {
       coachId: row.coachId,
       coachName: row.coachName,

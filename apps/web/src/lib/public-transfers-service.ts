@@ -1,11 +1,12 @@
 /**
  * Public transfers browse — read-only lean rows from player_transfers.
  */
-import { and, asc, desc, eq, ilike, ne, not, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, ne, not, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   competitionSeasons,
   competitions,
+  playerImages,
   playerRatings,
   playerTransfers,
   players,
@@ -17,6 +18,7 @@ import {
   sanitizeTransferClub,
   sanitizeTransferPlayerName,
   transferClubLabel,
+  transferMarketDealDetail,
 } from "./transfer-display";
 import {
   TRANSFER_MOVEMENT_TYPES,
@@ -27,17 +29,28 @@ import {
   formatSeasonRangeLabel,
   normalizeSeasonLabel,
   parseSeasonStartYear,
+  currentDomesticSeasonStartYear,
 } from "./season-label-utils";
 import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import { listSeasonsForPicker } from "./competition-admin-service";
 import { isJunkTeamName, isJunkTeamSlug } from "./entity-normalize";
 import { isRealCompareRosterTeamName } from "./compare-roster-team-name";
 import {
+  dedupeNamedOptionsByName,
+  dedupeSeasonsByCompetitionAndYear,
+  expandTransferSearchTerms,
+  filterTransferClubGroups,
+  sortSeasonsGroupedByCompetition,
+} from "./public-transfers-filter-utils";
+import { canonicalCompetitionDisplayName, dedupeCompetitionsByName as dedupeCompetitionPickerRows } from "./competition-list-utils";
+import {
   isInternationalTeamId,
+  isPlaceholderNationCode,
   loadTeamClassificationContext,
   resolveDisplayNation,
   type TeamClassificationContext,
 } from "./international-team-classify";
+import { rankingCountryFlagUrl } from "./player-ranking-engine";
 import {
   DEFAULT_PREMIERSHIP_TRANSFER_SEASON,
   PREMIERSHIP_TRANSFERS_WIKI_URL,
@@ -48,15 +61,21 @@ export type PublicTransferRow = {
   playerId: string;
   playerSlug: string;
   playerName: string;
+  playerImageUrl: string | null;
   positionName: string | null;
   playerRating: number | null;
   internationalStatus: string | null;
+  nationCode: string | null;
+  nationFlagUrl: string | null;
   movementType: string;
   movementLabel: string;
+  dealDetail: string | null;
   fromTeamId: string | null;
   toTeamId: string | null;
   fromLabel: string;
   toLabel: string;
+  fromTeamImageUrl: string | null;
+  toTeamImageUrl: string | null;
   effectiveDate: string | null;
   seasonId: string | null;
   seasonLabel: string | null;
@@ -68,6 +87,8 @@ export type PublicTransferFilters = {
   seasonId?: string | null;
   competitionId?: string | null;
   teamId?: string | null;
+  /** Substring match on from/to club names (e.g. "Bulls"). */
+  teamQuery?: string | null;
   movementType?: string | null;
   search?: string | null;
   sortDir?: "asc" | "desc" | null;
@@ -78,11 +99,21 @@ export type PublicTransferFilters = {
 export type PublicTransferTeamGroup = {
   teamId: string;
   teamName: string;
+  teamImageUrl: string | null;
   in: PublicTransferRow[];
   out: PublicTransferRow[];
 };
 
-/** Prefer transfer position, then player profile position. */
+/** Crest for a transfer from/to cell — skip released/retired placeholders. */
+export function transferClubImageUrl(
+  label: string,
+  teamImageUrl: string | null | undefined,
+  teamName?: string | null,
+): string | null {
+  const text = label.trim();
+  if (!text || /^(—|-|released|retired)$/i.test(text)) return null;
+  return teamImageUrl?.trim() || rankingCountryFlagUrl(teamName || text) || null;
+}
 export function resolveTransferPosition(
   transferPosition: string | null | undefined,
   playerPosition: string | null | undefined,
@@ -91,6 +122,119 @@ export function resolveTransferPosition(
   if (a) return a;
   const b = playerPosition?.trim();
   return b || null;
+}
+
+async function loadTransferHeadshots(
+  rows: Array<{
+    playerId: string;
+    playerName?: string | null;
+    playerImageUrl: string | null;
+    primaryImageId?: string | null;
+  }>,
+): Promise<Map<string, string>> {
+  const found = new Map<string, string>();
+  for (const row of rows) {
+    if (row.playerImageUrl?.trim()) found.set(row.playerId, row.playerImageUrl.trim());
+  }
+  const missing = [...new Set(rows.map((row) => row.playerId).filter((id) => !found.has(id)))];
+  if (!missing.length) return found;
+
+  const db = getDb();
+  const primaryIds = [
+    ...new Set(rows.map((row) => row.primaryImageId).filter((id): id is string => Boolean(id))),
+  ];
+  if (primaryIds.length) {
+    const primaryRows = await db
+      .select({ id: playerImages.id, playerId: playerImages.playerId, imageUrl: playerImages.imageUrl })
+      .from(playerImages)
+      .where(inArray(playerImages.id, primaryIds));
+    for (const img of primaryRows) {
+      if (img.imageUrl && !found.has(img.playerId)) found.set(img.playerId, img.imageUrl);
+    }
+  }
+
+  const stillMissing = missing.filter((id) => !found.has(id));
+  if (!stillMissing.length) return found;
+
+  const gallery = await db
+    .select({
+      playerId: playerImages.playerId,
+      imageUrl: playerImages.imageUrl,
+    })
+    .from(playerImages)
+    .where(
+      and(
+        inArray(playerImages.playerId, stillMissing),
+        not(inArray(playerImages.status, ["rejected", "incorrect_player", "removed"])),
+        or(
+          eq(playerImages.status, "approved"),
+          inArray(playerImages.sourceProvider, ["wikipedia", "wikimedia", "name_twin", "alamy", "commons"]),
+          eq(playerImages.confidence, "high"),
+          and(eq(playerImages.sourceProvider, "planet_rugby"), eq(playerImages.confidence, "medium")),
+        ),
+      ),
+    );
+  for (const img of gallery) {
+    if (img.imageUrl && !found.has(img.playerId)) found.set(img.playerId, img.imageUrl);
+  }
+
+  const unnamedMissing = stillMissing.filter((id) => !found.has(id));
+  if (!unnamedMissing.length) return found;
+
+  const names = [
+    ...new Set(
+      rows
+        .filter((row) => unnamedMissing.includes(row.playerId) && row.playerName?.trim())
+        .map((row) => row.playerName!.trim()),
+    ),
+  ];
+  if (!names.length) return found;
+
+  const twins = await db
+    .select({ name: players.name, imageUrl: players.imageUrl })
+    .from(players)
+    .where(and(inArray(players.name, names), sql`coalesce(${players.imageUrl}, '') <> ''`));
+  const urlByName = new Map<string, string>();
+  for (const twin of twins) {
+    if (twin.imageUrl?.trim() && !urlByName.has(twin.name)) urlByName.set(twin.name, twin.imageUrl.trim());
+  }
+  for (const row of rows) {
+    if (found.has(row.playerId) || !row.playerName?.trim()) continue;
+    const url = urlByName.get(row.playerName.trim());
+    if (url) found.set(row.playerId, url);
+  }
+
+  return found;
+}
+
+async function attachMissingClubCrests(rows: PublicTransferRow[]): Promise<PublicTransferRow[]> {
+  const missing = new Set<string>();
+  for (const row of rows) {
+    if (!row.fromTeamImageUrl && row.fromLabel && !/^(—|-|released|retired)$/i.test(row.fromLabel)) {
+      missing.add(row.fromLabel);
+    }
+    if (!row.toTeamImageUrl && row.toLabel && !/^(—|-|released|retired)$/i.test(row.toLabel)) {
+      missing.add(row.toLabel);
+    }
+  }
+  if (!missing.size) return rows;
+
+  const db = getDb();
+  const found = await db
+    .select({ name: teams.name, imageUrl: teams.imageUrl })
+    .from(teams)
+    .where(inArray(teams.name, [...missing]));
+  const byName = new Map<string, string>();
+  for (const team of found) {
+    if (team.imageUrl?.trim() && !byName.has(team.name)) byName.set(team.name, team.imageUrl.trim());
+  }
+  if (!byName.size) return rows;
+
+  return rows.map((row) => ({
+    ...row,
+    fromTeamImageUrl: row.fromTeamImageUrl || byName.get(row.fromLabel) || null,
+    toTeamImageUrl: row.toTeamImageUrl || byName.get(row.toLabel) || null,
+  }));
 }
 
 /**
@@ -127,6 +271,7 @@ function mapRow(
     playerId: string;
     playerSlug: string;
     playerName: string;
+    playerImageUrl: string | null;
     transferPositionName: string | null;
     playerPositionName: string | null;
     playerRating: number | null;
@@ -136,10 +281,13 @@ function mapRow(
     countryName: string | null;
     clubName: string | null;
     movementType: string;
+    notes: string | null;
     fromTeamId: string | null;
     toTeamId: string | null;
     fromTeamName: string | null;
     toTeamName: string | null;
+    fromTeamImageUrl: string | null;
+    toTeamImageUrl: string | null;
     fromClub: string | null;
     toClub: string | null;
     effectiveDate: Date | null;
@@ -154,31 +302,41 @@ function mapRow(
     input.playerRating != null && Number.isFinite(input.playerRating)
       ? Math.round(input.playerRating)
       : null;
+  const internationalStatus = resolvePlayerInternationalStatus(teamClassification, {
+    nationCode: input.nationCode,
+    countryName: input.countryName,
+    clubName: input.clubName,
+    internationalTeamId: input.internationalTeamId,
+    internationalTeamName: input.internationalTeamName,
+  });
+  const fromLabel = transferClubLabel(input.fromTeamName, sanitizeTransferClub(input.fromClub)) || "—";
+  const toLabel =
+    input.movementType === "released" &&
+    !transferClubLabel(input.toTeamName, sanitizeTransferClub(input.toClub))
+      ? "Released"
+      : transferClubLabel(input.toTeamName, sanitizeTransferClub(input.toClub)) ||
+        (input.movementType === "retirement" ? "Retired" : "—");
+  const nationCode = isPlaceholderNationCode(input.nationCode) ? null : input.nationCode;
   return {
     id: input.id,
     playerId: input.playerId,
     playerSlug: input.playerSlug,
     playerName: sanitizeTransferPlayerName(input.playerName),
+    playerImageUrl: input.playerImageUrl?.trim() || null,
     positionName: resolveTransferPosition(input.transferPositionName, input.playerPositionName),
     playerRating: rating,
-    internationalStatus: resolvePlayerInternationalStatus(teamClassification, {
-      nationCode: input.nationCode,
-      countryName: input.countryName,
-      clubName: input.clubName,
-      internationalTeamId: input.internationalTeamId,
-      internationalTeamName: input.internationalTeamName,
-    }),
+    internationalStatus,
+    nationCode,
+    nationFlagUrl: rankingCountryFlagUrl(internationalStatus, nationCode),
     movementType: input.movementType,
     movementLabel: movementTypeLabel(input.movementType),
+    dealDetail: transferMarketDealDetail(input.notes),
     fromTeamId: input.fromTeamId,
     toTeamId: input.toTeamId,
-    fromLabel: transferClubLabel(input.fromTeamName, sanitizeTransferClub(input.fromClub)) || "—",
-    toLabel:
-      input.movementType === "released" &&
-      !transferClubLabel(input.toTeamName, sanitizeTransferClub(input.toClub))
-        ? "Released"
-        : transferClubLabel(input.toTeamName, sanitizeTransferClub(input.toClub)) ||
-          (input.movementType === "retirement" ? "Retired" : "—"),
+    fromLabel,
+    toLabel,
+    fromTeamImageUrl: transferClubImageUrl(fromLabel, input.fromTeamImageUrl, input.fromTeamName),
+    toTeamImageUrl: transferClubImageUrl(toLabel, input.toTeamImageUrl, input.toTeamName),
     effectiveDate: input.effectiveDate?.toISOString() ?? null,
     seasonId: input.seasonId,
     seasonLabel: input.seasonLabel,
@@ -237,15 +395,75 @@ export async function getPublicTransferDefaults() {
   };
 }
 
-async function listCompetitionsForTransferFilters(preferredCompetitionId: string) {
+async function loadCompetitionLineage() {
   const db = getDb();
   const rows = await db
     .select({ id: competitions.id, name: competitions.name, slug: competitions.slug })
-    .from(competitions)
-    .where(not(sql`${competitions.slug} like '%\\_\\_legacy\\_\\_%'`))
-    .orderBy(asc(competitions.name));
+    .from(competitions);
+  const idsByKey = new Map<string, string[]>();
+  const keyById = new Map<string, string>();
+  const bestByKey = new Map<string, { id: string; name: string; slug: string }>();
 
-  return [...rows].sort((a, b) => {
+  for (const row of rows) {
+    const key = canonicalCompetitionDisplayName(row.name).toLowerCase();
+    keyById.set(row.id, key);
+    const list = idsByKey.get(key) ?? [];
+    list.push(row.id);
+    idsByKey.set(key, list);
+    const current = bestByKey.get(key);
+    const displayName = canonicalCompetitionDisplayName(row.name);
+    if (!current) {
+      bestByKey.set(key, { id: row.id, name: displayName, slug: row.slug });
+      continue;
+    }
+    const currentLegacy = current.slug.includes("__legacy__");
+    const rowLegacy = row.slug.includes("__legacy__");
+    if (currentLegacy && !rowLegacy) {
+      bestByKey.set(key, { id: row.id, name: displayName, slug: row.slug });
+    }
+  }
+
+  const siblingIdsById = new Map<string, string[]>();
+  const canonicalNameById = new Map<string, string>();
+  const canonicalSlugById = new Map<string, string>();
+  const canonicalIdById = new Map<string, string>();
+  for (const [id, key] of keyById) {
+    siblingIdsById.set(id, idsByKey.get(key) ?? [id]);
+    const best = bestByKey.get(key);
+    canonicalNameById.set(id, best?.name ?? "");
+    canonicalSlugById.set(id, best?.slug ?? "");
+    canonicalIdById.set(id, best?.id ?? id);
+  }
+  return { siblingIdsById, canonicalNameById, canonicalSlugById, canonicalIdById };
+}
+
+async function listCompetitionsForTransferFilters(preferredCompetitionId: string) {
+  const db = getDb();
+  const idRows = await db.execute(sql<{ id: string }>`
+    select distinct competition_id as id
+    from (
+      select competition_id from player_transfers where competition_id is not null
+      union
+      select cs.competition_id
+      from player_transfers t
+      join competition_seasons cs on cs.id = t.season_id
+      union
+      select cs.competition_id
+      from standing_rows sr
+      join competition_seasons cs on cs.id = sr.season_id
+    ) x
+    where competition_id is not null
+  `);
+  const ids = [...new Set(idRows.map((row) => row.id).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const rows = await db
+    .select({ id: competitions.id, name: competitions.name, slug: competitions.slug })
+    .from(competitions)
+    .where(inArray(competitions.id, ids));
+
+  const unique = dedupeCompetitionPickerRows(rows);
+  return [...unique].sort((a, b) => {
     if (a.id === preferredCompetitionId) return -1;
     if (b.id === preferredCompetitionId) return 1;
     if (a.slug === "premiership") return -1;
@@ -254,7 +472,7 @@ async function listCompetitionsForTransferFilters(preferredCompetitionId: string
   });
 }
 
-/** Every real club/nation in the DB — not limited to season standings or transfer rows. */
+/** Clubs/nations that actually appear on a transfer row. */
 async function listClubsForTransferFilters() {
   const db = getDb();
   const teamRows = await db
@@ -262,43 +480,72 @@ async function listClubsForTransferFilters() {
       id: teams.id,
       name: teams.name,
       slug: teams.slug,
-      sourceProvider: teams.sourceProvider,
     })
     .from(teams)
     .where(
       and(
         ne(teams.sourceProvider, "sync-repair"),
         not(sql`${teams.slug} like 'orphan-%'`),
+        sql`${teams.id} in (
+          select from_team_id from player_transfers where from_team_id is not null
+          union
+          select to_team_id from player_transfers where to_team_id is not null
+        )`,
       ),
     )
     .orderBy(asc(teams.name));
 
-  return teamRows
-    .filter(
-      (t) =>
-        !isJunkTeamSlug(t.slug) &&
-        !isJunkTeamName(t.name) &&
-        isRealCompareRosterTeamName(t.name),
-    )
-    .filter((t) => {
-      const name = t.name.trim();
-      // Import debris that slipped past slug/name junk checks.
-      if (name.length < 2) return false;
-      if (/^[,;/|-]+$/.test(name)) return false;
-      if (/^,\s*/.test(name) && name.length < 8) return false;
-      return true;
-    })
-    .map((t) => ({ id: t.id, name: t.name }));
+  return dedupeNamedOptionsByName(
+    teamRows
+      .filter(
+        (t) =>
+          !isJunkTeamSlug(t.slug) &&
+          !isJunkTeamName(t.name) &&
+          isRealCompareRosterTeamName(t.name),
+      )
+      .filter((t) => {
+        const name = t.name.trim();
+        if (name.length < 2) return false;
+        if (/^[,;/|-]+$/.test(name)) return false;
+        if (/^,\s*/.test(name) && name.length < 8) return false;
+        return true;
+      })
+      .map((t) => ({ id: t.id, name: t.name })),
+  );
 }
 
 async function listSeasonsForTransferFilters(competitionId: string | null) {
-  if (competitionId) {
-    return listSeasonsForPicker(competitionId);
+  const db = getDb();
+  const lineage = await loadCompetitionLineage();
+  const siblingIds = competitionId ? lineage.siblingIdsById.get(competitionId) ?? [competitionId] : null;
+  const conditions = [eq(competitionSeasons.isDeprecated, false)];
+  if (siblingIds?.length) {
+    conditions.push(inArray(competitionSeasons.competitionId, siblingIds));
+  } else {
+    const dataCompIds = await db.execute(sql<{ id: string }>`
+      select distinct competition_id as id
+      from (
+        select competition_id from player_transfers where competition_id is not null
+        union
+        select cs.competition_id
+        from player_transfers t
+        join competition_seasons cs on cs.id = t.season_id
+        union
+        select cs.competition_id
+        from standing_rows sr
+        join competition_seasons cs on cs.id = sr.season_id
+      ) x
+      where competition_id is not null
+    `);
+    const allowed = [
+      ...new Set(
+        dataCompIds.flatMap((row) => lineage.siblingIdsById.get(row.id) ?? [row.id]),
+      ),
+    ];
+    if (!allowed.length) return [];
+    conditions.push(inArray(competitionSeasons.competitionId, allowed));
   }
 
-  // All competitions: load non-deprecated seasons with their competition id.
-  const db = getDb();
-  const { decorateSeasonPickerRows, dedupeSeasonsByYear } = await import("./season-list-utils");
   const rows = await db
     .select({
       id: competitionSeasons.id,
@@ -306,21 +553,41 @@ async function listSeasonsForTransferFilters(competitionId: string | null) {
       year: competitionSeasons.year,
       competitionId: competitionSeasons.competitionId,
       isActive: competitionSeasons.isActive,
+      competitionName: competitions.name,
+      competitionSlug: competitions.slug,
     })
     .from(competitionSeasons)
-    .where(eq(competitionSeasons.isDeprecated, false))
-    .orderBy(desc(competitionSeasons.year), asc(competitionSeasons.label));
+    .innerJoin(competitions, eq(competitions.id, competitionSeasons.competitionId))
+    .where(and(...conditions));
 
-  return decorateSeasonPickerRows(
-    dedupeSeasonsByYear(
-      rows.map((row) => ({
+  const dataSeasonIds = await db.execute(sql<{ id: string }>`
+    select season_id as id from player_transfers where season_id is not null
+    union
+    select season_id as id from standing_rows
+  `);
+  const hasData = new Set(dataSeasonIds.map((row) => row.id));
+  const currentYear = currentDomesticSeasonStartYear();
+
+  const mapped = rows
+    .map((row) => {
+      const year = row.year ?? parseSeasonStartYear(row.label) ?? 0;
+      const label = normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(year);
+      const canonicalName = lineage.canonicalNameById.get(row.competitionId) || row.competitionName;
+      const canonicalSlug = lineage.canonicalSlugById.get(row.competitionId) || row.competitionSlug;
+      const canonicalCompetitionId = lineage.canonicalIdById.get(row.competitionId) || row.competitionId;
+      return {
         ...row,
-        year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
-      })),
-    ),
-    new Date(),
-    "club",
-  );
+        year,
+        label,
+        displayLabel: label,
+        competitionId: canonicalCompetitionId,
+        competitionName: canonicalName,
+        competitionSlug: canonicalSlug,
+      };
+    })
+    .filter((row) => row.year <= currentYear || hasData.has(row.id));
+
+  return sortSeasonsGroupedByCompetition(dedupeSeasonsByCompetitionAndYear(mapped));
 }
 
 export async function getPublicTransferFilterOptions(input?: {
@@ -336,7 +603,6 @@ export async function getPublicTransferFilterOptions(input?: {
     : requestedComp?.trim() || defaults.competitionId;
 
   let seasonRows = await listSeasonsForTransferFilters(compId);
-  seasonRows = [...seasonRows].sort((a, b) => b.year - a.year);
 
   // For Premiership, guarantee Wiki current season is in the list
   if (compId === defaults.competitionId && !seasonRows.some((s) => s.year === defaults.seasonYear)) {
@@ -346,7 +612,7 @@ export async function getPublicTransferFilterOptions(input?: {
       label: DEFAULT_PREMIERSHIP_TRANSFER_SEASON,
       isActive: true,
     });
-    seasonRows = [...(await listSeasonsForTransferFilters(compId))].sort((a, b) => b.year - a.year);
+    seasonRows = await listSeasonsForTransferFilters(compId);
   }
 
   let seasonId = input?.seasonId?.trim() || null;
@@ -384,15 +650,12 @@ export async function getPublicTransferFilterOptions(input?: {
     competitions: competitionRows.map((c) => ({ id: c.id, name: c.name })),
     seasons: seasonRows.map((s) => {
       const competitionId = s.competitionId ?? compId ?? "";
-      const competitionName = competitionId
-        ? competitionNameById.get(competitionId) ?? null
-        : null;
+      const competitionName = s.competitionName ?? (competitionId ? competitionNameById.get(competitionId) ?? null : null);
       const baseLabel = s.displayLabel || s.label;
       return {
         id: s.id,
         label: s.label,
-        displayLabel:
-          !compId && competitionName ? `${competitionName} · ${baseLabel}` : baseLabel,
+        displayLabel: baseLabel,
         year: s.year,
         competitionId,
         competitionName,
@@ -427,6 +690,7 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
 
   const teamClassification = await loadTeamClassificationContext();
   const teamId = filters.teamId?.trim() || null;
+  const teamQuery = filters.teamQuery?.trim() || null;
   const internationalTeamFilter =
     Boolean(teamId) && isInternationalTeamId(teamClassification, teamId);
 
@@ -437,8 +701,51 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
   }
 
   const conditions = [];
-  if (seasonId) conditions.push(eq(playerTransfers.seasonId, seasonId));
-  if (competitionId) conditions.push(eq(playerTransfers.competitionId, competitionId));
+  const lineage =
+    seasonId || competitionId ? await loadCompetitionLineage() : null;
+  if (seasonId) {
+    const [picked] = await db
+      .select({
+        id: competitionSeasons.id,
+        year: competitionSeasons.year,
+        competitionId: competitionSeasons.competitionId,
+      })
+      .from(competitionSeasons)
+      .where(eq(competitionSeasons.id, seasonId))
+      .limit(1);
+    const siblingCompIds = picked
+      ? lineage?.siblingIdsById.get(picked.competitionId) ?? [picked.competitionId]
+      : [];
+    const twinIds = picked
+      ? (
+          await db
+            .select({ id: competitionSeasons.id })
+            .from(competitionSeasons)
+            .where(
+              and(
+                inArray(competitionSeasons.competitionId, siblingCompIds),
+                eq(competitionSeasons.year, picked.year ?? 0),
+                eq(competitionSeasons.isDeprecated, false),
+              ),
+            )
+        ).map((row) => row.id)
+      : [seasonId];
+    conditions.push(inArray(playerTransfers.seasonId, twinIds.length ? twinIds : [seasonId]));
+  }
+  if (competitionId) {
+    const siblingIds = lineage?.siblingIdsById.get(competitionId) ?? [competitionId];
+    const siblingSeasons = await db
+      .select({ id: competitionSeasons.id })
+      .from(competitionSeasons)
+      .where(inArray(competitionSeasons.competitionId, siblingIds));
+    const seasonIds = siblingSeasons.map((row) => row.id);
+    const competitionMatch = [
+      inArray(playerTransfers.competitionId, siblingIds),
+      ...(seasonIds.length ? [inArray(playerTransfers.seasonId, seasonIds)] : []),
+    ];
+    const clause = or(...competitionMatch);
+    if (clause) conditions.push(clause);
+  }
   if (filters.movementType?.trim()) {
     conditions.push(eq(playerTransfers.movementType, filters.movementType.trim()));
   }
@@ -456,18 +763,38 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
         or(eq(playerTransfers.fromTeamId, teamId), eq(playerTransfers.toTeamId, teamId)),
       );
     }
-  }
-  if (filters.search?.trim()) {
-    const q = `%${filters.search.trim()}%`;
+  } else if (teamQuery) {
+    const q = `%${teamQuery.replace(/[%_]/g, " ")}%`;
     conditions.push(
       or(
-        ilike(players.name, q),
         ilike(playerTransfers.fromClub, q),
         ilike(playerTransfers.toClub, q),
         ilike(fromTeam.name, q),
         ilike(toTeam.name, q),
       ),
     );
+  }
+  if (filters.search?.trim()) {
+    const { phrases, codes } = expandTransferSearchTerms(filters.search);
+    const searchParts = [
+      ...phrases.flatMap((term) => {
+        const q = `%${term.replace(/[%_]/g, " ")}%`;
+        return [
+          ilike(players.name, q),
+          ilike(players.countryName, q),
+          ilike(players.nationCode, q),
+          ilike(players.clubName, q),
+          ilike(intlTeam.name, q),
+          ilike(playerTransfers.fromClub, q),
+          ilike(playerTransfers.toClub, q),
+          ilike(fromTeam.name, q),
+          ilike(toTeam.name, q),
+        ];
+      }),
+      ...codes.map((code) => sql`upper(coalesce(${players.nationCode}, '')) = ${code}`),
+    ];
+    const searchClause = or(...searchParts);
+    if (searchClause) conditions.push(searchClause);
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
@@ -477,6 +804,7 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
       : desc(playerTransfers.effectiveDate);
 
   const displayRating = sql<number | null>`coalesce(${playerRatings.manualOverrideRating}, ${playerRatings.playerRating})`;
+  const playerImage = sql<string | null>`coalesce(${players.imageUrl}, ${players.badgeImageUrl})`;
 
   const base = db
     .select({
@@ -484,6 +812,8 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
       playerId: playerTransfers.playerId,
       playerSlug: players.slug,
       playerName: players.name,
+      playerImageUrl: playerImage,
+      primaryImageId: players.primaryImageId,
       transferPositionName: playerTransfers.positionName,
       playerPositionName: players.positionName,
       playerRating: displayRating,
@@ -493,10 +823,13 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
       countryName: players.countryName,
       clubName: players.clubName,
       movementType: playerTransfers.movementType,
+      notes: playerTransfers.notes,
       fromTeamId: playerTransfers.fromTeamId,
       toTeamId: playerTransfers.toTeamId,
       fromTeamName: fromTeam.name,
       toTeamName: toTeam.name,
+      fromTeamImageUrl: fromTeam.imageUrl,
+      toTeamImageUrl: toTeam.imageUrl,
       fromClub: playerTransfers.fromClub,
       toClub: playerTransfers.toClub,
       effectiveDate: playerTransfers.effectiveDate,
@@ -523,19 +856,21 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
     .select({ value: sql<number>`count(*)::int` })
     .from(playerTransfers)
     .innerJoin(players, eq(playerTransfers.playerId, players.id))
+    .leftJoin(intlTeam, eq(players.internationalTeamId, intlTeam.id))
     .leftJoin(fromTeam, eq(playerTransfers.fromTeamId, fromTeam.id))
     .leftJoin(toTeam, eq(playerTransfers.toTeamId, toTeam.id));
 
   const [countRow] = await (whereClause ? countQuery.where(whereClause) : countQuery);
   const total = Number(countRow?.value ?? 0);
 
-  const transfers = rows.map((row) =>
+  const mapped = rows.map((row) =>
     mapRow(
       {
         id: row.id,
         playerId: row.playerId,
         playerSlug: row.playerSlug,
         playerName: row.playerName,
+        playerImageUrl: row.playerImageUrl,
         transferPositionName: row.transferPositionName,
         playerPositionName: row.playerPositionName,
         playerRating: row.playerRating,
@@ -545,10 +880,13 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
         countryName: row.countryName,
         clubName: row.clubName,
         movementType: row.movementType,
+        notes: row.notes,
         fromTeamId: row.fromTeamId,
         toTeamId: row.toTeamId,
         fromTeamName: row.fromTeamName,
         toTeamName: row.toTeamName,
+        fromTeamImageUrl: row.fromTeamImageUrl,
+        toTeamImageUrl: row.toTeamImageUrl,
         fromClub: row.fromClub,
         toClub: row.toClub,
         effectiveDate: row.effectiveDate,
@@ -559,6 +897,14 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
       },
       teamClassification,
     ),
+  );
+
+  const headshots = await loadTransferHeadshots(rows);
+  const transfers = await attachMissingClubCrests(
+    mapped.map((row) => ({
+      ...row,
+      playerImageUrl: row.playerImageUrl || headshots.get(row.playerId) || null,
+    })),
   );
 
   return {
@@ -573,26 +919,41 @@ export async function listPublicTransfers(filters: PublicTransferFilters = {}) {
 }
 
 /** Group transfers by club for Wikipedia-style In / Out lists. */
-export function groupTransfersByTeam(transfers: PublicTransferRow[]): PublicTransferTeamGroup[] {
+export function groupTransfersByTeam(
+  transfers: PublicTransferRow[],
+  options?: { teamId?: string | null; teamQuery?: string | null; search?: string | null },
+): PublicTransferTeamGroup[] {
   const byTeam = new Map<string, PublicTransferTeamGroup>();
 
-  function ensure(teamId: string, teamName: string) {
-    let group = byTeam.get(teamId);
+  function ensure(teamId: string, teamName: string, teamImageUrl: string | null) {
+    const key = teamName.trim().toLowerCase() || teamId;
+    let group = byTeam.get(key);
     if (!group) {
-      group = { teamId, teamName, in: [], out: [] };
-      byTeam.set(teamId, group);
+      group = { teamId, teamName, teamImageUrl, in: [], out: [] };
+      byTeam.set(key, group);
+    } else if (!group.teamImageUrl && teamImageUrl) {
+      group.teamImageUrl = teamImageUrl;
     }
     return group;
   }
 
   for (const row of transfers) {
     if (row.toTeamId) {
-      ensure(row.toTeamId, row.toLabel === "—" ? "Unknown club" : row.toLabel).in.push(row);
+      ensure(row.toTeamId, row.toLabel === "—" ? "Unknown club" : row.toLabel, row.toTeamImageUrl).in.push(
+        row,
+      );
     }
     if (row.fromTeamId) {
-      ensure(row.fromTeamId, row.fromLabel === "—" ? "Unknown club" : row.fromLabel).out.push(row);
+      ensure(
+        row.fromTeamId,
+        row.fromLabel === "—" ? "Unknown club" : row.fromLabel,
+        row.fromTeamImageUrl,
+      ).out.push(row);
     }
   }
 
-  return [...byTeam.values()].sort((a, b) => a.teamName.localeCompare(b.teamName));
+  return filterTransferClubGroups(
+    [...byTeam.values()].sort((a, b) => a.teamName.localeCompare(b.teamName)),
+    options,
+  );
 }

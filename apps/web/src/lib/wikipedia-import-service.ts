@@ -6,6 +6,7 @@ import {
   parseNationalityFromBirthPlace,
   parseWikipediaArchive,
   prioritizePlayerArticleTitles,
+  teamCodeFromName,
   type WikipediaArchiveData,
   type WikipediaEntityType,
   type WikipediaPlayerArchive,
@@ -18,6 +19,8 @@ import {
   resolveWikipediaRequestOptions,
 } from "./mediawiki-settings";
 import { countryNameLooksLikeClubTeam } from "./player-profile-fields";
+import { isAgeGradeInternationalTeamName } from "./international-team-classify";
+import { isPlaceholderNationCode, isPlaceholderNationLabel } from "./nation-code-utils";
 import { normalizeSocialAccounts, type PlayerSocialAccounts } from "./player-profile-utils";
 import { getWikimediaEnterpriseAccessToken } from "./wikimedia-enterprise-client";
 
@@ -60,9 +63,11 @@ function namesLikelyMatch(playerName: string, archiveName: string): boolean {
 }
 
 function nationalityFromPlayerArchive(archive: WikipediaPlayerArchive): string | null {
-  const intlTeams = archive.internationalCareer?.map((row) => row.teamName.trim()).filter(Boolean) ?? [];
-  if (intlTeams.length > 0) {
-    return intlTeams[intlTeams.length - 1] ?? null;
+  const intlTeams =
+    archive.internationalCareer?.map((row) => row.teamName.trim()).filter(Boolean) ?? [];
+  const senior = intlTeams.filter((name) => !isAgeGradeInternationalTeamName(name));
+  if (senior.length > 0) {
+    return senior[senior.length - 1] ?? null;
   }
   return parseNationalityFromBirthPlace(archive.birthPlace) ?? null;
 }
@@ -212,6 +217,7 @@ async function applyWikipediaPlayerArchive(
   }
 
   const archiveNationality = nationalityFromPlayerArchive(archive);
+  const existingCountry = isPlaceholderNationLabel(player.countryName) ? null : player.countryName;
   const hasIntlCaps = (archive.internationalCareer?.length ?? 0) > 0;
   let internationalTeamId = player.internationalTeamId;
   if (hasIntlCaps && archiveNationality && !player.internationalTeamId) {
@@ -239,7 +245,7 @@ async function applyWikipediaPlayerArchive(
         : inferredCurrentClub ?? player.clubName ?? null,
       clubTeamId,
       countryName:
-        player.countryName ??
+        existingCountry ??
         (archiveNationality &&
         !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
           ? archiveNationality
@@ -331,7 +337,7 @@ async function applyWikipediaPlayerArchive(
     if (!player.positionName && positionName) fieldsUpdated.push("positionName");
     if (!player.clubName && archive.currentTeam) fieldsUpdated.push("clubName");
     if (
-      !player.countryName &&
+      !existingCountry &&
       archiveNationality &&
       !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
     ) {
@@ -370,6 +376,18 @@ async function applyWikipediaPlayerArchive(
       "wikipediaUrl",
       "wikidataId",
     );
+  }
+
+  const resolvedCountry =
+    typeof patch.countryName === "string" && patch.countryName.trim()
+      ? patch.countryName.trim()
+      : null;
+  if (isPlaceholderNationCode(player.nationCode) || !player.nationCode?.trim()) {
+    const nextCode = resolvedCountry ? teamCodeFromName(resolvedCountry) : null;
+    if (nextCode !== (player.nationCode ?? null)) {
+      patch.nationCode = nextCode;
+      fieldsUpdated.push("nationCode");
+    }
   }
 
   if (socialMerge) {

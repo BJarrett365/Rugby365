@@ -63,6 +63,7 @@ export const MEDIA_OPTIMIZED_HOST_SUFFIXES = [
   "commons.wikimedia.org",
   "wikipedia.org",
   "rugbypass.com",
+  "alamy.com",
   "wp.com",
 ] as const;
 

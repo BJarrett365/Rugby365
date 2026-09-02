@@ -48,6 +48,16 @@ const SCORING_BY_SLUG: Record<string, RugbyScoringRules> = {
     losingBonusMargin: 7,
     losingBonusPoints: 1,
   },
+  // World Rugby pool stage: 4 win / 2 draw / try bonus (4+) / losing bonus (≤7).
+  "rugby-world-cup": {
+    winPoints: 4,
+    drawPoints: 2,
+    lossPoints: 0,
+    tryBonusThreshold: 4,
+    tryBonusPoints: 1,
+    losingBonusMargin: 7,
+    losingBonusPoints: 1,
+  },
 };
 
 export const DOMESTIC_SCORING_DEFAULT = DEFAULT_PREMIERSHIP_SCORING_RULES;

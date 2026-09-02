@@ -6,6 +6,7 @@ import {
   rugbyWorldCupPoolForTeam,
   rugbyWorldCupPoolsForYear,
 } from "../rugby-world-cup-pools";
+import { scoringRulesForCompetitionSlug } from "./competition-scoring-rules-catalog";
 import { splitRowsIntoWorldCupPools, standingRowsToTableRows } from "./table-pool-shared";
 
 describe("rugby world cup pools", () => {
@@ -31,6 +32,9 @@ describe("rugby world cup pools", () => {
     expect(isWorldCupKnockoutStage("final", "Final")).toBe(true);
     expect(isWorldCupKnockoutStage("regular", "")).toBe(false);
     expect(isWorldCupKnockoutStage("regular", "Pool A")).toBe(false);
+    expect(isWorldCupKnockoutStage("regular", "Round 3")).toBe(false);
+    expect(isWorldCupKnockoutStage("regular", "Quarter Finals")).toBe(true);
+    expect(isWorldCupKnockoutStage("regular", "Bronze Final")).toBe(true);
   });
 
   it("splits flat rows into pool tables and truncates form", () => {
@@ -70,5 +74,16 @@ describe("rugby world cup pools", () => {
     // Newest-first form WWWWL → LWWWW; keeping oldest 4 pool games drops the QF L → WWWW.
     expect(poolA?.rows[0]?.formSequence).toEqual(["W", "W", "W", "W"]);
     expect(poolA?.rows.some((r) => r.teamName === "Namibia")).toBe(true);
+  });
+
+  it("uses World Rugby pool points for Rugby World Cup", () => {
+    expect(scoringRulesForCompetitionSlug("rugby-world-cup", "world_cup")).toMatchObject({
+      winPoints: 4,
+      drawPoints: 2,
+      tryBonusThreshold: 4,
+      tryBonusPoints: 1,
+      losingBonusMargin: 7,
+      losingBonusPoints: 1,
+    });
   });
 });

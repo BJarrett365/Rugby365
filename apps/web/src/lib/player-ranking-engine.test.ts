@@ -246,6 +246,8 @@ describe("player-ranking-engine", () => {
     expect(rankingCountryFlagUrl("France", "FR")).toBe("https://flagcdn.com/w40/fr.png");
     expect(rankingCountryFlagUrl(null, "NZL")).toBe("https://flagcdn.com/w40/nz.png");
     expect(rankingCountryFlagUrl("Ivory Coast")).toBe("https://flagcdn.com/w40/ci.png");
+    expect(rankingCountryFlagUrl("England", "UN")).toBe("https://flagcdn.com/w40/gb-eng.png");
+    expect(rankingCountryFlagUrl(null, "UN")).toBeNull();
     expect(usableRankingCountryName("Barbarians")).toBeNull();
     expect(usableRankingCountryName("Unknown team 33423e41967c")).toBeNull();
   });

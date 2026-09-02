@@ -38,8 +38,19 @@ import { lookupCompetitionChampion } from "./competition-champions-catalog";
 import { isPlayoffRound } from "./rugby-round-utils";
 import { resolveTeamNamesFromFixtureSlug, pickCanonicalFixturesForStandings } from "./table-lab/standings-fixture-dedupe";
 import { applyUrcLineageSeasonLabels } from "./urc-lineage";
+import {
+  applyRugbyChampionshipLineageSeasonLabels,
+  canonicalRugbyChampionshipSlug,
+} from "./rugby-championship-lineage";
 
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
+
+function applyLineageSeasonLabels<T extends { year: number; label: string; displayLabel?: string }>(
+  slug: string | null | undefined,
+  seasons: T[],
+) {
+  return applyRugbyChampionshipLineageSeasonLabels(slug, applyUrcLineageSeasonLabels(slug, seasons));
+}
 
 export async function listAllSeasons(competitionId?: string) {
   let seasonKind: "club" | "international" | "tournament" = "club";
@@ -85,7 +96,7 @@ export async function listAllSeasons(competitionId?: string) {
   if (competitionId) {
     const competition = await getCompetitionById(competitionId);
     return {
-      seasons: applyUrcLineageSeasonLabels(competition?.slug, seasons),
+      seasons: applyLineageSeasonLabels(competition?.slug, seasons),
       seasonKind,
     };
   }
@@ -115,7 +126,7 @@ export async function listSeasonsForPicker(competitionId: string) {
     )
     .orderBy(desc(competitionSeasons.year));
 
-  return applyUrcLineageSeasonLabels(
+  return applyLineageSeasonLabels(
     competition?.slug,
     decorateSeasonPickerRows(
       dedupeSeasonsByYear(
@@ -179,7 +190,7 @@ export async function getCompetitionById(id: string) {
 
 export async function getCompetitionBySlug(slug: string) {
   const db = getDb();
-  const normalized = normalizeSlug(slug);
+  const normalized = canonicalRugbyChampionshipSlug(normalizeSlug(slug));
   const [bySlug] = await db
     .select()
     .from(competitions)
@@ -769,7 +780,7 @@ export async function getCompetitionStandingsBySlug(
   }
 
   const { seasons, season } = await resolveCompetitionSeason(competition.id, options.seasonLabel);
-  const pickerSeasons = applyUrcLineageSeasonLabels(
+  const pickerSeasons = applyLineageSeasonLabels(
     competition.slug,
     decorateSeasonPickerRows(seasons),
   );

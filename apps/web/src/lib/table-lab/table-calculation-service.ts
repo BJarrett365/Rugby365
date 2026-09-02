@@ -33,6 +33,10 @@ import {
 } from "./hemisphere-table-service";
 import { HEMISPHERE_RULE_EXPLANATION } from "../team-hemisphere-utils";
 import {
+  isRugbyChampionshipLineageSlug,
+  rugbyChampionshipTableNote,
+} from "../rugby-championship-lineage";
+import {
   buildFormTableStandings,
   DEFAULT_FORM_MATCH_COUNT,
   parseFormMatchCount,
@@ -646,16 +650,17 @@ async function loadPerspectives(input: {
 
   if (season) {
     const competition = await getCompetitionById(season.competitionId);
-    if (competition?.slug === "rugby-championship") {
+    if (competition && isRugbyChampionshipLineageSlug(competition.slug)) {
+      const year = season.year ?? parseSeasonStartYear(season.label);
       return perspectives.filter(
         (row) =>
-          isRugbyChampionshipParticipant(row.teamName) &&
-          isRugbyChampionshipParticipant(row.opponentName),
+          isRugbyChampionshipParticipant(row.teamName, year) &&
+          isRugbyChampionshipParticipant(row.opponentName, year),
       );
     }
   } else if (input.competitionId) {
     const competition = await getCompetitionById(input.competitionId);
-    if (competition?.slug === "rugby-championship") {
+    if (competition && isRugbyChampionshipLineageSlug(competition.slug)) {
       return perspectives.filter(
         (row) =>
           isRugbyChampionshipParticipant(row.teamName) &&
@@ -2448,20 +2453,26 @@ export async function calculateRugbyTable(
     const { isRugbyWorldCupSlug, isWorldCupKnockoutStage, poolStageFormSlots, resolveRugbyWorldCupYear, rugbyWorldCupPoolsForYear } =
       await import("../rugby-world-cup-pools");
     const isWorldCup = isRugbyWorldCupSlug(competition?.slug);
+    const [seasonMeta] = context.seasonId
+      ? await getDb()
+          .select({ year: competitionSeasons.year, label: competitionSeasons.label })
+          .from(competitionSeasons)
+          .where(eq(competitionSeasons.id, context.seasonId))
+          .limit(1)
+      : [undefined];
+    const rcTableNote =
+      isRugbyChampionshipLineageSlug(competition?.slug) && seasonMeta?.year != null
+        ? rugbyChampionshipTableNote(seasonMeta.year)
+        : null;
     let formSlots: number | undefined;
     if (isWorldCup) {
       // Pool tables must not include knockout results (QF+).
       livePerspectives = livePerspectives.filter(
         (row) => !isWorldCupKnockoutStage(row.stage, row.round),
       );
-      const [seasonRow] = await getDb()
-        .select({ year: competitionSeasons.year, label: competitionSeasons.label })
-        .from(competitionSeasons)
-        .where(eq(competitionSeasons.id, context.seasonId))
-        .limit(1);
       const year = resolveRugbyWorldCupYear({
-        seasonYear: seasonRow?.year,
-        seasonLabel: seasonRow?.label,
+        seasonYear: seasonMeta?.year,
+        seasonLabel: seasonMeta?.label,
       });
       const pools = rugbyWorldCupPoolsForYear(year);
       if (pools[0]) formSlots = poolStageFormSlots(pools[0].teams.length);
@@ -2559,9 +2570,7 @@ export async function calculateRugbyTable(
         liveMatchCount: built.liveFixtureCount,
         liveTableCalculationNote: isWorldCup
           ? "Pool standings are calculated from pool-stage matches only (knockouts excluded)."
-          : built.liveFixtureCount > 0
-            ? liveTableCalculationNote()
-            : null,
+          : rcTableNote ?? (built.liveFixtureCount > 0 ? liveTableCalculationNote() : null),
         showMovement: showMovement && built.liveFixtureCount > 0,
         includeLiveMatches,
         ...(formSlots != null ? { formMatchCount: formSlots } : {}),

@@ -44,7 +44,7 @@ const BY_CANONICAL_SLUG: Record<string, CatalogEntry> = {
   // International
   "rugby-world-cup": { group: "international", order: 10, label: "Rugby World Cup" },
   "six-nations": { group: "international", order: 20, label: "Six Nations" },
-  "rugby-championship": { group: "international", order: 30, label: "Rugby Championship" },
+  "rugby-championship": { group: "international", order: 30, label: "The Rugby Championship" },
   "nations-championship": {
     group: "international",
     order: 40,

@@ -37,6 +37,8 @@ const ALIAS_CODES: Record<string, string> = {
   ZAF: "RSA",
   WLS: "WAL",
   URY: "URU",
+  TGA: "TON",
+  EN: "ENG",
 };
 
 export function teamNameFromCode(code: string): string | null {

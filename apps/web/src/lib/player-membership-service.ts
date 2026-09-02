@@ -56,6 +56,8 @@ export async function upsertPlayerTeamMembership(input: {
   sourceProvider?: string;
   sourceUrl?: string | null;
   notes?: string | null;
+  membershipType?: "club" | "provincial" | "international";
+  isCurrent?: boolean;
 }) {
   const db = getDb();
   const status = input.status ?? "active";
@@ -83,6 +85,8 @@ export async function upsertPlayerTeamMembership(input: {
     sourceUrl: input.sourceUrl ?? null,
     notes: input.notes ?? null,
     syncedAt: new Date(),
+    ...(input.membershipType ? { membershipType: input.membershipType } : {}),
+    ...(typeof input.isCurrent === "boolean" ? { isCurrent: input.isCurrent } : {}),
   };
 
   if (existing) {

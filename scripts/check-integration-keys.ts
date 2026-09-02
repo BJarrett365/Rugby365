@@ -8,6 +8,7 @@ import {
   getElevenLabsPublicConfig,
   getOpenAiPublicConfig,
   getRugbyDataApiPublicConfig,
+  getStatsPerformSdapiPublicConfig,
   getSupabasePublicConfig,
 } from "../apps/web/src/lib/integration-settings-service";
 
@@ -16,6 +17,7 @@ async function main() {
   const eleven = await getElevenLabsPublicConfig();
   const supabase = await getSupabasePublicConfig();
   const rugbyData = await getRugbyDataApiPublicConfig();
+  const statsPerform = await getStatsPerformSdapiPublicConfig();
 
   console.log("=== Integration keys ===\n");
   console.log(
@@ -38,6 +40,10 @@ async function main() {
   );
   console.log(`  baseUrl=${rugbyData.baseUrl}`);
   if (rugbyData.apiTokenMasked) console.log(`  token mask=${rugbyData.apiTokenMasked}`);
+  console.log(
+    `Stats Perform: docs=${statsPerform.docsConfigured} outletKey=${statsPerform.apiConfigured} user=${statsPerform.docsUsername ?? "—"}`,
+  );
+  console.log(`  baseUrl=${statsPerform.baseUrl}`);
 
   const missing: string[] = [];
   if (!openai.configured) {

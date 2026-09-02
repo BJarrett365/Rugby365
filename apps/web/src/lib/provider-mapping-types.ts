@@ -13,6 +13,7 @@ export const PROVIDER_CLUB_WEBSITE = "club_website" as const;
 export const PROVIDER_ODDSCHECKER = "oddschecker" as const;
 export const PROVIDER_BMBETS = "bmbets" as const;
 export const PROVIDER_OPTA = "opta" as const;
+export const PROVIDER_STATS_PERFORM = "stats_perform" as const;
 export const PROVIDER_MANUAL = "manual" as const;
 export const PROVIDER_AI = "ai" as const;
 
@@ -32,6 +33,7 @@ export const DATA_INTEGRATION_PROVIDERS = [
   PROVIDER_ODDSCHECKER,
   PROVIDER_BMBETS,
   PROVIDER_OPTA,
+  PROVIDER_STATS_PERFORM,
   PROVIDER_MANUAL,
   PROVIDER_AI,
 ] as const;

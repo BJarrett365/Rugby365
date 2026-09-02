@@ -91,7 +91,7 @@ export const COMPETITION_CATALOG: CompetitionCatalogEntry[] = [
   e({
     key: "rugby-championship",
     name: "The Rugby Championship",
-    aliases: ["The Rugby Championship", "Rugby Championship", "TRC"],
+    aliases: ["The Rugby Championship", "Rugby Championship", "TRC", "Tri Nations", "Tri-Nations"],
     group: "International competitions",
     country: null,
     region: "southern_hemisphere",

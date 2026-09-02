@@ -3,6 +3,7 @@ import type { TeamClassificationContext } from "./international-team-classify";
 import {
   resolvePlayerInternationalStatus,
   resolveTransferPosition,
+  transferClubImageUrl,
 } from "./public-transfers-service";
 
 function mockCtx(overrides?: Partial<TeamClassificationContext>): TeamClassificationContext {
@@ -36,7 +37,7 @@ describe("public transfer display helpers", () => {
         internationalTeamName: "England",
         countryName: "Wales",
       }),
-    ).toBe("WAL");
+    ).toBe("Wales");
 
     expect(
       resolvePlayerInternationalStatus(ctx, {
@@ -66,5 +67,29 @@ describe("public transfer display helpers", () => {
         clubName: "Bath",
       }),
     ).toBeNull();
+
+    expect(
+      resolvePlayerInternationalStatus(ctx, {
+        nationCode: "UN",
+        countryName: "England",
+        clubName: "Ulster",
+      }),
+    ).toBe("England");
+
+    expect(
+      resolvePlayerInternationalStatus(ctx, {
+        nationCode: "UN",
+        countryName: null,
+        clubName: "Saracens",
+      }),
+    ).toBeNull();
+  });
+
+  it("attaches club crests for real clubs and skips released/retired", () => {
+    expect(transferClubImageUrl("Bath", "https://cdn.example/bath.png", "Bath")).toBe(
+      "https://cdn.example/bath.png",
+    );
+    expect(transferClubImageUrl("Released", "https://cdn.example/bath.png")).toBeNull();
+    expect(transferClubImageUrl("—", null)).toBeNull();
   });
 });

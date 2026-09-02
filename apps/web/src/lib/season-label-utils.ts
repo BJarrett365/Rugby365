@@ -218,6 +218,8 @@ export function usesDomesticSeasonCatalogForCompetition(
 
 const CALENDAR_YEAR_COMPETITION_SLUGS = new Set([
   "rugby-championship",
+  "the-rugby-championship",
+  "tri-nations",
   "six-nations",
   "nations-championship",
   "world-rugby-nations-cup",

@@ -25,6 +25,7 @@ export async function GET(req: Request) {
         ? searchParams.get("competitionId")
         : undefined,
       teamId: searchParams.get("teamId"),
+      teamQuery: searchParams.get("team"),
       movementType: searchParams.get("movementType"),
       search: searchParams.get("search"),
       sortDir: searchParams.get("sortDir") === "asc" ? "asc" : "desc",
@@ -36,7 +37,14 @@ export async function GET(req: Request) {
     return NextResponse.json({
       ...result,
       view,
-      groups: view === "teams" ? groupTransfersByTeam(result.transfers) : undefined,
+      groups:
+        view === "teams"
+          ? groupTransfersByTeam(result.transfers, {
+              teamId: searchParams.get("teamId"),
+              teamQuery: searchParams.get("team"),
+              search: searchParams.get("search"),
+            })
+          : undefined,
     });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load transfers");

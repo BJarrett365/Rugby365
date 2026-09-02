@@ -10,7 +10,7 @@ export default function AdminKeysHubPage() {
       <PageHeader
         eyebrow="Keys"
         title="API keys"
-        description="Supabase, ElevenLabs, OpenAI, Wikipedia and Wikidata in one place — masked secrets with admin reveal, connection tests, and env overrides. Wikipedia/Wikidata need a User-Agent, not a paid API key."
+        description="Supabase, ElevenLabs, OpenAI, Wikipedia, Wikidata and Stats Perform in one place — masked secrets with admin reveal, connection tests, and env overrides. Wikipedia/Wikidata need a User-Agent, not a paid API key."
         actions={
           <Link href="/admin" className="cms-btn cms-btn--secondary touch-target">
             Admin dashboard

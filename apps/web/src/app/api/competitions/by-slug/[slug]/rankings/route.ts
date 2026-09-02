@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     const resolvedLimit = Number.isFinite(limit) ? limit : undefined;
 
     const data = await cachedPublic(
-      `competition-rankings-v22:${slug}:${seasonLabel ?? ""}:${resolvedLimit ?? ""}`,
+      `competition-rankings-v24:${slug}:${seasonLabel ?? ""}:${resolvedLimit ?? ""}`,
       PUBLIC_CACHE_TTL.rankingsBoard,
       () =>
         getCompetitionRankingsBySlug(slug, {

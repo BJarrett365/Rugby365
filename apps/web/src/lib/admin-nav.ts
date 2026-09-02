@@ -97,6 +97,14 @@ export const ADMIN_HUB_KEYS: AdminHubKey[] = [
     matchPrefixes: ["/admin/keys/rugby-data"],
   },
   {
+    id: "stats-perform",
+    label: "Stats Perform SDAPI",
+    value: "SDAPI",
+    description: "Stats Perform Rugby Union Sports Data API — docs login plus outlet auth key for live scores.",
+    href: "/admin/keys/stats-perform",
+    matchPrefixes: ["/admin/keys/stats-perform"],
+  },
+  {
     id: "supabase",
     label: "Supabase advanced",
     value: "Supabase+",
@@ -389,6 +397,12 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       status: "Admin",
     },
     {
+      title: "Stats Perform SDAPI",
+      href: "/admin/keys/stats-perform",
+      description: "Rugby Union Sports Data API docs login and outlet key for live scores and calendars.",
+      status: "Admin",
+    },
+    {
       title: "Supabase advanced",
       href: "/admin/keys/supabase",
       description: "Anon key, bootstrap buckets, fixture mirror and full CMS sync.",
@@ -444,6 +458,26 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       title: "OpenAI on hub",
       href: "/admin/keys#openai",
       description: "Fallback TTS and AI enrichment when ElevenLabs is unset.",
+      status: "Admin",
+    },
+  ],
+  "stats-perform": [
+    {
+      title: "Stats Perform SDAPI keys",
+      href: "/admin/keys/stats-perform",
+      description: "Store documentation login and the Rugby Union outlet auth key for live scores.",
+      status: "Admin",
+    },
+    {
+      title: "Rugby Union SDAPI docs",
+      href: "https://documentation.statsperform.com/docs/rh/sdapi/Topics/rugbyunion/Index.htm",
+      description: "Official Stats Perform Rugby Union Sports Data API documentation.",
+      status: "API",
+    },
+    {
+      title: "Rugby Data API keys",
+      href: "/admin/keys/rugby-data",
+      description: "Planet Rugby / Rugby Data API — existing primary match feed.",
       status: "Admin",
     },
   ],
@@ -514,6 +548,12 @@ export const ADMIN_HUB_LINKS: Record<AdminHubKey["id"], AdminHubLink[]> = {
       title: "Rugby Data API keys",
       href: "/admin/keys/rugby-data",
       description: "Primary rugby data provider credentials for sync and mapping.",
+      status: "Admin",
+    },
+    {
+      title: "Stats Perform SDAPI",
+      href: "/admin/keys/stats-perform",
+      description: "Stats Perform Rugby Union docs login and outlet auth key.",
       status: "Admin",
     },
     {

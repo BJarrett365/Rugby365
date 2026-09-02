@@ -4,6 +4,16 @@ import { getDb } from "./db";
 import { normalizedEntityKey } from "./entity-normalize";
 import { listTeamPickerData } from "./team-picker-service";
 import { rugbyHemisphereForTeam } from "./team-picker-groups";
+import {
+  countryNameFromNationCode,
+  isPlaceholderNationLabel,
+} from "./nation-code-utils";
+
+export {
+  countryNameFromNationCode,
+  isPlaceholderNationCode,
+  isPlaceholderNationLabel,
+} from "./nation-code-utils";
 
 export type TeamClassificationContext = {
   internationalTeamIds: Set<string>;
@@ -98,7 +108,9 @@ export function isClubTeamId(ctx: TeamClassificationContext, teamId: string | nu
 
 export function isAgeGradeInternationalTeamName(name: string | null | undefined): boolean {
   if (!name?.trim()) return false;
-  return /\b(u18|u20|u21|under[- ]?18|under[- ]?20|england a|england 'a')\b/i.test(name);
+  return /\b(u1[89]|u2[0-3]|under[- ]?\d{1,2}|(england|ireland|scotland|wales|france|italy)\s+'?a'?)\b/i.test(
+    name,
+  );
 }
 
 export function isKnownInternationalCountryName(name: string | null | undefined): boolean {
@@ -185,18 +197,23 @@ export function resolveDisplayNation(
     internationalTeamName?: string | null;
   },
 ): string | null {
-  if (player.nationCode?.trim()) return player.nationCode.trim().toUpperCase();
+  if (
+    !isPlaceholderNationLabel(player.countryName) &&
+    isValidInternationalCountryName(ctx, player.countryName, player.clubName)
+  ) {
+    return player.countryName;
+  }
+
+  const fromCode = countryNameFromNationCode(player.nationCode);
+  if (fromCode) return fromCode;
 
   if (
     player.internationalTeamId &&
     isInternationalTeamId(ctx, player.internationalTeamId) &&
-    player.internationalTeamName
+    player.internationalTeamName &&
+    !isAgeGradeInternationalTeamName(player.internationalTeamName)
   ) {
     return player.internationalTeamName;
-  }
-
-  if (isValidInternationalCountryName(ctx, player.countryName, player.clubName)) {
-    return player.countryName;
   }
 
   return null;

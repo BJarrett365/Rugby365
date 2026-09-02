@@ -142,7 +142,10 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
 export function countryNameToIsoCode(countryName: string | null | undefined): string | null {
   if (!countryName?.trim()) return null;
   const key = countryName.trim().toLowerCase().replace(/\s+/g, " ");
-  if (/^[a-z]{2}$/i.test(key)) return key.toUpperCase();
+  if (/^[a-z]{2}$/i.test(key)) {
+    if (/^(un|xx|zz|eu|aa)$/i.test(key)) return null;
+    return key.toUpperCase();
+  }
   return COUNTRY_NAME_TO_ISO[key] ?? null;
 }
 

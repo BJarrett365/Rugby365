@@ -3,6 +3,30 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Avoid Desktop/iCloud sync races that drop `.next/server` manifests.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  async redirects() {
+    return [
+      {
+        source: "/competitions/tri-nations",
+        destination: "/competitions/rugby-championship",
+        permanent: true,
+      },
+      {
+        source: "/competitions/tri-nations/:path*",
+        destination: "/competitions/rugby-championship/:path*",
+        permanent: true,
+      },
+      {
+        source: "/competitions/the-rugby-championship",
+        destination: "/competitions/rugby-championship",
+        permanent: true,
+      },
+      {
+        source: "/competitions/the-rugby-championship/:path*",
+        destination: "/competitions/rugby-championship/:path*",
+        permanent: true,
+      },
+    ];
+  },
   transpilePackages: [
     "@rugby365/db",
     "@rugby365/commentary",
@@ -20,6 +44,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.ps-aws.com", pathname: "/**" },
       { protocol: "https", hostname: "d3gbf3ykm8gp5c.cloudfront.net", pathname: "/**" },
+      { protocol: "https", hostname: "d2amyifwht104i.cloudfront.net", pathname: "/**" },
       { protocol: "https", hostname: "www.planetrugby.com", pathname: "/**" },
       { protocol: "https", hostname: "planetrugby.com", pathname: "/**" },
       { protocol: "https", hostname: "upload.wikimedia.org", pathname: "/**" },

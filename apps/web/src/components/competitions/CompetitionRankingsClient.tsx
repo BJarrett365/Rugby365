@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FormBlocks,
   MovementCell,
@@ -25,7 +26,7 @@ import type {
   CompetitionRefereeRankingRow,
   CompetitionTeamRankingRow,
 } from "@/lib/competition-rankings-service";
-import { RANKING_POSITION_LABELS, type RankingPositionGroup } from "@/lib/competition-ranking-math";
+import { RANKING_POSITION_LABELS, rankingSeasonQueryValue, type RankingPositionGroup } from "@/lib/competition-ranking-math";
 import {
   buildPlayerRankingsTitle,
   COMPETITION_RANKING_TOP_OPTIONS,
@@ -490,6 +491,8 @@ export function CompetitionRankingsClient({
   slug: string;
   initialSeason?: string;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [data, setData] = useState<CompetitionRankingsPayload | null>(null);
   const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
   const [tab, setTab] = useState<Tab>("players");
@@ -520,7 +523,8 @@ export function CompetitionRankingsClient({
       return;
     }
     setData(json);
-    if (!seasonLabel && json.season?.label) setSeasonLabel(json.season.label);
+    const nextSeason = rankingSeasonQueryValue(slug, json.season);
+    if (nextSeason && nextSeason !== seasonLabel) setSeasonLabel(nextSeason);
     setLoading(false);
   }, [slug, seasonLabel, top]);
 
@@ -532,6 +536,15 @@ export function CompetitionRankingsClient({
       setLoading(false);
     });
   }, [load]);
+
+  useEffect(() => {
+    if (!seasonLabel) return;
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    if (params.get("season") === seasonLabel) return;
+    params.set("season", seasonLabel);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [seasonLabel, pathname, router]);
 
   useEffect(() => {
     if (staffBoard) {
@@ -596,7 +609,8 @@ export function CompetitionRankingsClient({
         ? (data?.notes.coaches ?? "Coach rankings use Rugby365 match ratings in this tournament.")
         : tab === "referees"
           ? (data?.notes.referees ?? "Referee rankings use Rugby365 match ratings in this tournament.")
-          : "Simple points table from finished matches in this competition season.";
+          : (data?.notes.teams ??
+            "Simple points table from finished matches in this competition season.");
 
   return (
     <article className="pr-player-v2">
@@ -653,7 +667,7 @@ export function CompetitionRankingsClient({
                 <option value="">No seasons</option>
               ) : (
                 data.seasons.map((season) => (
-                  <option key={season.id} value={season.label}>
+                  <option key={season.id} value={rankingSeasonQueryValue(slug, season) || season.label}>
                     {season.displayLabel ?? season.label}
                   </option>
                 ))

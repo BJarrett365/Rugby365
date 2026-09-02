@@ -253,3 +253,58 @@ export function transferClubLabel(
   if (team && !/^unknown team\b/i.test(team) && !/^orphan-/i.test(team)) return team;
   return sanitizeTransferClub(clubName) ?? team;
 }
+
+/** Mockup labels: Permanent, Season loan, etc. */
+export function transferMarketMovementLabel(type: string | null | undefined): string {
+  switch ((type ?? "").trim()) {
+    case "permanent":
+      return "Permanent";
+    case "loan":
+      return "Season loan";
+    case "contract_extension":
+      return "Extension";
+    case "released":
+      return "Released";
+    case "retirement":
+      return "Retired";
+    case "academy_promotion":
+      return "Academy";
+    default:
+      return type ? movementTypeLabelFromType(type) : "Transfer";
+  }
+}
+
+function movementTypeLabelFromType(type: string): string {
+  return type
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+/** Short deal line under the movement badge. */
+export function transferMarketDealDetail(notes: string | null | undefined): string | null {
+  if (!notes?.trim()) return null;
+  const cleaned = notes
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length < 3 || cleaned.length > 80) return null;
+  if (/https?:\/\//i.test(cleaned)) return null;
+  return cleaned;
+}
+
+export function formatTransferAnnouncedDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** "2026–27" → "2026 / 27" for the market eyebrow. */
+export function formatTransferMarketSeason(label: string | null | undefined): string {
+  if (!label?.trim()) return "";
+  return label
+    .trim()
+    .replace(/\u2013/g, " / ")
+    .replace(/(\d{4})\s*[-/]\s*(\d{2,4})/, "$1 / $2");
+}

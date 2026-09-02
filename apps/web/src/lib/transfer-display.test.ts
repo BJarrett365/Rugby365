@@ -6,6 +6,9 @@ import {
   sanitizeTransferClub,
   sanitizeTransferPlayerName,
   sanitizeTransferPlayerNameWithStatus,
+  transferMarketMovementLabel,
+  formatTransferAnnouncedDate,
+  formatTransferMarketSeason,
 } from "./transfer-display";
 
 describe("transfer display sanitization", () => {
@@ -68,5 +71,17 @@ describe("transfer display sanitization", () => {
     const francoisKey =
       "2026-27:bath:out:flagicon-rsa-francois-van-wyk-to-flagicon-ire-rugby-union-connacht-ref-cite-web-title-connacht-sign:bath:bath:permanent";
     expect(inferClubFromImportKey(francoisKey, "to")).toBe("Connacht");
+  });
+});
+
+describe("transfer market display", () => {
+  it("uses market movement labels", () => {
+    expect(transferMarketMovementLabel("permanent")).toBe("Permanent");
+    expect(transferMarketMovementLabel("loan")).toBe("Season loan");
+  });
+
+  it("formats announced dates and season eyebrows", () => {
+    expect(formatTransferAnnouncedDate("2026-07-27T12:00:00.000Z")).toMatch(/27 Jul 2026/);
+    expect(formatTransferMarketSeason("2026–27")).toBe("2026 / 27");
   });
 });

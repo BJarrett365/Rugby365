@@ -25,6 +25,7 @@ import {
   urcSplitTableKindForYear,
   urcStandingViewForSplit,
 } from "./urc-lineage";
+import { isRugbyChampionshipLineageSlug } from "./rugby-championship-lineage";
 import {
   PREMIERSHIP_CHAMPIONS,
   CHALLENGE_CUP_CHAMPIONS,
@@ -93,6 +94,7 @@ function wikipediaSeasonKind(competitionSlug: string, competitionType: string): 
   }
   if (
     competitionSlug === "rugby-championship" ||
+    isRugbyChampionshipLineageSlug(competitionSlug) ||
     competitionSlug === "six-nations" ||
     competitionSlug === "nations-championship" ||
     competitionSlug === "international" ||
@@ -997,7 +999,7 @@ export function wikipediaSeasonImportPresets(
 ): Array<{ startYear: number; url: string; winner: string }> {
   if (competitionSlug === "challenge-cup") return challengeCupWikipediaSeasonUrls();
   if (competitionSlug === "rugby-champions-cup") return championsCupWikipediaSeasonUrls();
-  if (competitionSlug === "rugby-championship") return rugbyChampionshipWikipediaSeasonUrls();
+  if (isRugbyChampionshipLineageSlug(competitionSlug)) return rugbyChampionshipWikipediaSeasonUrls();
   if (competitionSlug === "currie-cup" || competitionSlug.startsWith("currie-cup")) {
     return currieCupWikipediaSeasonUrls();
   }

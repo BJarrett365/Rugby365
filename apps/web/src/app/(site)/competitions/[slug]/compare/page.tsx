@@ -82,7 +82,7 @@ export default async function CompetitionComparePlayersPage({ params, searchPara
         <p className="pr-mc-pr-badge">{competition.name}</p>
         <h1 className="pr-player-profile-header__name">Compare players</h1>
         <p className="text-sm text-[var(--pr-mc-grey,#a7adac)] mt-1 mb-0">
-          Player A vs Player B — search or pick from the lists.
+          Player A vs Player B — pick a country, then the international squad or a club.
         </p>
       </header>
       <ComparePlayersPicker

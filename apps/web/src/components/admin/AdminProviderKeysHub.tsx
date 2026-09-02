@@ -637,6 +637,25 @@ export function AdminProviderKeysHub() {
     <div className="mx-auto max-w-2xl space-y-6">
       {loading ? <p className="m-0 text-sm text-zinc-500">Loading provider keys…</p> : null}
 
+      <p className="m-0 text-sm text-zinc-400">
+        Dedicated rugby feeds:{" "}
+        <Link href="/admin/keys/rugby-data" className="text-emerald-400 hover:underline">
+          Rugby Data API
+        </Link>
+        {" · "}
+        <Link href="/admin/keys/stats-perform" className="text-emerald-400 hover:underline">
+          Stats Perform SDAPI
+        </Link>
+        {" · "}
+        <Link href="/admin/keys/open-meteo" className="text-emerald-400 hover:underline">
+          Open-Meteo
+        </Link>
+        {" · "}
+        <Link href="/admin/keys/tv-schedule" className="text-emerald-400 hover:underline">
+          TV Schedule
+        </Link>
+      </p>
+
       {/* —— Supabase —— */}
       <section id="supabase" className="cms-card space-y-3 scroll-mt-24">
         <h2 className="m-0 text-sm font-bold uppercase tracking-wide text-zinc-100">

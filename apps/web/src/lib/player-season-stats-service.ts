@@ -488,6 +488,7 @@ export async function upsertMatchPerformanceStat(input: {
     points?: number;
     /** True when minutes/stats were inferred because SDMS omitted the player. */
     gapFilled?: boolean;
+    extraStats?: Record<string, unknown>;
   };
   sourceProvider?: string;
   /** Skip OpenAI bio refresh (bulk historical imports). */
@@ -536,6 +537,7 @@ export async function upsertMatchPerformanceStat(input: {
       carriesCrossedGainLine: input.stats.carriesCrossedGainLine,
       carriesNotMadeGainLine: input.stats.carriesNotMadeGainLine,
       ...(input.stats.gapFilled ? { gapFilled: true, statsEstimated: true } : {}),
+      ...(input.stats.extraStats ?? {}),
     },
     sourceProvider: input.sourceProvider ?? "sdms",
     importKey,

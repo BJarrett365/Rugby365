@@ -7,6 +7,7 @@ import {
   RANKING_MIN_ELIGIBLE,
   RANKING_PREFERRED_ELIGIBLE,
 } from "./player-rating-presentation";
+import { isPlaceholderNationCode } from "./nation-code-utils";
 import { countryNameToIsoCode } from "./open-meteo-service";
 import { flagUrlForVenue, venueFlagIso } from "./public-venue-product-math";
 
@@ -723,14 +724,16 @@ export function rankingCountryFlagUrl(
     ger: "de",
     ken: "ke",
   };
-  const code = (nationCode ?? name ?? "").trim().toLowerCase();
+  const rawCode = isPlaceholderNationCode(nationCode) ? "" : (nationCode ?? "").trim();
+  const code = (rawCode || name || "").trim().toLowerCase();
+  if (isPlaceholderNationCode(code)) return null;
   if (/^(gb-eng|gb-sct|gb-wls|gb-nir)$/i.test(code)) return flagUrlForVenue(code);
   if (rugbyIso3[code]) return `https://flagcdn.com/w40/${rugbyIso3[code]}.png`;
   const iso =
-    /^[a-z]{2}$/i.test(code) && !venueFlagIso(name)
+    /^[a-z]{2}$/i.test(code) && !venueFlagIso(name) && !isPlaceholderNationCode(code)
       ? code
       : countryNameToIsoCode(name)?.toLowerCase();
-  if (!iso) return null;
+  if (!iso || isPlaceholderNationCode(iso)) return null;
   return `https://flagcdn.com/w40/${iso}.png`;
 }
 

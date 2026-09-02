@@ -15,6 +15,10 @@ import {
 } from "@/lib/table-lab/table-urc-pool-service";
 import type { RugbyTableView } from "@/lib/table-lab/table-types";
 import { urcCompetitionDisplayNameForYear } from "@/lib/urc-lineage";
+import {
+  isRugbyChampionshipLineageSlug,
+  rugbyChampionshipCompetitionDisplayNameForYear,
+} from "@/lib/rugby-championship-lineage";
 import { cachedPublic, PUBLIC_CACHE_TTL, publicJsonCacheHeaders } from "@/lib/public-data-cache";
 import { attachTeamImagesToTableResult } from "@/lib/table-lab/table-team-images";
 
@@ -98,7 +102,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
           competition.slug === "pro12" ||
           competition.slug === "pro14")
           ? urcCompetitionDisplayNameForYear(season.year)
-          : competition.name;
+          : season?.year != null && isRugbyChampionshipLineageSlug(competition.slug)
+            ? rugbyChampionshipCompetitionDisplayNameForYear(season.year)
+            : competition.name;
 
       if (season?.year != null) {
         const poolFast = await loadUrcPoolTableResult({
@@ -149,7 +155,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       };
     };
 
-    const cacheKey = `live-table:${slug}:${seasonLabel ?? "default"}:${tableView}`;
+    const cacheKey = `live-table:v4:${slug}:${seasonLabel ?? "default"}:${tableView}`;
     const requestedYear = parseSeasonStartYear(seasonLabel);
     const ttl =
       requestedYear != null && requestedYear < currentDomesticSeasonStartYear()

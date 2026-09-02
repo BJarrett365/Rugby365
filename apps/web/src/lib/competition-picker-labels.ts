@@ -6,7 +6,7 @@ export function competitionPickerLabel(comp: { slug: string; name: string }): st
     case "championship":
       return "Championship (England — RFU 2nd tier)";
     case "rugby-championship":
-      return "Rugby Championship (Argentina · Australia · NZ · SA)";
+      return "The Rugby Championship (Tri Nations 1996–2011)";
     case "currie-cup-pd9ro98v":
       return "Currie Cup Premier Division (South Africa)";
     case "currie-cup-first-division":
@@ -25,7 +25,7 @@ export function competitionEmptyTeamsHint(slug: string | undefined): string | nu
     return "This is the English club league. Southern Hemisphere nations are under Rugby Championship — use that entry in the competition list.";
   }
   if (slug === "rugby-championship") {
-    return "Pick a season such as 2025 or 2024. Current/future shell seasons may have no teams yet.";
+    return "Pick a season such as 2025 or 2011. 1996–2011 are Tri Nations years; 2012– are The Rugby Championship.";
   }
   if (slug === "currie-cup-first-division") {
     return "Second tier of South African provincial rugby. The top division is Currie Cup Premier Division.";

@@ -19,13 +19,22 @@ function headers() {
 async function wikiQuery(params: Record<string, string>): Promise<Record<string, unknown>> {
   const search = new URLSearchParams({ format: "json", formatversion: "2", redirects: "1", ...params });
   for (let attempt = 0; attempt < 4; attempt++) {
-    const res = await fetch(`${API}?${search}`, { headers: headers() });
-    if (res.status === 429) {
-      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
-      continue;
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { ...headers(), "Content-Type": "application/x-www-form-urlencoded" },
+        body: search,
+        signal: AbortSignal.timeout(20000),
+      });
+      if (res.status === 429) {
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        continue;
+      }
+      if (!res.ok) return {};
+      return (await res.json()) as Record<string, unknown>;
+    } catch {
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
-    if (!res.ok) return {};
-    return (await res.json()) as Record<string, unknown>;
   }
   return {};
 }
@@ -67,6 +76,37 @@ export async function fetchWikipediaThumbnails(titles: string[]): Promise<Map<st
       }
     }
   }
+  return map;
+}
+
+export async function fetchWikipediaOriginalImages(titles: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const unique = [...new Set(titles.map((t) => t.trim()).filter(Boolean))];
+  for (let i = 0; i < unique.length; i += 40) {
+    const chunk = unique.slice(i, i + 40);
+    process.stdout.write(`wiki originals ${Math.min(i + 40, unique.length)}/${unique.length}\r`);
+    const payload = await wikiQuery({
+      action: "query",
+      prop: "pageimages",
+      piprop: "original|thumbnail",
+      pithumbsize: "440",
+      titles: chunk.join("|"),
+    });
+    const redirectFrom = new Map(redirectsOf(payload).map((r) => [r.to, r.from]));
+    for (const page of pagesOf(payload)) {
+      const url =
+        (page as { original?: { source?: string } }).original?.source || page.thumbnail?.source;
+      if (!page.title || !url) continue;
+      map.set(page.title, url);
+      const from = redirectFrom.get(page.title);
+      if (from) map.set(from, url);
+      for (const requested of chunk) {
+        if (requested.toLowerCase() === page.title.toLowerCase()) map.set(requested, url);
+      }
+    }
+    if (i + 40 < unique.length) await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  if (unique.length) process.stdout.write("\n");
   return map;
 }
 

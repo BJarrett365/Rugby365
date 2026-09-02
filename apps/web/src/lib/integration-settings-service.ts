@@ -1,6 +1,12 @@
 import { eq } from "drizzle-orm";
 import { integrationSettings } from "@rugby365/db";
 import { getDb } from "./db";
+import {
+  DEFAULT_STATS_PERFORM_SDAPI_BASE_URL,
+  STATS_PERFORM_DOCS_SAMPLE_OUTLET_AUTH_KEY,
+  testStatsPerformDocsLogin,
+  testStatsPerformSdapiConnection,
+} from "./stats-perform-sdapi-client";
 
 export const WIKIMEDIA_ENTERPRISE_SLUG = "wikimedia_enterprise";
 export const OPENAI_SLUG = "openai";
@@ -9,6 +15,7 @@ export const RUGBY_DATA_API_SLUG = "rugby_data_api";
 export const SUPABASE_SLUG = "supabase";
 export const WIKIPEDIA_SLUG = "wikipedia";
 export const WIKIDATA_SLUG = "wikidata";
+export const STATS_PERFORM_SDAPI_SLUG = "stats_perform_sdapi";
 
 export const DEFAULT_RUGBY_DATA_API_BASE_URL =
   "https://cms-planetrugby-players-investigator-for-barrie.hneeds.com";
@@ -1763,6 +1770,254 @@ export async function testWikidataConnection(input?: {
     userAgent: input?.userAgent?.trim() || resolved.userAgent,
     apiBaseUrl: input?.apiBaseUrl?.trim() || resolved.apiBaseUrl,
     accessToken: input?.accessToken?.trim() || resolved.accessToken,
+  });
+}
+
+export type StatsPerformSdapiConfig = {
+  docsUsername?: string;
+  docsPassword?: string;
+  outletAuthKey?: string;
+  baseUrl?: string;
+};
+
+export type StatsPerformSdapiPublicConfig = {
+  docsUsername?: string;
+  hasDocsPassword: boolean;
+  docsPasswordMasked?: string;
+  hasOutletAuthKey: boolean;
+  outletAuthKeyMasked?: string;
+  baseUrl: string;
+  docsConfigured: boolean;
+  apiConfigured: boolean;
+  configured: boolean;
+  docsUsernameSource: "environment" | "admin" | "none";
+  docsPasswordSource: "environment" | "admin" | "none";
+  outletAuthKeySource: "environment" | "admin" | "docs" | "none";
+  baseUrlSource: "environment" | "admin" | "default";
+};
+
+function statsPerformDocsUsernameSource(
+  config: StatsPerformSdapiConfig,
+): StatsPerformSdapiPublicConfig["docsUsernameSource"] {
+  if (process.env.STATS_PERFORM_DOCS_USERNAME?.trim()) return "environment";
+  if (config.docsUsername?.trim()) return "admin";
+  return "none";
+}
+
+function statsPerformDocsPasswordSource(
+  config: StatsPerformSdapiConfig,
+): StatsPerformSdapiPublicConfig["docsPasswordSource"] {
+  if (process.env.STATS_PERFORM_DOCS_PASSWORD?.trim()) return "environment";
+  if (config.docsPassword?.trim()) return "admin";
+  return "none";
+}
+
+function statsPerformOutletKeySource(
+  config: StatsPerformSdapiConfig,
+): StatsPerformSdapiPublicConfig["outletAuthKeySource"] {
+  if (process.env.STATS_PERFORM_OUTLET_AUTH_KEY?.trim()) return "environment";
+  if (config.outletAuthKey?.trim()) return "admin";
+  return "docs";
+}
+
+function statsPerformBaseUrlSource(
+  config: StatsPerformSdapiConfig,
+): StatsPerformSdapiPublicConfig["baseUrlSource"] {
+  if (process.env.STATS_PERFORM_SDAPI_BASE_URL?.trim()) return "environment";
+  if (config.baseUrl?.trim()) return "admin";
+  return "default";
+}
+
+function toStatsPerformSdapiPublicConfig(
+  config: StatsPerformSdapiConfig,
+): StatsPerformSdapiPublicConfig {
+  const docsUsernameSource = statsPerformDocsUsernameSource(config);
+  const docsPasswordSource = statsPerformDocsPasswordSource(config);
+  const outletAuthKeySource = statsPerformOutletKeySource(config);
+  const baseUrlSource = statsPerformBaseUrlSource(config);
+  const docsUsername =
+    process.env.STATS_PERFORM_DOCS_USERNAME?.trim() || config.docsUsername?.trim() || undefined;
+  const docsPassword =
+    process.env.STATS_PERFORM_DOCS_PASSWORD?.trim() || config.docsPassword?.trim() || undefined;
+  const outletAuthKey =
+    process.env.STATS_PERFORM_OUTLET_AUTH_KEY?.trim() ||
+    config.outletAuthKey?.trim() ||
+    STATS_PERFORM_DOCS_SAMPLE_OUTLET_AUTH_KEY;
+  const baseUrl =
+    process.env.STATS_PERFORM_SDAPI_BASE_URL?.trim() ||
+    config.baseUrl?.trim() ||
+    DEFAULT_STATS_PERFORM_SDAPI_BASE_URL;
+  const docsConfigured = Boolean(docsUsername && docsPassword);
+  const apiConfigured = Boolean(outletAuthKey);
+
+  return {
+    docsUsername,
+    hasDocsPassword: Boolean(docsPassword),
+    docsPasswordMasked: docsPassword ? maskSecret(docsPassword) : undefined,
+    hasOutletAuthKey: apiConfigured,
+    outletAuthKeyMasked: outletAuthKey ? maskSecret(outletAuthKey) : undefined,
+    baseUrl: baseUrl.replace(/\/$/, ""),
+    docsConfigured,
+    apiConfigured,
+    configured: docsConfigured || apiConfigured,
+    docsUsernameSource,
+    docsPasswordSource,
+    outletAuthKeySource,
+    baseUrlSource,
+  };
+}
+
+export async function getStatsPerformSdapiConfig(): Promise<StatsPerformSdapiConfig> {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(integrationSettings)
+    .where(eq(integrationSettings.slug, STATS_PERFORM_SDAPI_SLUG))
+    .limit(1);
+
+  if (!row) return {};
+  return (row.config ?? {}) as StatsPerformSdapiConfig;
+}
+
+export async function getStatsPerformSdapiPublicConfig(): Promise<StatsPerformSdapiPublicConfig> {
+  const config = await getStatsPerformSdapiConfig();
+  return toStatsPerformSdapiPublicConfig(config);
+}
+
+export async function saveStatsPerformSdapiCredentials(input: {
+  docsUsername?: string;
+  docsPassword?: string;
+  outletAuthKey?: string;
+  baseUrl?: string;
+}): Promise<StatsPerformSdapiPublicConfig> {
+  const db = getDb();
+  const existing = await getStatsPerformSdapiConfig();
+  const next: StatsPerformSdapiConfig = { ...existing };
+
+  if (typeof input.docsUsername === "string") {
+    const username = input.docsUsername.trim();
+    if (username) next.docsUsername = username;
+  }
+  if (input.docsPassword?.trim()) {
+    next.docsPassword = input.docsPassword;
+  }
+  if (input.outletAuthKey?.trim()) {
+    next.outletAuthKey = input.outletAuthKey.trim();
+  }
+  if (typeof input.baseUrl === "string") {
+    const trimmed = input.baseUrl.trim().replace(/\/$/, "");
+    if (trimmed) {
+      let parsed: URL;
+      try {
+        parsed = new URL(trimmed);
+      } catch {
+        throw new Error("Base URL must be a valid https URL.");
+      }
+      if (parsed.protocol !== "https:") {
+        throw new Error("Base URL must use https.");
+      }
+      next.baseUrl = trimmed;
+    }
+  }
+
+  const [row] = await db
+    .insert(integrationSettings)
+    .values({
+      slug: STATS_PERFORM_SDAPI_SLUG,
+      label: "Stats Perform SDAPI",
+      config: next,
+    })
+    .onConflictDoUpdate({
+      target: integrationSettings.slug,
+      set: {
+        config: next,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return toStatsPerformSdapiPublicConfig((row.config ?? {}) as StatsPerformSdapiConfig);
+}
+
+export async function clearStatsPerformSdapiCredentials(input?: {
+  clearDocs?: boolean;
+  clearOutletKey?: boolean;
+}): Promise<StatsPerformSdapiPublicConfig> {
+  const db = getDb();
+  const existing = await getStatsPerformSdapiConfig();
+  const clearDocs = input?.clearDocs !== false;
+  const clearOutletKey = input?.clearOutletKey !== false;
+  const next: StatsPerformSdapiConfig = {
+    baseUrl: existing.baseUrl,
+  };
+  if (!clearDocs) {
+    next.docsUsername = existing.docsUsername;
+    next.docsPassword = existing.docsPassword;
+  }
+  if (!clearOutletKey) {
+    next.outletAuthKey = existing.outletAuthKey;
+  }
+
+  const [row] = await db
+    .insert(integrationSettings)
+    .values({
+      slug: STATS_PERFORM_SDAPI_SLUG,
+      label: "Stats Perform SDAPI",
+      config: next,
+    })
+    .onConflictDoUpdate({
+      target: integrationSettings.slug,
+      set: {
+        config: next,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return toStatsPerformSdapiPublicConfig((row.config ?? {}) as StatsPerformSdapiConfig);
+}
+
+export async function resolveStatsPerformDocsAuth(): Promise<{
+  username: string;
+  password: string;
+}> {
+  const envUser = process.env.STATS_PERFORM_DOCS_USERNAME?.trim();
+  const envPass = process.env.STATS_PERFORM_DOCS_PASSWORD;
+  if (envUser && envPass) return { username: envUser, password: envPass };
+  const config = await getStatsPerformSdapiConfig();
+  return {
+    username: envUser || config.docsUsername?.trim() || "",
+    password: envPass || config.docsPassword || "",
+  };
+}
+
+export async function resolveStatsPerformOutletAuthKey(): Promise<string | null> {
+  const env = process.env.STATS_PERFORM_OUTLET_AUTH_KEY?.trim();
+  if (env) return env;
+  const config = await getStatsPerformSdapiConfig();
+  return config.outletAuthKey?.trim() || STATS_PERFORM_DOCS_SAMPLE_OUTLET_AUTH_KEY;
+}
+
+export async function resolveStatsPerformSdapiBaseUrl(): Promise<string> {
+  const env = process.env.STATS_PERFORM_SDAPI_BASE_URL?.trim();
+  if (env) return env.replace(/\/$/, "");
+  const config = await getStatsPerformSdapiConfig();
+  return (config.baseUrl?.trim() || DEFAULT_STATS_PERFORM_SDAPI_BASE_URL).replace(/\/$/, "");
+}
+
+export async function testResolvedStatsPerformDocsLogin() {
+  const auth = await resolveStatsPerformDocsAuth();
+  return testStatsPerformDocsLogin(auth);
+}
+
+export async function testResolvedStatsPerformSdapiConnection() {
+  const [outletAuthKey, baseUrl] = await Promise.all([
+    resolveStatsPerformOutletAuthKey(),
+    resolveStatsPerformSdapiBaseUrl(),
+  ]);
+  return testStatsPerformSdapiConnection({
+    outletAuthKey: outletAuthKey ?? "",
+    baseUrl,
   });
 }
 

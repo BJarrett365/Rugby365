@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ComparePlayersResult } from "@/components/players/ComparePlayersResult";
+import {
+  COMPARE_PICKER_INTERNATIONAL_KEY,
+  COMPARE_PICKER_UNASSIGNED,
+  filterComparePickerGroups,
+  groupComparePickerPlayers,
+  mergeComparePickerPlayers,
+  squadOptionsForNationGroup,
+  type ComparePickerPlayer,
+} from "@/lib/compare-player-picker-groups";
 
-type SearchHit = {
-  slug: string;
-  name: string;
-  position: string | null;
-  clubName: string | null;
-};
+type SearchHit = ComparePickerPlayer;
 
 type Side = "a" | "b";
 
@@ -32,19 +36,51 @@ type Props = {
   anchoredDisplayName?: string | null;
 };
 
+type SearchApiRow = {
+  slug: string;
+  name: string;
+  positionName: string | null;
+  clubName: string | null;
+  nationName?: string | null;
+};
+
 function emptySide(): SideState {
   return { playerSlug: "", picked: null };
 }
 
-function playerLabel(p: {
-  name: string;
-  position?: string | null;
-  clubName?: string | null;
-}): string {
-  const bits = [p.name];
-  if (p.position?.trim()) bits.push(p.position.trim());
-  if (p.clubName?.trim()) bits.push(p.clubName.trim());
-  return bits.join(" · ");
+function playerLabel(p: { name: string }): string {
+  return p.name;
+}
+
+function mapSearchRows(rows: SearchApiRow[] | undefined, otherSlug: string): ComparePickerPlayer[] {
+  return (rows ?? [])
+    .filter((r) => r.slug && r.slug !== otherSlug)
+    .map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      position: r.positionName,
+      clubName: r.clubName,
+      countryName: r.nationName ?? null,
+    }));
+}
+
+async function fetchPlayerSearch(input: {
+  query: string;
+  page: number;
+  otherSlug: string;
+}): Promise<{ rows: ComparePickerPlayer[]; total: number }> {
+  const params = new URLSearchParams({ pageSize: "100", page: String(input.page) });
+  if (input.query.trim().length >= 2) params.set("q", input.query.trim());
+  else params.set("browse", "1");
+  const res = await fetch(`/api/players/search?${params}`, { cache: "no-store" });
+  const json = (await res.json().catch(() => ({}))) as {
+    rows?: SearchApiRow[];
+    total?: number;
+  };
+  return {
+    rows: mapSearchRows(json.rows, input.otherSlug),
+    total: typeof json.total === "number" ? json.total : 0,
+  };
 }
 
 function PlayerSearchField({
@@ -52,56 +88,52 @@ function PlayerSearchField({
   selectedSlug,
   onPick,
   label,
+  rosterPlayers,
+  rosterLoading,
+  useRoster,
 }: {
   otherSlug: string;
   selectedSlug: string;
   onPick: (hit: SearchHit) => void;
   label: string;
+  rosterPlayers: ComparePickerPlayer[] | null;
+  rosterLoading: boolean;
+  useRoster: boolean;
 }) {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [remoteHits, setRemoteHits] = useState<ComparePickerPlayer[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!useRoster);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [nation, setNation] = useState("");
+  const [squadKey, setSquadKey] = useState(COMPARE_PICKER_INTERNATIONAL_KEY);
+  const selectClass =
+    "w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] disabled:opacity-50";
 
   useEffect(() => {
     const q = query.trim();
     let cancelled = false;
+    if (useRoster && q.length < 2) {
+      setRemoteHits([]);
+      setTotal(0);
+      setPage(1);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setPage(1);
     const timer = window.setTimeout(() => {
       void (async () => {
         try {
-          const params = new URLSearchParams({ pageSize: "100", page: "1" });
-          if (q.length >= 2) params.set("q", q);
-          else params.set("browse", "1");
-          const res = await fetch(`/api/players/search?${params}`, { cache: "no-store" });
-          const json = (await res.json().catch(() => ({}))) as {
-            rows?: Array<{
-              slug: string;
-              name: string;
-              positionName: string | null;
-              clubName: string | null;
-            }>;
-            total?: number;
-          };
+          const result = await fetchPlayerSearch({ query: q, page: 1, otherSlug });
           if (cancelled) return;
-          setHits(
-            (json.rows ?? [])
-              .filter((r) => r.slug && r.slug !== otherSlug)
-              .map((r) => ({
-                slug: r.slug,
-                name: r.name,
-                position: r.positionName,
-                clubName: r.clubName,
-              })),
-          );
-          setTotal(typeof json.total === "number" ? json.total : 0);
+          setRemoteHits(result.rows);
+          setTotal(result.total);
         } catch {
           if (!cancelled) {
-            setHits([]);
+            setRemoteHits([]);
             setTotal(0);
           }
         } finally {
@@ -114,7 +146,7 @@ function PlayerSearchField({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, otherSlug]);
+  }, [query, otherSlug, useRoster]);
 
   const loadMore = () => {
     const q = query.trim();
@@ -122,35 +154,9 @@ function PlayerSearchField({
     setLoadingMore(true);
     void (async () => {
       try {
-        const params = new URLSearchParams({
-          pageSize: "100",
-          page: String(nextPage),
-        });
-        if (q.length >= 2) params.set("q", q);
-        else params.set("browse", "1");
-        const res = await fetch(`/api/players/search?${params}`, { cache: "no-store" });
-        const json = (await res.json().catch(() => ({}))) as {
-          rows?: Array<{
-            slug: string;
-            name: string;
-            positionName: string | null;
-            clubName: string | null;
-          }>;
-          total?: number;
-        };
-        setHits((prev) => {
-          const seen = new Set(prev.map((h) => h.slug));
-          const extra = (json.rows ?? [])
-            .filter((r) => r.slug && r.slug !== otherSlug && !seen.has(r.slug))
-            .map((r) => ({
-              slug: r.slug,
-              name: r.name,
-              position: r.positionName,
-              clubName: r.clubName,
-            }));
-          return [...prev, ...extra];
-        });
-        if (typeof json.total === "number") setTotal(json.total);
+        const result = await fetchPlayerSearch({ query: q, page: nextPage, otherSlug });
+        setRemoteHits((prev) => mergeComparePickerPlayers(prev, result.rows));
+        setTotal(result.total);
         setPage(nextPage);
       } finally {
         setLoadingMore(false);
@@ -158,29 +164,144 @@ function PlayerSearchField({
     })();
   };
 
-  const canLoadMore = !loading && hits.length < total;
+  const groupedPlayers = useMemo(() => {
+    const base = useRoster ? mergeComparePickerPlayers(rosterPlayers ?? [], remoteHits) : remoteHits;
+    return groupComparePickerPlayers(base);
+  }, [useRoster, rosterPlayers, remoteHits]);
+
+  const groups = useMemo(
+    () => filterComparePickerGroups(groupedPlayers, query, otherSlug),
+    [groupedPlayers, query, otherSlug],
+  );
+
+  const selectedGroup = groups.find((group) => group.nation === nation) ?? groups[0] ?? null;
+  const squadOptions = selectedGroup ? squadOptionsForNationGroup(selectedGroup) : [];
+  const selectedSquad =
+    squadOptions.find((option) => option.key === squadKey) ?? squadOptions[0] ?? null;
+  const searching = query.trim().length >= 2;
+  const listedPlayers = searching
+    ? groups.flatMap((group) => {
+        const international = group.clubs.find((club) => club.kind === "international");
+        if (international) return international.players;
+        return group.clubs.flatMap((club) => club.players);
+      })
+    : (selectedSquad?.players ?? []);
+  const uniqueListed = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: ComparePickerPlayer[] = [];
+    for (const player of listedPlayers) {
+      if (player.slug === otherSlug || seen.has(player.slug)) continue;
+      seen.add(player.slug);
+      rows.push(player);
+    }
+    return rows;
+  }, [listedPlayers, otherSlug]);
+
+  useEffect(() => {
+    if (!selectedGroup) return;
+    if (selectedGroup.nation !== nation) setNation(selectedGroup.nation);
+  }, [selectedGroup, nation]);
+
+  useEffect(() => {
+    if (squadOptions.length === 0) return;
+    if (!squadOptions.some((option) => option.key === squadKey)) {
+      setSquadKey(squadOptions[0]!.key);
+    }
+  }, [squadOptions, squadKey]);
+
+  const showLoading = useRoster ? rosterLoading : loading;
+  const canLoadMore = !useRoster && !loading && remoteHits.length < total;
 
   return (
-    <div ref={wrapRef} className="space-y-1.5">
+    <div className="space-y-1.5">
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-[var(--pr-mc-muted)]">{label}</span>
         <input
           type="search"
           value={query}
-          placeholder="Search by name…"
+          placeholder="Search by name, club or country…"
           autoComplete="off"
-          className="w-full rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)] px-3 py-2 text-sm text-[var(--pr-mc-text)] placeholder:text-[var(--pr-mc-grey)]"
+          className={selectClass}
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
-      <div className="max-h-72 overflow-auto rounded-lg border border-[var(--pr-mc-border)] bg-[var(--pr-mc-bg)]">
-        {loading ? (
+
+      {!searching ? (
+        <>
+      <label className="block space-y-1.5">
+        <span className="text-xs font-medium text-[var(--pr-mc-muted)]">1. Country</span>
+        <select
+          className={selectClass}
+          value={selectedGroup?.nation ?? ""}
+          disabled={showLoading || groups.length === 0}
+          onChange={(e) => {
+            setNation(e.target.value);
+            setSquadKey(COMPARE_PICKER_INTERNATIONAL_KEY);
+          }}
+        >
+          {groups.length === 0 ? <option value="">No countries</option> : null}
+          {groups.map((group) => (
+            <option key={group.nation} value={group.nation}>
+              {group.nation}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="block space-y-1.5">
+        <span className="text-xs font-medium text-[var(--pr-mc-muted)]">2. Squad</span>
+        <select
+          className={selectClass}
+          value={selectedSquad?.key ?? ""}
+          disabled={showLoading || squadOptions.length === 0}
+          onChange={(e) => setSquadKey(e.target.value)}
+        >
+          {squadOptions.some((option) => option.kind === "international") ? (
+            <optgroup label="Internationals">
+              {squadOptions
+                .filter((option) => option.kind === "international")
+                .map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label} ({option.players.length})
+                  </option>
+                ))}
+            </optgroup>
+          ) : null}
+          {squadOptions.some((option) => option.kind === "club") ? (
+            <optgroup label="Clubs">
+              {squadOptions
+                .filter((option) => option.kind === "club")
+                .map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label} ({option.players.length})
+                  </option>
+                ))}
+            </optgroup>
+          ) : null}
+          {squadOptions.some((option) => option.kind === "unassigned") ? (
+            <optgroup label={COMPARE_PICKER_UNASSIGNED}>
+              {squadOptions
+                .filter((option) => option.kind === "unassigned")
+                .map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label} ({option.players.length})
+                  </option>
+                ))}
+            </optgroup>
+          ) : null}
+        </select>
+      </label>
+        </>
+      ) : null}
+
+      <div className="pr-mc-compare-picker">
+        {showLoading ? (
           <p className="m-0 px-3 py-2 text-sm text-[var(--pr-mc-muted)]">Loading players…</p>
-        ) : hits.length === 0 ? (
+        ) : uniqueListed.length === 0 ? (
           <p className="m-0 px-3 py-2 text-sm text-[var(--pr-mc-muted)]">No players found.</p>
         ) : (
-          <ul className="m-0 list-none p-1">
-            {hits.map((hit) => {
+          <ul className="pr-mc-compare-picker__list">
+            {uniqueListed.map((hit) => {
               const selected = hit.slug === selectedSlug;
               return (
                 <li key={hit.slug}>
@@ -209,11 +330,17 @@ function PlayerSearchField({
               disabled={loadingMore}
               onClick={loadMore}
             >
-              {loadingMore ? "Loading…" : `Show more (${hits.length} of ${total})`}
+              {loadingMore ? "Loading…" : `Show more (${remoteHits.length} of ${total})`}
             </button>
           </div>
         ) : null}
       </div>
+      {!showLoading && uniqueListed.length > 0 ? (
+        <p className="m-0 text-[11px] text-[var(--pr-mc-grey)]">
+          Choose a country, then International for the national squad, or a club. Players without a
+          club are under Unassigned.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -230,6 +357,57 @@ export function ComparePlayersPicker({
   const [sideA, setSideA] = useState<SideState>(() => emptySide());
   const [sideB, setSideB] = useState<SideState>(() => emptySide());
   const [initialHydrated, setInitialHydrated] = useState(false);
+  const [rosterPlayers, setRosterPlayers] = useState<ComparePickerPlayer[] | null>(null);
+  const [rosterLoading, setRosterLoading] = useState(Boolean(hubSlug));
+
+  useEffect(() => {
+    if (!hubSlug) {
+      setRosterPlayers(null);
+      setRosterLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setRosterLoading(true);
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/competitions/by-slug/${encodeURIComponent(hubSlug)}/compare-roster`,
+          { cache: "no-store" },
+        );
+        const json = (await res.json().catch(() => ({}))) as {
+          players?: Array<{
+            slug: string;
+            name: string;
+            position: string | null;
+            clubName?: string | null;
+            countryName?: string | null;
+            teamName?: string | null;
+          }>;
+        };
+        if (cancelled) return;
+        setRosterPlayers(
+          (json.players ?? [])
+            .filter((row) => row.slug?.trim())
+            .map((row) => ({
+              slug: row.slug,
+              name: row.name,
+              position: row.position,
+              clubName: row.clubName ?? null,
+              countryName: row.countryName ?? row.teamName ?? null,
+            })),
+        );
+      } catch {
+        if (!cancelled) setRosterPlayers([]);
+      } finally {
+        if (!cancelled) setRosterLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hubSlug]);
 
   useEffect(() => {
     if (initialHydrated) return;
@@ -248,14 +426,7 @@ export function ComparePlayersPicker({
           `/api/players/search?q=${encodeURIComponent(q.length >= 2 ? q : slug)}&pageSize=48`,
           { cache: "no-store" },
         );
-        const json = (await res.json().catch(() => ({}))) as {
-          rows?: Array<{
-            slug: string;
-            name: string;
-            positionName: string | null;
-            clubName: string | null;
-          }>;
-        };
+        const json = (await res.json().catch(() => ({}))) as { rows?: SearchApiRow[] };
         const hit = (json.rows ?? []).find((r) => r.slug === slug || r.slug.startsWith(`${slug}-`));
         if (!hit) {
           return {
@@ -268,6 +439,7 @@ export function ComparePlayersPicker({
                 .replace(/\b\w/g, (c) => c.toUpperCase()) || slug,
             position: null,
             clubName: null,
+            countryName: null,
           };
         }
         return {
@@ -275,6 +447,7 @@ export function ComparePlayersPicker({
           name: hit.name,
           position: hit.positionName,
           clubName: hit.clubName,
+          countryName: hit.nationName ?? null,
         };
       }
 
@@ -325,8 +498,11 @@ export function ComparePlayersPicker({
         <PlayerSearchField
           otherSlug={other.playerSlug}
           selectedSlug={state.playerSlug}
-          label="Search players"
+          label="Search or pick a country, then a squad"
           onPick={(hit) => pickFromSearch(side, hit)}
+          rosterPlayers={rosterPlayers}
+          rosterLoading={rosterLoading}
+          useRoster={Boolean(hubSlug)}
         />
 
         {state.playerSlug && state.picked ? (
@@ -351,8 +527,7 @@ export function ComparePlayersPicker({
         </p>
       ) : (
         <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
-          Pick Player A and Player B from the lists — search by name if you need to narrow them
-          down.
+          Pick Player A and Player B. Choose a country, then the international squad or a club.
         </p>
       )}
 

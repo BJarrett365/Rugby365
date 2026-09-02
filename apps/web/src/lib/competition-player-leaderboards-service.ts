@@ -12,15 +12,12 @@ import {
   isRugbyChampionshipPickerYear,
   rugbyChampionshipEraForYear,
   rugbyChampionshipEraLabel,
-  rugbyChampionshipPickerDisplayLabel,
   RUGBY_CHAMPIONSHIP_FIRST_YEAR,
   TRI_NATIONS_FIRST_YEAR,
 } from "./rugby-championship-lineage";
-import { applyUrcLineageSeasonLabels, isUrcLineageSlug } from "./urc-lineage";
 import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import {
   currentDomesticSeasonStartYear,
-  formatSeasonRangeLabel,
   parseSeasonStartYear,
   usesDomesticSeasonCatalog,
 } from "./season-label-utils";
@@ -255,35 +252,10 @@ function decorateSeasonsForCompetition(
   slug: string,
   seasons: Awaited<ReturnType<typeof listSeasonsForPicker>>,
 ) {
-  if (isUrcLineageSlug(slug)) {
-    return applyUrcLineageSeasonLabels(slug, seasons);
+  if (isRugbyChampionshipLineageSlug(slug)) {
+    return seasons.filter((season) => isRugbyChampionshipPickerYear(season.year));
   }
-
-  if (!isRugbyChampionshipLineageSlug(slug)) {
-    return seasons.map((season) => ({
-      ...season,
-      era: null as string | null,
-      eraGroup: null as string | null,
-    }));
-  }
-
-  return seasons
-    .filter((season) => isRugbyChampionshipPickerYear(season.year))
-    .map((season) => {
-      const era = rugbyChampionshipEraForYear(season.year);
-      const eraLabel = rugbyChampionshipEraLabel(era);
-      // Preserve " — just finished" (and similar) suffixes from decorateSeasonPickerRows.
-      const statusSuffix =
-        typeof season.displayLabel === "string" && season.displayLabel.includes(" — ")
-          ? season.displayLabel.slice(season.displayLabel.indexOf(" — "))
-          : "";
-      return {
-        ...season,
-        era: eraLabel,
-        eraGroup: eraLabel,
-        displayLabel: rugbyChampionshipPickerDisplayLabel(season.year, statusSuffix),
-      };
-    });
+  return seasons;
 }
 
 /** Guarantee Tri Nations + Rugby Championship season rows exist for the picker. */
@@ -295,8 +267,8 @@ async function ensureRugbyChampionshipSeasonCatalog(competitionId: string) {
     if (years.has(year)) continue;
     await upsertSeason({
       competitionId,
-      label: formatSeasonRangeLabel(year),
-      seasonKind: "club",
+      label: String(year),
+      seasonKind: "international",
     });
   }
 }
@@ -632,7 +604,7 @@ export async function getCompetitionPlayerStatsBySlug(
     competition: {
       id: competition.id,
       slug: competition.slug,
-      name: competition.name,
+      name: seasonEra ?? competition.name,
     },
     seasons,
     season: {
