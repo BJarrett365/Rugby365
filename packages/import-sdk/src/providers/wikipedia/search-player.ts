@@ -41,7 +41,9 @@ export function prioritizePlayerArticleTitles(candidates: string[], playerName: 
     return 0;
   };
 
-  return [...unique].sort((a, b) => score(b) - score(a) || a.localeCompare(b));
+  return [...unique]
+    .filter((title) => score(title) > 0)
+    .sort((a, b) => score(b) - score(a) || a.localeCompare(b));
 }
 
 function wikiConfig(options?: MediaWikiRequestOptions) {
@@ -105,6 +107,11 @@ export async function findWikipediaPlayerArticleTitles(
 
   if (name !== rugbyTitle && (await articleExists(name, options))) {
     candidates.push(name);
+  }
+
+  // Exact rugby / name hits are enough — extra search queries burn the Wikipedia 429 budget.
+  if (candidates.length > 0) {
+    return prioritizePlayerArticleTitles(candidates, name);
   }
 
   try {

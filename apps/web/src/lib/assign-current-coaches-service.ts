@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, ilike, inArray, sql } from "drizzle-orm";
 import { teamCoachingStaff, teams } from "@rugby365/db";
 import {
   resolveCoach,
@@ -6,8 +6,10 @@ import {
   type CoachingStaffRow,
 } from "./coach-admin-service";
 import { type CoachingRole } from "./coach-types";
+import { allRelatedTeamIds } from "./coach-team-aliases";
 import { createTeam } from "./entity-admin-service";
 import { getDb } from "./db";
+import { pickCanonicalTeamIdByName } from "./table-lab/standings-fixture-dedupe";
 
 export type CurrentCoachAssignment = {
   teamSlug: string;
@@ -25,7 +27,7 @@ const LEADERSHIP_ROLES: CoachingRole[] = ["head_coach", "director_of_rugby"];
 /** Canonical current head coaches / directors of rugby (July 2026). */
 export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   // Premiership
-  { teamSlug: "bath-rugby", coachName: "Johann van Graan", role: "director_of_rugby" },
+  { teamSlug: "bath-rugby", teamName: "Bath Rugby", coachName: "Johann van Graan", role: "director_of_rugby" },
   { teamSlug: "bristol-bears-4wjx0njp", coachName: "Pat Lam", role: "director_of_rugby" },
   { teamSlug: "exeter-chiefs-016owj5k", coachName: "Rob Baxter", role: "director_of_rugby" },
   { teamSlug: "gloucester-do6lo6yl", coachName: "George Skivington", role: "head_coach" },
@@ -48,24 +50,24 @@ export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   { teamSlug: "saracens-zv9039e5", coachName: "Mark McCall", role: "director_of_rugby" },
 
   // Internationals
-  { teamSlug: "ireland-m46v8v9z", coachName: "Andy Farrell", role: "head_coach" },
-  { teamSlug: "england-5294m098", coachName: "Steve Borthwick", role: "head_coach" },
+  { teamSlug: "ireland-m46v8v9z", teamName: "Ireland", coachName: "Andy Farrell", role: "head_coach" },
+  { teamSlug: "england-5294m098", teamName: "England", coachName: "Steve Borthwick", role: "head_coach" },
   { teamSlug: "england-red-roses", teamName: "England Red Roses", coachName: "John Mitchell", role: "head_coach" },
-  { teamSlug: "wales", coachName: "Steve Tandy", role: "head_coach" },
-  { teamSlug: "scotland", coachName: "Gregor Townsend", role: "head_coach" },
-  { teamSlug: "france-go9p0p68", coachName: "Fabien Galthié", role: "head_coach" },
-  { teamSlug: "south-africa", coachName: "Rassie Erasmus", role: "head_coach" },
-  { teamSlug: "new-zealand", coachName: "Scott Robertson", role: "head_coach" },
-  { teamSlug: "australia", coachName: "Joe Schmidt", role: "head_coach" },
-  { teamSlug: "italy-n0620o98", coachName: "Gonzalo Quesada", role: "head_coach" },
-  { teamSlug: "japan", coachName: "Eddie Jones", role: "head_coach" },
+  { teamSlug: "wales", teamName: "Wales", coachName: "Steve Tandy", role: "head_coach" },
+  { teamSlug: "scotland", teamName: "Scotland", coachName: "Gregor Townsend", role: "head_coach" },
+  { teamSlug: "france-go9p0p68", teamName: "France", coachName: "Fabien Galthié", role: "head_coach" },
+  { teamSlug: "south-africa", teamName: "South Africa", coachName: "Rassie Erasmus", role: "head_coach" },
+  { teamSlug: "new-zealand", teamName: "New Zealand", coachName: "Scott Robertson", role: "head_coach" },
+  { teamSlug: "australia", teamName: "Australia", coachName: "Joe Schmidt", role: "head_coach" },
+  { teamSlug: "italy-n0620o98", teamName: "Italy", coachName: "Gonzalo Quesada", role: "head_coach" },
+  { teamSlug: "japan", teamName: "Japan", coachName: "Eddie Jones", role: "head_coach" },
   { teamSlug: "united-states-216mky9n", teamName: "United States", coachName: "Scott Lawrence", role: "head_coach" },
   { teamSlug: "samoa-016oqwj5", teamName: "Samoa", coachName: "Mahonri Schwalger", role: "head_coach" },
   { teamSlug: "georgia-zd935n6v", teamName: "Georgia", coachName: "Pierre-Henry Broncan", role: "head_coach" },
   { teamSlug: "canada-k76k4rjy", teamName: "Canada", coachName: "Kingsley Jones", role: "head_coach" },
   { teamSlug: "uruguay-og9n31jl", teamName: "Uruguay", coachName: "Esteban Meneses", role: "head_coach" },
   { teamSlug: "chile-pm6wdmj4", teamName: "Chile", coachName: "Pablo Lemoine", role: "head_coach" },
-  { teamSlug: "argentina", coachName: "Felipe Contepomi", role: "head_coach" },
+  { teamSlug: "argentina", teamName: "Argentina", coachName: "Felipe Contepomi", role: "head_coach" },
   { teamSlug: "fiji", teamName: "Fiji", coachName: "Senirusi Seruvakula", role: "head_coach", startDate: "2026-01-01" },
 
   // Super Rugby — Australian conference
@@ -78,7 +80,7 @@ export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   { teamSlug: "auckland-blues", coachName: "Vern Cotter", role: "head_coach" },
   { teamSlug: "chiefs", teamName: "Chiefs", coachName: "Jono Gibbes", role: "head_coach" },
   { teamSlug: "canterbury-crusaders", coachName: "Scott Hansen", role: "head_coach" },
-  { teamSlug: "highlanders", coachName: "Jamie Joseph", role: "head_coach" },
+  { teamSlug: "highlanders", teamName: "Highlanders", coachName: "Jamie Joseph", role: "head_coach" },
   { teamSlug: "hurricanes", teamName: "Hurricanes", coachName: "Clark Laidlaw", role: "head_coach" },
 
   // Pacific franchises & cross-border
@@ -87,20 +89,20 @@ export const CURRENT_COACH_ASSIGNMENTS: CurrentCoachAssignment[] = [
   { teamSlug: "waratahs-016o2oj5", coachName: "Dan McKellar", role: "head_coach" },
 
   // Bunnings NPC — 2026 provincial head coaches
-  { teamSlug: "canterbury", coachName: "Alex Robertson", role: "head_coach", startDate: "2026-01-01" },
-  { teamSlug: "auckland", coachName: "Steven Bates", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "otago", coachName: "Mark Brown", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "waikato", coachName: "Leon Holden", role: "head_coach", startDate: "2026-01-01" },
-  { teamSlug: "taranaki", coachName: "Jarrad Hoeata", role: "head_coach", startDate: "2026-01-01" },
-  { teamSlug: "counties-manukau", coachName: "Reon Graham", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "hawke-s-bay", coachName: "Brock James", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "wellington", coachName: "Trent Renata", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "bay-of-plenty", coachName: "Richard Watt", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "southland", coachName: "Scott Eade", role: "head_coach", startDate: "2026-01-01" },
-  { teamSlug: "northland", coachName: "Ryan Martin", role: "head_coach", startDate: "2025-01-01" },
-  { teamSlug: "manawatu", coachName: "Wesley Clarke", role: "head_coach", startDate: "2025-06-01" },
-  { teamSlug: "tasman", coachName: "Jono Phillips", role: "head_coach", startDate: "2026-01-01" },
-  { teamSlug: "north-harbour", coachName: "Jimmy Maher", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "canterbury", teamName: "Canterbury", coachName: "Alex Robertson", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "auckland", teamName: "Auckland", coachName: "Steven Bates", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "otago", teamName: "Otago", coachName: "Mark Brown", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "waikato", teamName: "Waikato", coachName: "Leon Holden", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "taranaki", teamName: "Taranaki", coachName: "Jarrad Hoeata", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "counties-manukau", teamName: "Counties Manukau", coachName: "Reon Graham", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "hawke-s-bay", teamName: "Hawke's Bay", coachName: "Brock James", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "wellington", teamName: "Wellington", coachName: "Trent Renata", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "bay-of-plenty", teamName: "Bay of Plenty", coachName: "Richard Watt", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "southland", teamName: "Southland", coachName: "Scott Eade", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "northland", teamName: "Northland", coachName: "Ryan Martin", role: "head_coach", startDate: "2025-01-01" },
+  { teamSlug: "manawatu", teamName: "Manawatu", coachName: "Wesley Clarke", role: "head_coach", startDate: "2025-06-01" },
+  { teamSlug: "tasman", teamName: "Tasman", coachName: "Jono Phillips", role: "head_coach", startDate: "2026-01-01" },
+  { teamSlug: "north-harbour", teamName: "North Harbour", coachName: "Jimmy Maher", role: "head_coach", startDate: "2025-01-01" },
 
   // Currie Cup / URC SA sides (already used in match defaults)
   { teamSlug: "boland-cavaliers", coachName: "Kloppie Botha", role: "head_coach" },
@@ -150,8 +152,45 @@ export type AssignCurrentCoachesResult = {
 
 async function resolveTeamBySlug(slug: string, name?: string) {
   const db = getDb();
-  const [existing] = await db.select().from(teams).where(eq(teams.slug, slug)).limit(1);
-  if (existing) return { team: existing, created: false };
+  const [exact] = await db.select().from(teams).where(eq(teams.slug, slug)).limit(1);
+  if (exact && !exact.slug.includes("__legacy__")) return { team: exact, created: false };
+
+  const label = name?.trim() || exact?.name || null;
+  if (label) {
+    const siblings = await db.select().from(teams).where(eq(teams.name, label));
+    if (siblings.length > 0) {
+      const canonical = pickCanonicalTeamIdByName(siblings);
+      const preferred = canonical.get(label.toLowerCase());
+      const team =
+        siblings.find((row) => row.id === preferred?.id) ??
+        siblings.find((row) => !row.slug.includes("__legacy__")) ??
+        siblings[0];
+      if (team) return { team, created: false };
+    }
+  }
+
+  const prefixRows = await db
+    .select()
+    .from(teams)
+    .where(
+      and(
+        ilike(teams.slug, `${slug}-%`),
+        sql`${teams.slug} not like '%__legacy__%'`,
+      ),
+    );
+  const named = label
+    ? prefixRows.filter((row) => row.name.toLowerCase() === label.toLowerCase())
+    : prefixRows;
+  const pool = named.length > 0 ? named : prefixRows;
+  if (pool.length > 0) {
+    const canonical = pickCanonicalTeamIdByName(pool);
+    const key = (label ?? pool[0]!.name).toLowerCase();
+    const preferred = canonical.get(key);
+    const team = pool.find((row) => row.id === preferred?.id) ?? pool[0];
+    if (team) return { team, created: false };
+  }
+
+  if (exact) return { team: exact, created: false };
 
   if (!name) {
     throw new Error(`Team slug "${slug}" not found and no teamName provided to create it`);
@@ -176,16 +215,9 @@ async function demotePriorLeadership(teamId: string, keepCoachIds: string[]) {
 
   let demoted = 0;
   for (const row of rows) {
+    if (keepCoachIds.includes(row.coachId)) continue;
     const isCanonical = row.importKey?.startsWith("current-coach:") ?? false;
     if (isCanonical) continue;
-    if (keepCoachIds.includes(row.coachId)) {
-      await db
-        .update(teamCoachingStaff)
-        .set({ isCurrent: false, updatedAt: new Date() })
-        .where(eq(teamCoachingStaff.id, row.id));
-      demoted += 1;
-      continue;
-    }
     await db
       .update(teamCoachingStaff)
       .set({ isCurrent: false, updatedAt: new Date() })
@@ -227,9 +259,29 @@ export async function assignCurrentCoaches(
       if (!coach) throw new Error("Failed to resolve coach");
       if (!existingCoach) result.coachesCreated.push(coach.name);
 
-      const coachSet = teamCoachIds.get(team.id) ?? new Set<string>();
-      coachSet.add(coach.id);
-      teamCoachIds.set(team.id, coachSet);
+      const db = getDb();
+      const relatedTeamIds = await allRelatedTeamIds([team.id]);
+      for (const relatedId of relatedTeamIds) {
+        const set = teamCoachIds.get(relatedId) ?? new Set<string>();
+        set.add(coach.id);
+        teamCoachIds.set(relatedId, set);
+      }
+
+      const alreadyCurrent = await db
+        .select({ id: teamCoachingStaff.id })
+        .from(teamCoachingStaff)
+        .where(
+          and(
+            eq(teamCoachingStaff.coachId, coach.id),
+            inArray(teamCoachingStaff.teamId, relatedTeamIds.length ? relatedTeamIds : [team.id]),
+            eq(teamCoachingStaff.role, entry.role),
+            eq(teamCoachingStaff.isCurrent, true),
+          ),
+        )
+        .limit(1);
+      if (alreadyCurrent.length > 0) {
+        continue;
+      }
 
       const upsert = await upsertCoachingStaffAssignment({
         coachId: coach.id,
@@ -238,6 +290,11 @@ export async function assignCurrentCoaches(
         startDate: entry.startDate ?? null,
         endDate: entry.endDate ?? null,
         isCurrent: true,
+        showOnOverview: true,
+        overviewLabel: entry.role === "director_of_rugby" ? "Director of Rugby" : "Head Coach",
+        teamDisplayName: team.name,
+        recordStatus: "verified",
+        verifiedAt: new Date(),
         importKey: `current-coach:${entry.teamSlug}:${entry.role}:${coach.slug}`,
         notes: entry.startDate
           ? `Head coach from ${entry.startDate.slice(0, 4)}`

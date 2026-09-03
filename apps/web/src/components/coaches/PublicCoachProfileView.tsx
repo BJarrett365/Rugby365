@@ -16,6 +16,7 @@ import {
 import { CoachPlayingCareer } from "./CoachPlayingCareer";
 import { CoachCareerSnapshot } from "./CoachCareerSnapshot";
 import { CoachProfileAssetImage } from "./CoachProfileAssetImage";
+import { CoachSquadDashboard } from "./CoachSquadDashboard";
 import { CoachRatingTrendsCard } from "./CoachRatingTrendsCard";
 import { CoachAwardsCard } from "./CoachAwardsCard";
 import { CoachMedalRecordCard } from "./CoachMedalRecordCard";
@@ -101,6 +102,24 @@ function heroNameLines(profile: PublicCoachProfile): { line1: string; line2: str
   });
 }
 
+function nationalityFlag(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const n = name.toLowerCase();
+  if (n.includes("ireland")) return "🇮🇪";
+  if (n.includes("south africa")) return "🇿🇦";
+  if (n.includes("new zealand")) return "🇳🇿";
+  if (n.includes("england")) return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+  if (n.includes("wales")) return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
+  if (n.includes("scotland")) return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
+  if (n.includes("france")) return "🇫🇷";
+  if (n.includes("australia")) return "🇦🇺";
+  if (n.includes("argentina")) return "🇦🇷";
+  if (n.includes("italy")) return "🇮🇹";
+  if (n.includes("japan")) return "🇯🇵";
+  if (n.includes("fiji")) return "🇫🇯";
+  return null;
+}
+
 const NAV: Array<{ id: string; label: string; href?: string }> = [
   { id: "overview", label: "Overview" },
   { id: "career", label: "Career", href: "career" },
@@ -109,21 +128,27 @@ const NAV: Array<{ id: string; label: string; href?: string }> = [
   { id: "history", label: "History", href: "history" },
   { id: "matches", label: "Matches", href: "matches" },
   { id: "h2h", label: "Head-to-Head", href: "compare" },
-  { id: "rankings", label: "Rankings", href: "/rankings/coaches" },
+  { id: "rankings", label: "Rankings", href: "rankings" },
   { id: "news", label: "News" },
 ];
 
 export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfile }) {
   const r = profile.ratings;
   const cr = profile.careerRecord;
+  const teamDash = profile.teamDashboard;
+  const teamHref = teamDash ? `/teams/${teamDash.teamSlug}` : null;
+  const teamFlag = nationalityFlag(teamDash?.teamName ?? teamDash?.countryName);
+  const coachFlag = nationalityFlag(profile.nationality);
   // Same source as Recent Results (oldest → newest for form strip).
   const formResults =
-    profile.recentMatches.length > 0
-      ? [...profile.recentMatches]
-          .reverse()
-          .map((m) => m.result)
-          .filter((x): x is "W" | "D" | "L" => x != null)
-      : cr.form;
+    teamDash && teamDash.form.length > 0
+      ? teamDash.form
+      : profile.recentMatches.length > 0
+        ? [...profile.recentMatches]
+            .reverse()
+            .map((m) => m.result)
+            .filter((x): x is "W" | "D" | "L" => x != null)
+        : cr.form;
   const powerLeft = POWER_INDEX_DISPLAY_LEFT;
   const powerRight = POWER_INDEX_DISPLAY_RIGHT;
   /** Prefer Intelligence scores so Power Index card always matches CI. */
@@ -168,6 +193,132 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
         </div>
       </nav>
 
+      {teamDash ? (
+        <section className="pr-coach-hero pr-coach-hero--team" id="overview">
+          <div className="pr-coach-hero__team-panel">
+            <div className="pr-coach-hero__team-identity">
+              {profile.currentTeamCrestUrl || teamDash.teamImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="pr-coach-hero__team-crest"
+                  src={profile.currentTeamCrestUrl || teamDash.teamImageUrl || ""}
+                  alt={`${teamDash.teamName} crest`}
+                />
+              ) : (
+                <span className="pr-coach-hero__team-crest is-empty" aria-hidden />
+              )}
+              <div>
+                <div className="pr-coach-hero__team-kicker">
+                  Current team
+                  {teamFlag ? (
+                    <span className="pr-coach-hero__flag" aria-hidden>
+                      {teamFlag}
+                    </span>
+                  ) : null}
+                </div>
+                <h1>{teamDash.teamName}</h1>
+                {teamDash.nickname ? <div className="pr-coach-hero__nickname">{teamDash.nickname}</div> : null}
+              </div>
+            </div>
+            <dl className="pr-coach-hero__team-facts">
+              <div>
+                <dt>Union</dt>
+                <dd>{dash(teamDash.unionName)}</dd>
+              </div>
+              <div>
+                <dt>Nickname</dt>
+                <dd>{dash(teamDash.nickname)}</dd>
+              </div>
+              <div>
+                <dt>Founded</dt>
+                <dd>{dash(teamDash.foundedYear)}</dd>
+              </div>
+              <div>
+                <dt>Home Venue</dt>
+                <dd>{dash(teamDash.homeVenueName)}</dd>
+              </div>
+            </dl>
+            {teamHref ? (
+              <Link className="pr-coach-hero__cta" href={teamHref}>
+                Team Profile &gt;
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="pr-coach-hero__coach-panel">
+            <div className="pr-coach-hero__coach-copy">
+              <div className="pr-coach-hero__role">{profile.currentRole?.roleLabel ?? "Head Coach"}</div>
+              <h2 className="pr-coach-hero__coach-name">
+                {profile.displayName}
+                {profile.verified ? (
+                  <span className="pr-coach-hero__verified" title="Verified">
+                    ✓
+                  </span>
+                ) : null}
+              </h2>
+              <dl className="pr-coach-hero__coach-facts">
+                <div>
+                  <dt>Age</dt>
+                  <dd>{dash(profile.age)}</dd>
+                </div>
+                <div>
+                  <dt>Nationality</dt>
+                  <dd>
+                    {profile.nationality ?? "—"}
+                    {coachFlag ? (
+                      <span className="pr-coach-hero__flag" aria-hidden>
+                        {coachFlag}
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Appointed</dt>
+                  <dd>{dash(appointedYear)}</dd>
+                </div>
+                <div>
+                  <dt>Contract</dt>
+                  <dd>{dash(contractYear)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    Coaching Style
+                    {isCoachAssessment(profile.coachingStyleProvenance) ? (
+                      <span className="pr-coach-hero__assess" title="Rugby365 assessment">
+                        R365
+                      </span>
+                    ) : null}
+                  </dt>
+                  <dd>{dash(profile.coachingStyle)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    Preferred System
+                    {isCoachAssessment(profile.preferredSystemProvenance) ? (
+                      <span className="pr-coach-hero__assess" title="Rugby365 assessment">
+                        R365
+                      </span>
+                    ) : null}
+                  </dt>
+                  <dd>{dash(profile.preferredSystem)}</dd>
+                </div>
+                <div>
+                  <dt>Success Rate</dt>
+                  <dd>{cr.winRate != null ? `${cr.winRate}%` : "—"}</dd>
+                </div>
+              </dl>
+            </div>
+            <div className="pr-coach-hero__coach-photo">
+              {profile.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.imageUrl} alt={profile.name} />
+              ) : (
+                <div className="pr-coach-hero__silhouette" aria-hidden />
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
       <section className="pr-coach-hero" id="overview">
         <div className="pr-coach-hero__image">
           {profile.imageUrl ? (
@@ -200,9 +351,9 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
             {profile.nationality ? (
               <div className="pr-coach-hero__nat">
                 <span>{profile.nationality}</span>
-                {/south africa/i.test(profile.nationality) ? (
+                {coachFlag ? (
                   <span className="pr-coach-hero__flag" aria-hidden>
-                    🇿🇦
+                    {coachFlag}
                   </span>
                 ) : null}
               </div>
@@ -284,12 +435,13 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
 
         <CoachCareerSnapshot rows={profile.careerSnapshot} />
       </section>
+      )}
 
       <div
         className="pr-coach-kpi"
         style={
           {
-            ["--kpi-cols"]: r.competitionRank != null ? 8 : 7,
+            ["--kpi-cols"]: teamDash ? 6 : r.competitionRank != null ? 8 : 7,
           } as CSSProperties
         }
       >
@@ -299,29 +451,59 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
             className="pr-coach-kpi__link"
             title="Overall coaching rating based on current strength, career results, big matches, improvement, development and honours."
           >
-            <div className="pr-coach-kpi__label">Rugby365 Coach Rating</div>
+            <div className="pr-coach-kpi__label">Rugby365 Rating</div>
             <div className="pr-coach-kpi__value">
-              {r.overallRating != null ? r.overallRating.toFixed(1) : "—"}
+              {teamDash?.teamRating != null
+                ? teamDash.teamRating.toFixed(1)
+                : r.overallRating != null
+                  ? r.overallRating.toFixed(1)
+                  : "—"}
             </div>
-            <div className="pr-coach-kpi__stars">{stars(r.overallRating)}</div>
+            <div className="pr-coach-kpi__stars">
+              {stars(teamDash?.teamRating ?? r.overallRating)}
+            </div>
           </Link>
         </div>
         <div className="pr-coach-kpi__cell">
           <Link
-            href="/rankings/coaches"
+            href={teamDash && teamHref ? teamHref : "/rankings/coaches"}
             className="pr-coach-kpi__link"
-            title="Ranking among eligible Rugby365 coaches."
+            title={teamDash ? "Team world ranking." : "Ranking among eligible Rugby365 coaches."}
           >
             <div className="pr-coach-kpi__label">World Rank</div>
             <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
-              {r.worldRank != null ? `#${r.worldRank}` : "—"}
+              {teamDash?.worldRank != null
+                ? `#${teamDash.worldRank}`
+                : r.worldRank != null
+                  ? `#${r.worldRank}`
+                  : "—"}
             </div>
             <div className="pr-coach-kpi__sub">
-              {r.rankedOutOf != null ? `Out of ${r.rankedOutOf}` : r.provisional ? "Provisional" : "—"}
+              {teamDash
+                ? teamDash.worldRankPoints != null
+                  ? `${Math.round(teamDash.worldRankPoints)} pts`
+                  : "Team ranking"
+                : r.rankedOutOf != null
+                  ? `Out of ${r.rankedOutOf}`
+                  : r.provisional
+                    ? "Provisional"
+                    : "—"}
             </div>
           </Link>
         </div>
-        {r.competitionRank != null ? (
+        {teamDash ? (
+          <div className="pr-coach-kpi__cell">
+            <Link href={teamHref ?? `/teams/${teamDash.teamSlug}`} className="pr-coach-kpi__link">
+              <div className="pr-coach-kpi__label">Estimated Squad Value</div>
+              <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
+                {teamDash.squadValueLabel}
+              </div>
+              <div className="pr-coach-kpi__sub">
+                {teamDash.worldRank != null ? `World Rank: #${teamDash.worldRank}` : "Current squad"}
+              </div>
+            </Link>
+          </div>
+        ) : r.competitionRank != null ? (
           <div className="pr-coach-kpi__cell">
             <div className="pr-coach-kpi__label">{r.competitionRankLabel ?? "Competition Rank"}</div>
             <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
@@ -351,17 +533,28 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           <div className="pr-coach-kpi__label">Momentum</div>
           <div
             className={`pr-coach-kpi__value ${
-              r.momentum != null && r.momentum > 0
+              (r.momentum ?? 0) > 0
                 ? "pr-coach-kpi__value--green"
-                : r.momentum != null && r.momentum < 0
+                : (r.momentum ?? 0) < 0
                   ? ""
                   : ""
             }`}
-            style={r.momentum != null && r.momentum < 0 ? { color: "var(--cp-red)" } : undefined}
+            style={(r.momentum ?? 0) < 0 ? { color: "var(--cp-red)" } : undefined}
           >
-            {r.momentum == null ? "—" : r.momentum > 0 ? `↑ +${r.momentum}` : r.momentum < 0 ? `↓ ${r.momentum}` : "— 0"}
+            {(() => {
+              const formMomentum = formResults
+                .slice(-5)
+                .reduce((sum, f) => sum + (f === "W" ? 1 : f === "L" ? -1 : 0), 0);
+              const value =
+                r.momentum != null && r.momentum !== 0 ? r.momentum : formMomentum;
+              if (value > 0) return `↑ +${value}`;
+              if (value < 0) return `↓ ${value}`;
+              return "0";
+            })()}
           </div>
-          <div className="pr-coach-kpi__sub">Power Index vs last</div>
+          <div className="pr-coach-kpi__sub">
+            {r.momentum != null ? "Power Index vs last" : "Form last 5"}
+          </div>
         </div>
         <div className="pr-coach-kpi__cell">
           <div className="pr-coach-kpi__label">Current Form</div>
@@ -378,6 +571,8 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
           </div>
           <div className="pr-coach-kpi__sub">Last {Math.max(formResults.length, 8)} Matches</div>
         </div>
+        {!teamDash ? (
+          <>
         <div className="pr-coach-kpi__cell">
           <div className="pr-coach-kpi__label">Career Win Rate</div>
           <div className="pr-coach-kpi__value pr-coach-kpi__value--green">
@@ -396,7 +591,13 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
             <Link href={`/coaches/${profile.slug}/honours`}>See all</Link>
           </div>
         </div>
+          </>
+        ) : null}
       </div>
+
+      {teamDash && teamHref ? (
+        <CoachSquadDashboard dashboard={teamDash} teamHref={teamHref} />
+      ) : null}
 
       <div className="pr-coach-row pr-coach-row--3">
         <section className="pr-coach-card pr-coach-card--fill">
@@ -413,7 +614,9 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
               <span>World Rank</span>
             </div>
             <div className="pr-coach-intel__list">
-              {(r.intelligence?.length ? r.intelligence : r.metrics).map((m) => (
+              {(r.intelligence?.length ? r.intelligence : r.metrics)
+                .filter((m) => m.score != null)
+                .map((m) => (
                 <div className="pr-coach-intel__row" key={m.key}>
                   <div className="pr-coach-intel__name">{m.label}</div>
                   <div className="pr-coach-intel__barwrap">
@@ -550,13 +753,14 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
               <div>
                 {powerLeft.map((key) => {
                   const m = metricMap.get(key);
+                  if (m?.score == null) return null;
                   return (
                     <div className="pr-coach-power__metric" key={key}>
                       <span className="label">
-                        <i className={`pr-coach-power__dot ${powerBandClass(m?.score ?? null)}`} />
-                        {m?.label ?? key}
+                        <i className={`pr-coach-power__dot ${powerBandClass(m.score)}`} />
+                        {m.label ?? key}
                       </span>
-                      <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
+                      <strong>{Math.round(m.score)}</strong>
                     </div>
                   );
                 })}
@@ -564,19 +768,20 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
               <div>
                 {powerRight.map((key) => {
                   const m = metricMap.get(key);
+                  if (m?.score == null) return null;
                   const label =
                     key === "game_management"
                       ? "Game Mgmt"
                       : key === "player_development"
                         ? "Player Dev."
-                        : m?.label ?? key;
+                        : m.label ?? key;
                   return (
                     <div className="pr-coach-power__metric" key={key}>
                       <span className="label">
-                        <i className={`pr-coach-power__dot ${powerBandClass(m?.score ?? null)}`} />
+                        <i className={`pr-coach-power__dot ${powerBandClass(m.score)}`} />
                         {label}
                       </span>
-                      <strong>{dash(m?.score != null ? Math.round(m.score) : null)}</strong>
+                      <strong>{Math.round(m.score)}</strong>
                     </div>
                   );
                 })}
@@ -1013,6 +1218,14 @@ export function PublicCoachProfileView({ profile }: { profile: PublicCoachProfil
                       </span>
                       {m.venueName ? (
                         <span className="pr-coach-recent-row__tip-venue">Venue · {m.venueName}</span>
+                      ) : null}
+                      {m.attendance != null && m.attendance > 0 ? (
+                        <span className="pr-coach-recent-row__tip-venue">
+                          Attendance · {m.attendance.toLocaleString()}
+                        </span>
+                      ) : null}
+                      {m.manOfTheMatch ? (
+                        <span className="pr-coach-recent-row__tip-venue">MOTM · {m.manOfTheMatch}</span>
                       ) : null}
                       <span className="pr-coach-recent-row__tip-coach">
                         {profile.displayName}

@@ -248,8 +248,11 @@ async function upsertFixtureFromListedMatch(
   await updateFixture(existing.id, {
     kickoffAt,
     status,
-    competitionId: existing.competitionId ? undefined : ctx.competitionId,
-    seasonId: existing.seasonId ? undefined : ctx.seasonId ?? undefined,
+    // Rugby Data can previously mis-map competitions (e.g. Autumn Nations Cup vs Nations Cup).
+    // External match IDs are unique, so it's safe to correct fixture scope when it doesn't match
+    // the current import context.
+    competitionId: existing.competitionId !== ctx.competitionId ? ctx.competitionId : undefined,
+    seasonId: existing.seasonId !== ctx.seasonId ? ctx.seasonId ?? undefined : undefined,
     round: (match as { ro?: string }).ro ?? undefined,
   });
 

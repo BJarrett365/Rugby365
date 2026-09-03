@@ -11,6 +11,7 @@ import {
   players,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { allRelatedTeamIds } from "./coach-team-aliases";
 import { getCoachDetail } from "./coach-admin-service";
 import { loadCoachEligibleMatches } from "./coach-career-record-service";
 import { calculatePlayerAge } from "./player-profile-utils";
@@ -81,6 +82,7 @@ export async function getCoachPlayerDevelopmentBundle(
   const fixtureIds = matches.map((m) => m.id);
   const fixtureKickoff = new Map(matches.map((m) => [m.id, m.kickoffAt]));
   const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
 
   const [ratingRows, lineupRows] = await Promise.all([
     db
@@ -99,7 +101,7 @@ export async function getCoachPlayerDevelopmentBundle(
       .where(
         and(
           inArray(playerMatchRatings.fixtureId, fixtureIds),
-          eq(playerMatchRatings.teamId, teamId),
+          inArray(playerMatchRatings.teamId, teamIds),
         ),
       ),
     db
@@ -113,7 +115,7 @@ export async function getCoachPlayerDevelopmentBundle(
       })
       .from(fixturePlayers)
       .where(
-        and(inArray(fixturePlayers.fixtureId, fixtureIds), eq(fixturePlayers.teamId, teamId)),
+        and(inArray(fixturePlayers.fixtureId, fixtureIds), inArray(fixturePlayers.teamId, teamIds)),
       ),
   ]);
 

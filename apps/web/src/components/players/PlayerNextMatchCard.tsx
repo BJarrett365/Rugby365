@@ -83,13 +83,17 @@ export function PlayerNextMatchCard({ nextMatch }: PlayerNextMatchCardProps) {
   return (
     <div className="pr-player-v2__card pr-player-v2__widget-card pr-player-v2__next-match-card">
       <div className="pr-player-v2__card-head">
-        <h2>Next Match</h2>
+        <h2>{nextMatch.isPast ? "Last Match" : "Next Match"}</h2>
         {nextMatch.isLive ? <span className="pr-player-v2__live-badge">Live</span> : null}
       </div>
 
       {empty ? (
         <div className="pr-player-v2__next-match-empty">
-          <p className="pr-player-v2__empty">No upcoming fixture scheduled yet.</p>
+          <p className="pr-player-v2__empty">
+            {nextMatch.isPast
+              ? "No matches recorded yet."
+              : "No upcoming fixture scheduled yet."}
+          </p>
         </div>
       ) : (
         <>

@@ -5,6 +5,7 @@
 import { and, eq, inArray, lt } from "drizzle-orm";
 import { fixturePlayers, fixtures, players } from "@rugby365/db";
 import { getDb } from "./db";
+import { allRelatedTeamIds } from "./coach-team-aliases";
 import { getCoachDetail } from "./coach-admin-service";
 import { loadCoachEligibleMatches } from "./coach-career-record-service";
 import {
@@ -40,6 +41,7 @@ export async function getCoachSelectionStability(coachId: string): Promise<Coach
   }
 
   const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
   const rows = await db
     .select({
       fixtureId: fixturePlayers.fixtureId,
@@ -52,7 +54,7 @@ export async function getCoachSelectionStability(coachId: string): Promise<Coach
     .from(fixturePlayers)
     .innerJoin(players, eq(fixturePlayers.playerId, players.id))
     .where(
-      and(inArray(fixturePlayers.fixtureId, fixtureIds), eq(fixturePlayers.teamId, teamId)),
+      and(inArray(fixturePlayers.fixtureId, fixtureIds), inArray(fixturePlayers.teamId, teamIds)),
     );
 
   const byFixture = new Map<string, typeof rows>();

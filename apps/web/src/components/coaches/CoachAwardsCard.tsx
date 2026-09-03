@@ -16,9 +16,11 @@ export function CoachAwardsCard({ slug, awards, limit = 4 }: Props) {
     <section className="pr-coach-card pr-coach-awards-card">
       <div className="pr-coach-card__head">
         <h2>Awards</h2>
-        <Link className="pr-coach-card__link" href={`/coaches/${slug}/honours`}>
-          View all awards &gt;
-        </Link>
+        {awards.length > limit ? (
+          <Link className="pr-coach-card__link" href={`/coaches/${slug}/honours#awards`}>
+            View all awards &gt;
+          </Link>
+        ) : null}
       </div>
       {rows.length === 0 ? (
         <p className="pr-coach-empty">No individual awards recorded.</p>

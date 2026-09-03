@@ -253,6 +253,8 @@ async function upsertCoachFromArchive(
         sourceProvider: "wikipedia",
         sourceUrl: archive.wikipediaUrl,
         showOnOverview: teamType === "international",
+        recordStatus: "verified",
+        verifiedAt: new Date(),
       });
       keys.add(key);
     }
@@ -301,6 +303,10 @@ async function ensureCategoryNationalTeamAssignment(
       .filter(Boolean)
       .join(" · "),
     sourceUrl: archive.wikipediaUrl,
+    showOnOverview: true,
+    teamDisplayName: options.teamName,
+    recordStatus: "verified",
+    verifiedAt: new Date(),
     importKey: `wikipedia-category:${coachId}:${options.teamId}`,
   });
 
@@ -328,7 +334,7 @@ async function upsertAssignmentsFromArchive(
 
   for (const stint of career) {
     const team = teamResolver.resolveWikipediaTeamLabel(stint.teamName);
-    if (!team) continue;
+    if (!team || /^unknown team/i.test(team.name)) continue;
 
     const isLinkedTeam = options?.linkTeamId
       ? team.id === options.linkTeamId || teamNamesMatch(stint.teamName, options.linkTeamName ?? "")
@@ -348,8 +354,14 @@ async function upsertAssignmentsFromArchive(
       startDate: yearToStartDate(stint.startYear),
       endDate: yearToEndDate(stint.endYear),
       isCurrent: isLinkedTeam ? isCurrent : isCurrent && !options?.linkTeamId,
+      showOnOverview: true,
+      overviewLabel: stint.roleHint?.trim() || null,
+      teamDisplayName: stint.teamName,
+      recordStatus: "verified",
       bioSummary: `${stint.yearsLabel} · ${stint.teamName}${stint.roleHint ? ` (${stint.roleHint})` : ""}`,
       sourceUrl: archive.wikipediaUrl,
+      confidence: "high",
+      verifiedAt: new Date(),
       importKey: `wikipedia:${coachId}:${team.id}:${stint.sortOrder ?? stint.yearsLabel}:${normalizeCoachingRole(stint.roleHint?.trim() || "head_coach")}`,
     });
 
@@ -408,6 +420,12 @@ export async function importCoachFromWikipedia(input: {
       teamResolver,
     },
   );
+
+  try {
+    await hydrateCoachHonoursFromWikipedia(coach.id);
+  } catch {
+    // Honours hydrate is additive and should not fail the career import.
+  }
 
   return {
     coachId: coach.id,
@@ -497,7 +515,7 @@ export async function importInternationalCoachCategories(input?: {
 
 export async function enrichCoachFromWikipedia(
   coachId: string,
-  options?: { sourceUrl?: string },
+  options?: { sourceUrl?: string; skipHonours?: boolean },
 ): Promise<
   CoachWikipediaImportResult & {
     enriched: boolean;
@@ -627,6 +645,8 @@ export async function enrichCoachFromWikipedia(
         sourceProvider: "wikipedia",
         sourceUrl: archive.wikipediaUrl,
         showOnOverview: teamType === "international",
+        recordStatus: "verified",
+        verifiedAt: new Date(),
       });
       keys.add(key);
       fieldsUpdated.push("playingStint");
@@ -637,6 +657,14 @@ export async function enrichCoachFromWikipedia(
     coachId,
     archive,
   );
+  try {
+    if (!options?.skipHonours) {
+      const honoursAdded = await hydrateCoachHonoursFromWikipedia(coachId);
+      if (honoursAdded > 0) fieldsUpdated.push("honours");
+    }
+  } catch {
+    // Honours hydrate is additive and should not fail the career enrich.
+  }
 
   return {
     coachId,
@@ -655,4 +683,117 @@ export function filterCoachingCareerForTeam(
   teamName: string,
 ): WikipediaCoachingStint[] {
   return career.filter((stint) => teamNamesMatch(stint.teamName, teamName));
+}
+
+function wikipediaTitleFromUrl(url: string): string | null {
+  const match = url.match(/wikipedia\.org\/wiki\/([^?#]+)/i);
+  if (!match?.[1]) return null;
+  try {
+    return decodeURIComponent(match[1].replace(/_/g, " "));
+  } catch {
+    return match[1].replace(/_/g, " ");
+  }
+}
+
+async function fetchWikipediaArticleHtml(wikipediaUrl: string): Promise<string | null> {
+  const title = wikipediaTitleFromUrl(wikipediaUrl);
+  if (!title) return null;
+  const slug = title.trim().replace(/ /g, "_");
+  const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(slug)}`, {
+    headers: {
+      "User-Agent": "Rugby365ArchiveImport/1.0 (read-only archive enrichment)",
+      Accept: "text/html",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) return null;
+  return res.text();
+}
+
+/** Persist Wikipedia honours when CMS has none so public pages can show a career record. */
+export async function hydrateCoachHonoursFromWikipedia(coachId: string): Promise<number> {
+  const db = getDb();
+  const existing = await db
+    .select({ id: coachHonours.id })
+    .from(coachHonours)
+    .where(eq(coachHonours.coachId, coachId))
+    .limit(1);
+  if (existing.length > 0) return 0;
+
+  const coach = await getCoachById(coachId);
+  if (!coach?.wikipediaUrl) return 0;
+
+  const { parseCoachHonoursFromHtml } = await import("./coach-wikipedia-honours-parse");
+  const { createCoachHonour, createCoachAward, createCoachMilestone, listCoachAwards, listCoachMilestones } =
+    await import("./coach-history-cms-service");
+
+  const html = await fetchWikipediaArticleHtml(coach.wikipediaUrl);
+  const fromHtml = html ? parseCoachHonoursFromHtml(html) : [];
+  const proposed = fromHtml.length
+    ? fromHtml
+    : parseWikipediaHonourLines([], "coach");
+  if (proposed.length === 0) return 0;
+
+  const existingAwards = await listCoachAwards(coachId);
+  const existingMilestones = await listCoachMilestones(coachId);
+  let created = 0;
+  let awardOrder = existingAwards.length;
+  let milestoneOrder = existingMilestones.length;
+
+  for (const [index, honour] of proposed.entries()) {
+    if (honour.kind === "award") {
+      if (existingAwards.length === 0) {
+        await createCoachAward(coachId, {
+          awardName: honour.competitionName,
+          year: honour.year,
+          result: honour.achievementType === "winner" ? "winner" : honour.achievementType,
+          isMajor: honour.honourLevel === "major",
+          sourceUrl: honour.sourceLine ? `wikipedia:${honour.sourceLine}` : coach.wikipediaUrl,
+          showOnOverview: honour.honourLevel === "major",
+          visibility: "public",
+          sortOrder: awardOrder,
+        });
+        awardOrder += 1;
+        created += 1;
+      }
+      continue;
+    }
+
+    await createCoachHonour(coachId, {
+      competitionName: honour.competitionName,
+      year: honour.year,
+      achievementType: honour.achievementType,
+      roleType: honour.roleType,
+      honourLevel: honour.honourLevel,
+      shared: honour.shared,
+      teamName: honour.teamName ?? null,
+      sourceUrl: honour.sourceLine ? `wikipedia:${honour.sourceLine}` : coach.wikipediaUrl,
+      showOnOverview:
+        honour.roleType === "coach" &&
+        (honour.honourLevel === "major" || honour.honourLevel === "domestic_major"),
+      visibility: "public",
+      sortOrder: index,
+      notes: honour.sourceLine,
+    });
+    created += 1;
+
+    if (
+      existingMilestones.length === 0 &&
+      honour.roleType === "coach" &&
+      honour.achievementType === "winner" &&
+      (honour.honourLevel === "major" || /grand slam|coach of the year|lions/i.test(honour.competitionName))
+    ) {
+      await createCoachMilestone(coachId, {
+        milestoneYear: honour.year,
+        milestoneType: "honour",
+        title: honour.competitionName,
+        description: honour.teamName ? `${honour.teamName}` : honour.sourceLine,
+        sourceUrl: coach.wikipediaUrl,
+        showOnOverview: true,
+        sortOrder: milestoneOrder,
+      });
+      milestoneOrder += 1;
+    }
+  }
+  return created;
 }

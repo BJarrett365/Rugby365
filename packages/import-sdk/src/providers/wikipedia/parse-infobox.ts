@@ -390,6 +390,10 @@ export function parseWikipediaArchiveFromHtml(input: {
   if (resolvedType === "coach") {
     const coachingCareer = collectCoachingRows(infobox.params);
     const birthPlace = stripWikiMarkup(infobox.params.birth_place) || undefined;
+    const honours = input.wikitext
+      ? parsePlayerHonoursFromWikitext(input.wikitext)
+      : parsePlayerHonoursFromHtml(input.html);
+    const honourLines = honours.map((h) => h.sourceLine);
     return {
       entityType: "coach",
       articleTitle: input.articleTitle,
@@ -403,6 +407,7 @@ export function parseWikipediaArchiveFromHtml(input: {
       imageUrl: input.imageUrl,
       bioSummary,
       coachingCareer,
+      honourLines: honourLines.length ? honourLines : undefined,
       infoboxTemplate: infobox.template,
     };
   }

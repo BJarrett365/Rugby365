@@ -21,6 +21,7 @@ function normalizeCoachTeamLabel(value: string): string {
 }
 
 export function coachStintTeamMatchesCmsTeam(stintName: string, cmsTeamName: string): boolean {
+  if (/^unknown team/i.test(stintName) || /^unknown team/i.test(cmsTeamName)) return false;
   const stint = normalizeCoachTeamLabel(stintName);
   const cms = normalizeCoachTeamLabel(cmsTeamName);
   if (!stint || !cms) return false;

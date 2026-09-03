@@ -2,7 +2,7 @@
  * Squad value + strength aggregates for Compare Teams MVP.
  */
 import "server-only";
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNotNull, or, sql } from "drizzle-orm";
 import {
   competitionSeasons,
   fixturePlayers,
@@ -16,6 +16,7 @@ import {
   worldRankingRows,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { allRelatedTeamIds, resolveCanonicalTeam } from "./coach-team-aliases";
 import { baseMarketValueFromRating, formatGbpCompact } from "./player-value-math";
 import { compareByPlayingPosition } from "./player-radar-positions";
 import { computeTeamRating, TEAM_RATING_MODEL } from "./team-rating-math";
@@ -56,6 +57,7 @@ async function resolveSquadPlayers(teamId: string): Promise<
   }>
 > {
   const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
 
   const clubOrIntl = await db
     .select({
@@ -77,7 +79,7 @@ async function resolveSquadPlayers(teamId: string): Promise<
       and(
         eq(players.isPublic, true),
         eq(players.publishStatus, "published"),
-        or(eq(players.clubTeamId, teamId), eq(players.internationalTeamId, teamId)),
+        or(inArray(players.clubTeamId, teamIds), inArray(players.internationalTeamId, teamIds)),
       ),
     )
     .orderBy(asc(players.name));
@@ -89,7 +91,7 @@ async function resolveSquadPlayers(teamId: string): Promise<
     .selectDistinct({ playerId: fixturePlayers.playerId })
     .from(fixturePlayers)
     .innerJoin(fixtures, eq(fixturePlayers.fixtureId, fixtures.id))
-    .where(eq(fixturePlayers.teamId, teamId))
+    .where(inArray(fixturePlayers.teamId, teamIds))
     .limit(80);
 
   const ids = appearanceIds.map((r) => r.playerId).filter(Boolean);
@@ -199,8 +201,22 @@ function summarizeSquad(squad: TeamSquadPlayerRow[]): TeamSquadValueSummary {
   };
 }
 
+function isCompletedFixtureStatus(status: string | null | undefined): boolean {
+  const s = (status || "").toLowerCase().replace(/\s+/g, "_");
+  return (
+    s.includes("complete") ||
+    s.includes("finish") ||
+    s === "result" ||
+    s === "ft" ||
+    s === "full_time" ||
+    s.includes("full_time")
+  );
+}
+
 async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
   const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
+  const idSet = new Set(teamIds);
   const rows = await db
     .select({
       homeTeamId: fixtures.homeTeamId,
@@ -212,12 +228,15 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
     .from(fixtures)
     .where(
       and(
-        or(eq(fixtures.homeTeamId, teamId), eq(fixtures.awayTeamId, teamId)),
-        eq(fixtures.status, "full_time"),
+        or(inArray(fixtures.homeTeamId, teamIds), inArray(fixtures.awayTeamId, teamIds)),
+        isNotNull(fixtures.homeScore),
+        isNotNull(fixtures.awayScore),
       ),
     )
     .orderBy(desc(fixtures.kickoffAt))
-    .limit(limit);
+    .limit(limit * 3);
+
+  const completed = rows.filter((row) => isCompletedFixtureStatus(row.status)).slice(0, limit);
 
   let won = 0;
   let drawn = 0;
@@ -226,8 +245,8 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
   let pointsAgainst = 0;
   const lastResults: Array<"W" | "D" | "L"> = [];
 
-  for (const row of rows) {
-    const isHome = row.homeTeamId === teamId;
+  for (const row of completed) {
+    const isHome = row.homeTeamId != null && idSet.has(row.homeTeamId);
     const teamScore = isHome ? row.homeScore : row.awayScore;
     const oppScore = isHome ? row.awayScore : row.homeScore;
     pointsFor += teamScore ?? 0;
@@ -244,7 +263,7 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
     }
   }
 
-  const played = rows.length;
+  const played = completed.length;
   return {
     played,
     won,
@@ -259,10 +278,11 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
 
 async function loadTrophyCount(teamId: string): Promise<number> {
   const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
   const [row] = await db
     .select({ value: sql<number>`count(*)::int` })
     .from(competitionSeasons)
-    .where(eq(competitionSeasons.championTeamId, teamId));
+    .where(inArray(competitionSeasons.championTeamId, teamIds));
   return Number(row?.value ?? 0);
 }
 
@@ -277,6 +297,7 @@ async function loadWorldRank(teamId: string): Promise<{
     .where(eq(worldRankingFeeds.category, "mru"))
     .limit(1);
   if (!feed?.currentSnapshotId) return { position: null, points: null };
+  const teamIds = await allRelatedTeamIds([teamId]);
 
   const [row] = await db
     .select({
@@ -287,14 +308,42 @@ async function loadWorldRank(teamId: string): Promise<{
     .where(
       and(
         eq(worldRankingRows.snapshotId, feed.currentSnapshotId),
-        eq(worldRankingRows.teamId, teamId),
+        inArray(worldRankingRows.teamId, teamIds),
+      ),
+    )
+    .limit(1);
+  if (row) {
+    return {
+      position: row.position ?? null,
+      points: row.points != null ? Number(row.points) : null,
+    };
+  }
+
+  const [team] = await db
+    .select({ name: teams.name })
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+  const teamName = team?.name?.trim();
+  if (!teamName) return { position: null, points: null };
+
+  const [named] = await db
+    .select({
+      position: worldRankingRows.position,
+      points: worldRankingRows.points,
+    })
+    .from(worldRankingRows)
+    .where(
+      and(
+        eq(worldRankingRows.snapshotId, feed.currentSnapshotId),
+        ilike(worldRankingRows.teamName, teamName),
       ),
     )
     .limit(1);
 
   return {
-    position: row?.position ?? null,
-    points: row?.points != null ? Number(row.points) : null,
+    position: named?.position ?? null,
+    points: named?.points != null ? Number(named.points) : null,
   };
 }
 
@@ -309,10 +358,12 @@ async function loadCoachName(teamId: string): Promise<string | null> {
 
 async function loadHomeVenueName(teamId: string): Promise<string | null> {
   const db = getDb();
+  const canonical = await resolveCanonicalTeam(teamId);
+  const id = canonical?.id ?? teamId;
   const [team] = await db
     .select({ homeVenueId: teams.homeVenueId })
     .from(teams)
-    .where(eq(teams.id, teamId))
+    .where(eq(teams.id, id))
     .limit(1);
   if (!team?.homeVenueId) return null;
   const [venue] = await db
@@ -344,9 +395,18 @@ export async function getTeamCompareSidePacket(
 ): Promise<TeamCompareSidePacket | null> {
   const db = getDb();
   const { normalizeSlug } = await import("./fixture-admin-service");
-  const normalized = normalizeSlug(slug);
-  const [team] = await db.select().from(teams).where(eq(teams.slug, normalized)).limit(1);
+  const trimmed = slug.trim();
+  const normalized = normalizeSlug(trimmed);
+  let [team] = await db.select().from(teams).where(eq(teams.slug, trimmed)).limit(1);
+  if (!team && normalized && normalized !== trimmed) {
+    [team] = await db.select().from(teams).where(eq(teams.slug, normalized)).limit(1);
+  }
   if (!team) return null;
+  const canonical = await resolveCanonicalTeam(team.id);
+  if (canonical && canonical.id !== team.id) {
+    const [preferred] = await db.select().from(teams).where(eq(teams.id, canonical.id)).limit(1);
+    if (preferred) team = preferred;
+  }
 
   const [rawSquad, form, trophyCount, world, coachName, homeVenueName, competitionName] =
     await Promise.all([
@@ -358,6 +418,16 @@ export async function getTeamCompareSidePacket(
       loadHomeVenueName(team.id),
       loadPrimaryCompetitionName(team.id),
     ]);
+
+  let foundedYear = team.foundedYear;
+  if (foundedYear == null) {
+    const siblingIds = await allRelatedTeamIds([team.id]);
+    const siblingYears = await db
+      .select({ foundedYear: teams.foundedYear })
+      .from(teams)
+      .where(inArray(teams.id, siblingIds));
+    foundedYear = siblingYears.find((row) => row.foundedYear != null)?.foundedYear ?? null;
+  }
 
   const squad = buildSquadRows(rawSquad);
   const squadValue = summarizeSquad(squad);
@@ -386,7 +456,7 @@ export async function getTeamCompareSidePacket(
     imageUrl: team.imageUrl,
     countryName: team.countryName,
     teamType: team.teamType,
-    foundedYear: team.foundedYear,
+    foundedYear,
     competitionName,
     coachName,
     homeVenueName,

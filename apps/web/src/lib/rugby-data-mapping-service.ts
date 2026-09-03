@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { competitions, dataIntegrationConflicts, teams } from "@rugby365/db";
 import { getDb } from "./db";
 import { resolveCompetition, resolveTeam } from "./entity-resolve-service";
@@ -50,6 +50,30 @@ export async function mapRugbyDataCompetition(input: {
   allowCreate?: boolean;
   jobId?: string;
 }): Promise<{ competitionId: string | null; mappingStatus: MappingStatus; created: boolean }> {
+  const desiredBaseCompetitionSlug = (() => {
+    const lower = input.name.toLowerCase();
+    // Rugby Data naming overlap guard:
+    // "Autumn Nations Cup" must never map to "World Rugby Nations Cup" (and vice versa).
+    if (lower.includes("autumn") && lower.includes("nations") && lower.includes("cup")) {
+      return "autumn-nations-cup";
+    }
+    if (lower.includes("nations cup") && !lower.includes("autumn")) {
+      return "world-rugby-nations-cup";
+    }
+    return null;
+  })();
+
+  const resolveByDesiredBaseSlug = async (baseSlug: string) => {
+    const db = getDb();
+    const candidates = await db
+      .select()
+      .from(competitions)
+      .where(like(competitions.slug, `${baseSlug}%`));
+    if (!candidates.length) return null;
+    const nonLegacy = candidates.filter((c) => !c.slug.includes("__legacy__"));
+    return nonLegacy[0] ?? candidates[0] ?? null;
+  };
+
   const externalId = String(input.leagueId);
   const existing = await getConfirmedMapping({
     provider: PROVIDER_RUGBY_DATA,
@@ -57,6 +81,40 @@ export async function mapRugbyDataCompetition(input: {
     externalId,
   });
   if (existing?.rugby365Id) {
+    if (desiredBaseCompetitionSlug) {
+      const db = getDb();
+      const [mappedCompetition] = await db
+        .select()
+        .from(competitions)
+        .where(eq(competitions.id, existing.rugby365Id))
+        .limit(1);
+
+      const mappedSlug = mappedCompetition?.slug ?? "";
+      const wantsAutumn = desiredBaseCompetitionSlug === "autumn-nations-cup";
+      const wantsWorldNationsCup = desiredBaseCompetitionSlug === "world-rugby-nations-cup";
+      const isAutumnMapped = mappedSlug.startsWith("autumn-nations-cup");
+      const isWorldMapped = mappedSlug.startsWith("world-rugby-nations-cup");
+
+      const mismatch =
+        (wantsAutumn && !isAutumnMapped) || (wantsWorldNationsCup && !isWorldMapped);
+
+      if (mismatch) {
+        const corrected = await resolveByDesiredBaseSlug(desiredBaseCompetitionSlug);
+        if (corrected?.id) {
+          await confirmMapping({
+            provider: PROVIDER_RUGBY_DATA,
+            entityType: "competition",
+            externalId,
+            rugby365Id: corrected.id,
+            rugby365Name: corrected.name,
+            confirmedBy: "rugby_data_mapping",
+            notes: "Auto-correct competition mapping for Autumn Nations Cup vs Nations Cup overlap",
+          });
+          return { competitionId: corrected.id, mappingStatus: "confirmed", created: false };
+        }
+      }
+    }
+
     return { competitionId: existing.rugby365Id, mappingStatus: "confirmed", created: false };
   }
 
@@ -237,6 +295,8 @@ export async function mapRugbyDataPlayer(input: {
   name: string;
   teamId?: string | null;
   positionName?: string | null;
+  /** Bind this CMS player when names match, so hydrates do not create duplicates. */
+  preferPlayerId?: string;
 }): Promise<{ playerId: string | null; mappingStatus: MappingStatus }> {
   const externalId = String(input.externalPlayerId);
   const existing = await getConfirmedMapping({
@@ -248,15 +308,33 @@ export async function mapRugbyDataPlayer(input: {
     return { playerId: existing.rugby365Id, mappingStatus: "confirmed" };
   }
 
+  let preferId = input.preferPlayerId ?? null;
+  if (preferId) {
+    const { players } = await import("@rugby365/db");
+    const { eq } = await import("drizzle-orm");
+    const db = getDb();
+    const [preferred] = await db
+      .select({ id: players.id, name: players.name })
+      .from(players)
+      .where(eq(players.id, preferId))
+      .limit(1);
+    const { namesLikelyMatch } = await import("./player-profile-enrichment-service");
+    if (!preferred || !namesLikelyMatch(preferred.name, input.name)) {
+      preferId = null;
+    }
+  }
+
   const { resolvePlayer } = await import("./entity-resolve-service");
-  const player = await resolvePlayer({
-    name: input.name,
-    externalProviderId: externalId,
-    positionName: input.positionName ?? undefined,
-    clubTeamId: input.teamId ?? undefined,
-    createIfMissing: true,
-    sourceProvider: PROVIDER_RUGBY_DATA,
-  });
+  const player = preferId
+    ? { id: preferId, name: input.name, externalProviderId: externalId }
+    : await resolvePlayer({
+        name: input.name,
+        externalProviderId: externalId,
+        positionName: input.positionName ?? undefined,
+        clubTeamId: input.teamId ?? undefined,
+        createIfMissing: true,
+        sourceProvider: PROVIDER_RUGBY_DATA,
+      });
   if (!player) return { playerId: null, mappingStatus: "unmapped" };
 
   const { mapping, autoConfirmEligible } = await suggestMapping({

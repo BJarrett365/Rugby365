@@ -46,14 +46,16 @@ export async function refreshCoachMatchLinks(
   );
 
   for (const tenure of eligible) {
-    if (!tenure.startDate && !tenure.isCurrent) {
+    if (!tenure.startDate) {
       result.failures.push({
         tenureId: tenure.id,
-        error: "Tenure has no startDate — skipped",
+        error: tenure.isCurrent
+          ? "Current tenure has no startDate — skipped to avoid linking the team's entire history"
+          : "Tenure has no startDate — skipped",
       });
       continue;
     }
-    const fromDate = tenure.startDate ?? "1900-01-01";
+    const fromDate = tenure.startDate;
     const toDate = tenure.endDate ?? null;
     result.tenuresProcessed += 1;
     try {

@@ -53,8 +53,8 @@ export function RankingStatusBadge({
   return <VerifiedTick />;
 }
 
-export function RankingsAvatar({ src, name }: { src: string | null | undefined; name: string }) {
-  const initial = name.trim().slice(0, 1).toUpperCase() || "?";
+export function RankingsAvatar({ src, name }: { src: string | null | undefined; name: string | null | undefined }) {
+  const initial = (name ?? "").trim().slice(0, 1).toUpperCase() || "?";
   return (
     <span className="pr-rankings__avatar-wrap">
       {src ? (
@@ -69,8 +69,8 @@ export function RankingsAvatar({ src, name }: { src: string | null | undefined; 
   );
 }
 
-export function RankingsCrest({ src, name }: { src: string | null | undefined; name: string }) {
-  const initials = name
+export function RankingsCrest({ src, name }: { src: string | null | undefined; name: string | null | undefined }) {
+  const initials = (name ?? "")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
@@ -91,8 +91,8 @@ export function RankingsCrest({ src, name }: { src: string | null | undefined; n
   );
 }
 
-export function RankingsFlag({ src, name }: { src: string | null | undefined; name: string }) {
-  const initials = name.trim().slice(0, 2).toUpperCase() || "?";
+export function RankingsFlag({ src, name }: { src: string | null | undefined; name: string | null | undefined }) {
+  const initials = (name ?? "").trim().slice(0, 2).toUpperCase() || "?";
   return (
     <span className="pr-rankings__flag" title={name}>
       {src ? (

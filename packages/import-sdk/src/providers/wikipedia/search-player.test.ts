@@ -28,6 +28,7 @@ describe("prioritizePlayerArticleTitles", () => {
       "Alex Mitchell",
     );
     expect(ordered[0]).toBe("Alex Mitchell (rugby union)");
+    expect(ordered).not.toContain("Northampton Saints");
   });
 });
 

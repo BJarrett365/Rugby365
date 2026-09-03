@@ -242,9 +242,10 @@ export async function rugbyDataApiFetch<T = unknown>(
   };
 }
 
-export async function fetchRugbyDataTeams() {
+export async function fetchRugbyDataTeams(query?: string) {
   return rugbyDataApiFetch<unknown[]>({
     path: "/api/v1/rugby-union/teams",
+    query: query ? { q: query } : undefined,
     entityType: "team",
   });
 }
@@ -344,6 +345,23 @@ export async function fetchRugbyDataMatchTable(matchId: string | number) {
     query: { type: "all" },
     entityType: "match",
     externalId: String(matchId),
+  });
+}
+
+/** Football-module equivalent. Rugby Union docs omit Player Detail; probe and ignore 404s. */
+export async function fetchRugbyDataPlayerDetail(playerId: string | number) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/player/${playerId}/detail`,
+    entityType: "player",
+    externalId: String(playerId),
+  });
+}
+
+export async function fetchRugbyDataPlayerInfo(playerId: string | number) {
+  return rugbyDataApiFetch({
+    path: `/api/v1/rugby-union/player/${playerId}/info`,
+    entityType: "player",
+    externalId: String(playerId),
   });
 }
 

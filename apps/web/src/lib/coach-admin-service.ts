@@ -315,7 +315,20 @@ export async function getCoachById(id: string) {
   return row ?? null;
 }
 
+const COACH_DETAIL_CACHE_MS = 15_000;
+const coachDetailCache = new Map<string, { expires: number; promise: Promise<CoachDetail | null> }>();
+
 export async function getCoachDetail(id: string): Promise<CoachDetail | null> {
+  const now = Date.now();
+  const hit = coachDetailCache.get(id);
+  if (hit && hit.expires > now) return hit.promise;
+  const promise = loadCoachDetailUncached(id);
+  coachDetailCache.set(id, { expires: now + COACH_DETAIL_CACHE_MS, promise });
+  void promise.catch(() => coachDetailCache.delete(id));
+  return promise;
+}
+
+async function loadCoachDetailUncached(id: string): Promise<CoachDetail | null> {
   const coach = await getCoachById(id);
   if (!coach) return null;
   const assignments = await selectStaffRows(eq(teamCoachingStaff.coachId, id));
@@ -592,6 +605,9 @@ export async function upsertCoachingStaffAssignment(input: {
   isPrimaryCoach?: boolean;
   showOnOverview?: boolean;
   eligibleForCareerRecord?: boolean;
+  overviewLabel?: string | null;
+  teamDisplayName?: string | null;
+  recordStatus?: string | null;
   bioSummary?: string | null;
   notes?: string | null;
   sourceUrl?: string | null;
@@ -621,6 +637,9 @@ export async function upsertCoachingStaffAssignment(input: {
     isCurrent: input.isCurrent ?? false,
     isPrimaryCoach: input.isPrimaryCoach ?? false,
     showOnOverview: input.showOnOverview ?? false,
+    overviewLabel: input.overviewLabel?.trim() || null,
+    teamDisplayName: input.teamDisplayName?.trim() || null,
+    recordStatus: input.recordStatus?.trim() || "needs_review",
     eligibleForCareerRecord: input.eligibleForCareerRecord ?? true,
     bioSummary: input.bioSummary?.trim() || null,
     notes: input.notes?.trim() || null,
@@ -647,6 +666,22 @@ export async function upsertCoachingStaffAssignment(input: {
           input.showOnOverview !== undefined ? input.showOnOverview : existing.showOnOverview,
         verifiedAt:
           input.verifiedAt !== undefined ? input.verifiedAt : existing.verifiedAt,
+        recordStatus:
+          input.recordStatus !== undefined
+            ? input.recordStatus.trim() || existing.recordStatus
+            : existing.recordStatus,
+        overviewLabel:
+          input.overviewLabel !== undefined ? input.overviewLabel?.trim() || null : existing.overviewLabel,
+        teamDisplayName:
+          input.teamDisplayName !== undefined
+            ? input.teamDisplayName?.trim() || null
+            : existing.teamDisplayName,
+        bioSummary:
+          input.bioSummary !== undefined ? input.bioSummary?.trim() || null : existing.bioSummary,
+        notes: input.notes !== undefined ? input.notes?.trim() || null : existing.notes,
+        sourceUrl:
+          input.sourceUrl !== undefined ? input.sourceUrl?.trim() || null : existing.sourceUrl,
+        isCurrent: input.isCurrent !== undefined ? input.isCurrent : existing.isCurrent,
       })
       .where(eq(teamCoachingStaff.id, existing.id))
       .returning();

@@ -40,13 +40,24 @@ function resultColor(result: string | null): string {
 }
 
 export function CoachRatingTrendsCard({ slug, initial, compact = true }: Props) {
-  const [filter, setFilter] = useState<CoachTrendFilter>(initial.summary.filter);
+  const [filter, setFilter] = useState<CoachTrendFilter>(initial?.summary?.filter ?? "last_24");
   const [bundle, setBundle] = useState(initial);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const points = bundle.points;
-  const summary = bundle.summary;
+  const points = bundle?.points ?? [];
+  const summary = bundle?.summary ?? {
+    current: null,
+    rangeChange: null,
+    high: null,
+    low: null,
+    trend: "stable" as const,
+    trendLabel: "Stable",
+    trendVersion: "",
+    pointCount: 0,
+    filter,
+    filterLabel: COACH_TREND_FILTER_LABELS[filter],
+  };
   const active = points.find((p) => p.id === activeId) ?? null;
 
   const chart = useMemo(

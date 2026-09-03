@@ -172,7 +172,7 @@ async function syncEventsFromInfo(
 
 export async function enrichRugbyDataMatch(
   externalMatchId: string,
-  options: { fixtureId?: string } = {},
+  options: { fixtureId?: string; preferPlayerId?: string } = {},
 ): Promise<RugbyDataMatchEnrichResult> {
   const result: RugbyDataMatchEnrichResult = {
     fixtureId: options.fixtureId ?? "",
@@ -275,6 +275,7 @@ export async function enrichRugbyDataMatch(
           externalPlayerId: row.playerId,
           name: row.playerName,
           positionName: row.positionName,
+          preferPlayerId: options.preferPlayerId,
         });
         if (!mapped.playerId) continue;
 
@@ -352,6 +353,7 @@ export async function enrichRugbyDataMatch(
           externalPlayerId: row.playerId,
           name: row.playerName,
           teamId: row.isHome ? fixture.homeTeamId : fixture.awayTeamId,
+          preferPlayerId: options.preferPlayerId,
         });
         if (!mapped.playerId) continue;
 

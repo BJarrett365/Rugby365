@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CoachPublicSubNav } from "@/components/coaches/CoachPublicSubNav";
 import { CoachPlayingCareer } from "@/components/coaches/CoachPlayingCareer";
+import { CoachSquadDashboard } from "@/components/coaches/CoachSquadDashboard";
+import { CoachSubpageChrome } from "@/components/coaches/CoachSubpageChrome";
 import { isPreviewParam } from "@/lib/public-entity-profile-utils";
 import { getPublicCoachProfile } from "@/lib/public-coach-profile-service";
 
@@ -12,7 +13,9 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `Career | Coach | Rugby365`, description: `Playing and coaching career for ${slug}` };
+  const profile = await getPublicCoachProfile(slug, { preview: false });
+  const name = profile?.displayName ?? slug;
+  return { title: `Career | ${name} | Rugby365`, description: `Playing and coaching career for ${name}` };
 }
 
 export default async function CoachCareerPage({ params, searchParams }: PageProps) {
@@ -20,53 +23,53 @@ export default async function CoachCareerPage({ params, searchParams }: PageProp
   const sp = await searchParams;
   const profile = await getPublicCoachProfile(slug, { preview: isPreviewParam(sp.preview) });
   if (!profile) notFound();
-
   const cr = profile.careerRecord;
+  const teamHref = profile.teamDashboard ? `/teams/${profile.teamDashboard.teamSlug}` : `/coaches/${profile.slug}`;
 
   return (
-    <article className="pr-coach-profile">
-      <CoachPublicSubNav slug={profile.slug} active="career" />
-      <div style={{ padding: "1.25rem" }}>
-        <header className="mb-4">
-          <p className="pr-coach-card__kicker m-0">Career</p>
-          <h1 className="m-0 text-2xl font-bold">{profile.displayName}</h1>
-        </header>
-
-        <section className="pr-coach-card mb-4">
-          <div className="pr-coach-card__head">
-            <h2>Coaching record</h2>
+    <CoachSubpageChrome profile={profile} active="career">
+      <section className="pr-coach-card mb-4">
+        <div className="pr-coach-card__head">
+          <h2>Coaching record</h2>
+        </div>
+        <div className="pr-coach-stats__footer" style={{ margin: 0 }}>
+          <div>
+            <span>Played</span>
+            <strong>{cr.played}</strong>
           </div>
-          <div className="pr-coach-stat-row">
-            <div>
-              <strong>{cr.played}</strong>
-              <span>Played</span>
-            </div>
-            <div>
-              <strong>{cr.wins}</strong>
-              <span>Wins</span>
-            </div>
-            <div>
-              <strong>{cr.draws}</strong>
-              <span>Draws</span>
-            </div>
-            <div>
-              <strong>{cr.losses}</strong>
-              <span>Losses</span>
-            </div>
-            <div>
-              <strong>{cr.winRate != null ? `${cr.winRate.toFixed(1)}%` : "—"}</strong>
-              <span>Win rate</span>
-            </div>
+          <div>
+            <span>Wins</span>
+            <strong>{cr.wins}</strong>
           </div>
-          {cr.partial ? (
-            <p className="pr-coach-empty">
-              Partial career record{cr.notes ? `: ${cr.notes}` : "."}
-            </p>
-          ) : null}
-        </section>
+          <div>
+            <span>Draws</span>
+            <strong>{cr.draws}</strong>
+          </div>
+          <div>
+            <span>Losses</span>
+            <strong>{cr.losses}</strong>
+          </div>
+          <div>
+            <span>Win rate</span>
+            <strong>{cr.winRate != null ? `${cr.winRate}%` : "0"}</strong>
+          </div>
+        </div>
+        {cr.partial ? (
+          <p className="pr-coach-empty">
+            Partial career record{cr.notes ? `: ${cr.notes}` : "."}
+          </p>
+        ) : null}
+      </section>
 
+      {profile.teamDashboard ? (
+        <CoachSquadDashboard dashboard={profile.teamDashboard} teamHref={teamHref} />
+      ) : (
+        <p className="pr-coach-empty">No current squad intelligence linked to this coach yet.</p>
+      )}
+
+      <div style={{ marginTop: "0.85rem" }}>
         <CoachPlayingCareer profile={profile} />
       </div>
-    </article>
+    </CoachSubpageChrome>
   );
 }

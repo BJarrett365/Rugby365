@@ -10,6 +10,7 @@ import { getDb } from "./db";
 import { getCoachDetail, type CoachingStaffRow } from "./coach-admin-service";
 import { isRoleEligibleForCareerRecord } from "./coach-role-eligibility";
 import { getCoachPerspectiveResult } from "./coach-perspective-result";
+import { allRelatedTeamIds, relatedTeamIdsBySource } from "./coach-team-aliases";
 import { getTeamRankingAtDate } from "./world-rugby-rankings-at-date";
 import {
   COACH_IMPACT_VERSION,
@@ -110,19 +111,74 @@ function eligibleTenures(assignments: CoachingStaffRow[]): CoachingStaffRow[] {
   );
 }
 
+type LoadEligibleMatchOptions = {
+  filter?: CoachCareerFilter;
+  teamId?: string;
+  competitionName?: string;
+  primaryOnly?: boolean;
+  limit?: number;
+  /** Prefer FK links only (legacy). Default false = tenure-window query. */
+  fixtureCoachFkOnly?: boolean;
+  /** Inclusive cutoff — only matches with kickoffAt <= asOfDate. */
+  asOfDate?: Date | null;
+};
+
+const ELIGIBLE_MATCH_CACHE_MS = 15_000;
+const eligibleMatchCache = new Map<
+  string,
+  { expires: number; promise: Promise<CoachEligibleMatch[]> }
+>();
+
+function eligibleMatchCacheKey(coachId: string, options: LoadEligibleMatchOptions): string {
+  return JSON.stringify({
+    coachId,
+    filter: options.filter ?? null,
+    teamId: options.teamId ?? null,
+    competitionName: options.competitionName ?? null,
+    primaryOnly: options.primaryOnly ?? null,
+    fixtureCoachFkOnly: Boolean(options.fixtureCoachFkOnly),
+    asOfDate: options.asOfDate ? options.asOfDate.toISOString() : null,
+  });
+}
+
 export async function loadCoachEligibleMatches(
   coachId: string,
-  options: {
-    filter?: CoachCareerFilter;
-    teamId?: string;
-    competitionName?: string;
-    primaryOnly?: boolean;
-    limit?: number;
-    /** Prefer FK links only (legacy). Default false = tenure-window query. */
-    fixtureCoachFkOnly?: boolean;
-    /** Inclusive cutoff — only matches with kickoffAt <= asOfDate. */
-    asOfDate?: Date | null;
-  } = {},
+  options: LoadEligibleMatchOptions = {},
+): Promise<CoachEligibleMatch[]> {
+  const { limit, ...rest } = options;
+  const key = eligibleMatchCacheKey(coachId, rest);
+  const now = Date.now();
+  let entry = eligibleMatchCache.get(key);
+  if (!entry || entry.expires <= now) {
+    const promise = loadCoachEligibleMatchesUncached(coachId, rest);
+    entry = { expires: now + ELIGIBLE_MATCH_CACHE_MS, promise };
+    eligibleMatchCache.set(key, entry);
+    void promise.catch(() => eligibleMatchCache.delete(key));
+  }
+  let out = await entry.promise;
+  if (limit && limit > 0) out = out.slice(-limit);
+  return out;
+}
+
+function resolveTenureStart(
+  tenure: { startDate: string | null; isCurrent: boolean; teamId: string },
+  detail: { coach: { appointedOn?: string | Date | null }; assignments: CoachingStaffRow[] },
+): Date | null {
+  if (tenure.startDate) return new Date(`${tenure.startDate}T00:00:00.000Z`);
+  if (!tenure.isCurrent) return null;
+  const sibling = detail.assignments
+    .filter((row) => row.teamId === tenure.teamId && row.startDate)
+    .map((row) => row.startDate as string)
+    .sort()[0];
+  if (sibling) return new Date(`${sibling}T00:00:00.000Z`);
+  const appointed = detail.coach.appointedOn ? String(detail.coach.appointedOn).slice(0, 10) : null;
+  if (appointed) return new Date(`${appointed}T00:00:00.000Z`);
+  return null;
+}
+
+async function loadCoachEligibleMatchesUncached(
+  coachId: string,
+  options: LoadEligibleMatchOptions = {},
 ): Promise<CoachEligibleMatch[]> {
   const db = getDb();
   const detail = await getCoachDetail(coachId);
@@ -160,7 +216,7 @@ export async function loadCoachEligibleMatches(
       .where(or(eq(fixtures.homeCoachId, coachId), eq(fixtures.awayCoachId, coachId)))
       .orderBy(asc(fixtures.kickoffAt));
 
-    let fkOut = mapCompletedRows(rows, coachId, options, detail, null);
+    let fkOut = mapCompletedRows(rows, coachId, options, detail, null, null);
     if (options.asOfDate) {
       const cut = options.asOfDate.getTime();
       fkOut = fkOut.filter((m) => (m.kickoffAt?.getTime() ?? 0) <= cut);
@@ -169,58 +225,91 @@ export async function loadCoachEligibleMatches(
     return fkOut;
   }
 
-  const byId = new Map<string, CoachEligibleMatch>();
-
-  for (const tenure of tenures) {
+  const applicable = tenures.filter((tenure) => {
     if (options.filter === "current_team") {
       const current = detail.assignments.find((a) => a.isCurrent);
-      if (!current || tenure.teamId !== current.teamId) continue;
+      if (!current || tenure.teamId !== current.teamId) return false;
     }
-    if (options.teamId && tenure.teamId !== options.teamId) continue;
-    if (!tenure.startDate && !tenure.isCurrent) continue;
+    if (options.teamId && tenure.teamId !== options.teamId) return false;
+    if (resolveTenureStart(tenure, detail) == null) return false;
+    return true;
+  });
 
-    const from = tenure.startDate ? new Date(`${tenure.startDate}T00:00:00.000Z`) : new Date(0);
-    const to = tenure.endDate ? new Date(`${tenure.endDate}T23:59:59.999Z`) : null;
+  const tenureTeamIds = [
+    ...new Set(applicable.map((tenure) => tenure.teamId).filter((id): id is string => Boolean(id))),
+  ];
+  const relatedByTenure = await relatedTeamIdsBySource(tenureTeamIds);
+  const teamIds = [...new Set(relatedByTenure.size ? [...relatedByTenure.values()].flat() : tenureTeamIds)];
+  const byId = new Map<string, CoachEligibleMatch>();
+  if (teamIds.length > 0) {
+    const fromTimes = applicable
+      .map((tenure) => resolveTenureStart(tenure, detail)?.getTime())
+      .filter((value): value is number => value != null);
+    if (fromTimes.length === 0) {
+      // Undated current rows must not pull a team's entire fixture history.
+    } else {
+      const minFrom = new Date(Math.min(...fromTimes));
+      const dateConds = [gte(fixtures.kickoffAt, minFrom)];
+      if (options.asOfDate) dateConds.push(lte(fixtures.kickoffAt, options.asOfDate));
 
-    const dateConds = [gte(fixtures.kickoffAt, from)];
-    if (to) dateConds.push(lte(fixtures.kickoffAt, to));
+      const rows = await db
+        .select({
+          id: fixtures.id,
+          slug: fixtures.slug,
+          kickoffAt: fixtures.kickoffAt,
+          status: fixtures.status,
+          competitionName: fixtures.competitionName,
+          homeTeamId: fixtures.homeTeamId,
+          awayTeamId: fixtures.awayTeamId,
+          homeTeamName: homeTeams.name,
+          awayTeamName: awayTeams.name,
+          homeScore: fixtures.homeScore,
+          awayScore: fixtures.awayScore,
+          homeCoachId: fixtures.homeCoachId,
+          awayCoachId: fixtures.awayCoachId,
+        })
+        .from(fixtures)
+        .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
+        .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
+        .where(
+          and(
+            or(inArray(fixtures.homeTeamId, teamIds), inArray(fixtures.awayTeamId, teamIds)),
+            ...dateConds,
+          ),
+        )
+        .orderBy(asc(fixtures.kickoffAt));
 
-    const rows = await db
-      .select({
-        id: fixtures.id,
-        slug: fixtures.slug,
-        kickoffAt: fixtures.kickoffAt,
-        status: fixtures.status,
-        competitionName: fixtures.competitionName,
-        homeTeamId: fixtures.homeTeamId,
-        awayTeamId: fixtures.awayTeamId,
-        homeTeamName: homeTeams.name,
-        awayTeamName: awayTeams.name,
-        homeScore: fixtures.homeScore,
-        awayScore: fixtures.awayScore,
-        homeCoachId: fixtures.homeCoachId,
-        awayCoachId: fixtures.awayCoachId,
-      })
-      .from(fixtures)
-      .leftJoin(homeTeams, eq(fixtures.homeTeamId, homeTeams.id))
-      .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
-      .where(
-        and(
-          or(eq(fixtures.homeTeamId, tenure.teamId), eq(fixtures.awayTeamId, tenure.teamId)),
-          ...dateConds,
-        ),
-      )
-      .orderBy(asc(fixtures.kickoffAt));
-
-    for (const m of mapCompletedRows(rows, coachId, options, detail, tenure)) {
-      // Keep first tenure match; head_coach windows shouldn't double-count
-      if (!byId.has(m.id)) byId.set(m.id, m);
+      for (const tenure of applicable) {
+        const from = resolveTenureStart(tenure, detail);
+        if (!from) continue;
+        const to = tenure.endDate ? new Date(`${tenure.endDate}T23:59:59.999Z`) : null;
+        const siblingIds = new Set(
+          (tenure.teamId ? relatedByTenure.get(tenure.teamId) : null) ??
+            (tenure.teamId ? [tenure.teamId] : []),
+        );
+        const tenureRows = rows.filter((m) => {
+          const onTenureTeam =
+            (m.homeTeamId && siblingIds.has(m.homeTeamId)) ||
+            (m.awayTeamId && siblingIds.has(m.awayTeamId));
+          if (!onTenureTeam) return false;
+          const kickoff = m.kickoffAt?.getTime() ?? 0;
+          if (kickoff < from.getTime()) return false;
+          if (to && kickoff > to.getTime()) return false;
+          return true;
+        });
+        for (const m of mapCompletedRows(tenureRows, coachId, options, detail, tenure, siblingIds)) {
+          if (!byId.has(m.id)) byId.set(m.id, m);
+        }
+      }
     }
   }
 
   let out = [...byId.values()].sort(
     (a, b) => (a.kickoffAt?.getTime() ?? 0) - (b.kickoffAt?.getTime() ?? 0),
   );
+  if (out.length === 0 && !options.fixtureCoachFkOnly) {
+    return loadCoachEligibleMatchesUncached(coachId, { ...options, fixtureCoachFkOnly: true });
+  }
   if (options.asOfDate) {
     const cut = options.asOfDate.getTime();
     out = out.filter((m) => (m.kickoffAt?.getTime() ?? 0) <= cut);
@@ -254,19 +343,30 @@ function mapCompletedRows(
   },
   detail: NonNullable<Awaited<ReturnType<typeof getCoachDetail>>>,
   tenure: CoachingStaffRow | null,
+  relatedTeamIds: Set<string> | null,
 ): CoachEligibleMatch[] {
   const out: CoachEligibleMatch[] = [];
   for (const m of rows) {
     if (!isCompletedStatus(m.status)) continue;
     if (m.homeScore == null || m.awayScore == null) continue;
 
-    const coachTeamId =
-      tenure?.teamId ??
-      (m.homeCoachId === coachId
+    const siblingIds =
+      relatedTeamIds && relatedTeamIds.size > 0
+        ? relatedTeamIds
+        : tenure?.teamId
+          ? new Set([tenure.teamId])
+          : null;
+    const coachTeamId = siblingIds
+      ? m.homeTeamId && siblingIds.has(m.homeTeamId)
         ? m.homeTeamId
-        : m.awayCoachId === coachId
+        : m.awayTeamId && siblingIds.has(m.awayTeamId)
           ? m.awayTeamId
-          : null);
+          : tenure?.teamId ?? null
+      : (m.homeCoachId === coachId
+          ? m.homeTeamId
+          : m.awayCoachId === coachId
+            ? m.awayTeamId
+            : tenure?.teamId ?? null);
 
     const perspective = getCoachPerspectiveResult(
       {
@@ -296,10 +396,13 @@ function mapCompletedRows(
     const forScore = perspective.pointsFor;
     const againstScore = perspective.pointsAgainst;
 
-    if (options.teamId && teamId !== options.teamId) continue;
+    if (options.teamId && teamId !== options.teamId && !(relatedTeamIds?.has(options.teamId))) continue;
     if (options.filter === "current_team") {
       const current = detail.assignments.find((a) => a.isCurrent);
-      if (!current || teamId !== current.teamId) continue;
+      if (!current) continue;
+      if (relatedTeamIds && relatedTeamIds.size > 0) {
+        if (!teamId || !relatedTeamIds.has(teamId)) continue;
+      } else if (teamId !== current.teamId) continue;
     }
     if (options.competitionName && m.competitionName) {
       if (!m.competitionName.toLowerCase().includes(options.competitionName.toLowerCase())) {
@@ -498,10 +601,16 @@ export async function getCoachImpact(
   const underN = options.underN ?? 20;
   const detail = await getCoachDetail(coachId);
   const current = detail?.assignments.find((a) => a.isCurrent);
+  const tenureStart =
+    current?.startDate ??
+    (detail?.coach.appointedOn ? String(detail.coach.appointedOn).slice(0, 10) : null);
   const all = await loadCoachEligibleMatches(coachId, {
     primaryOnly: true,
     filter: "current_team",
   });
+  const siblingIds = current?.teamId
+    ? new Set(await allRelatedTeamIds([current.teamId]))
+    : new Set<string>();
 
   const empty = (label: string): CoachImpactResult => ({
     modelVersion: COACH_IMPACT_VERSION,
@@ -513,16 +622,17 @@ export async function getCoachImpact(
     confidence: "none",
     confidencePct: 0,
     enoughData: false,
-    tenureStart: current?.startDate ?? null,
+    tenureStart: tenureStart,
     teamId: current?.teamId ?? null,
     teamName: current?.teamName ?? null,
   });
 
-  if (!current?.startDate || all.length === 0) {
+  if (!tenureStart || !current?.teamId || all.length === 0) {
     return empty(`vs Before Appointment (Prev ${beforeN} Matches)`);
   }
 
-  const start = new Date(`${current.startDate}T00:00:00.000Z`);
+  const start = new Date(`${tenureStart}T00:00:00.000Z`);
+  const impactTeamIds = [...siblingIds];
   const db = getDb();
   const homeTeams = alias(teams, "impact_home");
   const awayTeams = alias(teams, "impact_away");
@@ -543,7 +653,7 @@ export async function getCoachImpact(
     .leftJoin(awayTeams, eq(fixtures.awayTeamId, awayTeams.id))
     .where(
       and(
-        or(eq(fixtures.homeTeamId, current.teamId), eq(fixtures.awayTeamId, current.teamId)),
+        or(inArray(fixtures.homeTeamId, impactTeamIds), inArray(fixtures.awayTeamId, impactTeamIds)),
         lte(fixtures.kickoffAt, start),
       ),
     )
@@ -556,6 +666,12 @@ export async function getCoachImpact(
     if (m.homeScore == null || m.awayScore == null) continue;
     // Exclude appointment-day match from baseline (belongs under coach if linked)
     if (m.kickoffAt && m.kickoffAt.getTime() >= start.getTime()) continue;
+    const coachTeamId =
+      m.homeTeamId && siblingIds.has(m.homeTeamId)
+        ? m.homeTeamId
+        : m.awayTeamId && siblingIds.has(m.awayTeamId)
+          ? m.awayTeamId
+          : current.teamId;
     const perspective = getCoachPerspectiveResult(
       {
         homeTeamId: m.homeTeamId,
@@ -566,7 +682,7 @@ export async function getCoachImpact(
         awayScore: m.awayScore,
         kickoffAt: m.kickoffAt,
       },
-      current.teamId,
+      coachTeamId,
     );
     if (
       perspective.pointsFor == null ||
@@ -596,7 +712,11 @@ export async function getCoachImpact(
   }
   beforeMatches.reverse();
 
-  let under = all.filter((m) => m.teamId === current.teamId);
+  let under = all.filter((m) => {
+    if (!m.teamId || !siblingIds.has(m.teamId)) return false;
+    const t = m.kickoffAt?.getTime() ?? 0;
+    return t >= start.getTime();
+  });
   if (options.underMode === "first_n") under = under.slice(0, underN);
 
   const beforeWr = winRateOf(beforeMatches);

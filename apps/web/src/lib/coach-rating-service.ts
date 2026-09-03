@@ -304,6 +304,235 @@ export type CoachRatingBundle = {
   provisional: boolean;
 };
 
+export function emptyCoachRatingBundle(): CoachRatingBundle {
+  return {
+    overallRating: null,
+    previousOverallRating: null,
+    overallRatingChange: null,
+    coachRatingDetail: null,
+    powerIndex: null,
+    previousPowerIndex: null,
+    powerIndexChange: null,
+    powerIndexDetail: null,
+    powerIndexMismatches: [],
+    worldRank: null,
+    previousWorldRank: null,
+    worldRankChange: null,
+    rankedOutOf: null,
+    competitionRank: null,
+    competitionRankedOutOf: null,
+    competitionRankLabel: null,
+    competitionRankSub: null,
+    momentum: null,
+    metrics: [],
+    intelligence: [],
+    intelligenceModelVersion: "",
+    powerContributions: [],
+    modelVersion: "",
+    powerIndexVersion: "",
+    dataConfidence: "none",
+    ratingConfidencePct: 0,
+    ratingConfidenceInputs: {
+      matchCoverage: 0,
+      teamStatCoverage: 0,
+      playerRatingCoverage: 0,
+      historicalRankingCoverage: 0,
+    },
+    matchCount: 0,
+    provisional: true,
+  };
+}
+
+function metricsToIntelligence(metrics: CoachMetricScore[]): CoachIntelligenceMetric[] {
+  const now = new Date().toISOString();
+  return metrics.map((m) => ({
+    ...m,
+    confidence: m.score != null ? 72 : 0,
+    sampleSize: Number(m.raw?.played ?? m.raw?.matches ?? 12) || 12,
+    dataCoverage: m.score != null ? 65 : 0,
+    period: "public-lite",
+    calculatedAt: now,
+    modelVersion: COACH_INTELLIGENCE_VERSION,
+    trend: null,
+    components: {},
+    availableInputs: m.score != null ? ["career_record"] : [],
+    missingInputs: m.score != null ? ["team_stats"] : ["career_record", "team_stats"],
+    status: m.score != null ? "PARTIAL" : "INSUFFICIENT",
+  }));
+}
+
+/** Fast public-page ratings when no snapshot exists — no peer scan, no Wikipedia. */
+export function buildCoachRatingBundleFromMatches(
+  matches: CoachEligibleMatch[],
+): CoachRatingBundle {
+  if (matches.length === 0) return emptyCoachRatingBundle();
+  const record = computeCareerRecord(matches);
+  const metrics = computeCoachMetrics(matches);
+  const intelligence = metricsToIntelligence(metrics);
+  const power = computePowerIndex(metrics);
+  const coachRatingDetail = computeCoachRating({
+    powerIndex: power.score,
+    intelligence,
+    careerWinRate: record.winRateExact,
+    matches,
+    impact: null,
+    honours: [],
+    matchesUsed: matches.length,
+  });
+  const coverage = Math.min(100, Math.round((matches.length / 20) * 100));
+  let dataConfidence: CoachRatingBundle["dataConfidence"] = "none";
+  if (matches.length >= 20) dataConfidence = "high";
+  else if (matches.length >= 10) dataConfidence = "medium";
+  else if (matches.length > 0) dataConfidence = "low";
+  return {
+    overallRating: coachRatingDetail.score,
+    previousOverallRating: null,
+    overallRatingChange: null,
+    coachRatingDetail,
+    powerIndex: power.score,
+    previousPowerIndex: null,
+    powerIndexChange: null,
+    powerIndexDetail: power.detail,
+    powerIndexMismatches: [],
+    worldRank: null,
+    previousWorldRank: null,
+    worldRankChange: null,
+    rankedOutOf: null,
+    competitionRank: null,
+    competitionRankedOutOf: null,
+    competitionRankLabel: null,
+    competitionRankSub: null,
+    momentum: null,
+    metrics,
+    intelligence,
+    intelligenceModelVersion: COACH_INTELLIGENCE_VERSION,
+    powerContributions: power.contributions,
+    modelVersion: COACH_RATING_VERSION,
+    powerIndexVersion: COACH_POWER_VERSION,
+    dataConfidence,
+    ratingConfidencePct: coverage,
+    ratingConfidenceInputs: {
+      matchCoverage: coverage,
+      teamStatCoverage: 0,
+      playerRatingCoverage: 0,
+      historicalRankingCoverage: 0,
+    },
+    matchCount: matches.length,
+    provisional: !coachRatingDetail.eligibleForWorldRank,
+  };
+}
+
+export function displayCoachTeamName(name: string | null | undefined): string | null {
+  if (!name?.trim()) return null;
+  const t = name.trim();
+  if (/^unknown(\s+team)?(\s+[0-9a-f-]*)?$/i.test(t)) return null;
+  if (/unknown team/i.test(t)) return null;
+  return t;
+}
+
+function asDataConfidence(value: string | null | undefined): CoachRatingBundle["dataConfidence"] {
+  if (value === "high" || value === "medium" || value === "low" || value === "none") return value;
+  return "none";
+}
+
+type StoredCoachRatingPayload = {
+  metrics?: CoachMetricScore[];
+  intelligence?: CoachIntelligenceMetric[];
+  intelligenceModelVersion?: string;
+  contributions?: CoachRatingBundle["powerContributions"];
+  powerIndex?: CoachPowerIndexResult;
+  previousPowerIndex?: number | null;
+  powerIndexChange?: number | null;
+  powerIndexMismatches?: CoachRatingBundle["powerIndexMismatches"];
+  coachRating?: CoachRatingResult;
+  previousOverallRating?: number | null;
+  overallRatingChange?: number | null;
+  previousWorldRank?: number | null;
+  worldRankChange?: number | null;
+  competitionRank?: number | null;
+  competitionRankedOutOf?: number | null;
+  competitionRankLabel?: string | null;
+  competitionRankSub?: string | null;
+  ratingConfidencePct?: number;
+  ratingConfidenceInputs?: CoachRatingBundle["ratingConfidenceInputs"];
+};
+
+export function coachRatingBundleFromSnapshot(row: {
+  overallRating: number | null;
+  powerIndex: number | null;
+  worldRank: number | null;
+  momentum: number | null;
+  metrics: unknown;
+  modelVersion: string | null;
+  powerIndexVersion: string | null;
+  dataConfidence: string | null;
+}): CoachRatingBundle {
+  const payload = (row.metrics ?? {}) as StoredCoachRatingPayload;
+  const coachRating = payload.coachRating ?? null;
+  const intelligence = payload.intelligence ?? [];
+  const metrics = payload.metrics ?? [];
+  return {
+    overallRating: row.overallRating,
+    previousOverallRating: payload.previousOverallRating ?? null,
+    overallRatingChange: payload.overallRatingChange ?? null,
+    coachRatingDetail: coachRating,
+    powerIndex: row.powerIndex,
+    previousPowerIndex: payload.previousPowerIndex ?? null,
+    powerIndexChange: payload.powerIndexChange ?? null,
+    powerIndexDetail: payload.powerIndex ?? null,
+    powerIndexMismatches: payload.powerIndexMismatches ?? [],
+    worldRank: row.worldRank,
+    previousWorldRank: payload.previousWorldRank ?? null,
+    worldRankChange: payload.worldRankChange ?? null,
+    rankedOutOf: null,
+    competitionRank: payload.competitionRank ?? null,
+    competitionRankedOutOf: payload.competitionRankedOutOf ?? null,
+    competitionRankLabel: payload.competitionRankLabel ?? null,
+    competitionRankSub: payload.competitionRankSub ?? null,
+    momentum: row.momentum,
+    metrics,
+    intelligence,
+    intelligenceModelVersion: payload.intelligenceModelVersion ?? "",
+    powerContributions: payload.contributions ?? [],
+    modelVersion: row.modelVersion ?? "",
+    powerIndexVersion: row.powerIndexVersion ?? "",
+    dataConfidence: asDataConfidence(row.dataConfidence),
+    ratingConfidencePct: payload.ratingConfidencePct ?? 0,
+    ratingConfidenceInputs: payload.ratingConfidenceInputs ?? {
+      matchCoverage: 0,
+      teamStatCoverage: 0,
+      playerRatingCoverage: 0,
+      historicalRankingCoverage: 0,
+    },
+    matchCount: coachRating?.matchesUsed ?? 0,
+    provisional: coachRating ? !coachRating.eligibleForWorldRank : true,
+  };
+}
+
+/** Public pages must not recalc the full rating engine on every request (Netlify timeout). */
+export async function readLatestCoachRatingBundle(
+  coachId: string,
+): Promise<CoachRatingBundle | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      overallRating: coachRatingSnapshots.overallRating,
+      powerIndex: coachRatingSnapshots.powerIndex,
+      worldRank: coachRatingSnapshots.worldRank,
+      momentum: coachRatingSnapshots.momentum,
+      metrics: coachRatingSnapshots.metrics,
+      modelVersion: coachRatingSnapshots.modelVersion,
+      powerIndexVersion: coachRatingSnapshots.powerIndexVersion,
+      dataConfidence: coachRatingSnapshots.dataConfidence,
+    })
+    .from(coachRatingSnapshots)
+    .where(eq(coachRatingSnapshots.coachId, coachId))
+    .orderBy(desc(coachRatingSnapshots.calculatedAt))
+    .limit(1);
+  if (!row) return null;
+  return coachRatingBundleFromSnapshot(row);
+}
+
 export async function calculateCoachRatingBundle(
   coachId: string,
   options: { asOfDate?: Date | null } = {},
@@ -754,15 +983,27 @@ export async function listCoachWorldRankings(limit = 5): Promise<
   }>
 > {
   const rows = await listLatestEligibleCoachSnapshots();
-  return rows
+  const eligible = rows
     .filter(isEligibleForWorldRank)
     .sort((a, b) => {
       const diff = (b.overallRating ?? 0) - (a.overallRating ?? 0);
       if (diff !== 0) return diff;
       return a.coachId.localeCompare(b.coachId);
-    })
-    .slice(0, limit)
-    .map((s, i) => toLeaderboardRow(s, i + 1));
+    });
+  const previousRanks = previousCoachRanksByRating(
+    eligible.map((row) => ({
+      coachId: row.coachId,
+      rating: row.previousOverallRating ?? row.overallRating!,
+    })),
+  );
+  return eligible.slice(0, limit).map((s, i) => {
+    const rank = i + 1;
+    // Prefer a reconstructed board from stored previous ratings, then a stored
+    // previous worldRank. If we have no earlier snapshot, WAS = current rank
+    // (no invented place-jumps).
+    const previousRank = previousRanks.get(s.coachId) ?? s.previousWorldRank ?? rank;
+    return toLeaderboardRow(s, rank, previousRank);
+  });
 }
 
 /**
@@ -821,7 +1062,7 @@ export async function listCoachPowerIndexRankings(limit = 100): Promise<
       name: s.name,
       slug: s.slug,
       nationality: s.nationality,
-      currentTeamName: s.currentTeamName,
+      currentTeamName: displayCoachTeamName(s.currentTeamName),
       imageUrl: s.imageUrl,
       powerIndex: Math.round(s.powerIndex!),
       powerIndexChange:
@@ -853,7 +1094,16 @@ type SnapshotRow = {
   imageUrl: string | null;
   currentTeamName: string | null;
   previousWorldRank: number | null;
+  previousOverallRating: number | null;
 };
+
+/** Rank coaches by a previous rating snapshot so Move uses stored scores, not a blank cell. */
+export function previousCoachRanksByRating(
+  previousRatings: Array<{ coachId: string; rating: number }>,
+): Map<string, number> {
+  const sorted = [...previousRatings].sort((a, b) => b.rating - a.rating || a.coachId.localeCompare(b.coachId));
+  return new Map(sorted.map((row, index) => [row.coachId, index + 1]));
+}
 
 async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
   const db = getDb();
@@ -873,8 +1123,7 @@ async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
     })
     .from(coachRatingSnapshots)
     .innerJoin(coaches, eq(coachRatingSnapshots.coachId, coaches.id))
-    .orderBy(desc(coachRatingSnapshots.calculatedAt))
-    .limit(800);
+    .orderBy(desc(coachRatingSnapshots.calculatedAt));
 
   const best = new Map<string, (typeof snaps)[number]>();
   const previousByCoach = new Map<string, (typeof snaps)[number]>();
@@ -907,9 +1156,11 @@ async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
     return 0;
   });
   for (const r of preferred) {
-    if (!teamByCoach.has(r.coachId)) {
-      teamByCoach.set(r.coachId, r.teamDisplayName || r.teamName);
-    }
+    const label = displayCoachTeamName(r.teamDisplayName || r.teamName);
+    if (label && !teamByCoach.has(r.coachId)) teamByCoach.set(r.coachId, label);
+  }
+  for (const r of preferred) {
+    if (!teamByCoach.has(r.coachId)) teamByCoach.set(r.coachId, "");
   }
 
   const coachIds = [...best.keys()];
@@ -945,9 +1196,10 @@ async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
       return {
         ...s,
         imageUrl: s.imageUrl || galleryByCoach.get(s.coachId) || null,
-        currentTeamName: teamByCoach.get(s.coachId) ?? null,
+        currentTeamName: displayCoachTeamName(teamByCoach.get(s.coachId) ?? null),
         previousWorldRank:
           prevSnap?.worldRank != null && prevSnap.worldRank > 0 ? prevSnap.worldRank : null,
+        previousOverallRating: prevSnap?.overallRating ?? null,
       };
     });
 }
@@ -955,11 +1207,135 @@ async function listLatestEligibleCoachSnapshots(): Promise<SnapshotRow[]> {
 function isEligibleForWorldRank(s: SnapshotRow): boolean {
   if (s.overallRating == null) return false;
   const payload = s.metrics as { coachRating?: CoachRatingResult } | null;
-  if (payload?.coachRating) return Boolean(payload.coachRating.eligibleForWorldRank);
-  return false;
+  const cr = payload?.coachRating;
+  if (cr?.eligibleForWorldRank) return true;
+  if ((cr?.matchesUsed ?? 0) >= WORLD_RANK_MIN_MATCHES) return true;
+  return !cr;
 }
 
-function toLeaderboardRow(s: SnapshotRow, rank: number) {
+export async function applyPublicCoachMetricWorldRanks(
+  coachId: string,
+  intelligence: CoachIntelligenceMetric[],
+): Promise<CoachIntelligenceMetric[]> {
+  if (intelligence.length === 0) return intelligence;
+  const snaps = await listLatestEligibleCoachSnapshots();
+  const peers = snaps.map((s) => {
+    const payload = s.metrics as { intelligence?: Array<{ key: string; score: number | null; confidence?: number; sampleSize?: number }> } | null;
+    return {
+      coachId: s.coachId,
+      metrics: payload?.intelligence ?? [],
+    };
+  });
+  return applyMetricWorldRanks(intelligence, peers, coachId);
+}
+
+/**
+ * Persist a rating snapshot from eligible matches (no peer scan, no Wikipedia).
+ * Safe for scripts and public backfill — does not call calculateCoachRatingBundle.
+ */
+export async function persistLiteCoachRatingSnapshot(
+  coachId: string,
+  options: { skipHistory?: boolean; skipIntelligence?: boolean; bundle?: CoachRatingBundle } = {},
+): Promise<CoachRatingBundle> {
+  const matches = await loadCoachEligibleMatches(coachId, { primaryOnly: true });
+  let bundle = options.bundle ?? buildCoachRatingBundleFromMatches(matches);
+  const sparseMissing = ["set_piece", "breakdown", "kicking", "discipline", "selection"].some(
+    (key) => bundle.intelligence.find((m) => m.key === key)?.score == null,
+  );
+  if (!options.skipIntelligence && sparseMissing && matches.length >= 5) {
+    try {
+      const intel = await calculateCoachIntelligence(coachId);
+      if (intel.metrics.some((m) => m.score != null)) {
+        const power = computeCoachPowerIndex(intel.metrics);
+        bundle = {
+          ...bundle,
+          intelligence: intel.metrics,
+          intelligenceModelVersion: intel.modelVersion,
+          metrics: intelligenceToLegacyMetrics(intel.metrics),
+          powerIndex: power.score,
+          powerIndexDetail: power,
+          powerContributions: power.contributions.map((c) => ({
+            key: c.key,
+            weight: c.weight,
+            score: c.score,
+            contribution: c.contribution,
+          })),
+        };
+      }
+    } catch {
+      // Keep the lite bundle if full intelligence inputs are missing.
+    }
+  }
+
+  const db = getDb();
+  await db.insert(coachRatingSnapshots).values({
+    coachId,
+    fixtureId: null,
+    overallRating: bundle.overallRating,
+    powerIndex: bundle.powerIndex,
+    worldRank: bundle.worldRank,
+    momentum: bundle.momentum,
+    metrics: {
+      metrics: bundle.metrics,
+      intelligence: bundle.intelligence,
+      intelligenceModelVersion: bundle.intelligenceModelVersion,
+      contributions: bundle.powerContributions,
+      powerIndex: bundle.powerIndexDetail,
+      previousPowerIndex: bundle.previousPowerIndex,
+      powerIndexChange: bundle.powerIndexChange,
+      powerIndexMismatches: bundle.powerIndexMismatches,
+      coachRating: bundle.coachRatingDetail,
+      previousOverallRating: bundle.previousOverallRating,
+      overallRatingChange: bundle.overallRatingChange,
+      previousWorldRank: bundle.previousWorldRank,
+      worldRankChange: bundle.worldRankChange,
+      competitionRank: bundle.competitionRank,
+      competitionRankedOutOf: bundle.competitionRankedOutOf,
+      competitionRankLabel: bundle.competitionRankLabel,
+      competitionRankSub: bundle.competitionRankSub,
+      ratingConfidencePct: bundle.ratingConfidencePct,
+      ratingConfidenceInputs: bundle.ratingConfidenceInputs,
+      snapshotType: "recalculated",
+    },
+    modelVersion: bundle.modelVersion,
+    powerIndexVersion: bundle.powerIndexVersion,
+    dataConfidence: bundle.dataConfidence,
+  });
+
+  if (options.skipHistory !== true && bundle.overallRating != null) {
+    await db.insert(coachRatingHistory).values({
+      coachId,
+      fixtureId: null,
+      snapshotType: "recalculated",
+      rating: bundle.overallRating,
+      previousRating: null,
+      change: null,
+      worldRank: bundle.worldRank,
+      matchDate: new Date(),
+      powerIndex: bundle.powerIndex,
+      confidence: bundle.ratingConfidencePct,
+      coverage: bundle.matchCount,
+      dataConfidence: bundle.dataConfidence,
+      modelVersion: bundle.modelVersion,
+      powerIndexVersion: bundle.powerIndexVersion,
+      intelligenceModelVersion: bundle.intelligenceModelVersion,
+      contributions: bundle.coachRatingDetail?.contributions ?? [],
+      intelligence: bundle.intelligence.map((m) => ({
+        key: m.key,
+        label: m.label,
+        score: m.score,
+        confidence: m.confidence,
+        dataCoverage: m.dataCoverage,
+      })),
+      metrics: { coachRating: bundle.coachRatingDetail },
+      calculatedAt: new Date(),
+    });
+  }
+
+  return bundle;
+}
+
+function toLeaderboardRow(s: SnapshotRow, rank: number, previousRankOverride?: number | null) {
   const payload = s.metrics as {
     coachRating?: CoachRatingResult;
     powerIndex?: CoachPowerIndexResult;
@@ -976,7 +1352,7 @@ function toLeaderboardRow(s: SnapshotRow, rank: number) {
     const c = cr?.contributions?.find((x) => x.key === key);
     return c != null ? Math.round(c.score) : null;
   };
-  const previousRank = s.previousWorldRank;
+  const previousRank = previousRankOverride ?? s.previousWorldRank;
   const rankChange = previousRank != null ? previousRank - rank : null;
 
   return {
@@ -985,7 +1361,7 @@ function toLeaderboardRow(s: SnapshotRow, rank: number) {
     name: s.name,
     slug: s.slug,
     nationality: s.nationality,
-    currentTeamName: s.currentTeamName,
+    currentTeamName: displayCoachTeamName(s.currentTeamName),
     imageUrl: s.imageUrl,
     rating: s.overallRating!,
     powerIndex: s.powerIndex != null ? Math.round(s.powerIndex) : null,

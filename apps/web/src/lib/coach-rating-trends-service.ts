@@ -6,8 +6,9 @@
 import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { coachRatingHistory, teamCoachingStaff } from "@rugby365/db";
 import { getDb } from "./db";
-import { loadCoachEligibleMatches } from "./coach-career-record-service";
+import { loadCoachEligibleMatches, type CoachEligibleMatch } from "./coach-career-record-service";
 import {
+  buildCoachRatingBundleFromMatches,
   detectMajorMatchLabel,
   persistCoachRatingSnapshot,
 } from "./coach-rating-service";
@@ -79,6 +80,67 @@ function computeTrendDirection(
   return { trend: "stable", trendLabel: "STABLE" };
 }
 
+export function synthesizeRatingTrendsFromMatches(
+  coachId: string,
+  matches: CoachEligibleMatch[],
+): CoachRatingTrendPoint[] {
+  const chrono = [...matches]
+    .filter((m) => m.kickoffAt)
+    .sort((a, b) => (a.kickoffAt?.getTime() ?? 0) - (b.kickoffAt?.getTime() ?? 0))
+    .slice(-24);
+  const points: CoachRatingTrendPoint[] = [];
+  let previous: number | null = null;
+  for (let i = 0; i < chrono.length; i += 1) {
+    const window = chrono.slice(0, i + 1);
+    if (window.length < 3) continue;
+    const bundle = buildCoachRatingBundleFromMatches(window);
+    if (bundle.overallRating == null) continue;
+    const match = chrono[i]!;
+    const change =
+      previous != null ? Math.round((bundle.overallRating - previous) * 10) / 10 : null;
+    const powerChange =
+      previous != null && bundle.powerIndex != null
+        ? Math.round((bundle.powerIndex - (points[points.length - 1]?.powerIndex ?? bundle.powerIndex)) * 10) / 10
+        : null;
+    points.push({
+      id: `lite-${match.id}`,
+      coachId,
+      fixtureId: match.id,
+      snapshotType: "backfilled",
+      matchDate: match.kickoffAt?.toISOString() ?? null,
+      rating: bundle.overallRating,
+      previousRating: previous,
+      change,
+      powerIndex: bundle.powerIndex,
+      powerIndexChange: powerChange,
+      result: match.result,
+      scoreFor: match.forScore,
+      scoreAgainst: match.againstScore,
+      teamId: match.teamId,
+      teamName: match.teamName,
+      opponentId: match.opponentTeamId ?? null,
+      opponentName: match.opponentName,
+      competitionName: match.competitionName,
+      fixtureSlug: match.slug,
+      homeAwayNeutral: match.side,
+      majorMatchLabel: detectMajorMatchLabel(match.competitionName),
+      confidence: bundle.ratingConfidencePct,
+      coverage: bundle.matchCount,
+      dataConfidence: bundle.dataConfidence,
+      modelVersion: bundle.modelVersion,
+      contributions: bundle.coachRatingDetail?.contributions ?? [],
+      intelligence: bundle.intelligence.map((m) => ({
+        key: m.key,
+        label: m.label,
+        score: m.score,
+        confidence: m.confidence,
+      })),
+    });
+    previous = bundle.overallRating;
+  }
+  return points;
+}
+
 export async function listMatchLinkedRatingHistory(
   coachId: string,
 ): Promise<CoachRatingTrendPoint[]> {
@@ -102,6 +164,22 @@ export async function getCoachRatingTrends(
   filter: CoachTrendFilter = "last_24",
 ): Promise<CoachRatingTrendsBundle> {
   let points = await listMatchLinkedRatingHistory(coachId);
+  if (points.length < 2) {
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(coachRatingHistory)
+      .where(eq(coachRatingHistory.coachId, coachId))
+      .orderBy(asc(coachRatingHistory.calculatedAt));
+    if (rows.length > points.length) points = rows.map(mapRow);
+  }
+
+  const distinctRatings = new Set(points.map((p) => p.rating));
+  if (points.length < 2 || distinctRatings.size < 2) {
+    const matches = await loadCoachEligibleMatches(coachId, { primaryOnly: true });
+    const synthesized = synthesizeRatingTrendsFromMatches(coachId, matches);
+    if (synthesized.length >= 2) points = synthesized;
+  }
 
   const now = Date.now();
   if (filter === "months_12") {

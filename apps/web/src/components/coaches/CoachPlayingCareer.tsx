@@ -38,8 +38,16 @@ function isSuperRugby(s: PlayingStint): boolean {
   );
 }
 
+function isRugbyLeagueInternational(s: PlayingStint): boolean {
+  return /great britain|england rugby league|\brl\b|rugby league/i.test(teamLabel(s));
+}
+
 function isInternational(s: PlayingStint): boolean {
-  return s.teamType === "international" || s.careerType === "international_player";
+  if (isRugbyLeagueInternational(s)) return true;
+  if (s.teamType === "international" || s.careerType === "international_player") return true;
+  return /^(england|ireland|wales|scotland|france|italy|argentina|australia|new zealand|south africa|great britain|british\s*&\s*irish lions|lions)\b/i.test(
+    teamLabel(s),
+  );
 }
 
 function filterRows(stints: PlayingStint[], tab: CareerTab): PlayingStint[] {
@@ -50,27 +58,35 @@ function filterRows(stints: PlayingStint[], tab: CareerTab): PlayingStint[] {
   return table.filter((s) => !isInternational(s));
 }
 
+function emptyCopy(tab: CareerTab): string {
+  if (tab === "super_rugby") return "Did not play Super Rugby.";
+  if (tab === "international") return "No verified international playing career yet.";
+  return "No verified playing career data yet.";
+}
+
 export function CoachPlayingCareer({ profile }: { profile: PublicCoachProfile }) {
   const [tab, setTab] = useState<CareerTab>("provincial");
 
   const rows = useMemo(
-    () => filterRows(profile.playingStints, tab),
+    () => filterRows(profile.playingStints ?? [], tab),
     [profile.playingStints, tab],
   );
 
   const intl = useMemo(
-    () => profile.playingStints.filter((s) => isTableRow(s) && isInternational(s)),
+    () => (profile.playingStints ?? []).filter((s) => isTableRow(s) && isInternational(s)),
     [profile.playingStints],
   );
 
-  const intlPrimary = intl[0] ?? null;
-  const caps = intl.reduce((s, r) => s + (r.apps ?? 0), 0);
-  const points = intl.reduce((s, r) => s + (r.points ?? 0), 0);
-  const debut = intl
+  const unionIntl = intl.filter((s) => !isRugbyLeagueInternational(s));
+  const intlPrimary = unionIntl[0] ?? intl[0] ?? null;
+  const capSource = unionIntl.length > 0 ? unionIntl : intl;
+  const caps = capSource.reduce((s, r) => s + (r.apps ?? 0), 0);
+  const points = capSource.reduce((s, r) => s + (r.points ?? 0), 0);
+  const debut = capSource
     .map((r) => r.startYear)
     .filter((y): y is number => y != null)
     .sort((a, b) => a - b)[0];
-  const finalY = intl
+  const finalY = capSource
     .map((r) => r.endYear ?? r.startYear)
     .filter((y): y is number => y != null)
     .sort((a, b) => b - a)[0];
@@ -103,7 +119,7 @@ export function CoachPlayingCareer({ profile }: { profile: PublicCoachProfile })
       </div>
 
       {rows.length === 0 ? (
-        <p className="pr-coach-empty">No verified playing career data yet.</p>
+        <p className="pr-coach-empty">{emptyCopy(tab)}</p>
       ) : (
         <table className="pr-coach-table pr-coach-table--playing">
           <colgroup>
@@ -161,7 +177,13 @@ export function CoachPlayingCareer({ profile }: { profile: PublicCoachProfile })
               <img src={shieldUrl} alt={`${nationLabel} crest`} width={76} height={76} />
             ) : (
               <div className="pr-coach-intl__shield-fallback" aria-hidden>
-                SA
+                {nationLabel
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join("")
+                  .toUpperCase() || "—"}
               </div>
             )}
           </div>

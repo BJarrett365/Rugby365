@@ -31,6 +31,7 @@ export type NextMatchResolutionSource =
   | "confirmed_squad"
   | "current_club"
   | "international_window"
+  | "last_appearance"
   | "none";
 
 export type NextMatchResolution = {

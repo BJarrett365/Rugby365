@@ -673,7 +673,11 @@ const sdmsEnrichInflight = new Set<string>();
  */
 export async function ensureMissingFixturePlayerMatchRatings(
   fixtureId: string,
-  options: { matchId?: string | null; allowSdmsEnrich?: boolean } = {},
+  options: {
+    matchId?: string | null;
+    allowSdmsEnrich?: boolean;
+    onlyPlayerId?: string;
+  } = {},
 ): Promise<{
   enriched: boolean;
   calculated: number;
@@ -757,7 +761,9 @@ export async function ensureMissingFixturePlayerMatchRatings(
   }
 
   try {
-    const result = await calculateAndPersistFixtureMatchRatings(fixtureId);
+    const result = await calculateAndPersistFixtureMatchRatings(fixtureId, {
+      onlyPlayerId: options.onlyPlayerId,
+    });
     return { enriched, calculated: result.calculated, triggered: true, needsSdmsEnrich };
   } catch {
     return { enriched, calculated: 0, triggered: enriched, needsSdmsEnrich };
@@ -814,7 +820,10 @@ export async function ensureMissingFixturePlayerCareerRatings(
   return { calculated, triggered: true };
 }
 
-export async function calculateAndPersistFixtureMatchRatings(fixtureId: string): Promise<{
+export async function calculateAndPersistFixtureMatchRatings(
+  fixtureId: string,
+  options?: { onlyPlayerId?: string },
+): Promise<{
   calculated: number;
   potmPlayerId: string | null;
   coachesCalculated?: number;
@@ -857,7 +866,9 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
       bestPerfByPlayer.set(row.playerId, row);
     }
   }
-  const perfRows = [...bestPerfByPlayer.values()];
+  const perfRows = [...bestPerfByPlayer.values()].filter(
+    (row) => !options?.onlyPlayerId || row.playerId === options.onlyPlayerId,
+  );
 
   const squadRows = await db
     .select()
@@ -998,66 +1009,70 @@ export async function calculateAndPersistFixtureMatchRatings(fixtureId: string):
     calculated += 1;
   }
 
-  await db
-    .update(playerMatchRatings)
-    .set({ isRugby365Potm: false, updatedAt: new Date() })
-    .where(eq(playerMatchRatings.fixtureId, fixtureId));
-
   let potmPlayerId: string | null = null;
-  if (best) {
-    potmPlayerId = best.playerId;
-    await db
-      .update(playerMatchRatings)
-      .set({ isRugby365Potm: true, updatedAt: new Date() })
-      .where(
-        and(
-          eq(playerMatchRatings.fixtureId, fixtureId),
-          eq(playerMatchRatings.playerId, best.playerId),
-        ),
-      );
-    await db
-      .update(fixtures)
-      .set({ rugby365PotmPlayerId: best.playerId })
-      .where(eq(fixtures.id, fixtureId));
-  }
-
-  // Coach + referee match ratings (same publish gate).
   let coachesCalculated = 0;
   let refereeCalculated = 0;
-  try {
-    const { calculateAndPersistFixtureStaffMatchRatings } = await import(
-      "./staff-match-rating-service"
-    );
-    const staff = await calculateAndPersistFixtureStaffMatchRatings(fixtureId);
-    coachesCalculated = staff.coachesCalculated;
-    refereeCalculated = staff.refereeCalculated;
-  } catch {
-    // Staff ratings are best-effort alongside player ratings.
+
+  // Single-player hydrate must not rewrite fixture POTM, staff ratings, or DNP rows.
+  if (!options?.onlyPlayerId) {
+    await db
+      .update(playerMatchRatings)
+      .set({ isRugby365Potm: false, updatedAt: new Date() })
+      .where(eq(playerMatchRatings.fixtureId, fixtureId));
+
+    if (best) {
+      potmPlayerId = best.playerId;
+      await db
+        .update(playerMatchRatings)
+        .set({ isRugby365Potm: true, updatedAt: new Date() })
+        .where(
+          and(
+            eq(playerMatchRatings.fixtureId, fixtureId),
+            eq(playerMatchRatings.playerId, best.playerId),
+          ),
+        );
+      await db
+        .update(fixtures)
+        .set({ rugby365PotmPlayerId: best.playerId })
+        .where(eq(fixtures.id, fixtureId));
+    }
+
+    try {
+      const { calculateAndPersistFixtureStaffMatchRatings } = await import(
+        "./staff-match-rating-service"
+      );
+      const staff = await calculateAndPersistFixtureStaffMatchRatings(fixtureId);
+      coachesCalculated = staff.coachesCalculated;
+      refereeCalculated = staff.refereeCalculated;
+    } catch {
+      // Staff ratings are best-effort alongside player ratings.
+    }
+
+    try {
+      await persistFixtureDidNotPlayRecords({
+        fixtureId,
+        fixture,
+        squadRows,
+        ratedPlayerIds: new Set(perfRows.map((p) => p.playerId)),
+      });
+    } catch {
+      // DNP ledger is best-effort; never block match ratings.
+    }
   }
 
-  // Record DNPs: unused bench + season members not selected for this fixture.
-  try {
-    await persistFixtureDidNotPlayRecords({
-      fixtureId,
-      fixture,
-      squadRows,
-      ratedPlayerIds: new Set(perfRows.map((p) => p.playerId)),
-    });
-  } catch {
-    // DNP ledger is best-effort; never block match ratings.
-  }
-
-  try {
-    const { cascadeFixtureDataChange } = await import("./data-change-event-service");
-    await cascadeFixtureDataChange({
-      fixtureId,
-      eventType: "PLAYER_RATINGS_UPDATED",
-      source: "rugby365",
-      importMethod: "SYSTEM",
-      processNow: false,
-    });
-  } catch {
-    // Stale marking is best-effort.
+  if (!options?.onlyPlayerId) {
+    try {
+      const { cascadeFixtureDataChange } = await import("./data-change-event-service");
+      await cascadeFixtureDataChange({
+        fixtureId,
+        eventType: "PLAYER_RATINGS_UPDATED",
+        source: "rugby365",
+        importMethod: "SYSTEM",
+        processNow: false,
+      });
+    } catch {
+      // Stale marking is best-effort.
+    }
   }
 
   return { calculated, potmPlayerId, coachesCalculated, refereeCalculated };

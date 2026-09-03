@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export default async function WorldCoachRankingsPage() {
   let rankings: Awaited<ReturnType<typeof listCoachWorldRankings>> = [];
   try {
-    rankings = await listCoachWorldRankings(10);
+    rankings = await listCoachWorldRankings(15);
   } catch (err) {
     console.error("[rankings/coaches] failed to load rankings", err);
   }

@@ -180,13 +180,41 @@ const TEAM_HEAD_COACH_DEFAULTS: Record<
   canada: { name: "Kingsley Jones", nationality: "Wales" },
   uruguay: { name: "Esteban Meneses", nationality: "Uruguay" },
   chile: { name: "Pablo Lemoine", nationality: "Uruguay" },
-  "new-zealand": { name: "Scott Robertson", nationality: "New Zealand" },
-  australia: { name: "Joe Schmidt", nationality: "New Zealand" },
-  england: { name: "Steve Borthwick", nationality: "England" },
-  ireland: { name: "Andy Farrell", nationality: "Ireland" },
-  wales: { name: "Steve Tandy", nationality: "Wales" },
-  scotland: { name: "Gregor Townsend", nationality: "Scotland" },
-  france: { name: "Fabien Galthié", nationality: "France" },
+  "new-zealand": {
+    name: "Scott Robertson",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Scott_Robertson_(rugby_union)",
+    nationality: "New Zealand",
+  },
+  australia: {
+    name: "Joe Schmidt",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Joe_Schmidt_(rugby_union)",
+    nationality: "New Zealand",
+  },
+  england: {
+    name: "Steve Borthwick",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Steve_Borthwick",
+    nationality: "England",
+  },
+  ireland: {
+    name: "Andy Farrell",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Andy_Farrell",
+    nationality: "Ireland",
+  },
+  wales: {
+    name: "Steve Tandy",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Steve_Tandy",
+    nationality: "Wales",
+  },
+  scotland: {
+    name: "Gregor Townsend",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Gregor_Townsend",
+    nationality: "Scotland",
+  },
+  france: {
+    name: "Fabien Galthié",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Fabien_Galthi%C3%A9",
+    nationality: "France",
+  },
 
   // Top 14
   "stade-toulousain": { name: "Ugo Mola", nationality: "France" },

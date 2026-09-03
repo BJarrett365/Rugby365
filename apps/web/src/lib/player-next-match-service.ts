@@ -39,6 +39,8 @@ export type PlayerNextMatchCard = {
   isLive: boolean;
   source: NextMatchResolutionSource;
   reason: string;
+  /** True when this card is the most recent completed appearance (no upcoming fixture). */
+  isPast?: boolean;
 };
 
 /** Internal Match Centre path from a Planet Rugby `/matches/...` URL only. */
@@ -323,6 +325,43 @@ function toCard(resolution: NextMatchResolution): PlayerNextMatchCard | null {
     isLive: resolution.isLive,
     source: resolution.source,
     reason: resolution.reason,
+    isPast: false,
+  };
+}
+
+/** Most recent completed appearance — used when no upcoming fixture is scheduled. */
+export async function getPlayerLastMatchCard(playerId: string): Promise<PlayerNextMatchCard | null> {
+  const { getPlayerRecentMatches } = await import("./player-recent-matches-service");
+  const recent = await getPlayerRecentMatches(playerId, { limit: 1 });
+  const row = recent[0];
+  if (!row) return null;
+  const [fx] = await loadFixturesByIds([row.id]);
+  const homeCrest =
+    (fx?.homeTeamId ? await resolveTeamCrestImageUrl(fx.homeTeamId) : null) ??
+    fx?.homeCrest ??
+    row.homeCrestUrl ??
+    null;
+  const awayCrest =
+    (fx?.awayTeamId ? await resolveTeamCrestImageUrl(fx.awayTeamId) : null) ??
+    fx?.awayCrest ??
+    row.awayCrestUrl ??
+    null;
+  return {
+    id: row.id,
+    slug: fx?.slug ?? row.id,
+    href: row.href,
+    kickoffAt: row.kickoffAt,
+    competitionName: row.competitionName,
+    homeTeamName: row.homeTeamName,
+    awayTeamName: row.awayTeamName,
+    homeTeamCrestUrl: homeCrest,
+    awayTeamCrestUrl: awayCrest,
+    venueName: fx?.venueName ?? null,
+    status: fx?.status ?? "completed",
+    isLive: false,
+    source: "last_appearance",
+    reason: "No upcoming fixture; showing last appearance",
+    isPast: true,
   };
 }
 

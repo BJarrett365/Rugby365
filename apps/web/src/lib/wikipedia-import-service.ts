@@ -6,6 +6,7 @@ import {
   parseNationalityFromBirthPlace,
   parseWikipediaArchive,
   prioritizePlayerArticleTitles,
+  rugbyUnionPlayerTitle,
   teamCodeFromName,
   type WikipediaArchiveData,
   type WikipediaEntityType,
@@ -70,6 +71,11 @@ function namesLikelyMatch(playerName: string, archiveName: string): boolean {
   const aFirst = aParts[0];
   const bFirst = bParts[0];
   return Boolean(aLast && bLast && aLast === bLast && aFirst && bFirst && aFirst[0] === bFirst[0]);
+}
+
+function isPlaceholderPlayerPosition(position: string | null | undefined): boolean {
+  const p = (position ?? "").trim().toLowerCase();
+  return !p || /^(reserve|unknown|player|tba|tbc|n\/a|unlisted)$/.test(p);
 }
 
 function nationalityFromPlayerArchive(archive: WikipediaPlayerArchive): string | null {
@@ -228,7 +234,19 @@ async function applyWikipediaPlayerArchive(
 
   const archiveNationality = nationalityFromPlayerArchive(archive);
   const existingCountry = isPlaceholderNationLabel(player.countryName) ? null : player.countryName;
+  const existingPosition = isPlaceholderPlayerPosition(player.positionName)
+    ? null
+    : player.positionName;
   const hasIntlCaps = (archive.internationalCareer?.length ?? 0) > 0;
+  const countryFromArchive =
+    archiveNationality &&
+    !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
+      ? archiveNationality
+      : null;
+  const resolvedCountry =
+    hasIntlCaps && countryFromArchive
+      ? countryFromArchive
+      : existingCountry ?? countryFromArchive;
   let internationalTeamId = player.internationalTeamId;
   if (hasIntlCaps && archiveNationality && !player.internationalTeamId) {
     internationalTeamId = await resolveInternationalTeamId(archiveNationality);
@@ -249,17 +267,12 @@ async function applyWikipediaPlayerArchive(
       wikipediaUrl: player.wikipediaUrl ?? archive.wikipediaUrl,
       wikidataId: player.wikidataId ?? archive.wikidataId ?? null,
       archiveSyncedAt: new Date(),
-      positionName: player.positionName ?? positionName ?? null,
+      positionName: existingPosition ?? positionName ?? null,
       clubName: player.clubName && !/^unknown team\b/i.test(player.clubName)
         ? player.clubName
         : inferredCurrentClub ?? player.clubName ?? null,
       clubTeamId,
-      countryName:
-        existingCountry ??
-        (archiveNationality &&
-        !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
-          ? archiveNationality
-          : null),
+      countryName: resolvedCountry,
       internationalTeamId,
     };
 
@@ -344,15 +357,9 @@ async function applyWikipediaPlayerArchive(
 
     if (!player.wikipediaUrl && archive.wikipediaUrl) fieldsUpdated.push("wikipediaUrl");
     if (!player.wikidataId && archive.wikidataId) fieldsUpdated.push("wikidataId");
-    if (!player.positionName && positionName) fieldsUpdated.push("positionName");
+    if (!existingPosition && positionName) fieldsUpdated.push("positionName");
     if (!player.clubName && archive.currentTeam) fieldsUpdated.push("clubName");
-    if (
-      !existingCountry &&
-      archiveNationality &&
-      !countryNameLooksLikeClubTeam(archiveNationality, player.clubName ?? archive.currentTeam)
-    ) {
-      fieldsUpdated.push("countryName");
-    }
+    if (resolvedCountry && resolvedCountry !== player.countryName) fieldsUpdated.push("countryName");
   } else {
     patch = {
       name: archive.name,
@@ -388,12 +395,12 @@ async function applyWikipediaPlayerArchive(
     );
   }
 
-  const resolvedCountry =
+  const patchedCountry =
     typeof patch.countryName === "string" && patch.countryName.trim()
       ? patch.countryName.trim()
       : null;
   if (isPlaceholderNationCode(player.nationCode) || !player.nationCode?.trim()) {
-    const nextCode = resolvedCountry ? teamCodeFromName(resolvedCountry) : null;
+    const nextCode = patchedCountry ? teamCodeFromName(patchedCountry) : null;
     if (nextCode !== (player.nationCode ?? null)) {
       patch.nationCode = nextCode;
       fieldsUpdated.push("nationCode");
@@ -414,7 +421,7 @@ async function applyWikipediaPlayerArchive(
       (archive.internationalCareer?.length ?? 0);
     if (careerCount > 0) fieldsUpdated.push(`career:${careerCount}`);
   }
-  if ((archive.honours?.length ?? 0) > 0 && !fillMissingOnly) {
+  if ((archive.honours?.length ?? 0) > 0) {
     const { importWikipediaPlayerHonours } = await import("./player-wikipedia-honours-import");
     const honoursResult = await importWikipediaPlayerHonours(updated.id, archive);
     if (honoursResult.upserted > 0) fieldsUpdated.push(`honours:${honoursResult.upserted}`);
@@ -478,65 +485,79 @@ export async function enrichPlayerFromWikipedia(
   if (player.wikipediaUrl?.trim() && !candidates.includes(player.wikipediaUrl.trim())) {
     candidates.push(player.wikipediaUrl.trim());
   }
-  // When an editor pasted a specific article URL, only try that page (identity check).
   if (!explicitSource) {
-    candidates.push(
-      ...prioritizePlayerArticleTitles(
-        await findWikipediaPlayerArticleTitles(name, await resolveWikipediaRequestOptions()),
-        name,
-      ).filter((title) => !candidates.includes(title)),
-    );
+    for (const title of [name, rugbyUnionPlayerTitle(name)]) {
+      if (!candidates.includes(title)) candidates.push(title);
+    }
   }
 
   let nameMismatchUrl: string | undefined;
   let nameMismatchArchiveName: string | undefined;
 
-  for (const title of candidates) {
-    try {
-      const parsedRaw = await parseWikipediaArchive({
-        articleTitleOrUrl: title,
-        entityType: "player",
-        accessToken,
-      });
+  const tryTitles = async (titles: string[]): Promise<PlayerArchiveEnrichResult | null> => {
+    for (const title of titles) {
+      try {
+        const parsedRaw = await parseWikipediaArchive({
+          articleTitleOrUrl: title,
+          entityType: "player",
+          accessToken,
+        });
 
-      if (parsedRaw.entityType !== "player") continue;
-      if (!namesLikelyMatch(name, parsedRaw.name)) {
-        if (explicitSource) {
-          nameMismatchUrl = parsedRaw.wikipediaUrl;
-          nameMismatchArchiveName = parsedRaw.name;
+        if (parsedRaw.entityType !== "player") continue;
+        if (!namesLikelyMatch(name, parsedRaw.name)) {
+          if (explicitSource) {
+            nameMismatchUrl = parsedRaw.wikipediaUrl;
+            nameMismatchArchiveName = parsedRaw.name;
+          }
+          continue;
         }
-        continue;
+
+        const parsed = await attachWikidataProfile(parsedRaw);
+        const applied = await applyWikipediaPlayerArchive(playerId, parsed, {
+          mergeLiveFields: true,
+          fillMissingOnly,
+          upsertCareer: options?.upsertCareer ?? !fillMissingOnly,
+        });
+        const careerStints =
+          (parsed.clubCareer?.length ?? 0) +
+          (parsed.cupCareer?.length ?? 0) +
+          (parsed.internationalCareer?.length ?? 0);
+
+        return {
+          enriched: applied.fieldsUpdated.length > 0 || !fillMissingOnly,
+          playerId,
+          wikipediaUrl: parsed.wikipediaUrl,
+          careerStints,
+          fieldsUpdated: applied.fieldsUpdated,
+          reason:
+            applied.fieldsUpdated.length === 0
+              ? "matched_no_new_data"
+              : undefined,
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (/429|rate limit/i.test(msg)) {
+          return { enriched: false, playerId, reason: "rate_limited" };
+        }
+        console.error(`wikipedia parse/apply failed for ${name} (${title}):`, msg);
       }
-
-      const parsed = await attachWikidataProfile(parsedRaw);
-      const applied = await applyWikipediaPlayerArchive(playerId, parsed, {
-        mergeLiveFields: true,
-        fillMissingOnly,
-        upsertCareer: options?.upsertCareer ?? !fillMissingOnly,
-      });
-      const careerStints =
-        (parsed.clubCareer?.length ?? 0) +
-        (parsed.cupCareer?.length ?? 0) +
-        (parsed.internationalCareer?.length ?? 0);
-
-      return {
-        enriched: applied.fieldsUpdated.length > 0 || !fillMissingOnly,
-        playerId,
-        wikipediaUrl: parsed.wikipediaUrl,
-        careerStints,
-        fieldsUpdated: applied.fieldsUpdated,
-        reason:
-          applied.fieldsUpdated.length === 0
-            ? "matched_no_new_data"
-            : undefined,
-      };
-    } catch (error) {
-      console.error(
-        `wikipedia parse/apply failed for ${name} (${title}):`,
-        error instanceof Error ? error.message : error,
-      );
-      continue;
     }
+    return null;
+  };
+
+  const firstHit = await tryTitles(candidates);
+  if (firstHit) return firstHit;
+
+  // Search only after exact titles miss, and only when we do not already have a stored article.
+  if (!explicitSource && !player.wikipediaUrl?.trim()) {
+    const searched = prioritizePlayerArticleTitles(
+      await findWikipediaPlayerArticleTitles(name, await resolveWikipediaRequestOptions()),
+      name,
+    )
+      .filter((title) => !candidates.includes(title))
+      .slice(0, 3);
+    const searchHit = await tryTitles(searched);
+    if (searchHit) return searchHit;
   }
 
   if (nameMismatchUrl) {

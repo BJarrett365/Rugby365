@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type CoachProfileAssetImageProps = {
-  src: string;
+  src: string | null | undefined;
   alt?: string;
   className?: string;
   width?: number;
@@ -22,7 +22,7 @@ export function CoachProfileAssetImage({
 }: CoachProfileAssetImageProps) {
   const [failed, setFailed] = useState(false);
 
-  if (failed || !src.trim()) {
+  if (failed || !src?.trim()) {
     return fallbackClassName ? <span className={fallbackClassName} aria-hidden /> : null;
   }
 

@@ -612,6 +612,29 @@ export async function resolveTeamCrestImageUrl(teamId: string): Promise<string |
   return reference ?? null;
 }
 
+export async function resolveTeamCrestByName(name: string | null | undefined): Promise<string | null> {
+  const trimmed = name?.trim();
+  if (!trimmed) return null;
+  const candidates = [
+    trimmed,
+    trimmed.replace(/\s+national rugby (union|league) team$/i, "").trim(),
+    trimmed.replace(/\s+rfc$/i, "").trim(),
+  ].filter(Boolean);
+  if (/^wigan$/i.test(trimmed)) candidates.push("Wigan Warriors");
+  if (/wigan warriors/i.test(trimmed)) candidates.push("Wigan");
+  if (/great britain/i.test(trimmed)) candidates.push("Great Britain", "British & Irish Lions");
+  const unique = [...new Set(candidates)];
+  const db = getDb();
+  const rows = await db
+    .select({ id: teams.id, name: teams.name, teamType: teams.teamType })
+    .from(teams)
+    .where(inArray(teams.name, unique));
+  if (rows.length === 0) return null;
+  const preferred =
+    rows.find((row) => unique.some((c) => c.toLowerCase() === row.name.toLowerCase())) ?? rows[0];
+  return resolveTeamCrestImageUrl(preferred.id);
+}
+
 function looksLikePersonPhotoUrl(url: string): boolean {
   const u = url.toLowerCase();
   return (

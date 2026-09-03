@@ -14,7 +14,7 @@ const SUB_NAV: SubNavItem[] = [
   { id: "honours", label: "Honours", href: "honours" },
   { id: "history", label: "History", href: "history" },
   { id: "matches", label: "Matches", href: "matches" },
-  { id: "rankings", label: "Rankings", href: "/rankings/coaches" },
+  { id: "rankings", label: "Rankings", href: "rankings" },
 ];
 
 export function CoachPublicSubNav({

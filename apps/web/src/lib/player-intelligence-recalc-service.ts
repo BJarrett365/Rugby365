@@ -44,14 +44,18 @@ async function loadMatchSamples(playerId: string): Promise<FlyHalfMatchSample[]>
     LEFT JOIN player_match_ratings pmr
       ON pmr.fixture_id = fp.fixture_id AND pmr.player_id = fp.player_id
     WHERE fp.player_id = ${playerId}::uuid
-    ORDER BY f.kickoff_at ASC NULLS LAST
+    ORDER BY f.kickoff_at DESC NULLS LAST
+    LIMIT 80
   `);
 
   const list =
     (rows as unknown as { rows?: Record<string, unknown>[] }).rows ??
     (rows as unknown as Record<string, unknown>[]);
 
-  return list.map((r) => {
+  return list
+    .slice()
+    .reverse()
+    .map((r) => {
     const extras = (r.extras ?? {}) as Record<string, number>;
     const home = Number(r.home_score ?? 0);
     const away = Number(r.away_score ?? 0);
@@ -87,7 +91,7 @@ async function loadMatchSamples(playerId: string): Promise<FlyHalfMatchSample[]>
       majorMatchLabel: detectMajorMatchLabel(String(r.competition_name ?? "")),
       isCloseMatch: margin > 0 && margin <= 7,
     } satisfies FlyHalfMatchSample;
-  });
+    });
 }
 
 export async function recalculatePlayerIntelligenceProfile(playerId: string): Promise<{

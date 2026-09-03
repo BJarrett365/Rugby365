@@ -415,7 +415,7 @@ function CoachesTable({ rows }: { rows: CompetitionCoachRankingRow[] }) {
                   <RankNumber rank={row.rank} provisional={row.provisional} />
                 </td>
                 <td>
-                  <Link href={`/coaches/${row.coachSlug}`} className="pr-rankings__player">
+                  <Link href={`/coaches/${row.coachSlug}`} prefetch={false} className="pr-rankings__player">
                     <RankingsAvatar src={row.coachImageUrl} name={row.coachName} />
                     <span className="pr-rankings__player-name">{row.coachName}</span>
                     <RankingStatusBadge provisional={row.provisional} retired={row.retired} />

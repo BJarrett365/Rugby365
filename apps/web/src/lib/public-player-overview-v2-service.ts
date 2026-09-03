@@ -84,6 +84,7 @@ import {
 } from "./player-comparison-service";
 import {
   getPlayerNextMatch,
+  getPlayerLastMatchCard,
   type PlayerNextMatchCard,
 } from "./player-next-match-service";
 import {
@@ -965,12 +966,14 @@ async function loadPublicPlayerOverviewV2(
   // Same fixture_players spine as Recent Form; unused bench excluded in service.
   const recentMatches = await getPlayerRecentMatches(playerId, { limit: 10 });
 
-  const { card: nextMatch, audit: nextMatchAudit } = await getPlayerNextMatch({
+  const { card: nextMatchRaw, audit: nextMatchAudit } = await getPlayerNextMatch({
     playerId,
     clubTeamId,
     internationalTeamId,
     now,
   });
+  const nextMatch =
+    nextMatchRaw.id ? nextMatchRaw : ((await getPlayerLastMatchCard(playerId)) ?? nextMatchRaw);
   const upcomingMatch: PublicPlayerOverviewUpcoming | null = nextMatch.id
     ? {
         id: nextMatch.id,

@@ -181,6 +181,8 @@ async function upsertAssignment(
     showOnOverview: boolean;
     notes: string;
     eligibleForCareerRecord?: boolean;
+    overviewLabel?: string | null;
+    teamDisplayName?: string | null;
   },
 ) {
   const [existing] = await db
@@ -200,6 +202,9 @@ async function upsertAssignment(
     isPrimaryCoach: row.isPrimaryCoach,
     eligibleForCareerRecord: row.eligibleForCareerRecord ?? true,
     showOnOverview: row.showOnOverview,
+    overviewLabel: row.overviewLabel ?? null,
+    teamDisplayName: row.teamDisplayName ?? null,
+    recordStatus: "verified",
     notes: row.notes,
     sourceUrl: SOURCE,
     confidence: "high",
@@ -234,7 +239,6 @@ async function main() {
   const SA = teamId(bySlug, "south-africa");
   const FREE_STATE = teamId(bySlug, "free-state");
   const FSC = teamId(bySlug, "free-state-cheetahs");
-  const CHEETAHS = teamId(bySlug, "cheetahs-x7jq3161");
   const LIONS = teamId(bySlug, "lions-k76kd1jy");
   const CATS = teamId(bySlug, "cats");
   const STORMERS = teamId(bySlug, "stormers");
@@ -333,45 +337,56 @@ async function main() {
     console.log("playing", p.importKey, r.created ? "created" : "updated");
   }
 
-  // Existing SA coaching rows — keep overlaps; flag for overview
+  // Collapse duplicate “current Springboks HC” rows into the Wikipedia 2024–present stint.
+  const keepCurrentHcId = "503ae3b9-3e8a-4ce8-b06b-b5036d19b436";
   await db
     .update(teamCoachingStaff)
     .set({
+      role: "head_coach",
+      careerType: "coach",
+      startDate: "2024-01-01",
+      endDate: null,
+      isCurrent: true,
+      isPrimaryCoach: true,
       showOnOverview: true,
-      sourceUrl: SOURCE,
-      confidence: "high",
-      verifiedAt: new Date(),
-      importKey: "wikipedia:rassie:sa:dor:2017-2024",
-      notes: "Director of Rugby (Wikipedia 2017–2024). Overlaps 2018–19 Head Coach.",
-      eligibleForCareerRecord: false,
-      updatedAt: new Date(),
-    })
-    .where(eq(teamCoachingStaff.id, "572a333a-61f0-4fff-b75c-df48b5414783"));
-
-  await db
-    .update(teamCoachingStaff)
-    .set({
-      showOnOverview: true,
-      sourceUrl: SOURCE,
-      confidence: "high",
-      verifiedAt: new Date(),
-      importKey: "wikipedia:rassie:sa:hc:2018-2019",
-      notes: "First Springboks head-coach appointment (March 2018–2019). Overlaps DoR.",
-      updatedAt: new Date(),
-    })
-    .where(eq(teamCoachingStaff.id, "2c1f92f7-4b6c-4cc3-b921-4b70f1a552bb"));
-
-  await db
-    .update(teamCoachingStaff)
-    .set({
-      showOnOverview: true,
+      overviewLabel: "Head Coach",
+      recordStatus: "verified",
       sourceUrl: SOURCE,
       confidence: "high",
       verifiedAt: new Date(),
       importKey: "wikipedia:rassie:sa:hc:2024-",
+      notes: "South Africa Head Coach (Wikipedia 2024–present). Second stint; overlaps end of DoR years.",
+      eligibleForCareerRecord: true,
       updatedAt: new Date(),
     })
-    .where(eq(teamCoachingStaff.id, "bc768aca-0b64-4c46-a53a-aeb84f01dc81"));
+    .where(eq(teamCoachingStaff.id, keepCurrentHcId));
+
+  const duplicateCurrent = await db
+    .select({ id: teamCoachingStaff.id, importKey: teamCoachingStaff.importKey })
+    .from(teamCoachingStaff)
+    .where(eq(teamCoachingStaff.coachId, COACH_ID));
+  for (const row of duplicateCurrent) {
+    if (row.id === keepCurrentHcId) continue;
+    if (row.importKey?.startsWith("wikipedia:rassie:")) continue;
+    const isLegacyCurrent =
+      row.importKey === "springboks-current:rassie-erasmus:head-coach" ||
+      row.importKey === "current-coach:south-africa:head_coach:rassie-erasmus" ||
+      row.importKey?.includes(":head_coach:current");
+    if (!isLegacyCurrent) continue;
+    await db
+      .update(teamCoachingStaff)
+      .set({
+        isCurrent: false,
+        isPrimaryCoach: false,
+        showOnOverview: false,
+        recordStatus: "needs_review",
+        verifiedAt: null,
+        notes: "Hidden duplicate of Wikipedia-verified South Africa Head Coach stints.",
+        updatedAt: new Date(),
+      })
+      .where(eq(teamCoachingStaff.id, row.id));
+    console.log("hid duplicate assignment", row.importKey);
+  }
 
   const coaching = [
     {
@@ -384,19 +399,22 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
+      overviewLabel: "Head Coach",
       notes: "Free State Cheetahs — Wikipedia coaching table 2004–2006.",
     },
     {
-      importKey: "wikipedia:rassie:cheetahs:coach:2006-2007",
-      teamId: CHEETAHS,
-      role: "coach",
+      importKey: "wikipedia:rassie:fsc:coach:2006-2007",
+      teamId: FSC,
+      role: "head_coach",
       careerType: "coach",
       startDate: "2006-01-01",
-      endDate: "2007-06-30",
+      endDate: "2007-12-31",
       isCurrent: false,
       isPrimaryCoach: false,
-      showOnOverview: false,
-      notes: "Cheetahs (Super Rugby) — Wikipedia coaching table 2006–2007. Role: Coach.",
+      showOnOverview: true,
+      overviewLabel: "Head Coach",
+      notes:
+        "Free State Cheetahs / Cheetahs Super 14 — Wikipedia 2006–2007 Cheetahs row, shown as Free State Cheetahs Head Coach.",
     },
     {
       importKey: "wikipedia:rassie:sa:tech-adviser:2007",
@@ -408,6 +426,7 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
+      overviewLabel: "Technical Adviser",
       notes: "South Africa (Technical Adviser) — Wikipedia coaching table 2007.",
       eligibleForCareerRecord: false,
     },
@@ -421,8 +440,9 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
+      overviewLabel: "Director of Coaching / Head Coach",
       notes:
-        "Western Province — Wikipedia prose: director of rugby from 2007. Overlaps Stormers 2008–2011.",
+        "Western Province — Wikipedia 2007–2010. Prose: director of rugby from 2007; also head coach. Overlaps Stormers 2008–2011.",
     },
     {
       importKey: "wikipedia:rassie:stormers:coach:2008-2011",
@@ -434,7 +454,8 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
-      notes: "Stormers — Wikipedia prose: head coach from 2008. Overlaps Western Province.",
+      overviewLabel: "Head Coach",
+      notes: "Stormers — Wikipedia coaching table 2008–2011. Overlaps Western Province.",
     },
     {
       importKey: "wikipedia:rassie:sa:tech-specialist:2011",
@@ -446,7 +467,23 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
+      overviewLabel: "Technical Specialist",
       notes: "South Africa (Technical Specialist) — Wikipedia coaching table 2011 / RWC.",
+      eligibleForCareerRecord: false,
+    },
+    {
+      importKey: "wikipedia:rassie:sa:gm-hp:2012-2016",
+      teamId: SA,
+      role: "other",
+      careerType: "management",
+      startDate: "2012-04-01",
+      endDate: "2016-06-30",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      overviewLabel: "General Manager / High Performance",
+      notes:
+        "SARU General Manager: High Performance teams from April 2012 (Wikipedia prose). Not in infobox coaching table; verified from article body.",
       eligibleForCareerRecord: false,
     },
     {
@@ -459,22 +496,64 @@ async function main() {
       isCurrent: false,
       isPrimaryCoach: false,
       showOnOverview: true,
+      overviewLabel: "Director of Rugby / Head Coach",
       notes:
-        "Munster Director of Rugby (Wikipedia + Munster appointment). Also covered HC duties after Anthony Foley’s death — stored role: Director of Rugby.",
+        "Munster Director of Rugby from 1 July 2016. Took on head-coach duties after Anthony Foley’s death.",
       eligibleForCareerRecord: true,
+    },
+    {
+      importKey: "wikipedia:rassie:sa:dor:2017-2024",
+      teamId: SA,
+      role: "director_of_rugby",
+      careerType: "management",
+      startDate: "2017-12-01",
+      endDate: "2024-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      overviewLabel: "Director of Rugby",
+      notes: "Director of Rugby (Wikipedia 2017–2024). Overlaps 2018–19 and 2024 Head Coach stints.",
+      eligibleForCareerRecord: false,
+    },
+    {
+      importKey: "wikipedia:rassie:sa:hc:2018-2019",
+      teamId: SA,
+      role: "head_coach",
+      careerType: "coach",
+      startDate: "2018-03-01",
+      endDate: "2019-12-31",
+      isCurrent: false,
+      isPrimaryCoach: false,
+      showOnOverview: true,
+      overviewLabel: "Head Coach",
+      notes: "First Springboks head-coach appointment (March 2018–2019 World Cup). Overlaps DoR.",
     },
     {
       importKey: "wikipedia:rassie:barbarians:coach:2018",
       teamId: BARBS,
-      role: "coach",
+      role: "head_coach",
       careerType: "coach",
       startDate: "2018-01-01",
       endDate: "2018-12-31",
       isCurrent: false,
       isPrimaryCoach: false,
-      showOnOverview: false, // Full History only — invitational one-off
-      notes: "Barbarians — Wikipedia coaching table 2018. Overview: Full History only.",
+      showOnOverview: true,
+      overviewLabel: "Head Coach",
+      notes: "Barbarians — Wikipedia coaching table 2018.",
       eligibleForCareerRecord: false,
+    },
+    {
+      importKey: "wikipedia:rassie:sa:hc:2024-",
+      teamId: SA,
+      role: "head_coach",
+      careerType: "coach",
+      startDate: "2024-01-01",
+      endDate: null,
+      isCurrent: true,
+      isPrimaryCoach: true,
+      showOnOverview: true,
+      overviewLabel: "Head Coach",
+      notes: "South Africa Head Coach (Wikipedia 2024–present).",
     },
   ] as const;
 
@@ -500,7 +579,11 @@ async function main() {
         coachingCount: assignments.length,
         coachingOverview: assignments
           .filter((a) => a.showOnOverview || a.isCurrent)
-          .map((a) => `${a.startDate} ${a.role}`),
+          .sort((a, b) => String(a.startDate ?? "").localeCompare(String(b.startDate ?? "")))
+          .map(
+            (a) =>
+              `${a.startDate?.slice(0, 4) ?? "—"}–${a.isCurrent ? "present" : a.endDate?.slice(0, 4) ?? "—"} ${a.overviewLabel || a.role}`,
+          ),
       },
       null,
       2,
