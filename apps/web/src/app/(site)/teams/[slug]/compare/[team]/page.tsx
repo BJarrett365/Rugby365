@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { TeamComparison } from "@/components/teams/TeamComparison";
 import { compareTeamsBySlug } from "@/lib/team-compare-service";
 
@@ -25,6 +26,11 @@ export default async function TeamComparePage({ params }: PageProps) {
 
   const data = await compareTeamsBySlug(slug, team);
   if (!data) notFound();
+
+  // Canonicalize legacy team slugs so URLs like `...__legacy__.../compare/...` still work.
+  if (data.teamA.slug !== slug || data.teamB.slug !== team) {
+    redirect(`/teams/${data.teamA.slug}/compare/${data.teamB.slug}`);
+  }
 
   return (
     <article className="pr-mc-fixtures-page">
