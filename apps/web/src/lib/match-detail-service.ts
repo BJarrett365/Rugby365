@@ -415,11 +415,17 @@ export async function getMatchDetailForPage(
   };
   // Soft navigation RSC flights abort around ~10–15s under load. Keep the page
   // budget under that so Link clicks never surface as "network error".
-  const PAGE_MS = 4_000;
-  const SECONDARY_MS = 2_500;
+  const PAGE_MS = 3_000;
+  const SECONDARY_MS = 2_000;
   const tab = (options.tab ?? "details").toLowerCase();
+  const isDetailsTab = tab === "details" || tab === "";
+  const needLineups = tab === "lineups" || tab === "player-stats" || tab === "edit";
+  const needMatchStats = isDetailsTab || tab === "stats" || tab === "player-stats";
   const needPlayerStats = tab === "player-stats" || tab === "stats";
   const needMeetings = tab === "head-to-head" || tab === "betting";
+  const needRatingsEnsure = tab === "lineups";
+  const needCoachEnsure = tab === "lineups" || tab === "edit";
+  const needKits = tab === "lineups";
 
   // Player-stat category fan-out (10 SDMS calls) raced with a short budget so it
   // cannot stall Match Centre / trigger Next.js client "network error".
@@ -437,20 +443,33 @@ export async function getMatchDetailForPage(
   let playerStats = emptyPlayerStats;
   let cmsFromFallback: CmsFixtureRow | null = null;
 
+  // Resolve CMS fixture in parallel with SDMS — Match Centre should paint from CMS
+  // scores/events even when the provider is slow.
+  const cmsLookupPromise = skipSdms
+    ? resolveCmsFixtureForMatchCentre(matchId)
+    : findFixtureBySdmsMatchId(matchId).then((row) => row ?? null);
+
   if (!skipSdms) {
     const playerStatsPromise = needPlayerStats
       ? Promise.race([
           fetchSdmsMatchPlayerStats(matchId, { timeoutMs: SECONDARY_MS }),
           new Promise<typeof emptyPlayerStats>((resolve) =>
-            setTimeout(() => resolve(emptyPlayerStats), 1_500),
+            setTimeout(() => resolve(emptyPlayerStats), 1_200),
           ),
         ])
       : Promise.resolve(emptyPlayerStats);
 
+    const lineupsPromise = needLineups
+      ? fetchSdmsLineups(matchId, { timeoutMs: SECONDARY_MS })
+      : Promise.resolve(null);
+    const matchStatsPromise = needMatchStats
+      ? fetchSdmsMatchStats(matchId, { timeoutMs: SECONDARY_MS })
+      : Promise.resolve(null);
+
     [detail, lineupsRaw, matchStats, previousMeetings, headToHead, playerStats] = await Promise.all([
       fetchSdmsMatchDetail(matchId, { timeoutMs: PAGE_MS }),
-      fetchSdmsLineups(matchId, { timeoutMs: SECONDARY_MS }),
-      fetchSdmsMatchStats(matchId, { timeoutMs: SECONDARY_MS }),
+      lineupsPromise,
+      matchStatsPromise,
       needMeetings
         ? fetchSdmsPreviousMeetings(matchId, { timeoutMs: SECONDARY_MS })
         : Promise.resolve([] as Awaited<ReturnType<typeof fetchSdmsPreviousMeetings>>),
@@ -463,7 +482,9 @@ export async function getMatchDetailForPage(
   __mark("sdms");
 
   if (!detail) {
-    cmsFromFallback = await resolveCmsFixtureForMatchCentre(matchId);
+    cmsFromFallback =
+      (await cmsLookupPromise) ??
+      (skipSdms ? null : await resolveCmsFixtureForMatchCentre(matchId));
     if (!cmsFromFallback) return null;
     detail = cmsFixtureToSdmsDetail(cmsFromFallback);
   }
@@ -485,7 +506,10 @@ export async function getMatchDetailForPage(
       )
     : null;
 
-  let cmsFixtureRow = cmsFromFallback ?? (await findFixtureBySdmsMatchId(matchId));
+  let cmsFixtureRow =
+    cmsFromFallback ??
+    ((await cmsLookupPromise) as CmsFixtureRow | null) ??
+    (await findFixtureBySdmsMatchId(matchId));
   __mark("findFixture");
   let entitySyncRan = false;
   let autoImported = false;
@@ -584,24 +608,31 @@ export async function getMatchDetailForPage(
               : detail.status
             : cmsFixtureRow.status;
         if (isFixtureRatingsPublished(ratingsStatus)) {
-          // Lineups tab: allow a longer DB calc wait so first paint isn't empty when
-          // perf rows already exist. SDMS enrich still stays off-request (after heal).
-          const ensureBudgetMs =
-            tab === "lineups" ? Math.max(MATCH_ENSURE_BUDGET_MS, 2_500) : MATCH_ENSURE_BUDGET_MS;
-          const ensureResult = await raceWithBudget(
-            ensureMissingFixturePlayerMatchRatings(cmsFixtureRow.id, {
-              matchId,
-              allowSdmsEnrich: false,
-            }),
-            ensureBudgetMs,
-          );
-          if (
-            ensureResult == null ||
-            ensureResult.triggered ||
-            ensureResult.needsSdmsEnrich
-          ) {
+          if (needRatingsEnsure) {
+            // Lineups tab: allow a longer DB calc wait so first paint isn't empty when
+            // perf rows already exist. SDMS enrich still stays off-request (after heal).
+            const ensureBudgetMs = Math.max(MATCH_ENSURE_BUDGET_MS, 2_500);
+            const ensureResult = await raceWithBudget(
+              ensureMissingFixturePlayerMatchRatings(cmsFixtureRow.id, {
+                matchId,
+                allowSdmsEnrich: false,
+              }),
+              ensureBudgetMs,
+            );
+            if (
+              ensureResult == null ||
+              ensureResult.triggered ||
+              ensureResult.needsSdmsEnrich
+            ) {
+              scheduleMatchDataSelfHeal(cmsFixtureRow.id, matchId);
+            }
+            return listMatchRatingsForFixture(cmsFixtureRow.id);
+          }
+          const listed = await listMatchRatingsForFixture(cmsFixtureRow.id);
+          if (listed.ratings.length === 0) {
             scheduleMatchDataSelfHeal(cmsFixtureRow.id, matchId);
           }
+          return listed;
         }
         return listMatchRatingsForFixture(cmsFixtureRow.id);
       })().catch(
@@ -622,28 +653,30 @@ export async function getMatchDetailForPage(
         officialPotmName: null,
       } satisfies FixtureMatchRatingsBundle);
   const coachesPromise =
-    cmsFixtureRow != null
+    cmsFixtureRow != null && needCoachEnsure
       ? Promise.race([
           ensureFixtureMatchCoaches(cmsFixtureRow.id).catch(() => undefined),
-          new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
+          new Promise<void>((resolve) => setTimeout(resolve, 800)),
         ])
       : Promise.resolve();
   // Reload fixture after coach resolve so newly assigned home/away coaches appear
   // on the same request (parallel getFixtureById used to race ahead of the write).
   const fixturePromise = (async () => {
     if (!cmsFixtureRow) return null;
-    await coachesPromise;
+    if (needCoachEnsure) await coachesPromise;
     return getFixtureById(cmsFixtureRow.id);
   })();
   // Wait for coach links, then fill any missing staff ratings (coach linked after
   // the first ratings pass used to leave header ratings blank).
   const staffPromise = (async () => {
     if (!cmsFixtureRow) return null;
-    await coachesPromise;
-    await raceWithBudget(
-      ensureMissingFixtureStaffMatchRatings(cmsFixtureRow.id),
-      MATCH_ENSURE_BUDGET_MS,
-    );
+    if (needCoachEnsure) {
+      await coachesPromise;
+      await raceWithBudget(
+        ensureMissingFixtureStaffMatchRatings(cmsFixtureRow.id),
+        MATCH_ENSURE_BUDGET_MS,
+      );
+    }
     return listStaffMatchRatingsForFixture(cmsFixtureRow.id);
   })();
   const tableContextPromise = resolveMatchTableContext(detail, cmsFixtureRow);
@@ -691,27 +724,29 @@ export async function getMatchDetailForPage(
   const broadcastersPromise = cmsFixtureRow
     ? listFixtureBroadcasters(cmsFixtureRow.id).catch(() => [])
     : Promise.resolve([]);
-  const kitsPromise = Promise.race([
-    Promise.all([
-      resolveMatchLineupKit({
-        teamId: cmsFixtureRow?.homeTeamId,
-        teamName: detail.home_team_name,
-        competitionId: cmsFixtureRow?.competitionId,
-        seasonId: cmsFixtureRow?.seasonId,
-        matchId: cmsFixtureRow?.id,
-        kitType: "HOME",
-      }),
-      resolveMatchLineupKit({
-        teamId: cmsFixtureRow?.awayTeamId,
-        teamName: detail.away_team_name,
-        competitionId: cmsFixtureRow?.competitionId,
-        seasonId: cmsFixtureRow?.seasonId,
-        matchId: cmsFixtureRow?.id,
-        kitType: "HOME",
-      }),
-    ]),
-    new Promise<[null, null]>((resolve) => setTimeout(() => resolve([null, null]), 700)),
-  ]);
+  const kitsPromise = needKits
+    ? Promise.race([
+        Promise.all([
+          resolveMatchLineupKit({
+            teamId: cmsFixtureRow?.homeTeamId,
+            teamName: detail.home_team_name,
+            competitionId: cmsFixtureRow?.competitionId,
+            seasonId: cmsFixtureRow?.seasonId,
+            matchId: cmsFixtureRow?.id,
+            kitType: "HOME",
+          }),
+          resolveMatchLineupKit({
+            teamId: cmsFixtureRow?.awayTeamId,
+            teamName: detail.away_team_name,
+            competitionId: cmsFixtureRow?.competitionId,
+            seasonId: cmsFixtureRow?.seasonId,
+            matchId: cmsFixtureRow?.id,
+            kitType: "HOME",
+          }),
+        ]),
+        new Promise<[null, null]>((resolve) => setTimeout(() => resolve([null, null]), 700)),
+      ])
+    : Promise.resolve([null, null] as [null, null]);
 
   const [
     competitionExternalId,
@@ -726,17 +761,50 @@ export async function getMatchDetailForPage(
     broadcasterRows,
     kitPair,
   ] = await Promise.all([
-    competitionExternalIdPromise,
-    squadPlayerIdsPromise,
-    ratingsPromise,
-    coachesPromise,
-    tableContextPromise,
-    fixturePromise,
-    staffPromise,
-    bonusPromise,
-    eventsPromise,
-    broadcastersPromise,
-    kitsPromise,
+    competitionExternalIdPromise.then((v) => {
+      __mark("p:competition");
+      return v;
+    }),
+    squadPlayerIdsPromise.then((v) => {
+      __mark("p:squad");
+      return v;
+    }),
+    ratingsPromise.then((v) => {
+      __mark("p:ratings");
+      return v;
+    }),
+    coachesPromise.then((v) => {
+      __mark("p:coaches");
+      return v;
+    }),
+    tableContextPromise.then((v) => {
+      __mark("p:table");
+      return v;
+    }),
+    fixturePromise.then((v) => {
+      __mark("p:fixture");
+      return v;
+    }),
+    staffPromise.then((v) => {
+      __mark("p:staff");
+      return v;
+    }),
+    bonusPromise.then((v) => {
+      __mark("p:bonus");
+      return v;
+    }),
+    eventsPromise.then((v) => {
+      __mark("p:events");
+      return v;
+    }),
+    broadcastersPromise.then((v) => {
+      __mark("p:broadcasters");
+      return v;
+    }),
+    kitsPromise.then((v) => {
+      __mark("p:kits");
+      return v;
+    }),
   ]);
   __mark("cms-parallel");
 
@@ -836,7 +904,7 @@ export async function getMatchDetailForPage(
     : null;
 
   let matchRatings: MatchRatingDisplay[] = ratingsPublished ? ratingsBundle.ratings : [];
-  if (ratingsPublished && cmsFixtureRow) {
+  if (ratingsPublished && cmsFixtureRow && needRatingsEnsure) {
     const playerLinks = Object.values(entities.playersByExternalId);
     try {
       matchRatings = await attachCareerAndFormToLineupRatings(matchRatings, playerLinks);
@@ -865,10 +933,11 @@ export async function getMatchDetailForPage(
     const venueName = (detail.venue_name || fixtureWithStaff?.venueName || "").trim();
     if (venueName) {
       try {
+        // Details tab: resolve only; never create/geocode on the critical path.
         const resolved = await resolveVenue({
           name: venueName,
           teamId: fixtureWithStaff?.homeTeamId ?? undefined,
-          createIfMissing: true,
+          createIfMissing: !isDetailsTab,
         });
         if (resolved) {
           venue = {
@@ -882,7 +951,7 @@ export async function getMatchDetailForPage(
             weather: null,
           };
           if (cmsFixtureRow && !fixtureWithStaff?.venueId) {
-            await getDb()
+            void getDb()
               .update(fixtures)
               .set({ venueId: resolved.id, venueName: resolved.name })
               .where(eq(fixtures.id, cmsFixtureRow.id));

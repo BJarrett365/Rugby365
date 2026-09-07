@@ -1143,7 +1143,9 @@ export const integrationSettings = pgTable("integration_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const fixtures = pgTable("fixtures", {
+export const fixtures = pgTable(
+  "fixtures",
+  {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
   sportId: uuid("sport_id").references(() => sports.id),
@@ -1204,7 +1206,9 @@ export const fixtures = pgTable("fixtures", {
   homeTeamKitId: uuid("home_team_kit_id"),
   /** Approved shirt the away side wore. */
   awayTeamKitId: uuid("away_team_kit_id"),
-});
+  },
+  (table) => [index("fixtures_external_match_id_idx").on(table.externalMatchId)],
+);
 
 /** Where to watch a fixture — CMS manual now; Gracenote / PA Media later. */
 export const fixtureBroadcasters = pgTable(
@@ -1472,20 +1476,27 @@ export const fixturePlayers = pgTable(
   (table) => [uniqueIndex("fixture_players_fixture_player_unique").on(table.fixtureId, table.playerId)],
 );
 
-export const matchEvents = pgTable("match_events", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  fixtureId: uuid("fixture_id")
-    .notNull()
-    .references(() => fixtures.id, { onDelete: "cascade" }),
-  eventType: text("event_type").notNull(),
-  minute: integer("minute").notNull().default(0),
-  second: integer("second").notNull().default(0),
-  teamId: uuid("team_id").references(() => teams.id),
-  playerId: uuid("player_id").references(() => players.id),
-  payload: jsonb("payload").notNull().default({}),
-  sourceProvider: text("source_provider").default("demo"),
-  sequenceNo: integer("sequence_no").notNull(),
-});
+export const matchEvents = pgTable(
+  "match_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fixtureId: uuid("fixture_id")
+      .notNull()
+      .references(() => fixtures.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    minute: integer("minute").notNull().default(0),
+    second: integer("second").notNull().default(0),
+    teamId: uuid("team_id").references(() => teams.id),
+    playerId: uuid("player_id").references(() => players.id),
+    payload: jsonb("payload").notNull().default({}),
+    sourceProvider: text("source_provider").default("demo"),
+    sequenceNo: integer("sequence_no").notNull(),
+  },
+  (table) => [
+    index("match_events_fixture_id_idx").on(table.fixtureId),
+    index("match_events_fixture_sequence_idx").on(table.fixtureId, table.sequenceNo),
+  ],
+);
 
 /** Public Match Animation + CMS Match Tracker settings (one row per fixture). */
 export const fixtureTrackerSettings = pgTable(
