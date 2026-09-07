@@ -30,7 +30,11 @@ export function LeagueTable({
   compact?: boolean;
 }) {
   if (!rows.length) {
-    return <p className="text-sm text-zinc-500 m-0">No standings data yet. Sync from SDMS in CMS.</p>;
+    return (
+      <p className="text-sm text-zinc-500 m-0">
+        No standings data yet for this season. Import or sync a completed season, or set an active season that has an overall table.
+      </p>
+    );
   }
 
   return (

@@ -3,6 +3,8 @@ import {
   deleteCompetition,
   getCompetitionDetail,
   getSeasonStandings,
+  pickSeasonForOverallTable,
+  setActiveCompetitionSeason,
   updateCompetition,
 } from "@/lib/competition-admin-service";
 import {
@@ -18,12 +20,44 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const detail = await getCompetitionDetail(id);
     if (!detail) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const activeSeason = detail.seasons.find((s) => s.isActive) ?? detail.seasons[0];
-    const standings = activeSeason
-      ? await getSeasonStandings(activeSeason.id, "overall")
+    const tableSeason = await pickSeasonForOverallTable(detail.seasons);
+    let standings = tableSeason
+      ? await getSeasonStandings(tableSeason.id, "overall")
       : [];
 
-    return NextResponse.json({ ...detail, standings });
+    // Wikipedia / manual tables often land without form — fill from finished fixtures.
+    if (tableSeason && standings.length > 0 && standings.every((row) => !row.form)) {
+      const { recomputeStandingFormForSeason } = await import("@/lib/standing-form-recompute-service");
+      await recomputeStandingFormForSeason(tableSeason.id, { force: true });
+      standings = await getSeasonStandings(tableSeason.id, "overall");
+    }
+
+    const { and, eq, inArray, sql } = await import("drizzle-orm");
+    const { standingRows } = await import("@rugby365/db");
+    const { getDb } = await import("@/lib/db");
+    const db = getDb();
+    const seasonIds = detail.seasons.map((s) => s.id);
+    const overallCounts = new Map<string, number>();
+    if (seasonIds.length) {
+      const rows = await db
+        .select({
+          seasonId: standingRows.seasonId,
+          n: sql<number>`count(*)::int`,
+        })
+        .from(standingRows)
+        .where(and(inArray(standingRows.seasonId, seasonIds), eq(standingRows.view, "overall")))
+        .groupBy(standingRows.seasonId);
+      for (const row of rows) {
+        if (row.seasonId) overallCounts.set(row.seasonId, Number(row.n) || 0);
+      }
+    }
+
+    const seasons = detail.seasons.map((s) => ({
+      ...s,
+      overallStandingCount: overallCounts.get(s.id) ?? 0,
+    }));
+
+    return NextResponse.json({ ...detail, seasons, standings, tableSeason });
   } catch (e) {
     return apiErrorResponse(e, "Failed to load competition");
   }
@@ -72,6 +106,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.action === "sync-season-standings" && body.seasonId) {
       const result = await syncSeasonStandings(String(body.seasonId));
       return NextResponse.json({ ok: true, ...result });
+    }
+
+    if (body.action === "set-active-season" && body.seasonId) {
+      const season = await setActiveCompetitionSeason(id, String(body.seasonId));
+      return NextResponse.json({ ok: true, season });
     }
 
     const competition = await updateCompetition(id, {

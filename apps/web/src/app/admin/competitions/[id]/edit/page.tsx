@@ -12,6 +12,8 @@ type Season = {
   year: number;
   isActive: boolean;
   syncedAt: string | null;
+  sourceProvider?: string | null;
+  overallStandingCount?: number;
 };
 
 type Standing = {
@@ -39,6 +41,7 @@ export default function EditCompetitionPage() {
   const [competitionSlug, setCompetitionSlug] = useState("");
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
+  const [tableSeasonLabel, setTableSeasonLabel] = useState<string | null>(null);
   const [values, setValues] = useState({
     name: "",
     slug: "",
@@ -63,6 +66,7 @@ export default function EditCompetitionPage() {
           });
         }
         setSeasons(d.seasons ?? []);
+        setTableSeasonLabel(d.tableSeason?.label ?? null);
         setStandings(
           (d.standings ?? []).map((r: Standing) => ({
             rank: r.rank,
@@ -149,6 +153,19 @@ export default function EditCompetitionPage() {
     setSyncing(false);
   }
 
+  async function setActiveSeason(seasonId: string) {
+    setSyncing(true);
+    const res = await fetch(`/api/admin/competitions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set-active-season", seasonId }),
+    });
+    const data = await res.json();
+    if (res.ok) await load();
+    else alert(data.error ?? "Failed to set active season");
+    setSyncing(false);
+  }
+
   async function remove() {
     if (!confirm("Delete this competition and all seasons/standings?")) return;
     const res = await fetch(`/api/admin/competitions/${id}`, { method: "DELETE" });
@@ -223,6 +240,11 @@ export default function EditCompetitionPage() {
             disabled={syncing || !values.sdmsCompCode}
             onClick={syncSeasons}
             className="cms-btn cms-btn--secondary"
+            title={
+              values.sdmsCompCode
+                ? "Pull seasons from SDMS"
+                : "Requires an SDMS comp code — Wikipedia/manual seasons stay as imported"
+            }
           >
             Sync seasons
           </button>
@@ -231,6 +253,11 @@ export default function EditCompetitionPage() {
             disabled={syncing || !values.sdmsCompCode}
             onClick={() => syncStandings()}
             className="cms-btn cms-btn--secondary"
+            title={
+              values.sdmsCompCode
+                ? "Pull overall table from SDMS for the active season"
+                : "Requires an SDMS comp code"
+            }
           >
             {syncing ? "Syncing…" : "Sync table"}
           </button>
@@ -256,31 +283,65 @@ export default function EditCompetitionPage() {
             Delete
           </button>
         </div>
+        {!values.sdmsCompCode && (
+          <p className="text-xs text-amber-400/90 m-0">
+            No SDMS comp code — Sync seasons / Sync table stay disabled. Season timestamps below are from
+            Wikipedia or manual import, not an SDMS pull. Use Set active on a completed season to drive the
+            current table.
+          </p>
+        )}
       </form>
 
       {seasons.length > 0 && (
         <div className="cms-card mb-4">
           <h3 className="font-semibold m-0">Seasons</h3>
+          <p className="text-xs text-zinc-500 mt-1 mb-0">
+            “Last import” only appears when a Wikipedia/SDMS import stamped that season. Missing that
+            timestamp does not mean the season has no table — check the team count.
+          </p>
           <ul className="mt-2 space-y-1 text-sm text-zinc-400">
             {seasons.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-2">
                 <span>
                   {s.label}
                   {s.isActive && <span className="text-emerald-400 ml-2 text-xs">Active</span>}
+                  {s.sourceProvider ? (
+                    <span className="text-zinc-600 ml-2 text-xs">· {s.sourceProvider}</span>
+                  ) : null}
+                  {(s.overallStandingCount ?? 0) > 0 ? (
+                    <span className="text-zinc-500 ml-2 text-xs">
+                      · table {s.overallStandingCount}
+                    </span>
+                  ) : (
+                    <span className="text-amber-500/80 ml-2 text-xs">· no overall table</span>
+                  )}
                   {s.syncedAt && (
                     <span className="text-zinc-600 ml-2 text-xs">
-                      · synced {new Date(s.syncedAt).toLocaleString()}
+                      · last import {new Date(s.syncedAt).toLocaleString()}
                     </span>
                   )}
                 </span>
-                <button
-                  type="button"
-                  className="text-xs text-emerald-400"
-                  disabled={syncing}
-                  onClick={() => syncStandings(s.label)}
-                >
-                  Sync
-                </button>
+                <span className="flex items-center gap-3 shrink-0">
+                  {!s.isActive && (
+                    <button
+                      type="button"
+                      className="text-xs text-zinc-300"
+                      disabled={syncing}
+                      onClick={() => setActiveSeason(s.id)}
+                    >
+                      Set active
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="text-xs text-emerald-400"
+                    disabled={syncing || !values.sdmsCompCode}
+                    title={values.sdmsCompCode ? "Sync standings for this season" : "Requires SDMS comp code"}
+                    onClick={() => syncStandings(s.label)}
+                  >
+                    Sync
+                  </button>
+                </span>
               </li>
             ))}
           </ul>
@@ -288,7 +349,12 @@ export default function EditCompetitionPage() {
       )}
 
       <div className="cms-card">
-        <h3 className="font-semibold m-0 mb-3">Current table (overall)</h3>
+        <h3 className="font-semibold m-0 mb-3">
+          Current table (overall)
+          {tableSeasonLabel ? (
+            <span className="font-normal text-zinc-400 text-sm ml-2">— {tableSeasonLabel}</span>
+          ) : null}
+        </h3>
         <LeagueTable rows={standings} />
       </div>
     </>

@@ -484,6 +484,8 @@ export function FixturesScheduleBoard({
   onSelectFixture,
   initialFixtureId,
   view = "fixtures",
+  initialDateKey = null,
+  onDateKeyChange,
 }: {
   admin?: boolean;
   /** Public Planet Rugby list layout. Default keeps existing admin/operator behaviour. */
@@ -496,6 +498,10 @@ export function FixturesScheduleBoard({
   initialFixtureId?: string;
   /** Public Live Centre: Results opens the latest completed match day. */
   view?: "fixtures" | "results";
+  /** Public Live Centre: YYYY-MM-DD from `?date=` when present. */
+  initialDateKey?: string | null;
+  /** Public Live Centre: keep the address bar in sync with the date strip. */
+  onDateKeyChange?: (dateKey: string) => void;
 }) {
   const isPublic = variant === "public";
   // null until mount so SSR HTML matches the client's first paint (avoids TZ hydration drift).
@@ -512,11 +518,30 @@ export function FixturesScheduleBoard({
   const [error, setError] = useState("");
   const [browserTimeZone, setBrowserTimeZone] = useState("Europe/London");
   const resultsJumpedRef = useRef(false);
+  const urlDateAppliedRef = useRef(false);
+
+  function selectDateKey(next: string) {
+    setSelectedDateKey(next);
+    onDateKeyChange?.(next);
+  }
 
   useEffect(() => {
     setBrowserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London");
-    setSelectedDateKey(dateKeyLocal(new Date()));
+    const fromUrl =
+      initialDateKey && /^\d{4}-\d{2}-\d{2}$/.test(initialDateKey) ? initialDateKey : null;
+    setSelectedDateKey(fromUrl ?? dateKeyLocal(new Date()));
+    if (fromUrl) urlDateAppliedRef.current = true;
   }, []);
+
+  useEffect(() => {
+    if (!initialDateKey || !/^\d{4}-\d{2}-\d{2}$/.test(initialDateKey)) return;
+    if (initialDateKey === selectedDateKey) return;
+    // Prefer deep-linked `?date=` over the default "today" seed.
+    if (!urlDateAppliedRef.current || initialDateKey !== selectedDateKey) {
+      urlDateAppliedRef.current = true;
+      setSelectedDateKey(initialDateKey);
+    }
+  }, [initialDateKey, selectedDateKey]);
 
   useEffect(() => {
     resultsJumpedRef.current = false;
@@ -527,7 +552,7 @@ export function FixturesScheduleBoard({
     const latest = latestDateOnOrBefore(datesWithMatches, dateKeyLocal(new Date()));
     if (!latest) return;
     resultsJumpedRef.current = true;
-    if (latest !== selectedDateKey) setSelectedDateKey(latest);
+    if (latest !== selectedDateKey) selectDateKey(latest);
   }, [view, datesWithMatches, selectedDateKey]);
 
   const seasonYear =
@@ -660,7 +685,7 @@ export function FixturesScheduleBoard({
         if (competitionIdParam && dates.length) {
           const next = nearestDateKey(selectedDateKey, dates);
           if (next && next !== selectedDateKey) {
-            setSelectedDateKey(next);
+            selectDateKey(next);
           }
         }
       } catch {
@@ -844,7 +869,7 @@ export function FixturesScheduleBoard({
     // Clamp invalid dates (e.g. Feb 29) via Date constructor
     const [, m, d] = nextKey.split("-").map(Number);
     const safe = dateKeyLocal(new Date(parsed, (m ?? 1) - 1, d ?? 1));
-    setSelectedDateKey(safe);
+    selectDateKey(safe);
   };
 
   const boardClass = isPublic
@@ -867,7 +892,7 @@ export function FixturesScheduleBoard({
             <MatchDatePicker
               key={`mdp-${competitionFilter}-${seasonYear}`}
               selectedKey={selectedDateKey}
-              onSelect={setSelectedDateKey}
+              onSelect={selectDateKey}
               matchDateKeys={matchDateKeys}
               onFetchMonthDates={fetchMonthDates}
               variant="public"
@@ -923,7 +948,7 @@ export function FixturesScheduleBoard({
       {!isPublic && (
         <MatchDatePicker
           selectedKey={selectedDateKey}
-          onSelect={setSelectedDateKey}
+          onSelect={selectDateKey}
           matchDateKeys={matchDateKeys}
           onFetchMonthDates={fetchMonthDates}
         />

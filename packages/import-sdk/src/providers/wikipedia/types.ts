@@ -43,6 +43,8 @@ export const WikipediaCoachArchiveSchema = z.object({
   bioSummary: z.string().optional(),
   coachingCareer: z.array(WikipediaCoachingStintSchema).optional(),
   playingCareer: z.array(WikipediaCareerStintSchema).optional(),
+  /** From infobox "Position" (e.g. "Lock"). Used as Former Position label. */
+  positions: z.array(z.string()).optional(),
   /** Free-text honour lines from wiki sections — never auto-published. */
   honourLines: z.array(z.string()).optional(),
   infoboxTemplate: z.string().optional(),

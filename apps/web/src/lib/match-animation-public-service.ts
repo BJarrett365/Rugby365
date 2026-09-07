@@ -311,11 +311,56 @@ export async function buildMatchAnimationPublicPayload(
   let cmsHomeTeamId: string | null = null;
   let squadLookup: AnimationPlayerLookup[] = [];
 
+  // Load CMS status first — previously liveFeed checked cmsStatus before it was set,
+  // so Result/Deleted SDMS feeds never synced scores/events into CMS.
+  if (cmsFixture?.id) {
+    try {
+      const db = getDb();
+      const [row] = await db
+        .select({
+          homeScore: fixtures.homeScore,
+          awayScore: fixtures.awayScore,
+          status: fixtures.status,
+          period: fixtures.period,
+          matchMinute: fixtures.matchMinute,
+          matchSecond: fixtures.matchSecond,
+          round: fixtures.round,
+          attendance: fixtures.attendance,
+          homeTeamId: fixtures.homeTeamId,
+        })
+        .from(fixtures)
+        .where(eq(fixtures.id, cmsFixture.id))
+        .limit(1);
+      if (row) {
+        cmsHome = row.homeScore;
+        cmsAway = row.awayScore;
+        cmsStatus = row.status;
+        cmsPeriod = row.period;
+        cmsMatchMinute = row.matchMinute ?? 0;
+        cmsMatchSecond = row.matchSecond ?? 0;
+        round = row.round;
+        attendance = row.attendance;
+        cmsHomeTeamId = row.homeTeamId;
+      }
+    } catch {
+      /* non-blocking */
+    }
+  }
+
   // Keep CMS clock/events current before animation reads them (fixes stuck HT clocks).
   if (cmsFixture?.id) {
-    const liveFeed =
-      /live|first|second|half\s*time|halftime/i.test(detail.status) ||
-      /live|first|second|half/i.test(String(cmsStatus ?? ""));
+    const sdmsLooksLive = /live|first|second|half\s*time|halftime/i.test(detail.status);
+    const sdmsLooksFinished = /result|deleted|full|complete|finished|ft\b/i.test(detail.status);
+    const cmsLooksLive = /live|first|second|half/i.test(String(cmsStatus ?? ""));
+    const cmsNeedsCatchUp =
+      cmsLooksLive ||
+      (String(cmsStatus ?? "").toLowerCase() === "scheduled" &&
+        (sdmsLooksLive ||
+          sdmsLooksFinished ||
+          (typeof detail.home_team_score === "number" &&
+            typeof detail.away_team_score === "number" &&
+            (detail.home_team_score > 0 || detail.away_team_score > 0))));
+    const liveFeed = sdmsLooksLive || cmsNeedsCatchUp;
     if (liveFeed) {
       try {
         await syncFixtureLiveStateFromSdms(cmsFixture.id, detail);

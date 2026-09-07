@@ -6,6 +6,7 @@ import {
   isWikipediaCategoryUrl,
   parseWikipediaArchive,
   parseWikipediaCategoryUrl,
+  fetchWikidataPlayerProfile,
   type WikipediaCoachArchive,
   type WikipediaCoachingStint,
 } from "@rugby365/import-sdk";
@@ -220,6 +221,12 @@ async function upsertCoachFromArchive(
     fullName: archive.fullName ?? null,
     placeOfBirth: archive.birthPlace ?? null,
     heightCm: archive.heightCm ?? null,
+    ...(archive.positions?.length
+      ? {
+          // Used by the public "Former Position" field.
+          formerPlayingPositions: archive.positions.join(" / "),
+        }
+      : {}),
   });
 
   // Playing career stints — structured, unverified until CMS review
@@ -611,6 +618,24 @@ export async function enrichCoachFromWikipedia(
   }
 
   await updateCoach(coachId, patch);
+  if (archive.positions?.length) {
+    const formerPlayingPositions = archive.positions.join(" / ");
+    if (!coach.formerPlayingPositions?.trim()) {
+      await updateCoach(coachId, { formerPlayingPositions });
+    }
+  }
+  // Fill missing birth/height from Wikidata when Wikipedia lacks them.
+  if (coach.wikidataId) {
+    const wd = await fetchWikidataPlayerProfile(coach.wikidataId);
+    const wdPatch: Parameters<typeof updateCoach>[1] = {};
+    if (!coach.birthDate && wd.birthDate) wdPatch.birthDate = wd.birthDate;
+    if (!coach.placeOfBirth && wd.birthPlace) wdPatch.placeOfBirth = wd.birthPlace;
+    if (coach.heightCm == null && wd.heightCm != null) wdPatch.heightCm = wd.heightCm;
+    if (Object.keys(wdPatch).length) {
+      await updateCoach(coachId, wdPatch);
+      for (const k of Object.keys(wdPatch)) fieldsUpdated.push(k);
+    }
+  }
 
   // Playing career + coaching assignments (additive)
   if (archive.playingCareer?.length) {

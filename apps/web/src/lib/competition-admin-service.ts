@@ -697,6 +697,58 @@ type ResolvedCompetitionSeason = {
   season: (typeof competitionSeasons.$inferSelect & { year: number }) | null;
 };
 
+/** Season IDs that have at least one overall standing row (used for default-table fallback). */
+async function seasonIdsWithOverallStandings(seasonIds: string[]): Promise<Set<string>> {
+  if (!seasonIds.length) return new Set();
+  const db = getDb();
+  const rows = await db
+    .selectDistinct({ seasonId: standingRows.seasonId })
+    .from(standingRows)
+    .where(and(inArray(standingRows.seasonId, seasonIds), eq(standingRows.view, "overall")));
+  return new Set(rows.map((row) => row.seasonId).filter((id): id is string => Boolean(id)));
+}
+
+/**
+ * Prefer the flagged active season; if it has no overall table yet (e.g. future RWC shell),
+ * fall back to the newest season that already has overall standings.
+ */
+export async function pickSeasonForOverallTable<T extends { id: string; isActive?: boolean | null }>(
+  seasons: T[],
+): Promise<T | null> {
+  if (!seasons.length) return null;
+  const withOverall = await seasonIdsWithOverallStandings(seasons.map((s) => s.id));
+  const preferred = seasons.find((s) => s.isActive) ?? seasons[0]!;
+  if (withOverall.has(preferred.id)) return preferred;
+  return seasons.find((s) => withOverall.has(s.id)) ?? preferred;
+}
+
+export async function setActiveCompetitionSeason(competitionId: string, seasonId: string) {
+  const db = getDb();
+  const [season] = await db
+    .select()
+    .from(competitionSeasons)
+    .where(
+      and(
+        eq(competitionSeasons.id, seasonId),
+        eq(competitionSeasons.competitionId, competitionId),
+        eq(competitionSeasons.isDeprecated, false),
+      ),
+    )
+    .limit(1);
+  if (!season) throw new Error("Season not found for this competition");
+
+  await db
+    .update(competitionSeasons)
+    .set({ isActive: false })
+    .where(eq(competitionSeasons.competitionId, competitionId));
+  const [updated] = await db
+    .update(competitionSeasons)
+    .set({ isActive: true })
+    .where(eq(competitionSeasons.id, seasonId))
+    .returning();
+  return updated;
+}
+
 async function resolveCompetitionSeason(
   competitionId: string,
   seasonLabel?: string,
@@ -720,7 +772,7 @@ async function resolveCompetitionSeason(
 
   const normalizedLabel = seasonLabel ? normalizeSeasonLabel(seasonLabel) : null;
   const requestedYear = seasonLabel ? parseSeasonStartYear(seasonLabel) : null;
-  const season =
+  let season =
     (seasonLabel
       ? seasons.find((s) => s.label === seasonLabel) ??
         (normalizedLabel ? seasons.find((s) => s.label === normalizedLabel) : null) ??
@@ -731,6 +783,11 @@ async function resolveCompetitionSeason(
     seasons.find((s) => s.isActive) ??
     seasons[0] ??
     null;
+
+  // When no explicit season is requested, avoid blank "current" tables on future shells.
+  if (!seasonLabel && season) {
+    season = (await pickSeasonForOverallTable(seasons)) ?? season;
+  }
 
   return { seasons, season };
 }

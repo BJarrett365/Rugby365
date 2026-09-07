@@ -28,6 +28,7 @@ import { getDb } from "./db";
 import { buildFixtureSlug } from "./fixture-admin-service";
 import { autoImportSdmsFixtureRows } from "./sdms-auto-import-service";
 import { syncRugbyDataFixturesForDate, scheduleLiteRugbyDataSync } from "./rugby-data-day-sync-service";
+import { scheduleLiteSdmsLiveSync } from "./fixture-live-score-sync";
 import { enrichScheduleFixturesForPublic } from "./schedule-fixture-enrichment";
 import { weatherConditionFromText } from "./weather-condition";
 import { sanitizePublicScheduleFixtures } from "./public-schedule-sanitize";
@@ -258,6 +259,22 @@ function shouldKickLiteRugbyDataSync(dateKey: string, rows: ScheduleFixture[]): 
   });
 }
 
+function shouldKickLiteSdmsLiveSync(dateKey: string, rows: ScheduleFixture[]): boolean {
+  const today = dateKeyLocal(new Date());
+  const yesterday = addDaysToDateKey(today, -1);
+  if (dateKey !== today && dateKey !== yesterday) return false;
+  return rows.some((f) => {
+    const status = (f.status ?? "").toLowerCase();
+    if (status === "live" || status === "half_time" || status === "first_half" || status === "second_half") {
+      return true;
+    }
+    if (!f.kickoffAt) return false;
+    const elapsed = Date.now() - new Date(f.kickoffAt).getTime();
+    // Kick-off window + recently finished (catch Result/Deleted before cron).
+    return elapsed > -20 * 60 * 1000 && elapsed < 4 * 60 * 60 * 1000;
+  });
+}
+
 async function listDbFixturesForDate(dateKey: string, timeZone: string) {
   const db = getDb();
   const { start, end } = dayBoundsInTimezone(dateKey, timeZone);
@@ -366,6 +383,9 @@ export async function getScheduleForDate(
     });
     if (shouldKickLiteRugbyDataSync(dateKey, mappedFixtures)) {
       scheduleLiteRugbyDataSync(dateKey, timeZone);
+    }
+    if (shouldKickLiteSdmsLiveSync(dateKey, mappedFixtures)) {
+      scheduleLiteSdmsLiveSync(`schedule:${dateKey}`);
     }
     return {
       fixtures: mappedFixtures,

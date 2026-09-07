@@ -575,7 +575,7 @@ export function CompetitionRankingsClient({
 
   const boardTitle = useMemo(() => {
     if (!data) return `TOP ${top} PLAYERS`;
-    if (tab === "teams") return `${data.competition.name.toUpperCase()} TOP ${top} TEAMS`;
+    if (tab === "teams") return `${data.competition.name.toUpperCase()} TOP TEAMS`;
     if (tab === "coaches") {
       const size = top === 10 ? "TOP 10" : "ALL";
       return `${data.competition.name.toUpperCase()} ${size} COACHES`;

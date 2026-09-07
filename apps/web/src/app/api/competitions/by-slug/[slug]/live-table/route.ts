@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchSdmsMatchDetail } from "@rugby365/import-sdk";
 import { apiErrorResponse } from "@/lib/api-errors";
-import { getCompetitionBySlug, listSeasonsForPicker } from "@/lib/competition-admin-service";
+import { getCompetitionBySlug, listSeasonsForPicker, pickSeasonForOverallTable } from "@/lib/competition-admin-service";
 import { parseSeasonStartYear, usesDomesticSeasonCatalog, currentDomesticSeasonStartYear } from "@/lib/season-label-utils";
 import { syncDomesticSeasonCatalog } from "@/lib/competition-admin-service";
 import { findFixtureBySdmsMatchId } from "@/lib/fixture-admin-service";
@@ -83,7 +83,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       }
 
       const seasons = await listSeasonsForPicker(competition.id);
-      const seasonId = resolveSeasonId(seasons, seasonLabel);
+      const seasonId = seasonLabel?.trim()
+        ? resolveSeasonId(seasons, seasonLabel)
+        : ((await pickSeasonForOverallTable(seasons))?.id ?? resolveSeasonId(seasons, seasonLabel));
       if (!seasonId) {
         return {
           competition: { id: competition.id, slug: competition.slug, name: competition.name },

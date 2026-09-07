@@ -74,6 +74,17 @@ function stripWikiMarkup(value?: string): string {
 function parseHeightCm(raw?: string): number | undefined {
   if (!raw) return undefined;
   const cleaned = stripWikiMarkup(raw);
+  // Prefer explicit "cm" values (often in parentheses like "(198 cm)").
+  const cm = cleaned.match(/([\d.]+)\s*cm/i);
+  if (cm) return Math.round(parseFloat(cm[1]));
+  // Support imperial "6 ft 6 in" style heights.
+  const ft = cleaned.match(/([\d.]+)\s*ft/i);
+  const inches = cleaned.match(/([\d.]+)\s*in/i);
+  if (ft && inches) {
+    const totalInches = parseFloat(ft[1]) * 12 + parseFloat(inches[1]);
+    return Math.round(totalInches * 2.54);
+  }
+  // Also handle heights expressed in meters.
   const m = cleaned.match(/([\d.]+)\s*m/i) ?? cleaned.match(/^([\d.]+)$/);
   if (!m) return undefined;
   return Math.round(parseFloat(m[1]) * 100);
@@ -89,7 +100,25 @@ function parseWeightKg(raw?: string): number | undefined {
 
 function parseBirthDate(raw?: string): string | undefined {
   if (!raw) return undefined;
-  const stripped = stripWikiMarkup(raw);
+  // Some Wikipedia pages encode birth dates as:
+  //   {{birth date and age|df=yes|1963|05|23}}
+  // or:
+  //   {{birth date and age|1963|05|23}}
+  const numeric1 = raw.match(/\{\{\s*birth date(?: and age)?\s*\|(\d{4})\|(\d{1,2})\|(\d{1,2})/i);
+  if (numeric1) {
+    const [, year, mm, dd] = numeric1;
+    return `${year}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  }
+  const numeric2 = raw.match(/\{\{\s*birth date(?: and age)?\s*\|[^|}]+\|(\d{4})\|(\d{1,2})\|(\d{1,2})/i);
+  if (numeric2) {
+    const [, year, mm, dd] = numeric2;
+    return `${year}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  }
+  // Handle common date templates like:
+  //   {{birth date and age|8 September 1974|df=y}}
+  const template = raw.match(/\{\{\s*birth date(?: and age)?\s*\|\s*([^|}]+)\s*(?:\||\}\})/i);
+  const resolvedRaw = template?.[1] ? template[1] : raw;
+  const stripped = stripWikiMarkup(resolvedRaw);
   const iso = stripped.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
   const dmy = stripped.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
@@ -187,7 +216,15 @@ export function parseVenueRecordAttendance(raw?: string): number | undefined {
 }
 
 function infoboxMatches(name: string): boolean {
-  return ALL_INFOBOXES.has(name);
+  if (ALL_INFOBOXES.has(name)) return true;
+  // Be a bit more tolerant: Wikipedia uses multiple infobox template name variants
+  // (e.g. different rugby code / coach vs player wording). We still want to parse
+  // these as long as they clearly belong to a rugby biography.
+  if (name.includes("officeholder")) return true;
+  return (
+    name.includes("infobox rugby") &&
+    (name.includes("biography") || name.includes("player") || name.includes("coach"))
+  );
 }
 
 function extractInfoboxFromHtml(html: string): { template: string; params: InfoboxParams } | null {
@@ -389,7 +426,30 @@ export function parseWikipediaArchiveFromHtml(input: {
 
   if (resolvedType === "coach") {
     const coachingCareer = collectCoachingRows(infobox.params);
+    const birthDate = parseBirthDate(infobox.params.birth_date ?? infobox.params.born);
+    const heightCm = parseHeightCm(infobox.params.height ?? infobox.params.height_cm);
     const birthPlace = stripWikiMarkup(infobox.params.birth_place) || undefined;
+    const clubCareer = collectIndexedRows(
+      infobox.params,
+      "years",
+      "clubs",
+      "apps",
+      "points",
+      "club",
+    );
+    const internationalCareer = collectIndexedRows(
+      infobox.params,
+      "repyears",
+      "repteam",
+      "repcaps",
+      "reppoints",
+      "international",
+    );
+    const playingCareer =
+      clubCareer.length || internationalCareer.length
+        ? [...clubCareer, ...internationalCareer]
+        : undefined;
+    const positions = parsePositions(infobox.params.position ?? infobox.params.ru_position);
     const honours = input.wikitext
       ? parsePlayerHonoursFromWikitext(input.wikitext)
       : parsePlayerHonoursFromHtml(input.html);
@@ -401,12 +461,15 @@ export function parseWikipediaArchiveFromHtml(input: {
       wikidataId: input.wikidataId,
       name,
       fullName: stripWikiMarkup(infobox.params.fullname ?? infobox.params.full_name) || undefined,
-      birthDate: parseBirthDate(infobox.params.birth_date),
+      birthDate,
       birthPlace,
       nationality: parseNationalityFromBirthPlace(birthPlace),
+      heightCm,
       imageUrl: input.imageUrl,
       bioSummary,
       coachingCareer,
+      playingCareer,
+      positions,
       honourLines: honourLines.length ? honourLines : undefined,
       infoboxTemplate: infobox.template,
     };

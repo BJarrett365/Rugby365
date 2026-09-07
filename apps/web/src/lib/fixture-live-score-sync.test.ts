@@ -83,6 +83,33 @@ describe("resolveLiveScoreSyncPatch", () => {
     expect(patch.period).toBe("half_time");
   });
 
+  it("maps Deleted SDMS feeds with scores to full_time", () => {
+    expect(
+      resolveLiveScoreSyncPatch(
+        detail({
+          status: "Deleted",
+          home_team_score: 29,
+          away_team_score: 24,
+          minutes: 0,
+          seconds: 0,
+        }),
+        { ...existing, homeScore: 0, awayScore: 0, status: "scheduled", period: "not_started" },
+      ),
+    ).toEqual({
+      homeScore: 29,
+      awayScore: 24,
+      status: "full_time",
+    });
+  });
+
+  it("accepts SDMS match ids and rejects wikipedia/numeric ids", async () => {
+    const { isSdmsExternalMatchId } = await import("./fixture-live-score-sync");
+    expect(isSdmsExternalMatchId("d9rx3q29")).toBe(true);
+    expect(isSdmsExternalMatchId("wikipedia:foo")).toBe(false);
+    expect(isSdmsExternalMatchId("9133")).toBe(false);
+    expect(isSdmsExternalMatchId("1-4307593")).toBe(false);
+  });
+
   it("respects locked score fields", () => {
     expect(
       resolveLiveScoreSyncPatch(detail({}), existing, new Set(["homeScore"])),
