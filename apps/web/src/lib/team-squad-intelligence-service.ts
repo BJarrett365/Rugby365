@@ -2,12 +2,13 @@
  * Squad value + strength aggregates for Compare Teams MVP.
  */
 import "server-only";
-import { and, asc, desc, eq, ilike, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import {
   competitionSeasons,
   fixturePlayers,
   fixtures,
   playerMarketValues,
+  playerMatchRatings,
   playerRatings,
   players,
   teams,
@@ -17,13 +18,17 @@ import {
 } from "@rugby365/db";
 import { getDb } from "./db";
 import { allRelatedTeamIds, resolveCanonicalTeam } from "./coach-team-aliases";
-import { baseMarketValueFromRating, formatGbpCompact } from "./player-value-math";
+import { formatGbpCompact } from "./player-value-math";
 import { compareByPlayingPosition } from "./player-radar-positions";
 import { computeTeamRating, TEAM_RATING_MODEL } from "./team-rating-math";
 import type {
+  PlayerMatchRatingPoint,
   TeamCompareSidePacket,
   TeamFormSummary,
+  TeamLastMatchLineupMeta,
   TeamSquadPlayerRow,
+  TeamSquadRole,
+  TeamSquadScope,
   TeamSquadValueSummary,
 } from "./team-squad-intelligence-types";
 
@@ -45,21 +50,62 @@ function ageFromBirthDate(birthDate: Date | string | null | undefined): number |
   return age >= 0 && age < 80 ? age : null;
 }
 
-async function resolveSquadPlayers(teamId: string): Promise<
-  Array<{
-    id: string;
-    slug: string;
-    name: string;
-    positionName: string | null;
-    birthDate: Date | null;
-    rating: number | null;
-    marketValueGbp: number | null;
-  }>
-> {
+const RECENT_SQUAD_MONTHS = 18;
+const MATCH_RATING_HISTORY_LIMIT = 12;
+
+type RawSquadPlayer = {
+  id: string;
+  slug: string;
+  name: string;
+  positionName: string | null;
+  birthDate: Date | null;
+  rating: number | null;
+  marketValueGbp: number | null;
+  imageUrl: string | null;
+};
+
+type LastMatchAppearance = {
+  playerId: string;
+  jerseyNumber: number | null;
+  squadRole: string | null;
+  positionName: string | null;
+};
+
+function monthsAgo(months: number): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - months);
+  return d;
+}
+
+function daysFromNow(days: number): Date {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+}
+
+function lineupRole(squadRole: string | null | undefined, jersey: number | null): TeamSquadRole {
+  const role = (squadRole || "").toLowerCase();
+  if (role.includes("start") || (jersey != null && jersey >= 1 && jersey <= 15 && !role.includes("sub") && !role.includes("bench") && !role.includes("repl"))) {
+    return "starting";
+  }
+  if (role.includes("sub") || role.includes("bench") || role.includes("repl") || (jersey != null && jersey >= 16)) {
+    return "bench";
+  }
+  if (jersey != null && jersey >= 1 && jersey <= 15) return "starting";
+  return "squad";
+}
+
+function betterLineupRow(a: LastMatchAppearance, b: LastMatchAppearance): LastMatchAppearance {
+  const aPos = a.positionName?.trim() ? 1 : 0;
+  const bPos = b.positionName?.trim() ? 1 : 0;
+  if (aPos !== bPos) return aPos > bPos ? a : b;
+  const aJersey = a.jerseyNumber != null ? 1 : 0;
+  const bJersey = b.jerseyNumber != null ? 1 : 0;
+  return aJersey >= bJersey ? a : b;
+}
+
+async function loadPlayersByIds(ids: string[]): Promise<RawSquadPlayer[]> {
+  if (ids.length === 0) return [];
   const db = getDb();
-  const teamIds = await allRelatedTeamIds([teamId]);
-
-  const clubOrIntl = await db
+  return db
     .select({
       id: players.id,
       slug: players.slug,
@@ -68,44 +114,7 @@ async function resolveSquadPlayers(teamId: string): Promise<
       birthDate: players.birthDate,
       rating: playerRatings.playerRating,
       marketValueGbp: playerMarketValues.marketValueGbp,
-    })
-    .from(players)
-    .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
-    .leftJoin(
-      playerMarketValues,
-      and(eq(playerMarketValues.playerId, players.id), eq(playerMarketValues.isCurrent, true)),
-    )
-    .where(
-      and(
-        eq(players.isPublic, true),
-        eq(players.publishStatus, "published"),
-        or(inArray(players.clubTeamId, teamIds), inArray(players.internationalTeamId, teamIds)),
-      ),
-    )
-    .orderBy(asc(players.name));
-
-  if (clubOrIntl.length >= 8) return clubOrIntl;
-
-  // Fallback: recent appearance squad for this team.
-  const appearanceIds = await db
-    .selectDistinct({ playerId: fixturePlayers.playerId })
-    .from(fixturePlayers)
-    .innerJoin(fixtures, eq(fixturePlayers.fixtureId, fixtures.id))
-    .where(inArray(fixturePlayers.teamId, teamIds))
-    .limit(80);
-
-  const ids = appearanceIds.map((r) => r.playerId).filter(Boolean);
-  if (ids.length === 0) return clubOrIntl;
-
-  const appearancePlayers = await db
-    .select({
-      id: players.id,
-      slug: players.slug,
-      name: players.name,
-      positionName: players.positionName,
-      birthDate: players.birthDate,
-      rating: playerRatings.playerRating,
-      marketValueGbp: playerMarketValues.marketValueGbp,
+      imageUrl: sql<string | null>`nullif(trim(coalesce(${players.imageUrl}, ${players.badgeImageUrl})), '')`,
     })
     .from(players)
     .leftJoin(playerRatings, eq(playerRatings.playerId, players.id))
@@ -121,57 +130,197 @@ async function resolveSquadPlayers(teamId: string): Promise<
       ),
     )
     .orderBy(asc(players.name));
-
-  const byId = new Map(clubOrIntl.map((p) => [p.id, p]));
-  for (const p of appearancePlayers) byId.set(p.id, p);
-  return [...byId.values()];
 }
 
-function buildSquadRows(
-  raw: Awaited<ReturnType<typeof resolveSquadPlayers>>,
-): TeamSquadPlayerRow[] {
-  const withValues = raw.map((p) => {
+async function loadMatchRatingHistory(
+  playerIds: string[],
+): Promise<Map<string, PlayerMatchRatingPoint[]>> {
+  const out = new Map<string, PlayerMatchRatingPoint[]>();
+  if (playerIds.length === 0) return out;
+  const db = getDb();
+  const rows = await db
+    .select({
+      playerId: playerMatchRatings.playerId,
+      fixtureId: playerMatchRatings.fixtureId,
+      rating: playerMatchRatings.rating,
+      kickoffAt: fixtures.kickoffAt,
+    })
+    .from(playerMatchRatings)
+    .innerJoin(fixtures, eq(fixtures.id, playerMatchRatings.fixtureId))
+    .where(
+      and(
+        inArray(playerMatchRatings.playerId, playerIds),
+        sql`${playerMatchRatings.rating} is not null`,
+      ),
+    )
+    .orderBy(desc(fixtures.kickoffAt));
+
+  for (const row of rows) {
+    const rating = row.rating != null && Number.isFinite(Number(row.rating)) ? Number(row.rating) : null;
+    if (rating == null) continue;
+    const list = out.get(row.playerId) ?? [];
+    if (list.length >= MATCH_RATING_HISTORY_LIMIT) continue;
+    list.push({
+      fixtureId: row.fixtureId,
+      kickoffAt: row.kickoffAt ? new Date(row.kickoffAt).toISOString() : null,
+      rating,
+    });
+    out.set(row.playerId, list);
+  }
+
+  for (const [id, list] of out) {
+    out.set(id, [...list].reverse());
+  }
+  return out;
+}
+
+async function loadLastMatchAppearances(
+  teamIds: string[],
+): Promise<{ meta: TeamLastMatchLineupMeta | null; appearances: LastMatchAppearance[] }> {
+  const db = getDb();
+  const now = new Date();
+  const recentFixtures = await db
+    .select({
+      id: fixtures.id,
+      kickoffAt: fixtures.kickoffAt,
+      competitionName: fixtures.competitionName,
+      status: fixtures.status,
+    })
+    .from(fixtures)
+    .where(
+      and(
+        or(inArray(fixtures.homeTeamId, teamIds), inArray(fixtures.awayTeamId, teamIds)),
+        lte(fixtures.kickoffAt, now),
+      ),
+    )
+    .orderBy(desc(fixtures.kickoffAt))
+    .limit(40);
+
+  for (const fixture of recentFixtures) {
+    const rows = await db
+      .select({
+        playerId: fixturePlayers.playerId,
+        jerseyNumber: fixturePlayers.jerseyNumber,
+        squadRole: fixturePlayers.squadRole,
+        positionName: fixturePlayers.positionName,
+      })
+      .from(fixturePlayers)
+      .where(
+        and(eq(fixturePlayers.fixtureId, fixture.id), inArray(fixturePlayers.teamId, teamIds)),
+      );
+    if (rows.length < 10) continue;
+
+    const byJersey = new Map<string, LastMatchAppearance>();
+    for (const row of rows) {
+      const jersey = row.jerseyNumber;
+      const role = lineupRole(row.squadRole, jersey);
+      const key = jersey != null ? `j:${jersey}` : `p:${row.playerId}`;
+      const next: LastMatchAppearance = {
+        playerId: row.playerId,
+        jerseyNumber: jersey,
+        squadRole: role,
+        positionName: row.positionName,
+      };
+      const prev = byJersey.get(key);
+      byJersey.set(key, prev ? betterLineupRow(prev, next) : next);
+    }
+    const appearances = [...byJersey.values()];
+    const starterCount = appearances.filter((r) => r.squadRole === "starting").length;
+    if (starterCount < 8) continue;
+    return {
+      meta: {
+        fixtureId: fixture.id,
+        kickoffAt: fixture.kickoffAt ? new Date(fixture.kickoffAt).toISOString() : null,
+        competitionName: fixture.competitionName ?? null,
+        starterCount,
+        substituteCount: appearances.filter((r) => r.squadRole === "bench").length,
+      },
+      appearances,
+    };
+  }
+
+  return { meta: null, appearances: [] };
+}
+
+async function resolveRecentSquad(teamId: string): Promise<{
+  scope: TeamSquadScope;
+  lastMatchLineup: TeamLastMatchLineupMeta | null;
+  players: TeamSquadPlayerRow[];
+}> {
+  const db = getDb();
+  const teamIds = await allRelatedTeamIds([teamId]);
+  const since = monthsAgo(RECENT_SQUAD_MONTHS);
+  const until = daysFromNow(14);
+
+  const [recentIds, lastMatch] = await Promise.all([
+    db
+      .selectDistinct({ playerId: fixturePlayers.playerId })
+      .from(fixturePlayers)
+      .innerJoin(fixtures, eq(fixturePlayers.fixtureId, fixtures.id))
+      .where(
+        and(
+          inArray(fixturePlayers.teamId, teamIds),
+          gte(fixtures.kickoffAt, since),
+          lte(fixtures.kickoffAt, until),
+        ),
+      ),
+    loadLastMatchAppearances(teamIds),
+  ]);
+
+  const idSet = new Set(recentIds.map((r) => r.playerId).filter(Boolean));
+  for (const row of lastMatch.appearances) idSet.add(row.playerId);
+  const ids = [...idSet];
+  if (ids.length === 0) {
+    return { scope: "unavailable", lastMatchLineup: lastMatch.meta, players: [] };
+  }
+
+  const [raw, history] = await Promise.all([loadPlayersByIds(ids), loadMatchRatingHistory(ids)]);
+  const lastByPlayer = new Map(lastMatch.appearances.map((r) => [r.playerId, r]));
+
+  const playersOut: TeamSquadPlayerRow[] = raw.map((p) => {
     const rating = p.rating != null && Number.isFinite(p.rating) ? p.rating : null;
-    const marketValueGbp =
-      p.marketValueGbp != null && Number.isFinite(p.marketValueGbp)
-        ? p.marketValueGbp
-        : baseMarketValueFromRating(rating).midGbp;
+    const stored =
+      p.marketValueGbp != null && Number.isFinite(p.marketValueGbp) ? p.marketValueGbp : null;
+    const last = lastByPlayer.get(p.id);
     return {
       id: p.id,
       slug: p.slug,
       name: p.name,
-      positionName: p.positionName,
+      positionName: last?.positionName || p.positionName,
       rating,
-      marketValueGbp,
-      marketValueLabel: formatGbpCompact(marketValueGbp),
+      marketValueGbp: stored,
+      marketValueLabel: stored != null ? formatGbpCompact(stored) : null,
+      marketValueIsStored: stored != null,
       age: ageFromBirthDate(p.birthDate),
-      squadRole: "squad" as const,
+      jerseyNumber: last?.jerseyNumber ?? null,
+      squadRole: last ? lineupRole(last.squadRole, last.jerseyNumber) : "squad",
+      imageUrl: p.imageUrl ?? null,
+      matchRatingHistory: history.get(p.id) ?? [],
     };
   });
 
-  // Prefer higher rating for XV/bench assignment, then position order for display.
-  const byStrength = [...withValues].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-  const startingIds = new Set(byStrength.slice(0, 15).map((p) => p.id));
-  const benchIds = new Set(byStrength.slice(15, 23).map((p) => p.id));
+  return {
+    scope: "recent_match_squads",
+    lastMatchLineup: lastMatch.meta,
+    players: playersOut.sort(compareByPlayingPosition),
+  };
+}
 
-  return withValues
-    .map((p) => ({
-      ...p,
-      squadRole: startingIds.has(p.id)
-        ? ("starting" as const)
-        : benchIds.has(p.id)
-          ? ("bench" as const)
-          : ("squad" as const),
-    }))
-    .sort(compareByPlayingPosition);
+function valueSum(players: TeamSquadPlayerRow[]): number | null {
+  const stored = players
+    .map((p) => p.marketValueGbp)
+    .filter((v): v is number => v != null && Number.isFinite(v));
+  if (stored.length === 0) return null;
+  return stored.reduce((s, v) => s + v, 0);
 }
 
 function summarizeSquad(squad: TeamSquadPlayerRow[]): TeamSquadValueSummary {
-  const total = squad.reduce((s, p) => s + p.marketValueGbp, 0);
+  const stored = squad.filter((p) => p.marketValueGbp != null);
+  const total = valueSum(squad);
   const starting = squad.filter((p) => p.squadRole === "starting");
   const bench = squad.filter((p) => p.squadRole === "bench");
-  const startingTotal = starting.reduce((s, p) => s + p.marketValueGbp, 0);
-  const benchTotal = bench.reduce((s, p) => s + p.marketValueGbp, 0);
+  const startingTotal = valueSum(starting);
+  const benchTotal = valueSum(bench);
   const rated = squad.filter((p) => p.rating != null);
   const ages = squad.map((p) => p.age).filter((a): a is number => a != null);
   const avgRating =
@@ -183,33 +332,37 @@ function summarizeSquad(squad: TeamSquadPlayerRow[]): TeamSquadValueSummary {
       ? Math.round((ages.reduce((s, a) => s + a, 0) / ages.length) * 10) / 10
       : null;
   const avgValue =
-    squad.length > 0 ? Math.round(total / squad.length) : null;
+    stored.length > 0 && total != null ? Math.round(total / stored.length) : null;
 
   return {
     playerCount: squad.length,
     ratedPlayerCount: rated.length,
+    storedValueCount: stored.length,
     totalSquadValueGbp: total,
-    totalSquadValueLabel: formatGbpCompact(total),
+    totalSquadValueLabel: total != null ? formatGbpCompact(total) : null,
     averagePlayerValueGbp: avgValue,
     averagePlayerValueLabel: avgValue != null ? formatGbpCompact(avgValue) : null,
-    startingXvValueGbp: starting.length > 0 ? startingTotal : null,
-    startingXvValueLabel: starting.length > 0 ? formatGbpCompact(startingTotal) : null,
-    benchValueGbp: bench.length > 0 ? benchTotal : null,
-    benchValueLabel: bench.length > 0 ? formatGbpCompact(benchTotal) : null,
+    startingXvValueGbp: startingTotal,
+    startingXvValueLabel: startingTotal != null ? formatGbpCompact(startingTotal) : null,
+    benchValueGbp: benchTotal,
+    benchValueLabel: benchTotal != null ? formatGbpCompact(benchTotal) : null,
     averageAge: avgAge,
     averageRating: avgRating,
   };
 }
 
 function isCompletedFixtureStatus(status: string | null | undefined): boolean {
-  const s = (status || "").toLowerCase().replace(/\s+/g, "_");
+  const s = (status || "").toLowerCase().replace(/[\s-]+/g, "_");
   return (
-    s.includes("complete") ||
-    s.includes("finish") ||
+    s === "full_time" ||
+    s === "finished" ||
+    s === "completed" ||
+    s === "complete" ||
     s === "result" ||
     s === "ft" ||
-    s === "full_time" ||
-    s.includes("full_time")
+    s.includes("full_time") ||
+    s.includes("complete") ||
+    s.includes("finish")
   );
 }
 
@@ -217,6 +370,7 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
   const db = getDb();
   const teamIds = await allRelatedTeamIds([teamId]);
   const idSet = new Set(teamIds);
+  const completedStatuses = ["full_time", "finished", "completed", "ft", "result"];
   const rows = await db
     .select({
       homeTeamId: fixtures.homeTeamId,
@@ -231,12 +385,24 @@ async function loadForm(teamId: string, limit = 10): Promise<TeamFormSummary> {
         or(inArray(fixtures.homeTeamId, teamIds), inArray(fixtures.awayTeamId, teamIds)),
         isNotNull(fixtures.homeScore),
         isNotNull(fixtures.awayScore),
+        inArray(fixtures.status, completedStatuses),
+        sql`${fixtures.kickoffAt} is not null`,
+        sql`${fixtures.kickoffAt} < now()`,
       ),
     )
     .orderBy(desc(fixtures.kickoffAt))
-    .limit(limit * 3);
+    .limit(Math.max(limit * 4, 40));
 
-  const completed = rows.filter((row) => isCompletedFixtureStatus(row.status)).slice(0, limit);
+  const completed = rows
+    .filter((row) => isCompletedFixtureStatus(row.status))
+    // Prefer real results over 0–0 placeholder imports when we have enough depth.
+    .filter((row, _, all) => {
+      const isZeroDraw = (row.homeScore ?? 0) === 0 && (row.awayScore ?? 0) === 0;
+      if (!isZeroDraw) return true;
+      const nonZero = all.filter((r) => !((r.homeScore ?? 0) === 0 && (r.awayScore ?? 0) === 0));
+      return nonZero.length < limit;
+    })
+    .slice(0, limit);
 
   let won = 0;
   let drawn = 0;
@@ -374,20 +540,23 @@ async function loadHomeVenueName(teamId: string): Promise<string | null> {
   return venue?.name ?? null;
 }
 
-async function loadPrimaryCompetitionName(teamId: string): Promise<string | null> {
+async function loadLastCompletedCompetitionName(teamId: string): Promise<string | null> {
   const db = getDb();
-  const [row] = await db
-    .select({ competitionName: fixtures.competitionName })
+  const teamIds = await allRelatedTeamIds([teamId]);
+  const rows = await db
+    .select({ competitionName: fixtures.competitionName, status: fixtures.status })
     .from(fixtures)
     .where(
       and(
-        or(eq(fixtures.homeTeamId, teamId), eq(fixtures.awayTeamId, teamId)),
+        or(inArray(fixtures.homeTeamId, teamIds), inArray(fixtures.awayTeamId, teamIds)),
         sql`${fixtures.competitionName} is not null`,
+        lte(fixtures.kickoffAt, new Date()),
       ),
     )
     .orderBy(desc(fixtures.kickoffAt))
-    .limit(1);
-  return row?.competitionName ?? null;
+    .limit(12);
+  const completed = rows.find((r) => isCompletedFixtureStatus(r.status));
+  return completed?.competitionName ?? rows[0]?.competitionName ?? null;
 }
 
 export async function getTeamCompareSidePacket(
@@ -408,15 +577,15 @@ export async function getTeamCompareSidePacket(
     if (preferred) team = preferred;
   }
 
-  const [rawSquad, form, trophyCount, world, coachName, homeVenueName, competitionName] =
+  const [recentSquad, form, trophyCount, world, coachName, homeVenueName, competitionName] =
     await Promise.all([
-      resolveSquadPlayers(team.id),
+      resolveRecentSquad(team.id),
       loadForm(team.id, 10),
       loadTrophyCount(team.id),
       loadWorldRank(team.id),
       loadCoachName(team.id),
       loadHomeVenueName(team.id),
-      loadPrimaryCompetitionName(team.id),
+      loadLastCompletedCompetitionName(team.id),
     ]);
 
   let foundedYear = team.foundedYear;
@@ -429,7 +598,7 @@ export async function getTeamCompareSidePacket(
     foundedYear = siblingYears.find((row) => row.foundedYear != null)?.foundedYear ?? null;
   }
 
-  const squad = buildSquadRows(rawSquad);
+  const squad = recentSquad.players;
   const squadValue = summarizeSquad(squad);
   const top23 = [...squad]
     .filter((p) => p.rating != null)
@@ -470,6 +639,8 @@ export async function getTeamCompareSidePacket(
       overall: rating.overall,
       components: rating.components,
     },
+    squadScope: recentSquad.scope,
+    lastMatchLineup: recentSquad.lastMatchLineup,
     squad,
   };
 }

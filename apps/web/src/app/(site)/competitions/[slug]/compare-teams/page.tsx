@@ -12,11 +12,11 @@ export default async function CompetitionCompareTeamsPage({
   if (!competition) notFound();
 
   return (
-    <article className="space-y-4">
+    <article className="pr-mc-fixtures-page pr-h2h-page space-y-4">
       <header>
         <h1 className="pr-player-profile-header__name m-0">Compare teams</h1>
         <p className="text-sm text-[var(--pr-mc-muted)] mt-1 mb-0">
-          Defaults to {competition.name}. Switch either side to another competition anytime.
+          Pick two teams, then Compare teams for the full head-to-head board.
         </p>
       </header>
       <CompareTeamsPicker

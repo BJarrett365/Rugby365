@@ -111,6 +111,8 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
   const [seasonsBySlug, setSeasonsBySlug] = useState<Record<string, Array<{ label: string; year: number }>>>({});
   const [sideA, setSideA] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
   const [sideB, setSideB] = useState<SideState>(() => emptySide(defaultCompetitionSlug));
+  const [comparedPair, setComparedPair] = useState<{ a: string; b: string } | null>(null);
+  const [exampleSeeded, setExampleSeeded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,6 +194,41 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
   useSideTeams(sideA.competitionSlug, sideA.seasonLabel, setSideA);
   useSideTeams(sideB.competitionSlug, sideB.seasonLabel, setSideB);
 
+  // RWC hub example: pre-select South Africa vs England once rosters load.
+  useEffect(() => {
+    if (exampleSeeded) return;
+    if (!isRugbyWorldCupSlug(hubSlug)) return;
+    if (sideA.rosterLoading || sideB.rosterLoading) return;
+    if (!sideA.teams.length || !sideB.teams.length) return;
+
+    const pick = (teams: TeamOption[], ...needles: string[]) => {
+      const matches = teams.filter((t) =>
+        needles.some((n) => t.name.toLowerCase() === n || t.slug.toLowerCase().startsWith(n)),
+      );
+      return (
+        matches.find((t) => !t.slug.includes("__legacy__")) ??
+        matches[0] ??
+        null
+      );
+    };
+
+    const sa = pick(sideA.teams, "south africa", "south-africa");
+    const eng = pick(sideB.teams, "england");
+    if (!sa || !eng) return;
+
+    setSideA((prev) => ({ ...prev, teamSlug: sa.slug }));
+    setSideB((prev) => ({ ...prev, teamSlug: eng.slug }));
+    setComparedPair({ a: sa.slug, b: eng.slug });
+    setExampleSeeded(true);
+  }, [
+    exampleSeeded,
+    hubSlug,
+    sideA.rosterLoading,
+    sideB.rosterLoading,
+    sideA.teams,
+    sideB.teams,
+  ]);
+
   const canCompare = Boolean(sideA.teamSlug && sideB.teamSlug && sideA.teamSlug !== sideB.teamSlug);
 
   const competitionOptions = useMemo(() => {
@@ -243,6 +280,7 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
   const setTeam = (side: Side, teamSlug: string) => {
     if (side === "a") setSideA((prev) => ({ ...prev, teamSlug }));
     else setSideB((prev) => ({ ...prev, teamSlug }));
+    setComparedPair(null);
   };
 
   const renderSide = (side: Side) => {
@@ -336,47 +374,73 @@ export function CompareTeamsPicker({ competitionSlug, competitionName }: Props) 
         <p className="m-0 text-sm text-red-300">{competitionsError}</p>
       ) : null}
 
-      <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
-        {hubSlug
-          ? `Both sides start on ${competitionName || "this competition"} — switch either side to compare across competitions.`
-          : "Defaults to Nations Championship — pick any two teams for a side-by-side intelligence compare."}
-      </p>
+      {comparedPair ? (
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="cms-btn touch-target"
+              onClick={() => setComparedPair(null)}
+            >
+              Change teams
+            </button>
+            <Link
+              href={`/teams/${encodeURIComponent(comparedPair.a)}/compare/${encodeURIComponent(comparedPair.b)}`}
+              className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
+            >
+              Open full page
+            </Link>
+          </div>
+          <CompareTeamsResult slugA={comparedPair.a} slugB={comparedPair.b} />
+        </>
+      ) : (
+        <>
+          <p className="m-0 text-sm text-[var(--pr-mc-muted)]">
+            {hubSlug
+              ? `Both sides start on ${competitionName || "this competition"}. Pick two teams, then Compare teams for the full head-to-head board.`
+              : "Pick any two teams, then Compare teams for ratings, form, meetings and squad intelligence."}
+          </p>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {renderSide("a")}
-        {renderSide("b")}
-      </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderSide("a")}
+            {renderSide("b")}
+          </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {canCompare ? (
-          <Link
-            href={`/teams/${encodeURIComponent(sideA.teamSlug)}/compare/${encodeURIComponent(sideB.teamSlug)}`}
-            className="cms-btn cms-btn--primary touch-target"
-          >
-            Open full compare
-          </Link>
-        ) : (
-          <button type="button" className="cms-btn cms-btn--primary touch-target" disabled>
-            Select two teams to compare
-          </button>
-        )}
-        {hubSlug ? (
-          <Link
-            href={`/competitions/${encodeURIComponent(hubSlug)}/table`}
-            className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
-          >
-            Back to table
-          </Link>
-        ) : (
-          <Link href="/players/compare" className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline">
-            Compare players
-          </Link>
-        )}
-      </div>
-
-      {canCompare ? (
-        <CompareTeamsResult slugA={sideA.teamSlug} slugB={sideB.teamSlug} />
-      ) : null}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="cms-btn cms-btn--primary touch-target"
+              disabled={!canCompare}
+              onClick={() => {
+                if (!canCompare) return;
+                setComparedPair({ a: sideA.teamSlug, b: sideB.teamSlug });
+              }}
+            >
+              Compare teams
+            </button>
+            {canCompare ? (
+              <Link
+                href={`/teams/${encodeURIComponent(sideA.teamSlug)}/compare/${encodeURIComponent(sideB.teamSlug)}`}
+                className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
+              >
+                Open full page
+              </Link>
+            ) : null}
+            {hubSlug ? (
+              <Link
+                href={`/competitions/${encodeURIComponent(hubSlug)}/table`}
+                className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline"
+              >
+                Back to table
+              </Link>
+            ) : (
+              <Link href="/players/compare" className="text-sm text-[var(--pr-mc-link,#54b989)] hover:underline">
+                Compare players
+              </Link>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

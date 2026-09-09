@@ -11,7 +11,7 @@ function teamInitials(name: string): string {
   return name.trim().slice(0, 2).toUpperCase() || "?";
 }
 
-const SIZE_PX = { xs: 18, sm: 22, md: 32, lg: 44 } as const;
+const SIZE_PX = { xs: 18, sm: 22, md: 32, lg: 56 } as const;
 
 /**
  * Team crest — Planet Rugby circular badge.

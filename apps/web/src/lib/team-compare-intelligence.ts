@@ -171,6 +171,30 @@ export function buildModelledStartingXv(squad: TeamSquadPlayerRow[]): TeamXvSlot
   return slots;
 }
 
+/** Official last-match XV from fixture_players jersey numbers. Does not fill gaps from ratings. */
+export function buildLastMatchStartingXv(squad: TeamSquadPlayerRow[]): TeamXvSlot[] {
+  const starters = squad.filter((p) => p.squadRole === "starting");
+  return XV_SLOTS.map((slot) => {
+    const matches = starters.filter((p) => p.jerseyNumber === slot.jersey);
+    const player =
+      matches.sort((a, b) => {
+        const ap = a.positionName?.trim() ? 1 : 0;
+        const bp = b.positionName?.trim() ? 1 : 0;
+        return bp - ap;
+      })[0] ?? null;
+    return {
+      jersey: slot.jersey,
+      label: slot.label,
+      family: slot.family,
+      player,
+    };
+  });
+}
+
+export function filledXvCount(slots: TeamXvSlot[]): number {
+  return slots.filter((s) => s.player).length;
+}
+
 export function buildPositionBattles(
   squadA: TeamSquadPlayerRow[],
   squadB: TeamSquadPlayerRow[],
@@ -252,15 +276,18 @@ export function buildDepthSummary(squad: TeamSquadPlayerRow[]): TeamDepthSummary
 }
 
 export function summarizeXv(slots: TeamXvSlot[]): {
-  valueGbp: number;
+  valueGbp: number | null;
   averageRating: number | null;
   averageAge: number | null;
   filled: number;
 } {
-  const players = slots.map((s) => s.player).filter((p): p is TeamSquadPlayerRow => Boolean(p));
-  const valueGbp = players.reduce((s, p) => s + p.marketValueGbp, 0);
-  const rated = players.filter((p) => p.rating != null);
-  const aged = players.filter((p) => p.age != null);
+  const xvPlayers = slots.map((s) => s.player).filter((p): p is TeamSquadPlayerRow => Boolean(p));
+  const stored = xvPlayers
+    .map((p) => p.marketValueGbp)
+    .filter((v): v is number => v != null && Number.isFinite(v));
+  const valueGbp = stored.length > 0 ? stored.reduce((s, v) => s + v, 0) : null;
+  const rated = xvPlayers.filter((p) => p.rating != null);
+  const aged = xvPlayers.filter((p) => p.age != null);
   return {
     valueGbp,
     averageRating:
@@ -271,6 +298,6 @@ export function summarizeXv(slots: TeamXvSlot[]): {
       aged.length > 0
         ? Math.round((aged.reduce((s, p) => s + (p.age ?? 0), 0) / aged.length) * 10) / 10
         : null,
-    filled: players.length,
+    filled: xvPlayers.length,
   };
 }

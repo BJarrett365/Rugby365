@@ -37,7 +37,7 @@ function TeamXvPitch({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h3 className="m-0 text-sm font-semibold text-[var(--pr-mc-text)]">{teamName}</h3>
         <p className="m-0 text-xs text-[var(--pr-mc-muted)]">
-          XV {summary.valueLabel} · avg {summary.averageRating ?? "—"} · age{" "}
+          XV {summary.valueLabel ?? "—"} est. · avg {summary.averageRating ?? "—"} · age{" "}
           {summary.averageAge ?? "—"} · {summary.filled}/15
         </p>
       </div>

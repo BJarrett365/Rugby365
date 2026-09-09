@@ -45,7 +45,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "trophies",
-      label: "Titles",
+      label: "CMS Titles",
       group: "summary",
       a: n(teamA.trophyCount),
       b: n(teamB.trophyCount),
@@ -62,7 +62,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "squadValue",
-      label: "Total Squad Value (£)",
+      label: "Rugby365 Estimated Value (£)",
       group: "value",
       a: n(teamA.squadValue.totalSquadValueGbp),
       b: n(teamB.squadValue.totalSquadValueGbp),
@@ -70,7 +70,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "avgValue",
-      label: "Average Player Value (£)",
+      label: "Avg Stored Player Value (£)",
       group: "value",
       a: n(teamA.squadValue.averagePlayerValueGbp),
       b: n(teamB.squadValue.averagePlayerValueGbp),
@@ -78,7 +78,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "xvValue",
-      label: "Starting XV Value (£)",
+      label: "Rugby365 Estimated XV Value (£)",
       group: "value",
       a: n(teamA.squadValue.startingXvValueGbp),
       b: n(teamB.squadValue.startingXvValueGbp),
@@ -86,7 +86,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "benchValue",
-      label: "Bench Value (£)",
+      label: "Rugby365 Estimated Bench Value (£)",
       group: "value",
       a: n(teamA.squadValue.benchValueGbp),
       b: n(teamB.squadValue.benchValueGbp),
@@ -127,7 +127,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "formComponent",
-      label: "Form Rating",
+      label: "Team Form Score",
       group: "rating",
       a: n(teamA.rating.components.form),
       b: n(teamB.rating.components.form),
@@ -135,7 +135,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "valueComponent",
-      label: "Value Rating",
+      label: "Estimated Value Score",
       group: "rating",
       a: n(teamA.rating.components.value),
       b: n(teamB.rating.components.value),
@@ -143,7 +143,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "depth",
-      label: "Depth Rating",
+      label: "Modelled Squad-Size Score",
       group: "rating",
       a: n(teamA.rating.components.depth),
       b: n(teamB.rating.components.depth),
@@ -151,7 +151,7 @@ export function buildTeamCompareMetrics(
     },
     {
       key: "players",
-      label: "Squad Size",
+      label: "Recently Selected Players",
       group: "squad",
       a: n(teamA.squadValue.playerCount),
       b: n(teamB.squadValue.playerCount),

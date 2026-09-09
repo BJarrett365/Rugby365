@@ -1,22 +1,40 @@
 /** Shared team-compare types (safe for client imports). */
 
+export type TeamSquadRole = "starting" | "bench" | "squad";
+
+export type TeamSquadScope = "recent_match_squads" | "unavailable";
+
+export type TeamXvSource = "last_match" | "modelled" | "unavailable";
+
+export type PlayerMatchRatingPoint = {
+  fixtureId: string;
+  kickoffAt: string | null;
+  rating: number;
+};
+
 export type TeamSquadPlayerRow = {
   id: string;
   slug: string;
   name: string;
   positionName: string | null;
   rating: number | null;
-  marketValueGbp: number;
-  marketValueLabel: string;
+  /** Stored Rugby365 player-value-v1 row only. Null when no current stored value exists. */
+  marketValueGbp: number | null;
+  marketValueLabel: string | null;
+  marketValueIsStored: boolean;
   age: number | null;
-  squadRole: "starting" | "bench" | "squad";
+  jerseyNumber: number | null;
+  squadRole: TeamSquadRole;
+  imageUrl: string | null;
+  matchRatingHistory: PlayerMatchRatingPoint[];
 };
 
 export type TeamSquadValueSummary = {
   playerCount: number;
   ratedPlayerCount: number;
-  totalSquadValueGbp: number;
-  totalSquadValueLabel: string;
+  storedValueCount: number;
+  totalSquadValueGbp: number | null;
+  totalSquadValueLabel: string | null;
   averagePlayerValueGbp: number | null;
   averagePlayerValueLabel: string | null;
   startingXvValueGbp: number | null;
@@ -38,6 +56,14 @@ export type TeamFormSummary = {
   lastResults: Array<"W" | "D" | "L">;
 };
 
+export type TeamLastMatchLineupMeta = {
+  fixtureId: string;
+  kickoffAt: string | null;
+  competitionName: string | null;
+  starterCount: number;
+  substituteCount: number;
+};
+
 export type TeamCompareSidePacket = {
   id: string;
   slug: string;
@@ -47,6 +73,7 @@ export type TeamCompareSidePacket = {
   countryName: string | null;
   teamType: string | null;
   foundedYear: number | null;
+  /** Last completed fixture competition name — not necessarily the current programme. */
   competitionName: string | null;
   coachName: string | null;
   homeVenueName: string | null;
@@ -66,5 +93,7 @@ export type TeamCompareSidePacket = {
       trophies: number | null;
     };
   };
+  squadScope: TeamSquadScope;
+  lastMatchLineup: TeamLastMatchLineupMeta | null;
   squad: TeamSquadPlayerRow[];
 };

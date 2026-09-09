@@ -15,7 +15,7 @@ const TABS = [
   { id: "form", label: "Form" },
   { id: "rating", label: "Ratings" },
   { id: "squad", label: "Squad" },
-  { id: "xv", label: "Starting XV" },
+    { id: "xv", label: "Last / Modelled XV" },
   { id: "battles", label: "Positions" },
   { id: "h2h", label: "Head-to-head" },
 ] as const;
@@ -97,7 +97,7 @@ function TeamHeadCard({ team }: { team: TeamCompareSidePacket }) {
         <div>
           <dt className="inline">Value </dt>
           <dd className="inline m-0 text-[var(--pr-mc-text)]">
-            {team.squadValue.totalSquadValueLabel}
+            {team.squadValue.totalSquadValueLabel ?? "—"}
           </dd>
         </div>
         <div>
@@ -111,12 +111,12 @@ function TeamHeadCard({ team }: { team: TeamCompareSidePacket }) {
           <dd className="inline m-0 text-[var(--pr-mc-text)]">{team.coachName ?? "—"}</dd>
         </div>
         <div>
-          <dt className="inline">Titles </dt>
+          <dt className="inline">CMS titles </dt>
           <dd className="inline m-0 text-[var(--pr-mc-text)]">{team.trophyCount}</dd>
         </div>
         <div className="col-span-2">
-          <dt className="inline">Stadium </dt>
-          <dd className="inline m-0 text-[var(--pr-mc-text)]">{team.homeVenueName ?? "—"}</dd>
+          <dt className="inline">Listed venue </dt>
+          <dd className="inline m-0 text-[var(--pr-mc-text)]">{team.homeVenueName ?? "Not available"}</dd>
         </div>
         <div className="col-span-2">
           <dt className="inline">Form </dt>

@@ -172,7 +172,7 @@ function familyMatches(playerFamily: RadarPositionFamily, slotFamily: RadarPosit
 }
 
 function pickXv(players: CoachDashboardPlayer[]): CoachTeamDashboard["valuableXv"] {
-  const unused = [...players].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || b.marketValueGbp - a.marketValueGbp);
+  const unused = [...players].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.marketValueGbp ?? 0) - (a.marketValueGbp ?? 0));
   const taken = new Set<string>();
   const out: CoachTeamDashboard["valuableXv"] = [];
   for (const slot of XV_SLOTS) {
@@ -396,15 +396,15 @@ export async function getCoachTeamDashboard(
   let forwardsValueGbp = 0;
   let backsValueGbp = 0;
   for (const p of players) {
-    if (FORWARD_FAMILIES.has(p.family)) forwardsValueGbp += p.marketValueGbp;
-    else backsValueGbp += p.marketValueGbp;
+    if (FORWARD_FAMILIES.has(p.family)) forwardsValueGbp += p.marketValueGbp ?? 0;
+    else backsValueGbp += p.marketValueGbp ?? 0;
   }
   const splitTotal = forwardsValueGbp + backsValueGbp;
   const forwardsPct = splitTotal > 0 ? Math.round((forwardsValueGbp / splitTotal) * 100) : 0;
   const backsPct = splitTotal > 0 ? 100 - forwardsPct : 0;
 
   const highestValuePlayer =
-    [...players].sort((a, b) => b.marketValueGbp - a.marketValueGbp)[0] ?? null;
+    [...players].sort((a, b) => (b.marketValueGbp ?? 0) - (a.marketValueGbp ?? 0))[0] ?? null;
   const youngestProspect =
     [...players]
       .filter((p) => p.age != null)
@@ -464,10 +464,10 @@ export async function getCoachTeamDashboard(
     .slice(0, 7);
 
   const risingStars = [...players]
-    .filter((p) => (p.age == null || p.age <= 26) && (p.rating != null || p.marketValueGbp > 0))
+    .filter((p) => (p.age == null || p.age <= 26) && (p.rating != null || (p.marketValueGbp ?? 0) > 0))
     .sort(
       (a, b) =>
-        (a.age ?? 99) - (b.age ?? 99) || (b.rating ?? 0) - (a.rating ?? 0) || b.marketValueGbp - a.marketValueGbp,
+        (a.age ?? 99) - (b.age ?? 99) || (b.rating ?? 0) - (a.rating ?? 0) || (b.marketValueGbp ?? 0) - (a.marketValueGbp ?? 0),
     )
     .slice(0, 5);
 
@@ -477,7 +477,7 @@ export async function getCoachTeamDashboard(
       : [...players]
           .sort(
             (a, b) =>
-              (a.age ?? 99) - (b.age ?? 99) || (b.rating ?? 0) - (a.rating ?? 0) || b.marketValueGbp - a.marketValueGbp,
+              (a.age ?? 99) - (b.age ?? 99) || (b.rating ?? 0) - (a.rating ?? 0) || (b.marketValueGbp ?? 0) - (a.marketValueGbp ?? 0),
           )
           .slice(0, 5);
 
@@ -488,7 +488,7 @@ export async function getCoachTeamDashboard(
     nationalTeamNickname(packet.name, packet.shortName) ??
     (/^ireland$/i.test(packet.name) ? "BOYS IN GREEN" : null);
 
-  const squadValueGbp = players.reduce((sum, p) => sum + p.marketValueGbp, 0);
+  const squadValueGbp = players.reduce((sum, p) => sum + (p.marketValueGbp ?? 0), 0);
   const rated = players.filter((p) => p.rating != null);
   const ages = players.map((p) => p.age).filter((age): age is number => age != null);
   const avgRating =

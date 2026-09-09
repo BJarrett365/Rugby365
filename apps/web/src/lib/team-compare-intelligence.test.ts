@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   buildDepthSummary,
+  buildLastMatchStartingXv,
   buildModelledStartingXv,
   buildPositionBattles,
+  filledXvCount,
 } from "./team-compare-intelligence";
 import type { TeamSquadPlayerRow } from "./team-squad-intelligence-types";
 
@@ -14,8 +16,12 @@ function p(
     rating: partial.rating ?? 80,
     marketValueGbp: partial.marketValueGbp ?? 100_000,
     marketValueLabel: partial.marketValueLabel ?? "£100k",
+    marketValueIsStored: partial.marketValueIsStored ?? true,
     age: partial.age ?? 27,
+    jerseyNumber: partial.jerseyNumber ?? null,
     squadRole: partial.squadRole ?? "squad",
+    imageUrl: partial.imageUrl ?? null,
+    matchRatingHistory: partial.matchRatingHistory ?? [],
     ...partial,
   };
 }
@@ -57,5 +63,16 @@ describe("team-compare-intelligence", () => {
     expect(summary.under23Count).toBe(1);
     expect(summary.over30Count).toBe(1);
     expect(summary.depthScore).not.toBeNull();
+  });
+
+  it("builds last-match XV from jersey numbers without rating fill", () => {
+    const xv = buildLastMatchStartingXv([
+      p({ id: "a10", name: "A FH", positionName: "fly-half", jerseyNumber: 10, squadRole: "starting" }),
+      p({ id: "a2", name: "A HK", positionName: "hooker", jerseyNumber: 2, squadRole: "starting" }),
+      p({ id: "bench", name: "Bench", positionName: "hooker", jerseyNumber: 16, squadRole: "bench", rating: 99 }),
+    ]);
+    expect(xv.find((s) => s.jersey === 10)?.player?.name).toBe("A FH");
+    expect(xv.find((s) => s.jersey === 1)?.player).toBeNull();
+    expect(filledXvCount(xv)).toBe(2);
   });
 });
