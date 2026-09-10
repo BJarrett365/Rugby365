@@ -2,15 +2,22 @@
  * Apply 0071 coach calc status + recalculate Rassie.
  *   npx tsx --require ./scripts/stub-server-only.cjs scripts/backfill-rassie-coach-data.ts
  */
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { coaches } from "@rugby365/db";
 import { getDb } from "../apps/web/src/lib/db";
 import { recalculateCoach, getCoachDataCoverage } from "../apps/web/src/lib/coach-recalc-service";
 import { loadCoachEligibleMatches, getCoachCareerRecord } from "../apps/web/src/lib/coach-career-record-service";
 
-const COACH_ID = "dbe4562a-7255-42c4-bb70-653153c4da3c";
+async function resolveCoachId() {
+  const db = getDb();
+  const [row] = await db.select({ id: coaches.id }).from(coaches).where(eq(coaches.slug, "rassie-erasmus")).limit(1);
+  if (!row) throw new Error("rassie-erasmus not found");
+  return row.id;
+}
 
 async function main() {
   const db = getDb();
+  const COACH_ID = await resolveCoachId();
   console.log("Applying calc_status columns…");
   await db.execute(sql`
     ALTER TABLE coaches

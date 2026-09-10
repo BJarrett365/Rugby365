@@ -41,7 +41,9 @@ function TeamLeaderboardCard({
       </header>
 
       {board.entries.length === 0 ? (
-        <p className="stat-board__empty">No data yet for this leaderboard.</p>
+        <p className="stat-board__empty">
+          {board.emptyMessage ?? "No data yet for this leaderboard."}
+        </p>
       ) : (
         <ol className="stat-board__list">
           {visible.map((entry) => (
@@ -155,6 +157,8 @@ export function CompetitionTeamStatsClient({
               ))}
             </div>
           </label>
+        ) : data?.seasonNote ? (
+          <p className="text-sm text-zinc-500 m-0 sm:col-span-2 self-end pb-2">{data.seasonNote}</p>
         ) : (
           <div className="sm:col-span-2 text-sm text-zinc-500 self-end pb-2">
             Team leaders across the selected season (from match team stats).
@@ -249,7 +253,7 @@ export function CompetitionTeamStatsClient({
             </p>
           )}
 
-          {data && data.coverage.rowCount === 0 ? (
+          {data && data.coverage.rowCount === 0 && !data.seasonNote ? (
             <p className="text-sm text-amber-400 mt-4">
               No team match stats imported for this season yet. Enrich finished matches from Planet
               Rugby / SDMS to populate these boards.

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { TeamOfWeekPicker } from "@/components/competitions/TeamOfWeekPicker";
 import { getCompetitionBySlug, listSeasonsForPicker } from "@/lib/competition-admin-service";
+import { isRugbyChampionshipLineageSlug } from "@/lib/rugby-championship-lineage";
+import { buildRugbyChampionshipTotwPickerSeasons } from "@/lib/rugby-championship-totw-rounds";
 import { buildTotwPickerSeasons } from "@/lib/team-of-week-picker";
 import { listPublishedEditionsForCompetition } from "@/lib/team-of-week-service";
 import "@/styles/team-of-week.css";
@@ -39,7 +41,9 @@ export default async function TeamOfWeekArchivePage({
     listSeasonsForPicker(competition.id),
   ]);
 
-  const pickerSeasons = buildTotwPickerSeasons(editions);
+  const pickerSeasons = isRugbyChampionshipLineageSlug(slug)
+    ? buildRugbyChampionshipTotwPickerSeasons(editions)
+    : buildTotwPickerSeasons(editions);
   const latest = editions[0];
 
   // Canonical browse URL is season + round — send users to the latest published edition.
@@ -47,6 +51,10 @@ export default async function TeamOfWeekArchivePage({
     redirect(
       `/competitions/${slug}/team-of-the-week/${latest.seasonYear}/${latest.roundKey}`,
     );
+  }
+
+  if (isRugbyChampionshipLineageSlug(slug)) {
+    redirect(`/competitions/${slug}/team-of-the-week/2025/round-1`);
   }
 
   return (

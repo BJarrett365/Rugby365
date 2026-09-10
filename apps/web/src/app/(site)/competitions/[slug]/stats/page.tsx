@@ -1,5 +1,6 @@
 import { CompetitionPlayerStatsClient } from "@/components/competitions/CompetitionPlayerStatsClient";
 import type { HemisphereFilter } from "@/lib/competition-player-leaderboards-service";
+import { canonicalSeasonQueryForCompetition } from "@/lib/season-label-utils";
 
 export default async function CompetitionStatsPage({
   params,
@@ -18,7 +19,7 @@ export default async function CompetitionStatsPage({
   return (
     <CompetitionPlayerStatsClient
       slug={slug}
-      initialSeason={sp.season}
+      initialSeason={canonicalSeasonQueryForCompetition(slug, sp.season)}
       initialHemisphere={hemisphere}
     />
   );

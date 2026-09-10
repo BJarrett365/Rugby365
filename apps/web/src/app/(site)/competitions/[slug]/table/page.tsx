@@ -1,4 +1,5 @@
 import { CompetitionTableClient } from "@/components/competitions/CompetitionTableClient";
+import { canonicalSeasonQueryForCompetition } from "@/lib/season-label-utils";
 
 export default async function CompetitionTablePage({
   params,
@@ -13,7 +14,7 @@ export default async function CompetitionTablePage({
   return (
     <CompetitionTableClient
       slug={slug}
-      initialSeason={sp.season}
+      initialSeason={canonicalSeasonQueryForCompetition(slug, sp.season)}
       initialView={(sp.view as "overall" | "home" | "away") ?? "overall"}
     />
   );

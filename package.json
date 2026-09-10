@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "node scripts/ensure-db.cjs && npm run dev -w @rugby365/web",
+    "dev:ensure": "node scripts/ensure-dev-server.cjs",
     "dev:kill-port": "lsof -tiTCP:3000 -sTCP:LISTEN | xargs kill 2>/dev/null || true",
     "dev:restart": "npm run dev:kill-port && rm -rf apps/web/.next apps/web/node_modules/.cache/rugby365-next && NEXT_DIST_DIR=node_modules/.cache/rugby365-next npm run dev -w @rugby365/web",
     "dev:restart:full": "npm run dev:kill-port && rm -rf apps/web/.next && node scripts/ensure-db.cjs && npm run dev -w @rugby365/web",
@@ -47,6 +48,7 @@
     "estimate:rwc:historical-stats": "tsx --require ./scripts/stub-server-only.cjs scripts/estimate-rwc-historical-player-stats.ts",
     "backfill:rwc:historical-stats": "tsx --require ./scripts/stub-server-only.cjs scripts/backfill-rwc-historical-player-stats.ts",
     "backfill:rwc:totw": "tsx --require ./scripts/stub-server-only.cjs scripts/backfill-rwc-team-of-the-week.ts",
+    "backfill:trc:totw": "tsx --require ./scripts/stub-server-only.cjs scripts/backfill-rugby-championship-team-of-the-week.ts",
     "scrape:rwc:wiki-stats": "tsx scripts/scrape-wikipedia-rwc-statistics.ts",
     "import:rwc:wiki-stats": "tsx --require ./scripts/stub-server-only.cjs scripts/import-wikipedia-rwc-statistics.ts",
     "import:wikipedia:rwc-players": "tsx --require ./scripts/stub-server-only.cjs scripts/import-wikipedia-rwc-players.ts",

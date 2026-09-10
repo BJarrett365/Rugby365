@@ -323,6 +323,7 @@ async function buildCandidates(fixtureIds: string[]): Promise<TotwCandidate[]> {
             name: players.name,
             slug: players.slug,
             imageUrl: players.imageUrl,
+            positionName: players.positionName,
           })
           .from(players)
           .where(inArray(players.id, playerIds))
@@ -385,7 +386,7 @@ async function buildCandidates(fixtureIds: string[]): Promise<TotwCandidate[]> {
       teamSlug: team.slug,
       teamImageUrl: team.imageUrl,
       fixtureId: r.fixtureId,
-      positionName: r.positionName,
+      positionName: r.positionName || player.positionName,
       jerseyNumber: r.jerseyNumber,
       squadRole: r.squadRole,
       matchRating: r.rating,

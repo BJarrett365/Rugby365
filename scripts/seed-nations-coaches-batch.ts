@@ -47,8 +47,8 @@ type Seed = {
     coachingCareerStartYear: number | null;
     appointedOn: string | null;
     contractExpiresOn: string | null;
-    preferredSystem: string;
-    coachingStyle: string;
+    preferredSystem: string | null;
+    coachingStyle: string | null;
     notes?: string | null;
   };
   nation: keyof typeof NATIONS;
@@ -96,15 +96,16 @@ const SEEDS: Seed[] = [
       heightCm: 191,
       formerPlayingPositions: "Flanker / No. 8",
       coachingCareerStartYear: 2004,
-      appointedOn: "2018-03-01",
-      contractExpiresOn: "2031-12-31",
-      preferredSystem: "Adaptive / Hybrid",
-      coachingStyle: "Structured & Innovative",
-      notes: "Appointed SA Head Coach 2018; returned 2024. Contract through 2031.",
+      appointedOn: "2024-02-06",
+      contractExpiresOn: null,
+      preferredSystem: null,
+      coachingStyle: null,
+      notes:
+        "Current Springboks head-coach stint from 6 February 2024 (SA Rugby). First HC appointment 1 March 2018–2 November 2019. Contract extended 5 December 2025 through the 2031 World Cup; no published calendar end-date. Style/system left empty — no official named system sourced. Prefer scripts/update-rassie-erasmus-profile.ts for the full verified tenure set.",
     },
     assignment: {
-      startDate: "2018-03-01",
-      notes: "Head Coach 2018; returned 2024",
+      startDate: "2024-02-06",
+      notes: "Second Springboks head-coach stint (SA Rugby, 6 February 2024).",
     },
     playing: [
       {
@@ -691,8 +692,8 @@ async function main() {
         contractExpiresOn: p.contractExpiresOn,
         preferredSystem: p.preferredSystem,
         coachingStyle: p.coachingStyle,
-        preferredSystemProvenance: "rugby365_assessment",
-        coachingStyleProvenance: "rugby365_assessment",
+        preferredSystemProvenance: p.preferredSystem ? "rugby365_assessment" : "unverified",
+        coachingStyleProvenance: p.coachingStyle ? "rugby365_assessment" : "unverified",
         notes: p.notes ?? null,
         profileUpdatedAt: new Date(),
         updatedAt: new Date(),

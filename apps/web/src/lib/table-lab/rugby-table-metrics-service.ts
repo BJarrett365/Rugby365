@@ -50,6 +50,7 @@ export function matchLeaguePoints(
   pointsAgainst: number,
   triesFor: number | null,
   rules: RugbyScoringRules = RULES,
+  triesAgainst: number | null = null,
 ): {
   leaguePoints: number;
   bonusPoints: number;
@@ -68,7 +69,12 @@ export function matchLeaguePoints(
   }
 
   let tryBonusPoints = 0;
-  if (triesFor != null && triesFor >= rules.tryBonusThreshold) {
+  const tryLead = rules.tryBonusLead ?? 0;
+  if (tryLead > 0) {
+    if (triesFor != null && triesAgainst != null && triesFor - triesAgainst >= tryLead) {
+      tryBonusPoints = rules.tryBonusPoints;
+    }
+  } else if (triesFor != null && triesFor >= rules.tryBonusThreshold) {
     tryBonusPoints = rules.tryBonusPoints;
   }
   let losingBonusPoints = 0;
@@ -96,6 +102,7 @@ export function addMatchToAccumulator(
     row.pointsAgainst,
     row.triesFor,
     rules,
+    row.triesAgainst,
   );
   acc.played += 1;
   acc.pointsFor += row.pointsFor;
@@ -136,7 +143,7 @@ export function standingOptionalFieldsFromAccumulator(
   const hasTryBonusRules =
     scoringRules != null &&
     scoringRules.tryBonusPoints > 0 &&
-    scoringRules.tryBonusThreshold > 0;
+    ((scoringRules.tryBonusLead ?? 0) > 0 || scoringRules.tryBonusThreshold > 0);
   const hasLosingBonusRules =
     scoringRules != null && scoringRules.losingBonusPoints > 0;
 

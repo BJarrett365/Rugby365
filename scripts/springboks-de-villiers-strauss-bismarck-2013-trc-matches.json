@@ -1,0 +1,65 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2013_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=676",
+    "https://bokhist.com/PlayerData.aspx?PlayerID=742",
+    "https://www.irishtimes.com/sport/rugby/international/all-blacks-too-strong-for-14-man-springboks-1.1526985"
+  ],
+  "note": "Only players who took the field. Minutes from Wikipedia rugbybox replacement times. Auckland: Bismarck sin-binned 15–25 then sent off at 41 (31 minutes); Strauss on 19–26 and from 44 (43 minutes), matching the Irish Times Alberts/hooker replacements. Tries are 5 points; conversions belong to the kicker.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2013-08-17",
+      "venue": "FNB Stadium, Johannesburg",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 67, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "adriaan-strauss": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 54, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "bismarck-du-plessis": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 26, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2013-08-24",
+      "venue": "Estadio Malvinas Argentinas, Mendoza",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "adriaan-strauss": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 52, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "bismarck-du-plessis": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 28, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2013-09-07",
+      "venue": "Lang Park, Brisbane",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 70, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "adriaan-strauss": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 23, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "bismarck-du-plessis": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 57, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2013-09-14",
+      "venue": "Eden Park, Auckland",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "adriaan-strauss": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 43, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "bismarck-du-plessis": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 31, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2013-09-28",
+      "venue": "Newlands, Cape Town",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "adriaan-strauss": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 49, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "bismarck-du-plessis": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 31, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2013-10-05",
+      "venue": "Ellis Park, Johannesburg",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "adriaan-strauss": { "squadRole": "bench", "jerseyNumber": 16, "positionName": "hooker", "minutes": 30, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "bismarck-du-plessis": { "squadRole": "starting", "jerseyNumber": 2, "positionName": "hooker", "minutes": 50, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    }
+  ]
+}

@@ -60,6 +60,8 @@ export function CompetitionHubClient({
   const [standings, setStandings] = useState<Standing[]>([]);
   const [fixtures, setFixtures] = useState<MatchRow[]>([]);
   const [results, setResults] = useState<MatchRow[]>([]);
+  const [allMatches, setAllMatches] = useState<MatchRow[]>([]);
+  const [seasonNote, setSeasonNote] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -89,6 +91,8 @@ export function CompetitionHubClient({
       );
       setFixtures(data.fixtures ?? []);
       setResults(data.results ?? []);
+      setAllMatches(data.allMatches ?? []);
+      setSeasonNote(typeof data.seasonNote === "string" && data.seasonNote.trim() ? data.seasonNote : null);
     }
     setLoading(false);
   }, [slug, seasonLabel, view, mode]);
@@ -143,21 +147,24 @@ export function CompetitionHubClient({
   }
 
   if (mode === "fixtures") {
+    const scheduleRows = allMatches.length ? allMatches : fixtures.length ? fixtures : results;
     return (
       <div>
+        {seasonNote ? <p className="text-sm text-zinc-400 m-0 mb-4">{seasonNote}</p> : null}
         <LeagueScheduleToolbar
           seasons={seasons}
           seasonLabel={seasonLabel}
           onSeasonChange={setSeasonLabel}
-          rows={fixtures}
+          rows={scheduleRows}
           monthIndex={monthIndex}
           onMonthChange={setMonthIndex}
         />
         <LeagueMatchList
-          rows={fixtures}
-          showScores={false}
+          rows={scheduleRows}
+          showScores
           newestFirst={false}
           monthIndex={monthIndex}
+          emptyMessage={seasonNote ?? undefined}
         />
       </div>
     );
@@ -166,6 +173,7 @@ export function CompetitionHubClient({
   if (mode === "results") {
     return (
       <div>
+        {seasonNote ? <p className="text-sm text-zinc-400 m-0 mb-4">{seasonNote}</p> : null}
         <LeagueScheduleToolbar
           seasons={seasons}
           seasonLabel={seasonLabel}
@@ -179,6 +187,7 @@ export function CompetitionHubClient({
           showScores
           newestFirst
           monthIndex={monthIndex}
+          emptyMessage={seasonNote ?? undefined}
         />
       </div>
     );

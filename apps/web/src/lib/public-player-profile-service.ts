@@ -13,6 +13,7 @@ import {
   playerLegends,
   playerMatchRatings,
   playerRatings,
+  playerSeasonStats,
   playerSuspensions,
   playerTransfers,
   players,
@@ -20,6 +21,7 @@ import {
   fixtures,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { findPlayerByPublicSlug } from "./public-player-slug";
 import { cachedPublic, PUBLIC_CACHE_TTL } from "./public-data-cache";
 import { calculatePlayerAge, normalizeSocialAccounts } from "./player-profile-utils";
 import { buildPublicPlayerIntro } from "./public-player-intro";
@@ -32,6 +34,7 @@ import { wikipediaCareerTotals } from "./player-career-stint-utils";
 import { careerStatusLabel } from "./player-career-status";
 import {
   currentDomesticSeasonStartYear,
+  parseSeasonStartYear,
   seasonSlugFromStartYear,
 } from "./season-label-utils";
 import {
@@ -536,6 +539,68 @@ function clubHistoryFromAppearances(rows: PublicAppearanceRow[]) {
     }));
 }
 
+function seniorInternationalStints(
+  rows: Array<{ teamName: string; apps: number | null; tries?: number | null; points: number | null }>,
+  countryName: string | null | undefined,
+) {
+  const nation = countryName?.trim().toLowerCase();
+  if (!nation) return rows;
+  const senior = rows.filter((row) => row.teamName.trim().toLowerCase() === nation);
+  return senior.length ? senior : rows;
+}
+
+/** Prefer verified All.Rugby / Wikipedia season totals when present (covers competitions without CMS fixtures). */
+async function overlayVerifiedSeasonTotals(input: {
+  playerId: string;
+  seasonSlug: string;
+  competitionSlug: string;
+  currentDomesticSlug: string;
+  summary: ReturnType<typeof summarizeAppearances>;
+}): Promise<ReturnType<typeof summarizeAppearances>> {
+  const year =
+    input.seasonSlug === "all"
+      ? null
+      : input.seasonSlug === "current"
+        ? parseSeasonStartYear(input.currentDomesticSlug)
+        : parseSeasonStartYear(input.seasonSlug);
+  if (year == null) return input.summary;
+
+  const db = getDb();
+  const conditions = [
+    eq(playerSeasonStats.playerId, input.playerId),
+    inArray(playerSeasonStats.sourceProvider, ["all_rugby", "wikipedia"]),
+    eq(competitionSeasons.year, year),
+  ];
+  if (input.competitionSlug !== "all") {
+    conditions.push(eq(competitions.slug, input.competitionSlug));
+  }
+
+  const rows = await db
+    .select({
+      appearances: playerSeasonStats.appearances,
+      tries: playerSeasonStats.tries,
+      points: playerSeasonStats.points,
+      minutesPlayed: playerSeasonStats.minutesPlayed,
+    })
+    .from(playerSeasonStats)
+    .innerJoin(competitionSeasons, eq(playerSeasonStats.seasonId, competitionSeasons.id))
+    .innerJoin(competitions, eq(playerSeasonStats.competitionId, competitions.id))
+    .where(and(...conditions));
+
+  const scoped = rows;
+  if (!scoped.length) return input.summary;
+
+  const appearances = scoped.reduce((sum, row) => sum + (row.appearances ?? 0), 0);
+  if (appearances <= 0) return input.summary;
+  return {
+    ...input.summary,
+    appearances,
+    tries: scoped.reduce((sum, row) => sum + (row.tries ?? 0), 0),
+    points: scoped.reduce((sum, row) => sum + (row.points ?? 0), 0),
+    minutesPlayed: scoped.reduce((sum, row) => sum + (row.minutesPlayed ?? 0), 0) || input.summary.minutesPlayed,
+  };
+}
+
 export async function getPublicPlayerProfile(
   slug: string,
   options: {
@@ -575,7 +640,7 @@ async function loadPublicPlayerProfile(
   } = {},
 ): Promise<PublicPlayerProfile | null> {
   const db = getDb();
-  const [player] = await db.select().from(players).where(eq(players.slug, slug)).limit(1);
+  const player = await findPlayerByPublicSlug(slug);
   if (!player) return null;
 
   const preview = Boolean(options.preview);
@@ -770,6 +835,14 @@ async function loadPublicPlayerProfile(
     }
   }
 
+  seasonSummary = await overlayVerifiedSeasonTotals({
+    playerId: player.id,
+    seasonSlug: seasonEffectiveFilter,
+    competitionSlug: competitionFilter === "all" ? "all" : competitionFilter,
+    currentDomesticSlug,
+    summary: seasonSummary,
+  });
+
   const intlTries = intlAppsRows.reduce((s, r) => s + (r.tries ?? 0), 0);
   const intlPointsCalc = intlAppsRows.reduce((s, r) => s + (r.points ?? 0), 0);
   const intlCompetitions = [
@@ -783,11 +856,20 @@ async function loadPublicPlayerProfile(
     return t === "club" || t === "cup" || t === "provincial" || t === "super";
   });
 
-  const stintIntlApps = internationalStints.reduce((sum, s) => sum + (s.apps ?? 0), 0) || null;
+  const stintIntlApps = seniorInternationalStints(internationalStints, player.countryName).reduce(
+    (sum, s) => sum + (s.apps ?? 0),
+    0,
+  ) || null;
   const stintIntlPoints =
-    internationalStints.reduce((sum, s) => sum + (s.points ?? 0), 0) || null;
+    seniorInternationalStints(internationalStints, player.countryName).reduce(
+      (sum, s) => sum + (s.points ?? 0),
+      0,
+    ) || null;
   const stintIntlTries =
-    internationalStints.reduce((sum, s) => sum + (s.tries ?? 0), 0) || null;
+    seniorInternationalStints(internationalStints, player.countryName).reduce(
+      (sum, s) => sum + (s.tries ?? 0),
+      0,
+    ) || null;
 
   const calculatedIntlApps = intlAppsRows.length || null;
   // Prefer the higher total: Wikipedia career stints are often more complete than CMS match rows.

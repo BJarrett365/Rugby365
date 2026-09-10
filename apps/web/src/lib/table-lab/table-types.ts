@@ -350,6 +350,8 @@ export type RugbyScoringRules = {
   lossPoints: number;
   tryBonusThreshold: number;
   tryBonusPoints: number;
+  /** When set, try bonus is awarded for finishing this many tries ahead of the opponent (SANZAAR 2016+). */
+  tryBonusLead?: number | null;
   losingBonusMargin: number;
   losingBonusPoints: number;
 };

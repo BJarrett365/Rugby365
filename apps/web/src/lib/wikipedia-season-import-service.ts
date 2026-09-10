@@ -25,7 +25,13 @@ import {
   urcSplitTableKindForYear,
   urcStandingViewForSplit,
 } from "./urc-lineage";
-import { isRugbyChampionshipLineageSlug } from "./rugby-championship-lineage";
+import {
+  isRugbyChampionshipLineageSlug,
+  isRugbyChampionshipParticipantMatch,
+  rugbyChampionshipChampionDisplayName,
+  rugbyChampionshipParticipantKeys,
+  rugbyChampionshipParticipantTeamKey,
+} from "./rugby-championship-lineage";
 import {
   PREMIERSHIP_CHAMPIONS,
   CHALLENGE_CUP_CHAMPIONS,
@@ -410,7 +416,9 @@ async function upsertFixtureFromWiki(input: {
                   : existing.awayScore,
             }
           : {}),
-        venueName: existing.venueName ?? input.row.venueName,
+        venueName: existing.venueName?.trim()
+          ? existing.venueName
+          : (input.row.venueName ?? existing.venueName),
         refereeName: existing.refereeName ?? input.row.refereeName,
         additionalInfo: pickBetterString(existing.additionalInfo, input.row.notes, input.mode),
         providerSnapshot: {
@@ -507,16 +515,24 @@ async function importStandings(
   competitionSlug: string,
   seasonStartYear: number,
 ): Promise<WikipediaSeasonImportCounts> {
-  const counts = emptyCounts(rows.length);
   const db = getDb();
 
   const splitKind = isUrcLineageSlug(competitionSlug)
     ? urcSplitTableKindForYear(seasonStartYear)
     : null;
 
+  const eligibleRows = isRugbyChampionshipLineageSlug(competitionSlug)
+    ? rows.filter((row) =>
+        rugbyChampionshipParticipantKeys(seasonStartYear).has(
+          rugbyChampionshipParticipantTeamKey(row.teamName),
+        ),
+      )
+    : rows;
+  const counts = emptyCounts(eligibleRows.length);
+
   // URC lineage: only persist Pool/Conference views for the seasons that used them.
   // Other years flatten wiki Pool A/B (e.g. 2002–03 page) into one overall table.
-  let normalized = rows;
+  let normalized = eligibleRows;
   if (isUrcLineageSlug(competitionSlug) && !splitKind && rows.some((row) => row.pool)) {
     normalized = [...rows]
       .sort(
@@ -705,6 +721,15 @@ export async function importWikipediaSeasonPage(
   const year = options.seasonStartYear ?? parsed.seasonStartYear;
   if (year == null) throw new Error(`Could not determine season year for ${url}`);
 
+  if (
+    isRugbyChampionshipLineageSlug(competitionSlug) &&
+    (year === 2026 || year === 2030)
+  ) {
+    throw new Error(
+      `The Rugby Championship was not held in ${year}; Wikipedia import refused so the overview article is not ingested as a season.`,
+    );
+  }
+
   const competition = await getCompetitionBySlug(competitionSlug);
   if (!competition) throw new Error(`Competition not found: ${competitionSlug}`);
 
@@ -725,7 +750,7 @@ export async function importWikipediaSeasonPage(
   const warnings = [...parsed.warnings];
 
   let table = emptyCounts(parsed.standings.length);
-  if (options.importTable !== false) {
+  if (options.importTable !== false && !isRugbyChampionshipLineageSlug(competition.slug)) {
     table = await importStandings(
       season.id,
       parsed.standings,
@@ -747,6 +772,13 @@ export async function importWikipediaSeasonPage(
 
   if (options.importFixtures !== false) {
     for (const row of parsed.fixtures) {
+      if (
+        isRugbyChampionshipLineageSlug(competition.slug) &&
+        !isRugbyChampionshipParticipantMatch(row.homeTeam, row.awayTeam, year)
+      ) {
+        fixtureCounts.skipped += 1;
+        continue;
+      }
       try {
         await upsertFixtureFromWiki({
           row,
@@ -794,13 +826,36 @@ export async function importWikipediaSeasonPage(
   }
 
   // Wikipedia standings have no form column — derive W/D/L after fixtures land.
-  if (options.importTable !== false && (options.importFixtures !== false || options.importPlayoffs !== false)) {
+  // Rugby Championship tables are rebuilt from completed matches so a failed wiki
+  // parse cannot persist a 0-0-0 table over real results.
+  if (isRugbyChampionshipLineageSlug(competition.slug) && options.importFixtures !== false) {
+    const { rebuildSeasonStandingsFromFixtures } = await import(
+      "./repair-rugby-championship-tables-service"
+    );
+    const rebuilt = await rebuildSeasonStandingsFromFixtures(season.id);
+    table = {
+      found: rebuilt.upserted,
+      created: 0,
+      updated: rebuilt.upserted,
+      skipped: 0,
+      errors: 0,
+    };
+    const { recomputeStandingFormForSeason } = await import("./standing-form-recompute-service");
+    await recomputeStandingFormForSeason(season.id, { force: true });
+  } else if (
+    options.importTable !== false &&
+    (options.importFixtures !== false || options.importPlayoffs !== false)
+  ) {
     const { recomputeStandingFormForSeason } = await import("./standing-form-recompute-service");
     await recomputeStandingFormForSeason(season.id, { force: true });
   }
 
   let championTeamId: string | null = null;
-  const championName = parsed.championName;
+  const championName = parsed.championName
+    ? isRugbyChampionshipLineageSlug(competition.slug)
+      ? rugbyChampionshipChampionDisplayName(parsed.championName)
+      : parsed.championName
+    : null;
   if (options.importWinner !== false && championName) {
     const champion = await resolveSeasonTeam(championName, createMissingTeams, competition.slug);
     if (champion) {

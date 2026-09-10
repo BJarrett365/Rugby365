@@ -19,6 +19,18 @@ describe("season-list-utils", () => {
     expect(rows.map((row) => row.label)).toEqual(["2026\u201327", "2025\u201326", "2024\u201325"]);
   });
 
+  it("keeps calendar-year labels for international competitions", () => {
+    const rows = dedupeSeasonsByYear(
+      [
+        { id: "a", label: "2012–13", year: 2012, competitionId: "trc" },
+        { id: "b", label: "2025–26", year: 2025, competitionId: "trc" },
+        { id: "c", label: "2026–27", year: 2026, competitionId: "trc" },
+      ],
+      "international",
+    );
+    expect(rows.map((row) => row.label)).toEqual(["2026", "2025", "2012"]);
+  });
+
   it("adds display labels for current and previous seasons", () => {
     const rows = decorateSeasonPickerRows(
       [{ id: "a", label: "2026\u201327", year: 2026, competitionId: "prem", isActive: true }],

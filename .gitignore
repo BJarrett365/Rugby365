@@ -3,6 +3,7 @@ node_modules
 .env.local
 dist
 *.log
+.logs/
 .DS_Store
 .env
 output/agent-sandbox

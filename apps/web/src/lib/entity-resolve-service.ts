@@ -466,7 +466,8 @@ export async function syncFixtureSquad(
         countryName: entry.countryName,
         createIfMissing: true,
         sourceProvider: options?.sourceProvider,
-        skipArchiveEnrich: options?.sourceProvider === SDMS_PROVIDER,
+        skipArchiveEnrich:
+          options?.sourceProvider === SDMS_PROVIDER || options?.sourceProvider === "wikipedia",
         squadContext,
       });
       if (!player) continue;

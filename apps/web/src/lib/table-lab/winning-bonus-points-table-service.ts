@@ -84,10 +84,19 @@ export function resolveMatchBonusPoints(
   row: TeamFixturePerspective,
   rules: RugbyScoringRules,
 ): MatchBonusResolution | null {
-  const needsTryData = rules.tryBonusPoints > 0 && rules.tryBonusThreshold > 0;
+  const needsTryLead = (rules.tryBonusLead ?? 0) > 0;
+  const needsTryData =
+    rules.tryBonusPoints > 0 && (needsTryLead || rules.tryBonusThreshold > 0);
   if (needsTryData && row.triesFor == null) return null;
+  if (needsTryLead && row.triesAgainst == null) return null;
 
-  const outcome = matchLeaguePoints(row.pointsFor, row.pointsAgainst, row.triesFor, rules);
+  const outcome = matchLeaguePoints(
+    row.pointsFor,
+    row.pointsAgainst,
+    row.triesFor,
+    rules,
+    row.triesAgainst,
+  );
   const isMaximumPointWin =
     outcome.result === "won" && outcome.leaguePoints >= maximumWinTablePoints(rules);
 

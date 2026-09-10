@@ -1,0 +1,34 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2019_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=774",
+    "https://bokhist.com/PlayerData.aspx?PlayerID=799",
+    "https://all.rugby/player/herschel-jantjies",
+    "https://all.rugby/player/elton-jantjies"
+  ],
+  "note": "Shortened World Cup-year Championship (three Tests each). Herschel started vs Australia (65'), came off the bench vs New Zealand (36', try 79') and Argentina (8'). Elton started vs Australia only (80', five conversions) and did not play the last two Tests (Handré Pollard started). Unused squad membership is omitted.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-australia-2019-07-20",
+      "venue": "Ellis Park Stadium, Johannesburg",
+      "players": {
+        "herschel-jantjies": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 65, "tries": 2, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 10 },
+        "elton-jantjies": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 80, "tries": 0, "conversions": 5, "penalties": 0, "dropGoals": 0, "points": 10 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2019-07-27",
+      "venue": "Wellington Regional Stadium, Wellington",
+      "players": {
+        "herschel-jantjies": { "squadRole": "bench", "jerseyNumber": 21, "positionName": "scrum-half", "minutes": 36, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2019-08-10",
+      "venue": "Estadio Padre Ernesto Martearena, Salta",
+      "players": {
+        "herschel-jantjies": { "squadRole": "bench", "jerseyNumber": 21, "positionName": "scrum-half", "minutes": 8, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    }
+  ]
+}

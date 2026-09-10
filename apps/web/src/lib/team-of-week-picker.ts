@@ -12,7 +12,9 @@ export type TotwPickerSeason = {
 
 const STAGE_ORDER: Record<string, number> = {
   "round-of-16": 90,
+  "quarter-final": 99,
   "quarter-finals": 100,
+  "semi-final": 109,
   "semi-finals": 110,
   "bronze-final": 120,
   final: 130,

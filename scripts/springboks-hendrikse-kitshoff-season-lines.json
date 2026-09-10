@@ -1,0 +1,29 @@
+{
+  "jordan-hendrikse": [
+    { "allRugbySeason": "21/22", "competitionSlug": "united-rugby-championship", "teamSlug": "gauteng-lions", "appearances": 12, "starts": 11, "tries": 2, "points": 117, "minutes": 863 },
+    { "allRugbySeason": "22/23", "competitionSlug": "united-rugby-championship", "teamSlug": "gauteng-lions", "appearances": 11, "starts": 8, "tries": 1, "points": 71, "minutes": 564, "note": "All.Rugby lists 12 URC matches; unused replacement vs Ospreys omitted" },
+    { "allRugbySeason": "22/23", "competitionSlug": "challenge-cup", "teamSlug": "gauteng-lions", "appearances": 3, "starts": 2, "tries": 0, "points": 34, "minutes": 200 },
+    { "allRugbySeason": "23/24", "competitionSlug": "united-rugby-championship", "teamSlug": "gauteng-lions", "appearances": 17, "starts": 9, "tries": 0, "points": 76, "minutes": 833, "note": "All.Rugby lists 18 URC matches; unused replacement vs Scarlets omitted" },
+    { "allRugbySeason": "23/24", "competitionSlug": "challenge-cup", "teamSlug": "gauteng-lions", "appearances": 4, "starts": 3, "tries": 1, "points": 38, "minutes": 254 },
+    { "allRugbySeason": "23/24", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 0, "points": 7, "minutes": 59, "seasonYear": 2024 },
+    { "allRugbySeason": "24/25", "competitionSlug": "united-rugby-championship", "teamSlug": "natal-sharks", "appearances": 18, "starts": 17, "tries": 2, "points": 118, "minutes": 1388 },
+    { "allRugbySeason": "24/25", "competitionSlug": "rugby-champions-cup", "teamSlug": "natal-sharks", "appearances": 3, "starts": 3, "tries": 0, "points": 17, "minutes": 219 },
+    { "allRugbySeason": "24/25", "competitionSlug": "autumn-nations-cup-vx917e9w", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 1, "points": 15, "minutes": 80, "seasonYear": 2024 },
+    { "allRugbySeason": "25/26", "competitionSlug": "united-rugby-championship", "teamSlug": "natal-sharks", "appearances": 11, "starts": 9, "tries": 0, "points": 43, "minutes": 733 },
+    { "allRugbySeason": "25/26", "competitionSlug": "rugby-champions-cup", "teamSlug": "natal-sharks", "appearances": 3, "starts": 2, "tries": 0, "points": 10, "minutes": 137 }
+  ],
+  "steven-kitshoff": [
+    { "allRugbySeason": "21/22", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 3, "tries": 0, "points": 0, "minutes": 320, "seasonYear": 2022, "source": "wikipedia-bokhist-2022-trc" },
+    { "allRugbySeason": "21/22", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 15, "starts": 15, "tries": 0, "points": 0, "minutes": 1029 },
+    { "allRugbySeason": "21/22", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 0, "points": 0, "minutes": 36, "seasonYear": 2022, "note": "Played 16 Jul vs Wales; unused replacement 2 Jul omitted" },
+    { "allRugbySeason": "22/23", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 11, "starts": 10, "tries": 1, "points": 5, "minutes": 731 },
+    { "allRugbySeason": "22/23", "competitionSlug": "rugby-champions-cup", "teamSlug": "western-province", "appearances": 6, "starts": 6, "tries": 1, "points": 5, "minutes": 382 },
+    { "allRugbySeason": "22/23", "competitionSlug": "autumn-nations-cup-vx917e9w", "teamSlug": "south-africa", "appearances": 4, "starts": 1, "tries": 1, "points": 5, "minutes": 152, "seasonYear": 2022 },
+    { "allRugbySeason": "22/23", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 3, "starts": 3, "tries": 0, "points": 0, "minutes": 179, "seasonYear": 2023 },
+    { "allRugbySeason": "23/24", "competitionSlug": "united-rugby-championship", "teamSlug": "ulster-vx917e9w", "appearances": 8, "starts": 5, "tries": 0, "points": 0, "minutes": 369 },
+    { "allRugbySeason": "23/24", "competitionSlug": "rugby-champions-cup", "teamSlug": "ulster-vx917e9w", "appearances": 4, "starts": 4, "tries": 0, "points": 0, "minutes": 264 },
+    { "allRugbySeason": "23/24", "competitionSlug": "challenge-cup", "teamSlug": "ulster-vx917e9w", "appearances": 2, "starts": 2, "tries": 0, "points": 0, "minutes": 118 },
+    { "allRugbySeason": "23/24", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 2, "starts": 2, "tries": 0, "points": 0, "minutes": 92, "seasonYear": 2023, "note": "Wales 19 Aug + New Zealand 25 Aug" },
+    { "allRugbySeason": "23/24", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 7, "starts": 5, "tries": 0, "points": 0, "minutes": 302, "seasonYear": 2023 }
+  ]
+}

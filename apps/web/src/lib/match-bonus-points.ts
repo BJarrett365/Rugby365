@@ -28,8 +28,8 @@ export function computeMatchBonusPoints(input: {
   rules?: RugbyScoringRules;
 }): MatchBonusPoints {
   const rules = input.rules ?? DEFAULT_PREMIERSHIP_SCORING_RULES;
-  const home = matchLeaguePoints(input.homeScore, input.awayScore, input.homeTries, rules);
-  const away = matchLeaguePoints(input.awayScore, input.homeScore, input.awayTries, rules);
+  const home = matchLeaguePoints(input.homeScore, input.awayScore, input.homeTries, rules, input.awayTries);
+  const away = matchLeaguePoints(input.awayScore, input.homeScore, input.awayTries, rules, input.homeTries);
 
   return {
     homeTryBonusPoints: home.tryBonusPoints,

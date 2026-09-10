@@ -16,7 +16,7 @@ import {
   standingRowsToTableRows,
 } from "@/lib/table-lab/table-pool-shared";
 import type { RugbyTableResult } from "@/lib/table-lab/table-types";
-import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
+import { returnedSeasonMatchesRequest, sanitizeSeasonQueryParam } from "@/lib/season-label-utils";
 
 type View = "overall" | "home" | "away";
 
@@ -71,7 +71,7 @@ export function CompetitionTableClient({
   const [competitionId, setCompetitionId] = useState("");
   const [competitionName, setCompetitionName] = useState("");
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
+  const [seasonLabel, setSeasonLabel] = useState(sanitizeSeasonQueryParam(initialSeason) ?? "");
   const [view, setView] = useState<View>(initialView);
   const [liveResult, setLiveResult] = useState<RugbyTableResult | null>(null);
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -105,12 +105,16 @@ export function CompetitionTableClient({
         liveData = {};
       }
       const liveSeasonOk = returnedSeasonMatchesRequest(seasonLabel, liveData.season);
-      const liveHasRows = Boolean(
-        liveData.result?.poolGroups?.length ||
-          (Array.isArray(liveData.result?.rows) && liveData.result.rows.length > 0),
-      );
+      const liveRows = Array.isArray(liveData.result?.rows) ? liveData.result.rows : [];
+      const liveHasRows = Boolean(liveData.result?.poolGroups?.length || liveRows.length > 0);
+      const liveAllZeroPlayed =
+        liveRows.length > 0 && liveRows.every((row) => (row.played ?? 0) === 0);
+      const liveUsable =
+        Boolean(liveRes?.ok && liveSeasonOk && liveData.result) &&
+        ((liveHasRows && !liveAllZeroPlayed) ||
+          (!liveHasRows && Boolean(liveData.result?.liveTableCalculationNote)));
 
-      if (liveRes?.ok && liveSeasonOk && liveHasRows) {
+      if (liveUsable) {
         setCompetitionId(liveData.competition?.id ?? "");
         setCompetitionName(liveData.competition?.name ?? slug);
         setSeasons(liveData.seasons ?? []);

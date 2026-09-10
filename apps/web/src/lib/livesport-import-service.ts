@@ -16,7 +16,11 @@ import {
 import type { ImportProgressReporter } from "./import-progress-types";
 import { getCompetitionBySlug, upsertSeason } from "./competition-admin-service";
 import { getDb } from "./db";
-import { currentDomesticSeasonStartYear, parseSeasonStartYear } from "./season-label-utils";
+import {
+  currentDomesticSeasonStartYear,
+  parseSeasonStartYear,
+  seasonKindForCompetition,
+} from "./season-label-utils";
 import { resolveCompetition, resolveTeam } from "./entity-resolve-service";
 import {
   createFixture,
@@ -260,6 +264,7 @@ export async function importFromLiveSportTournamentUrl(
     competitionId: competition.id,
     label: preview.meta.seasonLabel,
     isActive: isCurrentSeason,
+    seasonKind: seasonKindForCompetition(competition.slug, competition.competitionType),
   });
 
   const importFixtures = options.importFixtures ?? true;

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchSdmsMatchDetail } from "@rugby365/import-sdk";
 import { apiErrorResponse } from "@/lib/api-errors";
 import { getCompetitionBySlug, listSeasonsForPicker, pickSeasonForOverallTable } from "@/lib/competition-admin-service";
-import { parseSeasonStartYear, usesDomesticSeasonCatalog, currentDomesticSeasonStartYear } from "@/lib/season-label-utils";
+import { parseSeasonStartYear, sanitizeSeasonQueryParam, usesDomesticSeasonCatalog, currentDomesticSeasonStartYear } from "@/lib/season-label-utils";
 import { syncDomesticSeasonCatalog } from "@/lib/competition-admin-service";
 import { findFixtureBySdmsMatchId } from "@/lib/fixture-admin-service";
 import { syncFixtureLiveStateFromSdms } from "@/lib/fixture-live-score-sync";
@@ -50,7 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   try {
     const { slug } = await params;
     const { searchParams } = new URL(req.url);
-    const seasonLabel = searchParams.get("season");
+    const seasonLabel = sanitizeSeasonQueryParam(searchParams.get("season")) ?? null;
     const syncMatchId = searchParams.get("syncMatchId")?.trim() || null;
     const viewParam = searchParams.get("view") ?? "overall";
     const tableView: RugbyTableView =
@@ -157,7 +157,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       };
     };
 
-    const cacheKey = `live-table:v4:${slug}:${seasonLabel ?? "default"}:${tableView}`;
+    const cacheKey = `live-table:v6:${slug}:${seasonLabel ?? "default"}:${tableView}`;
     const requestedYear = parseSeasonStartYear(seasonLabel);
     const ttl =
       requestedYear != null && requestedYear < currentDomesticSeasonStartYear()

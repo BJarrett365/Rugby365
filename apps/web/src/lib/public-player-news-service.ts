@@ -4,8 +4,9 @@
 import "server-only";
 
 import { desc, eq } from "drizzle-orm";
-import { playerSourceNews, players } from "@rugby365/db";
+import { playerSourceNews } from "@rugby365/db";
 import { getDb } from "./db";
+import { findPlayerByPublicSlug } from "./public-player-slug";
 
 export type PublicPlayerNewsItem = {
   id: string;
@@ -42,12 +43,7 @@ export async function getPublicPlayerNewsBySlug(
   slug: string,
   limit = 40,
 ): Promise<{ playerId: string; name: string; items: PublicPlayerNewsItem[] } | null> {
-  const db = getDb();
-  const [player] = await db
-    .select({ id: players.id, name: players.name })
-    .from(players)
-    .where(eq(players.slug, slug))
-    .limit(1);
+  const player = await findPlayerByPublicSlug(slug);
   if (!player) return null;
   const items = await getPublicPlayerNews(player.id, limit);
   return { playerId: player.id, name: player.name, items };

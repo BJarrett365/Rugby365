@@ -18,6 +18,7 @@ import {
   teams,
 } from "@rugby365/db";
 import { getDb } from "./db";
+import { findPlayerByPublicSlug } from "./public-player-slug";
 import { teamDedupKey } from "./entity-normalize";
 import { buildMatchDetailPath } from "./match-schedule-utils";
 import {
@@ -1307,14 +1308,9 @@ export async function getPlayerStatsBySlug(
   slug: string,
   filters: PlayerStatsFilters = {},
 ): Promise<PlayerStatsV2Dto | null> {
-  const db = getDb();
-  const [row] = await db
-    .select({ id: players.id })
-    .from(players)
-    .where(eq(players.slug, slug))
-    .limit(1);
-  if (!row) return null;
-  return getPlayerStats(row.id, filters);
+  const player = await findPlayerByPublicSlug(slug);
+  if (!player) return null;
+  return getPlayerStats(player.id, filters);
 }
 
 function buildSlice(input: {

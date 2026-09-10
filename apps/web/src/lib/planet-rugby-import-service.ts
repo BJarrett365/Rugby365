@@ -16,6 +16,7 @@ import {
   updateCompetition,
   upsertSeason,
 } from "./competition-admin-service";
+import { seasonKindForCompetition } from "./season-label-utils";
 import { getDb } from "./db";
 import { resolveTeam } from "./entity-resolve-service";
 import {
@@ -273,6 +274,7 @@ export async function importPlanetRugbyCompetition(input: {
     competitionId: competition.id,
     label: seasonLabel,
     isActive: seasonLabel === (seasons?.activeSeason ?? seasons?.currentSeason),
+    seasonKind: seasonKindForCompetition(competition.slug, competition.competitionType),
   });
 
   const importFixtures = input.importFixtures === true;

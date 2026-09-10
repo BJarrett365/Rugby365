@@ -36,11 +36,18 @@ import {
 } from "./season-list-utils";
 import { lookupCompetitionChampion } from "./competition-champions-catalog";
 import { isPlayoffRound } from "./rugby-round-utils";
-import { resolveTeamNamesFromFixtureSlug, pickCanonicalFixturesForStandings } from "./table-lab/standings-fixture-dedupe";
+import {
+  resolveTeamNamesFromFixtureSlug,
+  pickCanonicalFixturesForStandings,
+  isHealthyStandingsRows,
+} from "./table-lab/standings-fixture-dedupe";
 import { applyUrcLineageSeasonLabels } from "./urc-lineage";
 import {
   applyRugbyChampionshipLineageSeasonLabels,
   canonicalRugbyChampionshipSlug,
+  isRugbyChampionshipLineageSlug,
+  isRugbyChampionshipParticipantMatch,
+  rugbyChampionshipTableNote,
 } from "./rugby-championship-lineage";
 
 export type CompetitionType = "domestic" | "international" | "world_cup" | "european";
@@ -88,6 +95,7 @@ export async function listAllSeasons(competitionId?: string) {
         ...row,
         year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
       })),
+      seasonKind,
     ),
     new Date(),
     seasonKind,
@@ -134,6 +142,7 @@ export async function listSeasonsForPicker(competitionId: string) {
           ...row,
           year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
         })),
+        seasonKind,
       ),
       new Date(),
       seasonKind,
@@ -160,6 +169,7 @@ export async function listCompetitions() {
   return competitionsForPicker(
     rows.map((c) => {
       const competitionSeasons = seasonsByCompetition.get(c.id) ?? [];
+      const seasonKind = seasonKindForCompetition(c.slug, c.competitionType);
       const pickerRows = dedupeSeasonsByYear(
         competitionSeasons.map((season) => ({
           id: season.id,
@@ -168,8 +178,9 @@ export async function listCompetitions() {
           competitionId: season.competitionId,
           isActive: season.isActive,
         })),
+        seasonKind,
       );
-      const picked = pickDefaultSeasonForPicker(pickerRows);
+      const picked = pickDefaultSeasonForPicker(pickerRows, new Date(), seasonKind);
       const activeSeason = picked
         ? (competitionSeasons.find((season) => season.id === picked.id) ?? null)
         : null;
@@ -754,6 +765,8 @@ async function resolveCompetitionSeason(
   seasonLabel?: string,
 ): Promise<ResolvedCompetitionSeason> {
   const db = getDb();
+  const competition = await getCompetitionById(competitionId);
+  const seasonKind = seasonKindForCompetition(competition?.slug, competition?.competitionType);
   const rawSeasons = await db
     .select()
     .from(competitionSeasons)
@@ -766,6 +779,7 @@ async function resolveCompetitionSeason(
       ...row,
       year: row.year ?? parseSeasonStartYear(row.label) ?? 0,
     })),
+    seasonKind,
   );
 
   if (!seasons.length) return { seasons: [], season: null };
@@ -837,9 +851,10 @@ export async function getCompetitionStandingsBySlug(
   }
 
   const { seasons, season } = await resolveCompetitionSeason(competition.id, options.seasonLabel);
+  const seasonKind = seasonKindForCompetition(competition.slug, competition.competitionType);
   const pickerSeasons = applyLineageSeasonLabels(
     competition.slug,
-    decorateSeasonPickerRows(seasons),
+    decorateSeasonPickerRows(seasons, new Date(), seasonKind),
   );
 
   if (!seasons.length) {
@@ -855,7 +870,11 @@ export async function getCompetitionStandingsBySlug(
   }
 
   const view = options.view ?? "overall";
-  const standings = season ? await getSeasonStandings(season.id, view) : [];
+  const standingsRaw = season ? await getSeasonStandings(season.id, view) : [];
+  const standings =
+    isRugbyChampionshipLineageSlug(competition.slug) && !isHealthyStandingsRows(standingsRaw)
+      ? []
+      : standingsRaw;
   const champion = season ? await resolveSeasonChampion(competition.slug, season) : null;
   const playoffFixtures = season ? await listPlayoffFixtures(competition.id, season) : [];
   const playedCounts = new Set(standings.map((row) => row.played).filter((played) => played > 0));
@@ -959,6 +978,14 @@ export async function listCompetitionFixtures(
         venueName: f.venueName,
         planetRugbyUrl: f.planetRugbyUrl,
       };
+    })
+    .filter((fixture) => {
+      if (!isRugbyChampionshipLineageSlug(competition?.slug) || seasonYear == null) return true;
+      return isRugbyChampionshipParticipantMatch(
+        fixture.homeTeam ?? "",
+        fixture.awayTeam ?? "",
+        seasonYear,
+      );
     });
 
   return pickCanonicalFixturesForStandings(mapped, (fixture) => ({
@@ -1082,11 +1109,17 @@ export async function getCompetitionHubBySlug(
   const upcoming = fixtureList.filter(
     (f) => f.status === "scheduled" || f.status === "postponed",
   );
+  const seasonYear = standingsData.season?.year ?? null;
+  const seasonNote =
+    isRugbyChampionshipLineageSlug(standingsData.competition.slug) && seasonYear != null
+      ? rugbyChampionshipTableNote(seasonYear)
+      : null;
 
   return {
     ...standingsData,
     fixtures: upcoming,
     results,
     allMatches: fixtureList,
+    seasonNote,
   };
 }

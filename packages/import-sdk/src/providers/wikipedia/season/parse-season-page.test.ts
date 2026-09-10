@@ -384,6 +384,48 @@ describe("parsePremiershipSeasonWikitext", () => {
     expect(parsed.championName).toBe("Bourgoin");
   });
 
+  it("maps Wikipedia Week and Matchday headings onto Round N", () => {
+    const parsed = parsePremiershipSeasonWikitext({
+      pageTitle: "2015 Rugby Championship",
+      wikipediaUrl: "https://en.wikipedia.org/wiki/2015_Rugby_Championship",
+      revisionId: 1,
+      wikitext: `==Fixtures==
+===Week 1===
+{{Rugbybox
+|date = 17 July 2015
+|home = [[New Zealand national rugby union team|New Zealand]]
+|score = 39–18
+|away = [[Argentina national rugby union team|Argentina]]
+|stadium = [[Rugby League Park]]
+}}
+===Matchday 2===
+{{Rugbybox
+|date = 25 July 2015
+|home = [[South Africa national rugby union team|South Africa]]
+|score = 20–27
+|away = [[New Zealand national rugby union team|New Zealand]]
+|stadium = [[Ellis Park Stadium]]
+}}
+`,
+    });
+    expect(parsed.fixtures).toEqual([
+      expect.objectContaining({
+        round: "Round 1",
+        homeTeam: "New Zealand",
+        awayTeam: "Argentina",
+        homeScore: 39,
+        awayScore: 18,
+      }),
+      expect.objectContaining({
+        round: "Round 2",
+        homeTeam: "South Africa",
+        awayTeam: "New Zealand",
+        homeScore: 20,
+        awayScore: 27,
+      }),
+    ]);
+  });
+
   it("extracts table fixtures and playoff stages", () => {
     const parsed = parsePremiershipSeasonWikitext({
       pageTitle: "2024–25 Premiership Rugby",

@@ -1,6 +1,8 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import {
+  fixtures,
+  matchEvents,
   playerMatchPerformanceStats,
   playerSeasonStats,
   players,
@@ -19,6 +21,7 @@ import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import {
   currentDomesticSeasonStartYear,
   parseSeasonStartYear,
+  sanitizeSeasonQueryParam,
   usesDomesticSeasonCatalog,
 } from "./season-label-utils";
 import {
@@ -36,6 +39,18 @@ import {
   teamCodeForLeaderboard,
 } from "./competition-player-stat-display";
 import { isJunkPlayerName } from "./entity-normalize";
+import {
+  eventPayloadPlayerName,
+  matchScorerToCandidates,
+  type ScorerCandidate,
+} from "./event-scorer-match";
+import {
+  aggregatesHaveScoring,
+  collapseDuplicateLeaderboardPlayers,
+  mergeEventScoringIntoRows,
+} from "./event-scoring-leaderboard";
+import { leaderboardEmptyMessage } from "./competition-player-leaderboards-math";
+import { pointsForScoringEventType } from "./match-event-scores";
 
 export type LeaderboardMetric =
   | "points"
@@ -192,16 +207,6 @@ function metricValue(row: AggregatedPlayer, metric: LeaderboardMetric): number {
   return row[metric] ?? 0;
 }
 
-function emptyMessageForBoard(hasTrackedData: boolean, playerCount: number): string {
-  if (playerCount === 0) {
-    return "No player statistics available for this season.";
-  }
-  if (!hasTrackedData) {
-    return "No data available for this season.";
-  }
-  return "No data available for this season.";
-}
-
 function rankBoard(
   rows: AggregatedPlayer[],
   metric: LeaderboardMetric,
@@ -224,7 +229,7 @@ function rankBoard(
     label,
     valueLabel: LEADERBOARD_VALUE_LABELS[metric] ?? "VAL",
     hasTrackedData,
-    emptyMessage: emptyMessageForBoard(hasTrackedData, rows.length),
+    emptyMessage: leaderboardEmptyMessage({ hasTrackedData, playerCount: rows.length }),
     entries: ranked.map((entry, index) => ({
       rank: index + 1,
       playerId: entry.row.playerId,
@@ -310,15 +315,14 @@ async function resolveSeasonForCompetition(
     await listSeasonsForPicker(competitionId),
   );
 
-  if (!seasonLabel?.trim()) {
+  const requested = sanitizeSeasonQueryParam(seasonLabel);
+  if (!requested) {
     const withStats = await seasonIdsWithPlayerStats(competitionId);
     const latestWithStats =
       seasons.find((season) => withStats.has(season.id)) ?? null;
     const fallback = pickDefaultSeasonForPicker(seasons) ?? seasons[0] ?? null;
     return { seasons, season: latestWithStats ?? fallback };
   }
-
-  const requested = seasonLabel.trim();
   const requestedYear = parseSeasonStartYear(requested);
   const match =
     seasons.find((s) => s.label === requested) ??
@@ -478,6 +482,151 @@ async function loadMatchStatAggregates(
   return { players: [...buckets.values()], rowCount: rows.length };
 }
 
+const SCORING_EVENT_TYPES = ["try", "conversion", "penalty", "penalty_goal", "drop_goal"] as const;
+
+type EventScorerIdentity = {
+  playerId: string;
+  playerName: string;
+  playerSlug: string;
+  playerImageUrl: string | null;
+  teamId: string;
+  teamName: string;
+  teamSlug: string;
+  teamShortName: string | null;
+  teamImageUrl: string | null;
+};
+
+async function loadInternationalSquadCandidates(teamIds: string[]): Promise<Map<string, ScorerCandidate[]>> {
+  const byTeam = new Map<string, ScorerCandidate[]>();
+  if (teamIds.length === 0) return byTeam;
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: players.id,
+      name: players.name,
+      slug: players.slug,
+      imageUrl: players.imageUrl,
+      teamId: players.internationalTeamId,
+    })
+    .from(players)
+    .where(inArray(players.internationalTeamId, teamIds));
+
+  for (const row of rows) {
+    if (!row.teamId) continue;
+    const list = byTeam.get(row.teamId) ?? [];
+    list.push({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      imageUrl: row.imageUrl,
+    });
+    byTeam.set(row.teamId, list);
+  }
+  return byTeam;
+}
+
+async function loadEventScoringAggregates(
+  competitionId: string,
+  seasonId: string,
+): Promise<{ players: AggregatedPlayer[]; scoringEventCount: number }> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      eventType: matchEvents.eventType,
+      playerId: matchEvents.playerId,
+      teamId: matchEvents.teamId,
+      payload: matchEvents.payload,
+      teamName: teams.name,
+      teamSlug: teams.slug,
+      teamShortName: teams.shortName,
+      teamImageUrl: teams.imageUrl,
+      linkedPlayerName: players.name,
+      linkedPlayerSlug: players.slug,
+      linkedPlayerImageUrl: players.imageUrl,
+    })
+    .from(matchEvents)
+    .innerJoin(fixtures, eq(matchEvents.fixtureId, fixtures.id))
+    .leftJoin(teams, eq(matchEvents.teamId, teams.id))
+    .leftJoin(players, eq(matchEvents.playerId, players.id))
+    .where(
+      and(
+        eq(fixtures.competitionId, competitionId),
+        eq(fixtures.seasonId, seasonId),
+        inArray(matchEvents.eventType, [...SCORING_EVENT_TYPES]),
+      ),
+    );
+
+  const teamIds = [
+    ...new Set(rows.map((row) => row.teamId).filter((id): id is string => Boolean(id))),
+  ];
+  const candidatesByTeam = await loadInternationalSquadCandidates(teamIds);
+
+  const identityByKey = new Map<string, EventScorerIdentity>();
+  const totals = new Map<string, { tries: number; points: number }>();
+
+  for (const row of rows) {
+    if (!row.teamId || !row.teamName) continue;
+    const points = pointsForScoringEventType(row.eventType);
+    if (points <= 0) continue;
+    const tries = row.eventType === "try" ? 1 : 0;
+    const payloadName = eventPayloadPlayerName(row.payload);
+    const teamCandidates = candidatesByTeam.get(row.teamId) ?? [];
+    const matched =
+      matchScorerToCandidates(payloadName ?? "", teamCandidates) ??
+      matchScorerToCandidates(row.linkedPlayerName ?? "", teamCandidates);
+
+    let identity: EventScorerIdentity | null = null;
+    if (matched) {
+      identity = {
+        playerId: matched.id,
+        playerName: matched.name,
+        playerSlug: matched.slug,
+        playerImageUrl: matched.imageUrl,
+        teamId: row.teamId,
+        teamName: row.teamName,
+        teamSlug: row.teamSlug ?? "",
+        teamShortName: row.teamShortName,
+        teamImageUrl: row.teamImageUrl,
+      };
+    } else if (row.playerId && row.linkedPlayerName && row.linkedPlayerSlug) {
+      identity = {
+        playerId: row.playerId,
+        playerName: row.linkedPlayerName,
+        playerSlug: row.linkedPlayerSlug,
+        playerImageUrl: row.linkedPlayerImageUrl,
+        teamId: row.teamId,
+        teamName: row.teamName,
+        teamSlug: row.teamSlug ?? "",
+        teamShortName: row.teamShortName,
+        teamImageUrl: row.teamImageUrl,
+      };
+    }
+
+    if (!identity) continue;
+    const key = `${identity.playerId}:${identity.teamId}`;
+    identityByKey.set(key, identity);
+    const current = totals.get(key) ?? { tries: 0, points: 0 };
+    current.tries += tries;
+    current.points += points;
+    totals.set(key, current);
+  }
+
+  const playersOut: AggregatedPlayer[] = [];
+  for (const [key, identity] of identityByKey) {
+    const score = totals.get(key);
+    if (!score || (score.tries <= 0 && score.points <= 0)) continue;
+    const row = emptyAgg({
+      ...identity,
+      hemisphere: nationsChampionshipHemisphereForTeam(identity.teamName),
+    });
+    row.tries = score.tries;
+    row.points = score.points;
+    playersOut.push(row);
+  }
+
+  return { players: playersOut, scoringEventCount: rows.length };
+}
+
 function emptyBoards(): {
   boards: CompetitionLeaderboardBoard[];
   additionalBoards: CompetitionLeaderboardBoard[];
@@ -498,14 +647,6 @@ function emptyBoards(): {
       entries: [],
     })),
   };
-}
-
-/** Exported for unit tests — metrics with all zeros are treated as untracked. */
-export function metricHasTrackedData(
-  rows: Array<Partial<Record<LeaderboardMetric, number>>>,
-  metric: LeaderboardMetric,
-): boolean {
-  return rows.some((row) => (row[metric] ?? 0) > 0);
 }
 
 export async function getCompetitionPlayerStatsBySlug(
@@ -574,17 +715,37 @@ export async function getCompetitionPlayerStatsBySlug(
     ? rugbyChampionshipEraLabel(rugbyChampionshipEraForYear(season.year))
     : null;
 
-  // Prefer season aggregates (full squad coverage) when present for this season only.
-  let aggregated = await loadSeasonStatAggregates(competition.id, season.id);
-  let rowCount = aggregated.length;
-  let source: CompetitionPlayerStatsPayload["coverage"]["source"] =
-    aggregated.length > 0 ? "season_stats" : "none";
+  const seasonAgg = await loadSeasonStatAggregates(competition.id, season.id);
+  const matchAgg = await loadMatchStatAggregates(competition.id, season.id);
 
-  if (aggregated.length === 0) {
-    const matchAgg = await loadMatchStatAggregates(competition.id, season.id);
-    aggregated = matchAgg.players;
-    rowCount = matchAgg.rowCount;
-    source = matchAgg.rowCount > 0 ? "match_stats" : "none";
+  let aggregated: AggregatedPlayer[] = [];
+  let rowCount = 0;
+  let source: CompetitionPlayerStatsPayload["coverage"]["source"] = "none";
+
+  if (seasonAgg.length > 0) {
+    aggregated = seasonAgg;
+    rowCount = seasonAgg.length;
+    source = "season_stats";
+  }
+  if (matchAgg.players.length > 0) {
+    aggregated = aggregated.length
+      ? mergeEventScoringIntoRows(matchAgg.players, aggregated)
+      : matchAgg.players;
+    rowCount = Math.max(rowCount, matchAgg.rowCount);
+    if (source === "none") source = "match_stats";
+  }
+
+  if (!aggregatesHaveScoring(aggregated)) {
+    const eventAgg = await loadEventScoringAggregates(competition.id, season.id);
+    if (eventAgg.players.length > 0) {
+      aggregated = mergeEventScoringIntoRows(aggregated, eventAgg.players);
+      if (source === "none") {
+        source = "match_stats";
+        rowCount = eventAgg.scoringEventCount;
+      } else {
+        rowCount = Math.max(rowCount, aggregated.length);
+      }
+    }
   }
 
   // Never fall back to another season's rows.
@@ -599,6 +760,7 @@ export async function getCompetitionPlayerStatsBySlug(
       !/^unknown\b/i.test(row.playerName) &&
       !/^unknown\b/i.test(row.teamName),
   );
+  aggregated = collapseDuplicateLeaderboardPlayers(aggregated);
 
   return {
     competition: {

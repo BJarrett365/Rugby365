@@ -1185,7 +1185,7 @@ function dedupeFixtures(rows: WikipediaFixtureRow[]): WikipediaFixtureRow[] {
 function splitByRoundSections(wikitext: string): Array<{ round: string; matchweek: number | null; body: string }> {
   const headings = [
     ...wikitext.matchAll(
-      /^(={2,})\s*(Pool\s+[A-Z0-9]+|Round\s+(\d+)|Quarter-?finals?|Semi-?finals?|Bronze\s+final|Third[- ]place(?:\s+play-?off)?|Final|Fixtures|Results|Matches)\s*\1/gim,
+      /^(={2,})\s*(Pool\s+[A-Z0-9]+|(?:Round|Week|Match\s*day)\s+(\d+)|Quarter-?finals?|Semi-?finals?|Bronze\s+final|Third[- ]place(?:\s+play-?off)?|Final|Fixtures|Results|Matches)\s*\1/gim,
     ),
   ];
   if (!headings.length) {
@@ -1206,6 +1206,7 @@ function splitByRoundSections(wikitext: string): Array<{ round: string; matchwee
     else if (/third[- ]place/i.test(label)) round = "Third-place play-off";
     else if (/^final$/i.test(label)) round = "Final";
     else if (/^matches$/i.test(label)) round = "Pool stage";
+    else if (week != null) round = `Round ${week}`;
     sections.push({
       round,
       matchweek: week,

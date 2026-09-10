@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   buildDomesticSeasonCatalog,
+  canonicalSeasonQueryForCompetition,
   currentDomesticSeasonStartYear,
   formatSeasonPickerLabel,
   formatSeasonRangeLabel,
   normalizeSeasonLabel,
   parseSeasonStartYear,
   returnedSeasonMatchesRequest,
+  sanitizeSeasonQueryParam,
   seasonStatusForStartYear,
 } from "./season-label-utils";
 
@@ -25,6 +27,24 @@ describe("season-label-utils", () => {
     expect(parseSeasonStartYear(null)).toBeNull();
     expect(parseSeasonStartYear(undefined)).toBeNull();
     expect(parseSeasonStartYear("")).toBeNull();
+  });
+
+  it("strips copied quotes from season query params", () => {
+    expect(sanitizeSeasonQueryParam('2022–23"')).toBe("2022–23");
+    expect(sanitizeSeasonQueryParam('"2022"')).toBe("2022");
+    expect(parseSeasonStartYear('2022–23"')).toBe(2022);
+    expect(
+      returnedSeasonMatchesRequest('2022–23"', { label: "2022", year: 2022 }),
+    ).toBe(true);
+  });
+
+  it("maps club-style Rugby Championship queries to a calendar year", () => {
+    expect(canonicalSeasonQueryForCompetition("rugby-championship", '2022–23"')).toBe(
+      "2022",
+    );
+    expect(canonicalSeasonQueryForCompetition("rugby-championship", "2022-23")).toBe(
+      "2022",
+    );
   });
 
   it("matches World Cup year queries to picker labels", () => {

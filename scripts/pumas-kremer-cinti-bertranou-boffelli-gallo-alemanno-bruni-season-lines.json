@@ -1,0 +1,1978 @@
+{
+  "marcos-kremer": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "top-14",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 13,
+      "tries": 1,
+      "points": 5,
+      "minutes": 925
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 116
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "nations-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 139
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "top-14",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 13,
+      "tries": 0,
+      "points": 0,
+      "minutes": 890
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 210
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 35
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 394
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "top-14",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 18,
+      "tries": 0,
+      "points": 0,
+      "minutes": 1265
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "clermont-zd93m5jv",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 290
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 7,
+      "tries": 0,
+      "points": 0,
+      "minutes": 530
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 382
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "top-14",
+      "teamSlug": "stade-francais-g567qe9e",
+      "appearances": 14,
+      "tries": 1,
+      "points": 5,
+      "minutes": 958
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "stade-francais-g567qe9e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 28
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 159
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "top-14",
+      "teamSlug": "stade-francais-g567qe9e",
+      "appearances": 15,
+      "tries": 1,
+      "points": 5,
+      "minutes": 977
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "stade-francais-g567qe9e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 102
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 207
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 171
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 436
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "top-14",
+      "teamSlug": "stade-francais-g567qe9e",
+      "appearances": 15,
+      "tries": 2,
+      "points": 10,
+      "minutes": 943
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 199
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 364
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 385
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 55
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 271
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 286
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 18,
+      "tries": 2,
+      "points": 10,
+      "minutes": 1105
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 150
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 16,
+      "tries": 1,
+      "points": 5,
+      "minutes": 1084
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 434
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 456
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 10,
+      "tries": 0,
+      "points": 0,
+      "minutes": 591
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 161
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 24
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 37
+    }
+  ],
+  "lucio-cinti": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "premiership",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 8,
+      "tries": 0,
+      "points": 0,
+      "minutes": 540
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "premiership-rugby-cup",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 50
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 2,
+      "tries": 2,
+      "points": 10,
+      "minutes": 133
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "premiership",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 247
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 225
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 218
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 230
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 360
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "premiership",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 13,
+      "tries": 3,
+      "points": 15,
+      "minutes": 884
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "saracens-zv9039e5",
+      "appearances": 4,
+      "tries": 2,
+      "points": 10,
+      "minutes": 271
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 7,
+      "tries": 0,
+      "points": 0,
+      "minutes": 432
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 2,
+      "points": 10,
+      "minutes": 433
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "premiership",
+      "teamSlug": "london-irish",
+      "appearances": 15,
+      "tries": 3,
+      "points": 15,
+      "minutes": 983
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "london-irish",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 309
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "premiership-rugby-cup",
+      "teamSlug": "london-irish",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "london-irish",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "premiership",
+      "teamSlug": "london-irish",
+      "appearances": 9,
+      "tries": 1,
+      "points": 5,
+      "minutes": 616
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "premiership-rugby-cup",
+      "teamSlug": "london-irish",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 252
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 99
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 31
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 178
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 241
+    }
+  ],
+  "gonzalo-bertranou": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "major-league-rugby",
+      "teamSlug": "california-legion",
+      "appearances": 12,
+      "tries": 5,
+      "points": 25,
+      "minutes": 934
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "major-league-rugby",
+      "teamSlug": "rfc-los-angeles",
+      "appearances": 16,
+      "tries": 6,
+      "points": 30,
+      "minutes": 1093
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 96
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 49
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 62
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 26
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "cardiff-rugby-3ej5njxk",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 108
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 200
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 242
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 300
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 132
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 221
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 176
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 12,
+      "tries": 0,
+      "points": 0,
+      "minutes": 618
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 152
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 53
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 170
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 267
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 9,
+      "tries": 0,
+      "points": 0,
+      "minutes": 506
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "dragons-go9p5qj8",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 23
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 15
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 380
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 206
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 25
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 24
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 105
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 64
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 141
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 20
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 17,
+      "tries": 2,
+      "points": 10,
+      "minutes": 922
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 156
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 350
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 14,
+      "tries": 3,
+      "points": 15,
+      "minutes": 571
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 18
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 1
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 12,
+      "tries": 2,
+      "points": 10,
+      "minutes": 247
+    }
+  ],
+  "emiliano-boffelli": [
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 43
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 261
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 160
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 8,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 2,
+      "points": 67,
+      "minutes": 480
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 10,
+      "tries": 4,
+      "points": 85,
+      "minutes": 741
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 3,
+      "tries": 0,
+      "points": 31,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 2,
+      "points": 45,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 16,
+      "minutes": 160
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 13,
+      "tries": 6,
+      "points": 107,
+      "minutes": 1021
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "edinburgh-1m98e29x",
+      "appearances": 5,
+      "tries": 2,
+      "points": 63,
+      "minutes": 382
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 21,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 30,
+      "minutes": 230
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 1,
+      "points": 71,
+      "minutes": 480
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "top-14",
+      "teamSlug": "racing-92-og9nqr9l",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 104
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "racing-92-og9nqr9l",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 62
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 1,
+      "points": 23,
+      "minutes": 271
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 6,
+      "tries": 3,
+      "points": 15,
+      "minutes": 437
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 2,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 226
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 13,
+      "tries": 3,
+      "points": 15,
+      "minutes": 980
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 218
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 1,
+      "points": 8,
+      "minutes": 139
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 17,
+      "tries": 10,
+      "points": 62,
+      "minutes": 1205
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 3,
+      "minutes": 467
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 3,
+      "points": 21,
+      "minutes": 480
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 7,
+      "tries": 2,
+      "points": 10,
+      "minutes": 403
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 2,
+      "points": 10,
+      "minutes": 135
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 1,
+      "points": 17,
+      "minutes": 480
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 11,
+      "tries": 3,
+      "points": 15,
+      "minutes": 797
+    }
+  ],
+  "thomas-gallo": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 9,
+      "tries": 1,
+      "points": 5,
+      "minutes": 440
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 194
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 129
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 12,
+      "tries": 0,
+      "points": 0,
+      "minutes": 620
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 257
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 194
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-xv",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 67
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 12,
+      "tries": 0,
+      "points": 0,
+      "minutes": 669
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 293
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 2,
+      "points": 10,
+      "minutes": 197
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 418
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 376
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 10,
+      "tries": 0,
+      "points": 0,
+      "minutes": 322
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 45
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 190
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 179
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 10,
+      "tries": 2,
+      "points": 10,
+      "minutes": 545
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 144
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 173
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 49
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 2,
+      "points": 10,
+      "minutes": 249
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "united-rugby-championship",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 16,
+      "tries": 0,
+      "points": 0,
+      "minutes": 709
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "benetton-dp9zn98l",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 81
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 2,
+      "points": 10,
+      "minutes": 29
+    }
+  ],
+  "matias-alemanno": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "premiership-rugby-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 310
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 15,
+      "tries": 2,
+      "points": 10,
+      "minutes": 929
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 216
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 20
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "nations-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 131
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 9,
+      "tries": 0,
+      "points": 0,
+      "minutes": 399
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 22
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 8,
+      "tries": 2,
+      "points": 10,
+      "minutes": 629
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 119
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 7,
+      "tries": 0,
+      "points": 0,
+      "minutes": 267
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 17,
+      "tries": 4,
+      "points": 20,
+      "minutes": 1200
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 320
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 230
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 122
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 18,
+      "tries": 1,
+      "points": 5,
+      "minutes": 1230
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 221
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 139
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 379
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 120
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 11,
+      "tries": 2,
+      "points": 10,
+      "minutes": 651
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 41
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 297
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 170
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "premiership",
+      "teamSlug": "gloucester-do6lo6yl",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 92
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 25
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 155
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 161
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 179
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 100
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 17,
+      "tries": 0,
+      "points": 0,
+      "minutes": 681
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 287
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 134
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 10,
+      "tries": 2,
+      "points": 10,
+      "minutes": 625
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 7,
+      "tries": 0,
+      "points": 0,
+      "minutes": 431
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 301
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 11,
+      "tries": 2,
+      "points": 10,
+      "minutes": 588
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 87
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 246
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 432
+    },
+    {
+      "allRugbySeason": "2014-15",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 38
+    },
+    {
+      "allRugbySeason": "2013-14",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 105
+    },
+    {
+      "allRugbySeason": "2013-14",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 128
+    }
+  ],
+  "rodrigo-bruni": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "top-14",
+      "teamSlug": "aviron-bayonnais",
+      "appearances": 16,
+      "tries": 4,
+      "points": 20,
+      "minutes": 1071
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "top-14",
+      "teamSlug": "aviron-bayonnais",
+      "appearances": 20,
+      "tries": 6,
+      "points": 30,
+      "minutes": 1502
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "aviron-bayonnais",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 220
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "top-14",
+      "teamSlug": "aviron-bayonnais",
+      "appearances": 9,
+      "tries": 0,
+      "points": 0,
+      "minutes": 440
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-champions-cup",
+      "teamSlug": "aviron-bayonnais",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 286
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 137
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "top-14",
+      "teamSlug": "brive",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 327
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "challenge-cup",
+      "teamSlug": "brive",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 81
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "pro-d2",
+      "teamSlug": "vannes",
+      "appearances": 13,
+      "tries": 5,
+      "points": 25,
+      "minutes": 812
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 46
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 29
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "pro-d2",
+      "teamSlug": "vannes",
+      "appearances": 13,
+      "tries": 6,
+      "points": 30,
+      "minutes": 736
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 224
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 229
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 6,
+      "tries": 2,
+      "points": 10,
+      "minutes": 372
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 158
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "jaguares",
+      "appearances": 9,
+      "tries": 1,
+      "points": 5,
+      "minutes": 298
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "argentina-g567pe6e",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 103
+    }
+  ]
+}

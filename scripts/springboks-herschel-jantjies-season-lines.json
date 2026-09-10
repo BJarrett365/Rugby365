@@ -1,0 +1,25 @@
+{
+  "herschel-jantjies": [
+    { "allRugbySeason": "18/19", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 3, "starts": 1, "tries": 3, "points": 15, "minutes": 109, "seasonYear": 2019, "source": "wikipedia-bokhist-2019-trc" },
+    { "allRugbySeason": "18/19", "competitionSlug": "super-rugby", "teamSlug": "western-province", "appearances": 15, "starts": 12, "tries": 5, "points": 25, "minutes": 870 },
+    { "allRugbySeason": "19/20", "competitionSlug": "super-rugby", "teamSlug": "western-province", "appearances": 9, "starts": 9, "tries": 5, "points": 25, "minutes": 595, "seasonYear": 2020, "note": "All.Rugby Super Rugby 5 + Super Rugby Unlocked 4" },
+    { "allRugbySeason": "19/20", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 1, "points": 5, "minutes": 15, "seasonYear": 2019 },
+    { "allRugbySeason": "19/20", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 6, "starts": 1, "tries": 0, "points": 0, "minutes": 125, "seasonYear": 2019, "note": "Played six; unused replacement vs Wales in the semi-final is omitted" },
+    { "allRugbySeason": "20/21", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 0, "tries": 1, "points": 5, "minutes": 64, "seasonYear": 2020 },
+    { "allRugbySeason": "20/21", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 4, "starts": 0, "tries": 0, "points": 0, "minutes": 41, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 14, "starts": 11, "tries": 2, "points": 10, "minutes": 839 },
+    { "allRugbySeason": "21/22", "competitionSlug": "autumn-nations-cup-vx917e9w", "teamSlug": "south-africa", "appearances": 3, "starts": 2, "tries": 0, "points": 0, "minutes": 67, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 0, "points": 0, "minutes": 10, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 0, "points": 0, "minutes": 5, "seasonYear": 2022 },
+    { "allRugbySeason": "22/23", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 15, "starts": 7, "tries": 3, "points": 15, "minutes": 645 },
+    { "allRugbySeason": "22/23", "competitionSlug": "rugby-champions-cup", "teamSlug": "western-province", "appearances": 5, "starts": 3, "tries": 1, "points": 5, "minutes": 262 },
+    { "allRugbySeason": "23/24", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 17, "starts": 10, "tries": 2, "points": 10, "minutes": 771 },
+    { "allRugbySeason": "23/24", "competitionSlug": "rugby-champions-cup", "teamSlug": "western-province", "appearances": 4, "starts": 4, "tries": 2, "points": 10, "minutes": 260 },
+    { "allRugbySeason": "23/24", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 0, "points": 0, "minutes": 25, "seasonYear": 2023 },
+    { "allRugbySeason": "24/25", "competitionSlug": "united-rugby-championship", "teamSlug": "western-province", "appearances": 12, "starts": 6, "tries": 0, "points": 0, "minutes": 484 },
+    { "allRugbySeason": "24/25", "competitionSlug": "rugby-champions-cup", "teamSlug": "western-province", "appearances": 2, "starts": 0, "tries": 1, "points": 5, "minutes": 54 },
+    { "allRugbySeason": "25/26", "competitionSlug": "top-14", "teamSlug": "bayonne", "appearances": 16, "starts": 8, "tries": 2, "points": 10, "minutes": 809 },
+    { "allRugbySeason": "25/26", "competitionSlug": "rugby-champions-cup", "teamSlug": "bayonne", "appearances": 4, "starts": 2, "tries": 0, "points": 0, "minutes": 184 },
+    { "allRugbySeason": "25/26", "competitionSlug": "nations-championship", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 1, "points": 5, "minutes": 29, "seasonYear": 2026 }
+  ]
+}

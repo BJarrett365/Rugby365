@@ -6,7 +6,7 @@
  */
 import { eq, inArray, sql } from "drizzle-orm";
 import { competitionSeasons, fixtures, standingRows, teams } from "@rugby365/db";
-import { getCompetitionBySlug, type StandingView } from "./competition-admin-service";
+import { getCompetitionBySlug, upsertSeason, type StandingView } from "./competition-admin-service";
 import { getDb } from "./db";
 import { dedupeTeams, mergeTeamRecords } from "./entity-dedup-service";
 import { deleteFixture } from "./fixture-admin-service";
@@ -21,6 +21,10 @@ import {
   RUGBY_CHAMPIONSHIP_TEAM_KEYS,
 } from "./table-lab/standings-fixture-dedupe";
 import { isLiveFixtureStatus } from "./table-lab/live-table-service";
+import {
+  isRugbyChampionshipParticipantMatch,
+  RUGBY_CHAMPIONSHIP_FIRST_YEAR,
+} from "./rugby-championship-lineage";
 
 const VIEWS: StandingView[] = ["overall", "home", "away"];
 
@@ -246,8 +250,61 @@ export async function dedupeRugbyChampionshipFixtures(competitionId: string) {
   return { fixtureCount: fixtureRows.length, kept: keepers.length, removed };
 }
 
+export async function relabelRugbyChampionshipCalendarSeasons(competitionId: string) {
+  const db = getDb();
+  const seasons = await db
+    .select()
+    .from(competitionSeasons)
+    .where(eq(competitionSeasons.competitionId, competitionId));
+
+  let updated = 0;
+  for (const season of seasons) {
+    if (season.year == null || season.year < 1996) continue;
+    const next = await upsertSeason({
+      competitionId,
+      label: String(season.year),
+      isActive: season.isActive,
+      seasonKind: "international",
+    });
+    if (next?.label !== season.label || next?.slug !== season.slug) updated += 1;
+  }
+  return { scanned: seasons.length, updated };
+}
+
+export async function removeNonParticipantRugbyChampionshipFixtures(competitionId: string) {
+  const db = getDb();
+  const fixtureRows = await db.select().from(fixtures).where(eq(fixtures.competitionId, competitionId));
+  const teamRows = await db.select().from(teams);
+  const teamNameById = Object.fromEntries(teamRows.map((row) => [row.id, row.name]));
+  const seasons = await db
+    .select({ id: competitionSeasons.id, year: competitionSeasons.year })
+    .from(competitionSeasons)
+    .where(eq(competitionSeasons.competitionId, competitionId));
+  const yearBySeasonId = Object.fromEntries(seasons.map((row) => [row.id, row.year]));
+
+  let removed = 0;
+  const removedSlugs: string[] = [];
+  for (const row of fixtureRows) {
+    const year = (row.seasonId ? yearBySeasonId[row.seasonId] : null) ?? row.kickoffAt?.getUTCFullYear() ?? null;
+    if (year == null || year < RUGBY_CHAMPIONSHIP_FIRST_YEAR) continue;
+    const homeName = row.homeTeamId ? (teamNameById[row.homeTeamId] ?? "") : "";
+    const awayName = row.awayTeamId ? (teamNameById[row.awayTeamId] ?? "") : "";
+    const resolved = resolveTeamNamesFromFixtureSlug(row.slug, homeName, awayName);
+    if (isRugbyChampionshipParticipantMatch(resolved.homeName, resolved.awayName, year)) continue;
+    await deleteFixture(row.id);
+    removed += 1;
+    removedSlugs.push(row.slug);
+  }
+  return { scanned: fixtureRows.length, removed, removedSlugs };
+}
+
 export async function rebuildSeasonStandingsFromFixtures(seasonId: string) {
   const db = getDb();
+  const [season] = await db
+    .select({ competitionId: competitionSeasons.competitionId })
+    .from(competitionSeasons)
+    .where(eq(competitionSeasons.id, seasonId))
+    .limit(1);
   let upserted = 0;
 
   // Clear first so live_table does not re-read polluted synced rows.
@@ -257,6 +314,7 @@ export async function rebuildSeasonStandingsFromFixtures(seasonId: string) {
     const tableView = view === "home" ? "home" : view === "away" ? "away" : "all";
     const result = await calculateRugbyTable("live_table", {
       seasonId,
+      competitionId: season?.competitionId,
       tableView,
       includeLiveMatches: true,
       includeScheduledMatches: false,
@@ -314,6 +372,8 @@ export async function repairRugbyChampionshipTables(options?: { dryRun?: boolean
 
   const teamRepair = await mergeRugbyChampionshipTeamAliases(competition.id);
   const staleLive = await clearStaleLiveFixtureStatuses(competition.id);
+  const labels = await relabelRugbyChampionshipCalendarSeasons(competition.id);
+  const nonParticipants = await removeNonParticipantRugbyChampionshipFixtures(competition.id);
   const fixtureRepair = await dedupeRugbyChampionshipFixtures(competition.id);
 
   const seasonResults: Array<{ seasonId: string; label: string; upserted: number }> = [];
@@ -327,6 +387,8 @@ export async function repairRugbyChampionshipTables(options?: { dryRun?: boolean
     competitionId: competition.id,
     teams: teamRepair,
     staleLive,
+    labels,
+    nonParticipants,
     fixtures: fixtureRepair,
     seasons: seasonResults,
   };

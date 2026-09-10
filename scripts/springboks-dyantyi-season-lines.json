@@ -1,0 +1,13 @@
+{
+  "aphiwe-dyantyi": [
+    { "allRugbySeason": "17/18", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 5, "points": 25, "minutes": 464, "seasonYear": 2018, "source": "wikipedia-bokhist-2018-trc" },
+    { "allRugbySeason": "17/18", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 15, "starts": 13, "tries": 7, "points": 35, "minutes": 980 },
+    { "allRugbySeason": "17/18", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 3, "starts": 3, "tries": 1, "points": 5, "minutes": 240, "seasonYear": 2017 },
+    { "allRugbySeason": "18/19", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 14, "starts": 12, "tries": 6, "points": 30, "minutes": 939 },
+    { "allRugbySeason": "18/19", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 4, "tries": 0, "points": 0, "minutes": 316, "seasonYear": 2018 },
+    { "allRugbySeason": "23/24", "competitionSlug": "united-rugby-championship", "teamSlug": "natal-sharks", "appearances": 9, "starts": 7, "tries": 0, "points": 0, "minutes": 565 },
+    { "allRugbySeason": "24/25", "competitionSlug": "united-rugby-championship", "teamSlug": "blue-bulls", "appearances": 6, "starts": 1, "tries": 0, "points": 0, "minutes": 90 },
+    { "allRugbySeason": "24/25", "competitionSlug": "rugby-champions-cup", "teamSlug": "blue-bulls", "appearances": 2, "starts": 1, "tries": 0, "points": 0, "minutes": 98 },
+    { "allRugbySeason": "25/26", "competitionSlug": "nationale", "teamSlug": "narbonne", "appearances": 6, "starts": 6, "tries": 2, "points": 10, "minutes": 470 }
+  ]
+}

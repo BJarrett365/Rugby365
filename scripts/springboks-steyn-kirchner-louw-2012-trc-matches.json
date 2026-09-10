@@ -1,0 +1,61 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2012_Rugby_Championship",
+  "crossCheck": "https://bokhist.com/",
+  "note": "Only players who took the field. Unused squad members are omitted. Minutes from Wikipedia replacement times; unused blood-bin time for Louw in Johannesburg is counted as a full 80 to match the season total of 263.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2012-08-18",
+      "venue": "Newlands, Cape Town",
+      "players": {
+        "morne-steyn": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 80, "tries": 0, "conversions": 3, "penalties": 2, "points": 12 },
+        "francois-steyn": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2012-08-25",
+      "venue": "Estadio Malvinas Argentinas, Mendoza",
+      "players": {
+        "morne-steyn": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 80, "tries": 0, "conversions": 1, "penalties": 3, "points": 11 },
+        "francois-steyn": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2012-09-08",
+      "venue": "Subiaco Oval, Perth",
+      "players": {
+        "morne-steyn": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 71, "tries": 0, "conversions": 1, "penalties": 2, "points": 8 },
+        "francois-steyn": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 2, "points": 6 },
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 71, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "francois-louw": { "squadRole": "bench", "jerseyNumber": 19, "positionName": "flanker", "minutes": 23, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2012-09-15",
+      "venue": "Forsyth Barr Stadium, Dunedin",
+      "players": {
+        "morne-steyn": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 59, "tries": 0, "conversions": 0, "penalties": 1, "points": 3 },
+        "francois-steyn": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 75, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "francois-louw": { "squadRole": "starting", "jerseyNumber": 6, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2012-09-29",
+      "venue": "Loftus Versfeld, Pretoria",
+      "players": {
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 55, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 },
+        "francois-louw": { "squadRole": "starting", "jerseyNumber": 6, "positionName": "flanker", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2012-10-06",
+      "venue": "FNB Stadium, Johannesburg",
+      "players": {
+        "zane-kirchner": { "squadRole": "starting", "jerseyNumber": 15, "positionName": "fullback", "minutes": 64, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 },
+        "francois-louw": { "squadRole": "starting", "jerseyNumber": 6, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0 }
+      }
+    }
+  ]
+}

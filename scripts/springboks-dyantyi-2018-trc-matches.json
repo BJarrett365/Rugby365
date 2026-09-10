@@ -1,0 +1,52 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2018_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=770",
+    "https://all.rugby/player/aphiwe-dyantyi"
+  ],
+  "note": "Started all six Tests at left wing. All.Rugby 17/18 TRC: 6 starts, 5 tries, 25 points, 464 minutes. Tries: Durban vs Argentina (2), Wellington vs New Zealand (2), Port Elizabeth vs Australia (1). Yellow card PE 64'–74' (Wikipedia); All.Rugby minutes 70. Durban Wikipedia rugbybox 73' vs All.Rugby 74' — All.Rugby minutes used so match sum equals 464.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2018-08-18",
+      "venue": "Kings Park Stadium, Durban",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 74, "tries": 2, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 10 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2018-08-25",
+      "venue": "Estadio Malvinas Argentinas, Mendoza",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2018-09-08",
+      "venue": "Suncorp Stadium, Brisbane",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2018-09-15",
+      "venue": "Westpac Stadium, Wellington",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 2, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 10 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2018-09-29",
+      "venue": "Nelson Mandela Bay Stadium, Port Elizabeth",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 70, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2018-10-06",
+      "venue": "Loftus Versfeld, Pretoria",
+      "players": {
+        "aphiwe-dyantyi": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    }
+  ]
+}

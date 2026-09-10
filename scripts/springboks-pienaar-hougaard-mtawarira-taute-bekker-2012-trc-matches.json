@@ -1,0 +1,68 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2012_Rugby_Championship",
+  "crossCheck": "https://bokhist.com/PlayerData.aspx?PlayerID=912",
+  "note": "Only players who took the field. Unused squad members are omitted. Minutes from Wikipedia replacement times. Mtawarira Perth blood-bin 33–43 counted as 10 minutes off. Bekker Dunedin: on 40–42 (blood for van der Merwe) then on 53–80. Bekker was not in the Perth 23.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2012-08-18",
+      "venue": "Newlands, Cape Town",
+      "players": {
+        "ruan-pienaar": { "squadRole": "substitute", "jerseyNumber": 20, "positionName": "scrum-half", "minutes": 20, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 60, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" },
+        "andries-bekker": { "squadRole": "starting", "jerseyNumber": 5, "positionName": "lock", "minutes": 58, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Stormers" }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2012-08-25",
+      "venue": "Estadio Malvinas Argentinas, Mendoza",
+      "players": {
+        "ruan-pienaar": { "squadRole": "substitute", "jerseyNumber": 20, "positionName": "scrum-half", "minutes": 23, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 57, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" },
+        "andries-bekker": { "squadRole": "starting", "jerseyNumber": 5, "positionName": "lock", "minutes": 49, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Stormers" }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2012-09-08",
+      "venue": "Subiaco Oval, Perth",
+      "players": {
+        "ruan-pienaar": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 70, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2012-09-15",
+      "venue": "Forsyth Barr Stadium, Dunedin",
+      "players": {
+        "ruan-pienaar": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 51, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" },
+        "andries-bekker": { "squadRole": "substitute", "jerseyNumber": 18, "positionName": "lock", "minutes": 29, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Stormers" }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2012-09-29",
+      "venue": "Loftus Versfeld, Pretoria",
+      "players": {
+        "ruan-pienaar": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 80, "tries": 0, "conversions": 3, "penalties": 0, "points": 6, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" },
+        "jaco-taute": { "squadRole": "starting", "jerseyNumber": 13, "positionName": "centre", "minutes": 75, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Lions" },
+        "andries-bekker": { "squadRole": "starting", "jerseyNumber": 5, "positionName": "lock", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Stormers" }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2012-10-06",
+      "venue": "FNB Stadium, Johannesburg",
+      "players": {
+        "ruan-pienaar": { "squadRole": "starting", "jerseyNumber": 9, "positionName": "scrum-half", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Ulster" },
+        "francois-hougaard": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Bulls" },
+        "tendai-mtawarira": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "prop", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Sharks" },
+        "jaco-taute": { "squadRole": "starting", "jerseyNumber": 13, "positionName": "centre", "minutes": 76, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Lions" },
+        "andries-bekker": { "squadRole": "starting", "jerseyNumber": 5, "positionName": "lock", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "points": 0, "clubName": "Stormers" }
+      }
+    }
+  ]
+}

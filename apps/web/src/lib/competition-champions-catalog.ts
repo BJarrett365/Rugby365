@@ -391,17 +391,17 @@ const RUGBY_CHAMPIONSHIP_WINNERS: Record<number, string> = {
   2012: "New Zealand",
   2013: "New Zealand",
   2014: "New Zealand",
-  2015: "New Zealand",
+  2015: "Australia",
   2016: "New Zealand",
   2017: "New Zealand",
   2018: "New Zealand",
   2019: "South Africa",
   2020: "New Zealand",
-  2021: "South Africa",
+  2021: "New Zealand",
   2022: "New Zealand",
-  2023: "South Africa",
+  2023: "New Zealand",
   2024: "South Africa",
-  2025: "TBD",
+  2025: "South Africa",
 };
 
 /** Tri Nations (1996–2011, 2020) and Rugby Championship (2012–2019, 2021+). */
@@ -416,15 +416,19 @@ export function rugbyChampionshipWikipediaSeasonUrl(year: number): string {
   return wikipediaArticleUrl(rugbyChampionshipSeasonPageTitle(year));
 }
 
-export const RUGBY_CHAMPIONSHIP_CHAMPIONS: SeasonChampionEntry[] = Array.from({ length: 30 }, (_, index) => {
-  const startYear = 1996 + index;
-  return {
-    startYear,
-    label: String(startYear),
-    winner: RUGBY_CHAMPIONSHIP_WINNERS[startYear] ?? "TBD",
-    wikipediaUrl: rugbyChampionshipWikipediaSeasonUrl(startYear),
-  };
-});
+export const RUGBY_CHAMPIONSHIP_CHAMPIONS: SeasonChampionEntry[] = [
+  ...Array.from({ length: 30 }, (_, index) => {
+    const startYear = 1996 + index;
+    return {
+      startYear,
+      label: String(startYear),
+      winner: RUGBY_CHAMPIONSHIP_WINNERS[startYear] ?? "TBD",
+      wikipediaUrl: rugbyChampionshipWikipediaSeasonUrl(startYear),
+    };
+  }),
+  // SANZAAR did not stage the tournament in 2026 — no season Wikipedia fixtures page.
+  { startYear: 2026, label: "2026", winner: "Not held" },
+];
 
 /** Currie Cup (1968–2003, 2005–2006) and Currie Cup Premier Division (2004, 2007+). */
 export function currieCupSeasonPageTitle(year: number): string {

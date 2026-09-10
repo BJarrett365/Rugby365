@@ -1,0 +1,53 @@
+{
+  "jean-de-villiers": [
+    { "allRugbySeason": "2013", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 3, "points": 15, "minutes": 457, "seasonYear": 2013, "source": "wikipedia-bokhist-2013-trc" },
+    { "allRugbySeason": "13/14", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 3, "starts": 3, "tries": 1, "points": 5, "minutes": 231, "seasonYear": 2013 },
+    { "allRugbySeason": "13/14", "competitionSlug": "super-rugby", "teamSlug": "western-province", "appearances": 9, "starts": 9, "tries": 1, "points": 5, "minutes": 716, "note": "All.Rugby Stormers Super Rugby 2014; no Stormers franchise team in DB so mapped to Western Province" },
+    { "allRugbySeason": "13/14", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 2, "points": 10, "minutes": 480, "seasonYear": 2014, "note": "All.Rugby 13/14 TRC match dates are 2014 (two tries vs Australia 27 Sep 2014)" },
+    { "allRugbySeason": "14/15", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 4, "tries": 0, "points": 0, "minutes": 298, "seasonYear": 2014 },
+    { "allRugbySeason": "14/15", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 0, "points": 0, "minutes": 80, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 2, "starts": 2, "tries": 0, "points": 0, "minutes": 155, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "premiership", "teamSlug": "leicester-tigers-g567e9er", "appearances": 2, "starts": 2, "tries": 1, "points": 5, "minutes": 156 }
+  ],
+  "adriaan-strauss": [
+    { "allRugbySeason": "2013", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 3, "tries": 2, "points": 10, "minutes": 251, "seasonYear": 2013, "source": "wikipedia-bokhist-2013-trc" },
+    { "allRugbySeason": "13/14", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 1, "tries": 0, "points": 0, "minutes": 113, "seasonYear": 2013 },
+    { "allRugbySeason": "13/14", "competitionSlug": "super-rugby", "teamSlug": "free-state-cheetahs", "appearances": 16, "starts": 16, "tries": 0, "points": 0, "minutes": 1241 },
+    { "allRugbySeason": "13/14", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 3, "tries": 0, "points": 0, "minutes": 254, "seasonYear": 2014 },
+    { "allRugbySeason": "14/15", "competitionSlug": "super-rugby", "teamSlug": "blue-bulls", "appearances": 13, "starts": 13, "tries": 0, "points": 0, "minutes": 909 },
+    { "allRugbySeason": "14/15", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 2, "tries": 0, "points": 0, "minutes": 152, "seasonYear": 2014 },
+    { "allRugbySeason": "14/15", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 3, "starts": 0, "tries": 0, "points": 0, "minutes": 66, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "super-rugby", "teamSlug": "blue-bulls", "appearances": 14, "starts": 14, "tries": 6, "points": 30, "minutes": 1025 },
+    { "allRugbySeason": "15/16", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 4, "tries": 0, "points": 0, "minutes": 279, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 6, "starts": 1, "tries": 1, "points": 5, "minutes": 216, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 0, "points": 0, "minutes": 429, "seasonYear": 2016 },
+    { "allRugbySeason": "16/17", "competitionSlug": "super-rugby", "teamSlug": "blue-bulls", "appearances": 11, "starts": 10, "tries": 0, "points": 0, "minutes": 647 },
+    { "allRugbySeason": "16/17", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 3, "starts": 3, "tries": 0, "points": 0, "minutes": 219, "seasonYear": 2016 },
+    { "allRugbySeason": "17/18", "competitionSlug": "super-rugby", "teamSlug": "blue-bulls", "appearances": 13, "starts": 7, "tries": 5, "points": 25, "minutes": 565 }
+  ],
+  "bismarck-du-plessis": [
+    { "allRugbySeason": "2013", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 3, "tries": 2, "points": 10, "minutes": 223, "seasonYear": 2013, "source": "wikipedia-bokhist-2013-trc" },
+    { "allRugbySeason": "13/14", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 6, "starts": 5, "tries": 1, "points": 5, "minutes": 344, "seasonYear": 2013 },
+    { "allRugbySeason": "13/14", "competitionSlug": "super-rugby", "teamSlug": "natal-sharks", "appearances": 17, "starts": 16, "tries": 3, "points": 15, "minutes": 1209 },
+    { "allRugbySeason": "13/14", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 3, "tries": 0, "points": 0, "minutes": 226, "seasonYear": 2014 },
+    { "allRugbySeason": "14/15", "competitionSlug": "super-rugby", "teamSlug": "natal-sharks", "appearances": 11, "starts": 11, "tries": 3, "points": 15, "minutes": 783 },
+    { "allRugbySeason": "14/15", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 2, "tries": 0, "points": 0, "minutes": 162, "seasonYear": 2014 },
+    { "allRugbySeason": "14/15", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 3, "starts": 3, "tries": 0, "points": 0, "minutes": 185, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 2, "points": 10, "minutes": 306, "seasonYear": 2015 },
+    { "allRugbySeason": "15/16", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 17, "starts": 12, "tries": 8, "points": 40, "minutes": 996 },
+    { "allRugbySeason": "15/16", "competitionSlug": "challenge-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 6, "starts": 6, "tries": 1, "points": 5, "minutes": 394 },
+    { "allRugbySeason": "16/17", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 13, "starts": 13, "tries": 5, "points": 25, "minutes": 794 },
+    { "allRugbySeason": "17/18", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 18, "starts": 14, "tries": 8, "points": 40, "minutes": 1049 },
+    { "allRugbySeason": "17/18", "competitionSlug": "rugby-champions-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 5, "starts": 4, "tries": 1, "points": 5, "minutes": 333 },
+    { "allRugbySeason": "18/19", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 17, "starts": 16, "tries": 3, "points": 15, "minutes": 1175 },
+    { "allRugbySeason": "18/19", "competitionSlug": "rugby-champions-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 2, "starts": 2, "tries": 0, "points": 0, "minutes": 116 },
+    { "allRugbySeason": "19/20", "competitionSlug": "rugby-champions-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 5, "starts": 4, "tries": 0, "points": 0, "minutes": 270 },
+    { "allRugbySeason": "19/20", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 7, "starts": 4, "tries": 1, "points": 5, "minutes": 364 },
+    { "allRugbySeason": "20/21", "competitionSlug": "top-14", "teamSlug": "montpellier-g56ey3j7", "appearances": 12, "starts": 3, "tries": 0, "points": 0, "minutes": 356 },
+    { "allRugbySeason": "20/21", "competitionSlug": "rugby-champions-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 2, "starts": 1, "tries": 0, "points": 0, "minutes": 87 },
+    { "allRugbySeason": "20/21", "competitionSlug": "challenge-cup", "teamSlug": "montpellier-g56ey3j7", "appearances": 4, "starts": 0, "tries": 0, "points": 0, "minutes": 90 },
+    { "allRugbySeason": "21/22", "competitionSlug": "united-rugby-championship", "teamSlug": "blue-bulls", "appearances": 13, "starts": 4, "tries": 0, "points": 0, "minutes": 374 },
+    { "allRugbySeason": "22/23", "competitionSlug": "united-rugby-championship", "teamSlug": "blue-bulls", "appearances": 11, "starts": 3, "tries": 5, "points": 25, "minutes": 301 },
+    { "allRugbySeason": "22/23", "competitionSlug": "rugby-champions-cup", "teamSlug": "blue-bulls", "appearances": 5, "starts": 3, "tries": 0, "points": 0, "minutes": 208 }
+  ]
+}

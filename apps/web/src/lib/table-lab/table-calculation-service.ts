@@ -22,6 +22,7 @@ import {
   syncDomesticSeasonCatalog,
   type StandingView,
 } from "../competition-admin-service";
+import { resolveFixtureTryCounts } from "./match-try-count";
 import { assessFixtureCoverage, isTableAvailable } from "./table-confidence-service";
 import { assessTableDataLevels } from "./table-lab-data-levels";
 import { getRugbyTableDefinition } from "./table-definition-service";
@@ -536,8 +537,13 @@ async function loadPerspectives(input: {
           detectNeutralVenueFromSnapshot(fixture.providerSnapshot),
         pointsFor,
         pointsAgainst,
-        triesFor: stat?.tries ?? null,
-        triesAgainst: oppStat?.tries ?? null,
+        ...resolveFixtureTryCounts({
+          events,
+          teamIds: [rawTeamId, teamId],
+          opponentIds: [rawOpponentId, opponentId],
+          statTries: stat?.tries,
+          opponentStatTries: oppStat?.tries,
+        }),
         firstHalfFor,
         firstHalfAgainst,
         firstHalfTriesFor,
@@ -788,7 +794,16 @@ async function buildTableMetadata(
   scoringRules: Awaited<ReturnType<typeof getScoringRulesForCompetition>>;
   competition?: { slug: string; name: string };
 }> {
-  const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+  let metadataSeasonYear: number | null = null;
+  if (context.seasonId) {
+    const [seasonRow] = await getDb()
+      .select({ year: competitionSeasons.year })
+      .from(competitionSeasons)
+      .where(eq(competitionSeasons.id, context.seasonId))
+      .limit(1);
+    metadataSeasonYear = seasonRow?.year ?? null;
+  }
+  const scoringRules = await getScoringRulesForCompetition(context.competitionId, metadataSeasonYear);
   let competitionName = "Competition";
   let seasonLabel = "All seasons";
   let lastUpdated: string | null = null;
@@ -1003,6 +1018,16 @@ export async function calculateRugbyTable(
     throw new Error(`Unknown table type: ${tableId}`);
   }
 
+  let seasonYear: number | null = null;
+  if (context.seasonId) {
+    const [seasonRow] = await getDb()
+      .select({ year: competitionSeasons.year })
+      .from(competitionSeasons)
+      .where(eq(competitionSeasons.id, context.seasonId))
+      .limit(1);
+    seasonYear = seasonRow?.year ?? null;
+  }
+
   if (definition.id === "custom_match_period" || definition.id === "points_gained_drawn") {
     return emptyResult(definition, context, [
       definition.id === "custom_match_period"
@@ -1072,7 +1097,7 @@ export async function calculateRugbyTable(
     }
 
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildFirstHalfTableStandings({
       perspectives,
       rules: scoringRules,
@@ -1131,7 +1156,7 @@ export async function calculateRugbyTable(
     }
 
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildSecondHalfTableStandings({
       perspectives,
       rules: scoringRules,
@@ -1193,7 +1218,7 @@ export async function calculateRugbyTable(
 
     const includeExtraTime = parseIncludeExtraTime(context.includeExtraTime, false);
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildFinalTwentyTableStandings({
       perspectives,
       rules: scoringRules,
@@ -1259,7 +1284,7 @@ export async function calculateRugbyTable(
 
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const oppositionPositionRule = parseOppositionPositionRule(context.oppositionPositionRule);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildVTopHalfTableStandings({
       seasonPerspectives: seasonPerspectivesForOppositionHalf ?? perspectives,
       rules: scoringRules,
@@ -1327,7 +1352,7 @@ export async function calculateRugbyTable(
 
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const oppositionPositionRule = parseOppositionPositionRule(context.oppositionPositionRule);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildVBottomHalfTableStandings({
       seasonPerspectives: seasonPerspectivesForOppositionHalf ?? perspectives,
       rules: scoringRules,
@@ -1396,7 +1421,7 @@ export async function calculateRugbyTable(
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const firstScoreType = parseFirstScoreTypeFilter(context.firstScoreType);
     const scoringFirstSortBy = parseScoringFirstSortBy(context.scoringFirstSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildScoringFirstTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1487,7 +1512,7 @@ export async function calculateRugbyTable(
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const firstScoreConcededType = parseFirstScoreTypeFilter(context.firstScoreType);
     const concedingFirstSortBy = parseConcedingFirstSortBy(context.concedingFirstSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildConcedingFirstTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1578,7 +1603,7 @@ export async function calculateRugbyTable(
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const losingPositionFilter = parseLosingPositionFilter(context.losingPositionFilter);
     const pointsGainedLosingSortBy = parsePointsGainedLosingSortBy(context.pointsGainedLosingSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildPointsGainedLosingTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1663,7 +1688,7 @@ export async function calculateRugbyTable(
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const winningPositionFilter = parseWinningPositionFilter(context.winningPositionFilter);
     const pointsLostWinningSortBy = parsePointsLostWinningSortBy(context.pointsLostWinningSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildPointsLostWinningTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1753,7 +1778,7 @@ export async function calculateRugbyTable(
         ? Math.max(0, Math.floor(context.minimumDeficitPoints))
         : parseMinimumDeficitPoints(minimumDeficitPreset, context.minimumDeficitPoints);
     const comebackSortBy = parseComebackSortBy(context.comebackSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildComebackTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1849,7 +1874,7 @@ export async function calculateRugbyTable(
         ? Math.max(0, Math.floor(context.minimumLeadPoints))
         : parseMinimumLeadPoints(minimumLeadPreset, context.minimumLeadPoints);
     const leadProtectionSortBy = parseLeadProtectionSortBy(context.leadProtectionSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildLeadProtectionTableStandings({
       seasonPerspectives: seasonPerspectivesForScoringFirst ?? perspectives,
       rules: scoringRules,
@@ -1945,7 +1970,7 @@ export async function calculateRugbyTable(
       context.triesMatchRangeCustom,
     );
     const triesScoredSortBy = parseTriesScoredSortBy(context.triesScoredSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildTriesScoredTableStandings({
       seasonPerspectives: perspectives,
       rules: scoringRules,
@@ -2060,7 +2085,7 @@ export async function calculateRugbyTable(
       context.triesMatchRangeCustom,
     );
     const triesConcededSortBy = parseTriesConcededSortBy(context.triesConcededSortBy);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildTriesConcededTableStandings({
       seasonPerspectives: perspectives,
       rules: scoringRules,
@@ -2178,7 +2203,7 @@ export async function calculateRugbyTable(
     const bothTeamsScoredTriesSortBy = parseBothTeamsScoredTriesSortBy(
       context.bothTeamsScoredTriesSortBy,
     );
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildBothTeamsScoredTriesTableStandings({
       seasonPerspectives: perspectives,
       rules: scoringRules,
@@ -2292,7 +2317,7 @@ export async function calculateRugbyTable(
     const competition = context.competitionId
       ? await getCompetitionById(context.competitionId)
       : null;
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildWinningBonusPointsTableStandings({
       seasonPerspectives: perspectives,
       rules: scoringRules,
@@ -2478,7 +2503,7 @@ export async function calculateRugbyTable(
       if (pools[0]) formSlots = poolStageFormSlots(pools[0].teams.length);
     }
 
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildLiveTableStandings({
       perspectives: livePerspectives,
       rules: scoringRules,
@@ -2490,7 +2515,13 @@ export async function calculateRugbyTable(
     // Finished seasons: prefer curated synced standings over duplicate-heavy fixture calc.
     // World Cup pool tables must stay on knockout-filtered fixtures (synced rows include
     // QF/SF/F so P becomes 4–6 and form is null).
-    if (built.liveFixtureCount === 0 && !isWorldCup) {
+    // Rugby Championship tables always come from completed matches so a Wikipedia
+    // import (including all-zero rows) cannot replace the fixture-derived table.
+    if (
+      built.liveFixtureCount === 0 &&
+      !isWorldCup &&
+      !isRugbyChampionshipLineageSlug(competition?.slug)
+    ) {
       const standingView = standingViewForTableView(tableView);
       const synced = await trySyncedStandings(context.seasonId, standingView);
       if (synced?.length) {
@@ -2583,9 +2614,16 @@ export async function calculateRugbyTable(
 
   if (definition.id === "full_table") {
     const standingView = standingViewForTableView(tableView);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
+    const fullTableCompetition = context.competitionId
+      ? await getCompetitionById(context.competitionId)
+      : null;
     const synced = await trySyncedStandings(context.seasonId, standingView);
-    if (synced?.length && coverage.fixtureCount > 0) {
+    if (
+      synced?.length &&
+      coverage.fixtureCount > 0 &&
+      !isRugbyChampionshipLineageSlug(fullTableCompetition?.slug)
+    ) {
       return attachTableLabMetadata(
         {
           definition,
@@ -2633,7 +2671,7 @@ export async function calculateRugbyTable(
 
   if (definition.id === "form_table") {
     const formMatchCount = parseFormMatchCount(context.formMatchCount ?? DEFAULT_FORM_MATCH_COUNT);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const formWarnings = [...warnings];
     const { rows, dateRangeLabel } = buildFormTableStandings({
       perspectives,
@@ -2681,7 +2719,7 @@ export async function calculateRugbyTable(
     const hemisphereMode = context.hemisphereMode ?? "summary";
     const hemisphereMatchType = context.hemisphereMatchType ?? "all";
     const includeUnknown = context.includeUnknownHemisphere === true;
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildHemisphereTable({
       perspectives,
       mode: hemisphereMode,
@@ -2732,7 +2770,7 @@ export async function calculateRugbyTable(
   }
 
   if (definition.id === "home_table") {
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const homeWarnings = [...warnings];
 
@@ -2964,7 +3002,7 @@ export async function calculateRugbyTable(
             competitionType: competition?.competitionType,
             seasonStartYear,
           })
-        : await getScoringRulesForCompetition(context.competitionId);
+        : await getScoringRulesForCompetition(context.competitionId, seasonYear);
 
     const built = buildBetweenDatesTableStandings({
       perspectives,
@@ -3023,7 +3061,7 @@ export async function calculateRugbyTable(
 
   if (definition.id === "calendar_year") {
     const calendarYear = parseCalendarYear(context.calendarYear);
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const calendarWarnings = [...warnings];
 
@@ -3074,7 +3112,7 @@ export async function calculateRugbyTable(
   }
 
   if (definition.id === "away_table") {
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const minMatchesPlayed = parseMinMatchesPlayed(context.minMatchesPlayed);
     const includeNeutralVenue = context.includeNeutralVenueForAwayTable === true;
     const awayWarnings = [...warnings];
@@ -3150,7 +3188,7 @@ export async function calculateRugbyTable(
 
   if (definition.id === "try_bonus_point") {
     const tryBonusWarnings = [...warnings];
-    const scoringRules = await getScoringRulesForCompetition(context.competitionId);
+    const scoringRules = await getScoringRulesForCompetition(context.competitionId, seasonYear);
     const built = buildTryBonusPointStandings({ perspectives, rules: scoringRules });
     tryBonusWarnings.push(
       ...bettingTableScopeWarnings({

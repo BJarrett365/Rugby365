@@ -194,5 +194,11 @@ describe("standings fixture dedupe", () => {
     expect(
       isHealthyStandingsRows([{ teamId: "1", teamName: "Unknown team abc" }]),
     ).toBe(false);
+    expect(
+      isHealthyStandingsRows([
+        { teamId: "1", teamName: "New Zealand", played: 0 },
+        { teamId: "2", teamName: "South Africa", played: 0 },
+      ]),
+    ).toBe(false);
   });
 });

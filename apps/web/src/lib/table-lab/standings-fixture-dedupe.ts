@@ -130,7 +130,7 @@ export function displayNameFromFixtureSlugToken(raw: string): string {
 
 /** Reject synced standings polluted by duplicate imports / orphan teams. */
 export function isHealthyStandingsRows(
-  rows: Array<{ teamId?: string; teamName?: string | null }>,
+  rows: Array<{ teamId?: string; teamName?: string | null; played?: number | null }>,
 ): boolean {
   if (!rows.length) return false;
   const names = rows.map((row) => canonicalStandingsTeamName(row.teamName ?? ""));
@@ -139,6 +139,8 @@ export function isHealthyStandingsRows(
   if (uniqueNames.size !== rows.length) return false;
   const uniqueIds = new Set(rows.map((row) => row.teamId).filter(Boolean));
   if (uniqueIds.size !== rows.length) return false;
+  const hasPlayedField = rows.some((row) => row.played != null);
+  if (hasPlayedField && rows.every((row) => (row.played ?? 0) === 0)) return false;
   return true;
 }
 

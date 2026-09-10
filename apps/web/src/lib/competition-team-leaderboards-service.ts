@@ -17,10 +17,20 @@ import { pickDefaultSeasonForPicker } from "./season-list-utils";
 import { teamCodeForLeaderboard } from "./competition-player-stat-display";
 import type { HemisphereFilter } from "./competition-player-leaderboards-service";
 import {
+  TEAM_ADVANCED_LEADERBOARD_METRICS,
+  mergeTeamMatchStatRows,
+  teamAdvancedCoverageComplete,
+  teamLeaderboardEmptyMessage,
   teamMatchScoringPoints,
-  teamMatchStatsProviderPriority,
   teamStatSectionNumber,
 } from "./competition-team-stat-display";
+import {
+  isRugbyChampionshipLineageSlug,
+  rugbyChampionshipParticipantTeamKey,
+  rugbyChampionshipParticipantKeys,
+  rugbyChampionshipTableNote,
+  RUGBY_CHAMPIONSHIP_NOT_HELD_YEARS,
+} from "./rugby-championship-lineage";
 
 export type TeamLeaderboardMetric =
   | "points"
@@ -53,6 +63,7 @@ export type CompetitionTeamLeaderboardBoard = {
   label: string;
   valueLabel: string;
   entries: CompetitionTeamLeaderboardEntry[];
+  emptyMessage?: string;
 };
 
 export type CompetitionTeamStatsPayload = {
@@ -73,6 +84,7 @@ export type CompetitionTeamStatsPayload = {
     teamCount: number;
     rowCount: number;
   };
+  seasonNote: string | null;
 };
 
 export const TEAM_LEADERBOARD_VALUE_LABELS: Record<TeamLeaderboardMetric, string> = {
@@ -126,6 +138,7 @@ type AggregatedTeam = {
   cleanBreaks: number;
   defendersBeaten: number;
   hemisphere: "northern" | "southern" | null;
+  matchesWithMetric: Partial<Record<TeamLeaderboardMetric, number>>;
 };
 
 function sectionNumber(sections: unknown, path: string[]): number {
@@ -161,6 +174,7 @@ function emptyAgg(
     | "offloads"
     | "cleanBreaks"
     | "defendersBeaten"
+    | "matchesWithMetric"
   >,
 ): AggregatedTeam {
   return {
@@ -178,6 +192,7 @@ function emptyAgg(
     offloads: 0,
     cleanBreaks: 0,
     defendersBeaten: 0,
+    matchesWithMetric: {},
   };
 }
 
@@ -190,21 +205,50 @@ function rankBoard(
   metric: TeamLeaderboardMetric,
   label: string,
   limit: number,
+  options?: { notHeld?: boolean; requireFullAdvancedCoverage?: boolean; participantCount?: number },
 ): CompetitionTeamLeaderboardBoard {
-  const ranked = [...rows]
-    .map((row) => ({ row, value: metricValue(row, metric) }))
-    .filter((entry) => entry.value > 0)
-    .sort((a, b) => {
-      if (b.value !== a.value) return b.value - a.value;
-      if (b.row.matches !== a.row.matches) return b.row.matches - a.row.matches;
-      return a.row.teamName.localeCompare(b.row.teamName);
-    })
-    .slice(0, limit);
+  const isAdvanced = (TEAM_ADVANCED_LEADERBOARD_METRICS as readonly string[]).includes(metric);
+  const matches = rows.reduce((sum, row) => sum + row.matches, 0);
+  const matchesTracked = rows.reduce(
+    (sum, row) => sum + (row.matchesWithMetric[metric] ?? 0),
+    0,
+  );
+  const teamsTracked = rows.filter(
+    (row) => row.matches > 0 && (row.matchesWithMetric[metric] ?? 0) === row.matches,
+  ).length;
+  const coverageComplete =
+    !isAdvanced ||
+    !options?.requireFullAdvancedCoverage ||
+    teamAdvancedCoverageComplete({
+      teamCount: rows.length,
+      teamsTracked,
+      participantCount: options.participantCount,
+      matches,
+      matchesTracked,
+    });
+  const hasTrackedData = coverageComplete && rows.some((row) => metricValue(row, metric) > 0);
+
+  const ranked = hasTrackedData
+    ? [...rows]
+        .map((row) => ({ row, value: metricValue(row, metric) }))
+        .filter((entry) => entry.value > 0)
+        .sort((a, b) => {
+          if (b.value !== a.value) return b.value - a.value;
+          if (b.row.matches !== a.row.matches) return b.row.matches - a.row.matches;
+          return a.row.teamName.localeCompare(b.row.teamName);
+        })
+        .slice(0, limit)
+    : [];
 
   return {
     metric,
     label,
     valueLabel: TEAM_LEADERBOARD_VALUE_LABELS[metric],
+    emptyMessage: teamLeaderboardEmptyMessage({
+      hasTrackedData,
+      teamCount: rows.length,
+      notHeld: options?.notHeld,
+    }),
     entries: ranked.map((entry, index) => ({
       rank: index + 1,
       teamId: entry.row.teamId,
@@ -285,6 +329,7 @@ function emptyPayload(
       entries: [],
     })),
     coverage: { teamCount: 0, rowCount: 0 },
+    seasonNote: null,
   };
 }
 
@@ -364,6 +409,9 @@ export async function getCompetitionTeamStatsBySlug(
 
   // Strict season scope — never fall back to other seasons' team stats.
   const sourceRows = rows;
+  const championshipOnly = isRugbyChampionshipLineageSlug(competition.slug);
+  const participantKeys = rugbyChampionshipParticipantKeys(season.year);
+  const notHeld = championshipOnly && RUGBY_CHAMPIONSHIP_NOT_HELD_YEARS.has(season.year);
 
   function matchIdentity(row: (typeof sourceRows)[number]): string {
     const day = row.kickoffAt ? row.kickoffAt.toISOString().slice(0, 10) : "nodate";
@@ -375,23 +423,60 @@ export async function getCompetitionTeamStatsBySlug(
     return `${day}|${pair}|${team}`;
   }
 
-  // One row per real match+team — prefer SDMS over historical rollups; collapse twin fixtures.
-  const bestByMatch = new Map<string, (typeof sourceRows)[number]>();
+  const grouped = new Map<string, (typeof sourceRows)[number][]>();
   for (const row of sourceRows) {
-    const key = matchIdentity(row);
-    const existing = bestByMatch.get(key);
-    if (!existing) {
-      bestByMatch.set(key, row);
-      continue;
+    if (championshipOnly) {
+      const teamKey = rugbyChampionshipParticipantTeamKey(row.teamName);
+      if (!participantKeys.has(teamKey)) continue;
+      if (
+        row.homeTeamName &&
+        row.awayTeamName &&
+        (!participantKeys.has(rugbyChampionshipParticipantTeamKey(row.homeTeamName)) ||
+          !participantKeys.has(rugbyChampionshipParticipantTeamKey(row.awayTeamName)))
+      ) {
+        continue;
+      }
     }
-    const nextPri = teamMatchStatsProviderPriority(row.sourceProvider);
-    const prevPri = teamMatchStatsProviderPriority(existing.sourceProvider);
-    if (nextPri > prevPri) bestByMatch.set(key, row);
+    const key = matchIdentity(row);
+    const list = grouped.get(key) ?? [];
+    list.push(row);
+    grouped.set(key, list);
+  }
+
+  const mergedByMatch: Array<(typeof sourceRows)[number] & { sections: unknown }> = [];
+  for (const group of grouped.values()) {
+    const merged = mergeTeamMatchStatRows(
+      group.map((row) => ({
+        sourceProvider: row.sourceProvider,
+        tries: row.tries,
+        conversions: row.conversions,
+        penalties: row.penalties,
+        dropGoals: row.dropGoals,
+        metres: row.metres,
+        carries: row.carries,
+        tackles: row.tackles,
+        turnoversWon: row.turnoversWon,
+        sections: row.sections,
+      })),
+    );
+    const base = group[0]!;
+    mergedByMatch.push({
+      ...base,
+      tries: merged.tries,
+      conversions: merged.conversions,
+      penalties: merged.penalties,
+      dropGoals: merged.dropGoals,
+      metres: merged.metres,
+      carries: merged.carries,
+      tackles: merged.tackles,
+      turnoversWon: merged.turnoversWon,
+      sections: merged.sections,
+    });
   }
 
   const byTeam = new Map<string, AggregatedTeam>();
 
-  for (const row of bestByMatch.values()) {
+  for (const row of mergedByMatch) {
     const hemisphere = supportsHemisphereFilter
       ? nationsChampionshipHemisphereForTeam(row.teamName)
       : null;
@@ -432,10 +517,28 @@ export async function getCompetitionTeamStatsBySlug(
     existing.offloads += offloads;
     existing.cleanBreaks += cleanBreaks;
     existing.defendersBeaten += defendersBeaten;
+    const matchHasAdvancedTracking =
+      row.metres > 0 ||
+      row.carries > 0 ||
+      row.tackles > 0 ||
+      row.turnoversWon > 0 ||
+      offloads > 0 ||
+      cleanBreaks > 0 ||
+      defendersBeaten > 0;
+    if (matchHasAdvancedTracking) {
+      for (const metric of TEAM_ADVANCED_LEADERBOARD_METRICS) {
+        existing.matchesWithMetric[metric] = (existing.matchesWithMetric[metric] ?? 0) + 1;
+      }
+    }
     byTeam.set(teamKey, existing);
   }
 
   const aggregated = [...byTeam.values()];
+  const boardOptions = {
+    notHeld,
+    requireFullAdvancedCoverage: championshipOnly,
+    participantCount: championshipOnly ? participantKeys.size : undefined,
+  };
 
   return {
     competition: competitionMeta,
@@ -448,13 +551,16 @@ export async function getCompetitionTeamStatsBySlug(
     },
     hemisphereFilter,
     supportsHemisphereFilter,
-    boards: PRIMARY_BOARDS.map((b) => rankBoard(aggregated, b.metric, b.label, limit)),
+    boards: PRIMARY_BOARDS.map((b) =>
+      rankBoard(aggregated, b.metric, b.label, limit, boardOptions),
+    ),
     additionalBoards: ADDITIONAL_BOARDS.map((b) =>
-      rankBoard(aggregated, b.metric, b.label, limit),
+      rankBoard(aggregated, b.metric, b.label, limit, boardOptions),
     ),
     coverage: {
       teamCount: aggregated.length,
-      rowCount: bestByMatch.size,
+      rowCount: mergedByMatch.length,
     },
+    seasonNote: championshipOnly ? rugbyChampionshipTableNote(season.year) : null,
   };
 }

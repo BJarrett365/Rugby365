@@ -1,0 +1,71 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2014_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/GameData.aspx?GameID=442",
+    "https://www.bbc.com/sport/rugby-union/29393514",
+    "https://all.rugby/player/cornal-hendricks",
+    "https://all.rugby/player/pat-lambie",
+    "https://all.rugby/player/marcell-coetzee"
+  ],
+  "note": "Only players who took the field. Unused squad members omitted (Lambie was not in the match-day 23 vs Argentina). Minutes from Wikipedia rugbybox replacement times. Lambie Cape Town: try, conversion and drop-goal (10 points); Ellis Park: one penalty (3). Tries are 5 points.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2014-08-16",
+      "venue": "Loftus Versfeld, Pretoria",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "marcell-coetzee": { "squadRole": "starting", "jerseyNumber": 7, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2014-08-23",
+      "venue": "Estadio Padre Ernesto Martearena, Salta",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 },
+        "marcell-coetzee": { "squadRole": "bench", "jerseyNumber": 20, "positionName": "flanker", "minutes": 29, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2014-09-06",
+      "venue": "Patersons Stadium, Perth",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 },
+        "marcell-coetzee": { "squadRole": "starting", "jerseyNumber": 7, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "patrick-lambie": { "squadRole": "bench", "jerseyNumber": 22, "positionName": "fly-half", "minutes": 10, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2014-09-13",
+      "venue": "Westpac Stadium, Wellington",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 },
+        "marcell-coetzee": { "squadRole": "starting", "jerseyNumber": 7, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "patrick-lambie": { "squadRole": "bench", "jerseyNumber": 22, "positionName": "fly-half", "minutes": 10, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2014-09-27",
+      "venue": "Newlands, Cape Town",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 2, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 10 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "marcell-coetzee": { "squadRole": "starting", "jerseyNumber": 6, "positionName": "flanker", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 },
+        "patrick-lambie": { "squadRole": "bench", "jerseyNumber": 22, "positionName": "fly-half", "minutes": 22, "tries": 1, "conversions": 1, "penalties": 0, "dropGoals": 1, "points": 10 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2014-10-04",
+      "venue": "Ellis Park, Johannesburg",
+      "players": {
+        "jean-de-villiers": { "squadRole": "starting", "jerseyNumber": 12, "positionName": "centre", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "cornal-hendricks": { "squadRole": "starting", "jerseyNumber": 14, "positionName": "wing", "minutes": 57, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "marcell-coetzee": { "squadRole": "starting", "jerseyNumber": 6, "positionName": "flanker", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 },
+        "patrick-lambie": { "squadRole": "bench", "jerseyNumber": 22, "positionName": "fly-half", "minutes": 18, "tries": 0, "conversions": 0, "penalties": 1, "dropGoals": 0, "points": 3 }
+      }
+    }
+  ]
+}

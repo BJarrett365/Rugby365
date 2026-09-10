@@ -1,0 +1,27 @@
+{
+  "elton-jantjies": [
+    { "allRugbySeason": "15/16", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 4, "starts": 4, "tries": 0, "points": 33, "minutes": 248, "seasonYear": 2016, "source": "wikipedia-bokhist-2016-trc" },
+    { "allRugbySeason": "15/16", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 16, "starts": 16, "tries": 3, "points": 190, "minutes": 1165 },
+    { "allRugbySeason": "15/16", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 3, "starts": 2, "tries": 0, "points": 30, "minutes": 213, "seasonYear": 2015 },
+    { "allRugbySeason": "16/17", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 17, "starts": 17, "tries": 4, "points": 197, "minutes": 1246 },
+    { "allRugbySeason": "16/17", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 5, "starts": 4, "tries": 1, "points": 59, "minutes": 326, "seasonYear": 2016 },
+    { "allRugbySeason": "16/17", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 6, "starts": 6, "tries": 1, "points": 68, "minutes": 437, "seasonYear": 2017 },
+    { "allRugbySeason": "17/18", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 19, "starts": 19, "tries": 1, "points": 173, "minutes": 1520 },
+    { "allRugbySeason": "17/18", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 7, "starts": 3, "tries": 0, "points": 17, "minutes": 216, "seasonYear": 2017 },
+    { "allRugbySeason": "17/18", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 4, "starts": 1, "tries": 0, "points": 8, "minutes": 101, "seasonYear": 2018 },
+    { "allRugbySeason": "18/19", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 15, "starts": 14, "tries": 3, "points": 124, "minutes": 1112 },
+    { "allRugbySeason": "18/19", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 4, "starts": 0, "tries": 0, "points": 6, "minutes": 76, "seasonYear": 2018 },
+    { "allRugbySeason": "18/19", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 0, "points": 10, "minutes": 80, "seasonYear": 2019 },
+    { "allRugbySeason": "19/20", "competitionSlug": "super-rugby", "teamSlug": "gauteng-lions", "appearances": 10, "starts": 10, "tries": 2, "points": 91, "minutes": 788, "seasonYear": 2020, "note": "All.Rugby Super Rugby 6 + Super Rugby Unlocked 4" },
+    { "allRugbySeason": "19/20", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 0, "points": 14, "minutes": 80, "seasonYear": 2019 },
+    { "allRugbySeason": "19/20", "competitionSlug": "rugby-world-cup", "teamSlug": "south-africa", "appearances": 2, "starts": 2, "tries": 0, "points": 28, "minutes": 160, "seasonYear": 2019 },
+    { "allRugbySeason": "20/21", "competitionSlug": "top-14", "teamSlug": "pau", "appearances": 4, "starts": 2, "tries": 0, "points": 26, "minutes": 186 },
+    { "allRugbySeason": "20/21", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 2, "starts": 0, "tries": 0, "points": 2, "minutes": 27, "seasonYear": 2020 },
+    { "allRugbySeason": "20/21", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 3, "starts": 1, "tries": 0, "points": 26, "minutes": 105, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "japan-rugby-league-one", "teamSlug": "red-hurricanes-osaka", "appearances": 1, "starts": 1, "tries": 0, "points": 0, "minutes": 27 },
+    { "allRugbySeason": "21/22", "competitionSlug": "autumn-nations-cup-vx917e9w", "teamSlug": "south-africa", "appearances": 3, "starts": 1, "tries": 0, "points": 17, "minutes": 101, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "international-matches-n062z68w", "teamSlug": "south-africa", "appearances": 1, "starts": 1, "tries": 0, "points": 3, "minutes": 40, "seasonYear": 2021 },
+    { "allRugbySeason": "21/22", "competitionSlug": "rugby-championship", "teamSlug": "south-africa", "appearances": 1, "starts": 0, "tries": 0, "points": 2, "minutes": 21, "seasonYear": 2022 },
+    { "allRugbySeason": "22/23", "competitionSlug": "pro-d2", "teamSlug": "agen", "appearances": 11, "starts": 7, "tries": 0, "points": 65, "minutes": 615 }
+  ]
+}

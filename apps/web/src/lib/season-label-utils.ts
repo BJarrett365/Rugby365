@@ -47,9 +47,31 @@ export function seasonSlugForKind(
   return kind === "club" ? seasonSlugFromStartYear(year) : String(year);
 }
 
+/** Strip copy/paste noise from `?season=` (wrapping quotes, stray whitespace). */
+export function sanitizeSeasonQueryParam(raw: string | null | undefined): string | undefined {
+  if (raw == null) return undefined;
+  const trimmed = raw.trim().replace(/^["'\u201c\u201d]+|["'\u201c\u201d]+$/g, "").trim();
+  return trimmed || undefined;
+}
+
+/** Canonical `?season=` value for a competition (calendar-year comps use `2022`, not `2022–23"`). */
+export function canonicalSeasonQueryForCompetition(
+  competitionSlug: string,
+  raw: string | null | undefined,
+  competitionType?: string | null,
+): string | undefined {
+  const cleaned = sanitizeSeasonQueryParam(raw);
+  if (!cleaned) return undefined;
+  if (usesCalendarYearSeasons(competitionSlug, competitionType)) {
+    const year = parseSeasonStartYear(cleaned);
+    return year != null ? String(year) : cleaned;
+  }
+  return cleaned;
+}
+
 export function parseSeasonStartYear(label: string | null | undefined): number | null {
   if (!label) return null;
-  const trimmed = label.trim();
+  const trimmed = sanitizeSeasonQueryParam(label);
   if (!trimmed) return null;
 
   const crossYear = trimmed.match(/^(\d{4})\s*[/\u2013-]\s*(\d{2}|\d{4})$/);
@@ -94,9 +116,9 @@ export function returnedSeasonMatchesRequest(
     | null
     | undefined,
 ): boolean {
-  if (!requested?.trim()) return true;
+  const req = sanitizeSeasonQueryParam(requested);
+  if (!req) return true;
   if (!returned) return false;
-  const req = requested.trim();
   const candidates = [returned.label, returned.displayLabel, returned.originalLabel]
     .filter((value): value is string => Boolean(value?.trim()))
     .map((value) => value.trim());

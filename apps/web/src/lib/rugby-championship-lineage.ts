@@ -5,6 +5,7 @@
  *  - 1996–2011 Tri Nations — Australia, New Zealand, South Africa
  *  - 2012–2025 The Rugby Championship — those three plus Argentina
  *  - 2020 exception — South Africa withdrew (COVID-19); Argentina, Australia, New Zealand only
+ *  - 2026 and 2030 — tournament not held (SANZAAR multi-week tours / Nations Championship window)
  */
 export type RugbyChampionshipEra = "pre-tri-nations" | "tri-nations" | "rugby-championship";
 
@@ -17,6 +18,96 @@ export const TRI_NATIONS_FIRST_YEAR = 1996;
 export const RUGBY_CHAMPIONSHIP_FIRST_YEAR = 2012;
 /** COVID year: three-team series, South Africa withdrew. */
 export const RUGBY_CHAMPIONSHIP_COVID_YEAR = 2020;
+/** Years SANZAAR confirmed The Rugby Championship is not staged. */
+export const RUGBY_CHAMPIONSHIP_NOT_HELD_YEARS = new Set([2026, 2030]);
+
+/**
+ * Verified Championship match counts for 2012–2026.
+ * Sources: Wikipedia season pages ("Matches played") and rugbydatabase.co.nz competition summaries.
+ * World Cup years used a single round-robin (6). 2020 was a three-team series (6). 2026 was not held (0).
+ * Total 2012–2026 = 144 matches (138 Rugby Championship-branded + 6 in the 2020 Tri Nations series).
+ */
+export const RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR: Record<number, number> = {
+  2012: 12,
+  2013: 12,
+  2014: 12,
+  2015: 6,
+  2016: 12,
+  2017: 12,
+  2018: 12,
+  2019: 6,
+  2020: 6,
+  2021: 12,
+  2022: 12,
+  2023: 6,
+  2024: 12,
+  2025: 12,
+  2026: 0,
+};
+
+const TEAM_NAME_ALIASES: Record<string, string> = {
+  "all blacks": "new zealand",
+  "new zealand all blacks": "new zealand",
+  wallabies: "australia",
+  springboks: "south africa",
+  "south africa springboks": "south africa",
+  pumas: "argentina",
+  "los pumas": "argentina",
+  "ru zaf": "south africa",
+  "ru rt zaf": "south africa",
+  aus: "australia",
+  nzl: "new zealand",
+  rsa: "south africa",
+  zaf: "south africa",
+  arg: "argentina",
+};
+
+/** Normalise a display/import team name onto the participant-key space. */
+export function rugbyChampionshipParticipantTeamKey(name: string): string {
+  const key = name
+    .trim()
+    .toLowerCase()
+    .replace(/\{\{[^}]+\}\}/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+  return TEAM_NAME_ALIASES[key] ?? key;
+}
+
+/** True when both sides are Championship/Tri Nations nations for that year (excludes club warm-ups). */
+export function isRugbyChampionshipParticipantMatch(
+  homeTeam: string,
+  awayTeam: string,
+  year: number,
+): boolean {
+  const keys = rugbyChampionshipParticipantKeys(year);
+  return (
+    keys.has(rugbyChampionshipParticipantTeamKey(homeTeam)) &&
+    keys.has(rugbyChampionshipParticipantTeamKey(awayTeam))
+  );
+}
+
+export function rugbyChampionshipExpectedFixtureCount(year: number): number | null {
+  if (!Number.isFinite(year)) return null;
+  if (year in RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR) {
+    return RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR[year]!;
+  }
+  if (RUGBY_CHAMPIONSHIP_NOT_HELD_YEARS.has(year)) return 0;
+  return null;
+}
+
+const CHAMPION_DISPLAY_NAMES: Record<string, string> = {
+  australia: "Australia",
+  "new zealand": "New Zealand",
+  "south africa": "South Africa",
+  argentina: "Argentina",
+};
+
+/** Map Wikipedia infobox codes such as AUS onto the canonical nation name. */
+export function rugbyChampionshipChampionDisplayName(raw: string): string {
+  const key = rugbyChampionshipParticipantTeamKey(raw);
+  return CHAMPION_DISPLAY_NAMES[key] ?? raw.trim();
+}
 
 const TRI_NATIONS_TEAM_KEYS = new Set(["australia", "new zealand", "south africa"]);
 const RUGBY_CHAMPIONSHIP_TEAM_KEYS = new Set(["argentina", "australia", "new zealand", "south africa"]);
@@ -92,6 +183,9 @@ export function rugbyChampionshipParticipantKeys(year?: number | null): Set<stri
 }
 
 export function rugbyChampionshipTableNote(year: number): string | null {
+  if (RUGBY_CHAMPIONSHIP_NOT_HELD_YEARS.has(year)) {
+    return "The Rugby Championship was not held this year. SANZAAR scheduled international multi-week tours in this window instead, including New Zealand’s tour of South Africa in 2026.";
+  }
   if (year === RUGBY_CHAMPIONSHIP_COVID_YEAR) {
     return "South Africa withdrew from the 2020 tournament because of COVID-19. Argentina, Australia and New Zealand contested a three-team series.";
   }

@@ -2,6 +2,7 @@ import {
   DEFAULT_PREMIERSHIP_SCORING_RULES,
   type RugbyScoringRules,
 } from "./table-types";
+import { isRugbyChampionshipLineageSlug } from "../rugby-championship-lineage";
 
 /** Per-competition league scoring — not a single global Premiership default. */
 /** Domestic SA Currie Cup — same bonus structure as Premiership / URC. */
@@ -21,15 +22,6 @@ const SCORING_BY_SLUG: Record<string, RugbyScoringRules> = {
     losingBonusPoints: 1,
   },
   "united-rugby-championship": DEFAULT_PREMIERSHIP_SCORING_RULES,
-  "rugby-championship": {
-    winPoints: 4,
-    drawPoints: 2,
-    lossPoints: 0,
-    tryBonusThreshold: 3,
-    tryBonusPoints: 1,
-    losingBonusMargin: 7,
-    losingBonusPoints: 0,
-  },
   "six-nations": {
     winPoints: 4,
     drawPoints: 2,
@@ -60,6 +52,27 @@ const SCORING_BY_SLUG: Record<string, RugbyScoringRules> = {
   },
 };
 
+/**
+ * The Rugby Championship / Tri Nations league points.
+ * 2012–2015: 4-try bonus. From 2016: bonus for finishing 3+ tries ahead (SANZAAR).
+ * Losing bonus (≤7) applies throughout.
+ */
+export function rugbyChampionshipScoringRules(year?: number | null): RugbyScoringRules {
+  const base: RugbyScoringRules = {
+    winPoints: 4,
+    drawPoints: 2,
+    lossPoints: 0,
+    tryBonusThreshold: 4,
+    tryBonusPoints: 1,
+    losingBonusMargin: 7,
+    losingBonusPoints: 1,
+  };
+  if (year != null && year >= 2016) {
+    return { ...base, tryBonusLead: 3 };
+  }
+  return { ...base, tryBonusLead: null };
+}
+
 export const DOMESTIC_SCORING_DEFAULT = DEFAULT_PREMIERSHIP_SCORING_RULES;
 
 const INTERNATIONAL_DEFAULT: RugbyScoringRules = {
@@ -75,8 +88,12 @@ const INTERNATIONAL_DEFAULT: RugbyScoringRules = {
 export function scoringRulesForCompetitionSlug(
   slug: string | null | undefined,
   competitionType?: string | null,
+  seasonYear?: number | null,
 ): RugbyScoringRules {
   const key = (slug ?? "").trim().toLowerCase();
+  if (isRugbyChampionshipLineageSlug(key)) {
+    return rugbyChampionshipScoringRules(seasonYear);
+  }
   if (key && SCORING_BY_SLUG[key]) {
     return SCORING_BY_SLUG[key]!;
   }

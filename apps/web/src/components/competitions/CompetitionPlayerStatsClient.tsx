@@ -9,7 +9,7 @@ import type {
   CompetitionPlayerStatsPayload,
   HemisphereFilter,
 } from "@/lib/competition-player-leaderboards-service";
-import { returnedSeasonMatchesRequest } from "@/lib/season-label-utils";
+import { returnedSeasonMatchesRequest, sanitizeSeasonQueryParam } from "@/lib/season-label-utils";
 
 const HEMISPHERE_OPTIONS: Array<{ value: HemisphereFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -104,7 +104,7 @@ export function CompetitionPlayerStatsClient({
 }) {
   const [data, setData] = useState<CompetitionPlayerStatsPayload | null>(null);
   const [seasons, setSeasons] = useState<CompetitionPlayerStatsPayload["seasons"]>([]);
-  const [seasonLabel, setSeasonLabel] = useState(initialSeason ?? "");
+  const [seasonLabel, setSeasonLabel] = useState(sanitizeSeasonQueryParam(initialSeason) ?? "");
   const [hemisphere, setHemisphere] = useState<HemisphereFilter>(initialHemisphere);
   const [showAdditional, setShowAdditional] = useState(true);
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(new Set());
@@ -135,7 +135,7 @@ export function CompetitionPlayerStatsClient({
       return;
     }
     setData(json);
-    if (!seasonLabel && json.season?.label) {
+    if (json.season?.label && json.season.label !== seasonLabel) {
       setSeasonLabel(json.season.label);
     }
     const advancedPrimaryEmpty = (json.boards ?? [])

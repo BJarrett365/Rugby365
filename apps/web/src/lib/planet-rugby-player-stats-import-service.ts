@@ -259,7 +259,9 @@ export async function importMatchPerformanceStats(
         : await resolvePlayer({
             name: row.playerName,
             externalProviderId: row.externalPlayerId,
+            internationalTeamId: teamId,
             createIfMissing: true,
+            skipArchiveEnrich: true,
             sourceProvider: SDMS_PROVIDER,
           });
     if (!player) continue;
@@ -274,8 +276,8 @@ export async function importMatchPerformanceStats(
       externalPlayerId: row.externalPlayerId,
       stats: {
         ...row,
-        tries: scoring?.tries ?? 0,
-        points: scoring?.points ?? 0,
+        tries: scoring?.tries && scoring.tries > 0 ? scoring.tries : 0,
+        points: scoring?.points && scoring.points > 0 ? scoring.points : 0,
       },
     });
 

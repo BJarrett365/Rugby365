@@ -4,14 +4,18 @@ import {
   canonicalRugbyChampionshipSlug,
   formatRugbyChampionshipSeasonDisplayLabel,
   isRugbyChampionshipLineageSlug,
+  isRugbyChampionshipParticipantMatch,
   isRugbyChampionshipPickerYear,
+  rugbyChampionshipChampionDisplayName,
   rugbyChampionshipCompetitionDisplayNameForYear,
   rugbyChampionshipEraForYear,
   rugbyChampionshipEraLabel,
+  rugbyChampionshipExpectedFixtureCount,
   rugbyChampionshipParticipantKeys,
   rugbyChampionshipPickerDisplayLabel,
   rugbyChampionshipSeasonDisplaySuffix,
   rugbyChampionshipTableNote,
+  RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR,
   RUGBY_CHAMPIONSHIP_FIRST_YEAR,
   TRI_NATIONS_FIRST_YEAR,
 } from "./rugby-championship-lineage";
@@ -82,6 +86,52 @@ describe("rugby championship lineage", () => {
     expect(rugbyChampionshipTableNote(2020)).toMatch(/South Africa withdrew/);
     expect(rugbyChampionshipTableNote(2003)).toMatch(/Tri Nations/);
     expect(rugbyChampionshipTableNote(2024)).toBeNull();
+  });
+
+  it("explains that SANZAAR did not stage the 2026 tournament", () => {
+    expect(rugbyChampionshipTableNote(2026)).toMatch(/not held/i);
+    expect(rugbyChampionshipExpectedFixtureCount(2026)).toBe(0);
+  });
+
+  it("uses verified 2012–2026 Championship match counts", () => {
+    expect(RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR).toEqual({
+      2012: 12,
+      2013: 12,
+      2014: 12,
+      2015: 6,
+      2016: 12,
+      2017: 12,
+      2018: 12,
+      2019: 6,
+      2020: 6,
+      2021: 12,
+      2022: 12,
+      2023: 6,
+      2024: 12,
+      2025: 12,
+      2026: 0,
+    });
+    expect(
+      Object.entries(RUGBY_CHAMPIONSHIP_FIXTURE_COUNT_BY_YEAR).reduce(
+        (sum, [, count]) => sum + count,
+        0,
+      ),
+    ).toBe(144);
+    // 2012–2025 are completed Championship/Tri Nations results; 2026 was not held.
+    expect(rugbyChampionshipExpectedFixtureCount(2015)).toBe(6);
+    expect(rugbyChampionshipExpectedFixtureCount(2020)).toBe(6);
+    expect(rugbyChampionshipExpectedFixtureCount(2023)).toBe(6);
+  });
+
+  it("rejects club warm-up matches that appear on Wikipedia season pages", () => {
+    expect(isRugbyChampionshipParticipantMatch("Argentina", "Stade Français", 2012)).toBe(false);
+    expect(isRugbyChampionshipParticipantMatch("Argentina", "NSW Barbarians", 2013)).toBe(false);
+    expect(isRugbyChampionshipParticipantMatch("Argentina", "Grenoble", 2014)).toBe(false);
+    expect(isRugbyChampionshipParticipantMatch("South Africa", "Argentina", 2012)).toBe(true);
+    expect(isRugbyChampionshipParticipantMatch("All Blacks", "Wallabies", 2025)).toBe(true);
+    expect(isRugbyChampionshipParticipantMatch("South Africa", "New Zealand", 2020)).toBe(false);
+    expect(rugbyChampionshipChampionDisplayName("AUS")).toBe("Australia");
+    expect(rugbyChampionshipChampionDisplayName("NZL")).toBe("New Zealand");
   });
 
   it("applies era labels on the canonical slug", () => {

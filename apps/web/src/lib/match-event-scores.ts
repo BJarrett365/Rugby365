@@ -5,13 +5,19 @@ export type MatchEventForScore = {
   payload?: Record<string, unknown> | null;
 };
 
-const SCORING_POINTS: Record<string, number> = {
+export const SCORING_EVENT_POINTS: Record<string, number> = {
   try: 5,
   conversion: 2,
   penalty: 3,
   penalty_goal: 3,
   drop_goal: 3,
 };
+
+const SCORING_POINTS = SCORING_EVENT_POINTS;
+
+export function pointsForScoringEventType(eventType: string): number {
+  return SCORING_POINTS[eventType] ?? 0;
+}
 
 function readScorePair(payload: Record<string, unknown>): [number, number] | null {
   const scoreAfter = payload.score_after;

@@ -1,0 +1,52 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2017_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=587",
+    "https://all.rugby/player/courtnall-skosan"
+  ],
+  "note": "Started all six Tests at left wing. No replacement times on Wikipedia rugbyboxes. All.Rugby 16/17 TRC: 6 starts, 2 tries, 10 points, 480 minutes. Tries vs Argentina 19 Aug (36') and Australia 30 Sep (48').",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2017-08-19",
+      "venue": "Nelson Mandela Bay Stadium, Port Elizabeth",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2017-08-26",
+      "venue": "Estadio Padre Ernesto Martearena, Salta",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2017-09-09",
+      "venue": "Perth Oval, Perth",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2017-09-16",
+      "venue": "North Harbour Stadium, Auckland",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-australia-2017-09-30",
+      "venue": "Free State Stadium, Bloemfontein",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 1, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 5 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-new-zealand-2017-10-07",
+      "venue": "Newlands, Cape Town",
+      "players": {
+        "courtnall-skosan": { "squadRole": "starting", "jerseyNumber": 11, "positionName": "wing", "minutes": 80, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    }
+  ]
+}

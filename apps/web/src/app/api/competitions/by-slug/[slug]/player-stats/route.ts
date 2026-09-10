@@ -5,6 +5,7 @@ import {
   type HemisphereFilter,
 } from "@/lib/competition-player-leaderboards-service";
 import { publicJsonCacheHeaders, PUBLIC_CACHE_TTL } from "@/lib/public-data-cache";
+import { sanitizeSeasonQueryParam } from "@/lib/season-label-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   try {
     const { slug } = await params;
     const { searchParams } = new URL(req.url);
-    const seasonLabel = searchParams.get("season") ?? undefined;
+    const seasonLabel = sanitizeSeasonQueryParam(searchParams.get("season"));
     const hemisphere = (searchParams.get("hemisphere") ?? "all") as HemisphereFilter;
     const limitRaw = searchParams.get("limit");
     const limit = limitRaw ? Number.parseInt(limitRaw, 10) : undefined;

@@ -7,12 +7,14 @@
  *
  * Usage:
  *   npx tsx --require ./scripts/stub-server-only.cjs scripts/populate-rassie-career-history.ts
+ *
+ * Prefer scripts/update-rassie-erasmus-profile.ts for the public slug profile.
  */
 import { eq, sql } from "drizzle-orm";
 import { coaches, coachPlayingStints, teamCoachingStaff, teams } from "@rugby365/db";
 import { getDb } from "../apps/web/src/lib/db";
 
-const COACH_ID = "dbe4562a-7255-42c4-bb70-653153c4da3c";
+let COACH_ID = "dbe4562a-7255-42c4-bb70-653153c4da3c";
 const SOURCE = "https://en.wikipedia.org/wiki/Rassie_Erasmus";
 const SOURCE_PROVIDER = "wikipedia";
 
@@ -227,6 +229,12 @@ async function upsertAssignment(
 
 async function main() {
   const db = getDb();
+  const [publicCoach] = await db
+    .select()
+    .from(coaches)
+    .where(eq(coaches.slug, "rassie-erasmus"))
+    .limit(1);
+  if (publicCoach) COACH_ID = publicCoach.id;
   const [coach] = await db.select().from(coaches).where(eq(coaches.id, COACH_ID)).limit(1);
   if (!coach) throw new Error("Rassie coach row not found");
 

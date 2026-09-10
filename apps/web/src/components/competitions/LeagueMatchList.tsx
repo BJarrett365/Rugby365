@@ -153,11 +153,13 @@ export function LeagueMatchList({
   showScores,
   newestFirst = true,
   monthIndex = null,
+  emptyMessage,
 }: {
   rows: LeagueMatchRow[];
   showScores: boolean;
   newestFirst?: boolean;
   monthIndex?: number | null;
+  emptyMessage?: string;
 }) {
   const filtered = useMemo(() => {
     return rows.filter((row) => {
@@ -173,7 +175,8 @@ export function LeagueMatchList({
   if (!grouped.length) {
     return (
       <p className="text-sm text-zinc-500 m-0 py-8 text-center">
-        No matches for this period. Try another month or season, or import from Planet Rugby in CMS.
+        {emptyMessage ??
+          "No matches for this period. Try another month or season, or import from Planet Rugby in CMS."}
       </p>
     );
   }
@@ -216,6 +219,9 @@ export function LeagueMatchList({
                     </div>
                   </div>
                   {!showScores && m.kickoffAt && (
+                    <span className="league-match-row__kickoff">{formatKickoffTime(m.kickoffAt)}</span>
+                  )}
+                  {showScores && m.kickoffAt && m.status !== "full_time" && m.status !== "live" && (
                     <span className="league-match-row__kickoff">{formatKickoffTime(m.kickoffAt)}</span>
                   )}
                 </div>

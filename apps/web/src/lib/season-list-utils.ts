@@ -30,7 +30,10 @@ function seasonPickerScore(row: SeasonPickerRow, originalLabel: string): number 
 }
 
 /** Collapse duplicate season imports that share the same competition + start year. */
-export function dedupeSeasonsByYear<T extends SeasonPickerRow>(rows: T[]): T[] {
+export function dedupeSeasonsByYear<T extends SeasonPickerRow>(
+  rows: T[],
+  seasonKind: "club" | "international" | "tournament" = "club",
+): T[] {
   const byKey = new Map<string, T>();
 
   for (const row of rows) {
@@ -41,7 +44,10 @@ export function dedupeSeasonsByYear<T extends SeasonPickerRow>(rows: T[]): T[] {
     const normalized = {
       ...row,
       year: startYear,
-      label: normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(startYear),
+      label:
+        seasonKind === "club"
+          ? (normalizeSeasonLabel(row.label) ?? formatSeasonRangeLabel(startYear))
+          : formatSeasonLabelForKind(startYear, seasonKind),
       originalLabel: row.originalLabel ?? row.label,
     };
 

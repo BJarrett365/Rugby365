@@ -1,0 +1,1472 @@
+{
+  "caleb-clarke": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 14,
+      "tries": 9,
+      "points": 45,
+      "minutes": 1004
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 204
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "nations-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 92
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 11,
+      "tries": 0,
+      "points": 0,
+      "minutes": 887
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "auckland-76knq76y",
+      "appearances": 3,
+      "tries": 3,
+      "points": 15,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 0,
+      "points": 0,
+      "minutes": 291
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 45
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 15,
+      "tries": 10,
+      "points": 50,
+      "minutes": 1114
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 108
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 6,
+      "points": 30,
+      "minutes": 269
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 13,
+      "tries": 7,
+      "points": 35,
+      "minutes": 930
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 232
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 112
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 9,
+      "tries": 7,
+      "points": 35,
+      "minutes": 648
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 2,
+      "points": 10,
+      "minutes": 460
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 8,
+      "tries": 2,
+      "points": 10,
+      "minutes": 628
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 6,
+      "tries": 2,
+      "points": 10,
+      "minutes": 465
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "auckland-76knq76y",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 160
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 88
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 224
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 8,
+      "tries": 3,
+      "points": 15,
+      "minutes": 553
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 340
+    }
+  ],
+  "codie-taylor": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 12,
+      "tries": 6,
+      "points": 30,
+      "minutes": 665
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 174
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "nations-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 138
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 12,
+      "tries": 4,
+      "points": 20,
+      "minutes": 644
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 116
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 111
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 255
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 4,
+      "tries": 2,
+      "points": 10,
+      "minutes": 238
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 0,
+      "points": 0,
+      "minutes": 336
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 127
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 380
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 14,
+      "tries": 12,
+      "points": 60,
+      "minutes": 803
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 26
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 3,
+      "points": 15,
+      "minutes": 139
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 138
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 12,
+      "tries": 4,
+      "points": 20,
+      "minutes": 713
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 105
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 177
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 117
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 13,
+      "tries": 9,
+      "points": 45,
+      "minutes": 781
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 167
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 2,
+      "points": 10,
+      "minutes": 250
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 12,
+      "tries": 2,
+      "points": 10,
+      "minutes": 768
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "canterbury-294zr2j8",
+      "appearances": 2,
+      "tries": 2,
+      "points": 10,
+      "minutes": 125
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 171
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 209
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 157
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 10,
+      "tries": 4,
+      "points": 20,
+      "minutes": 529
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 162
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 85
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 17,
+      "tries": 3,
+      "points": 15,
+      "minutes": 1010
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 7,
+      "tries": 2,
+      "points": 10,
+      "minutes": 407
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 390
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 15,
+      "tries": 2,
+      "points": 10,
+      "minutes": 823
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 8,
+      "tries": 2,
+      "points": 10,
+      "minutes": 387
+    },
+    {
+      "allRugbySeason": "2016-17",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 173
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 15,
+      "tries": 5,
+      "points": 25,
+      "minutes": 992
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 8
+    },
+    {
+      "allRugbySeason": "2015-16",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 69
+    },
+    {
+      "allRugbySeason": "2014-15",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 16,
+      "tries": 1,
+      "points": 5,
+      "minutes": 558
+    },
+    {
+      "allRugbySeason": "2014-15",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 51
+    },
+    {
+      "allRugbySeason": "2013-14",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "crusaders-5d9yde9o",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 24
+    }
+  ],
+  "dalton-papalii": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 9,
+      "tries": 3,
+      "points": 15,
+      "minutes": 595
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "all-blacks-xv",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 14,
+      "tries": 2,
+      "points": 10,
+      "minutes": 1046
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "counties-manukau-o6gddo63",
+      "appearances": 8,
+      "tries": 1,
+      "points": 5,
+      "minutes": 490
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 15
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 15,
+      "tries": 3,
+      "points": 15,
+      "minutes": 1127
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "counties-manukau-o6gddo63",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 26
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 178
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 2,
+      "points": 10,
+      "minutes": 247
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 114
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 12,
+      "tries": 3,
+      "points": 15,
+      "minutes": 871
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 14
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 232
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 134
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 11,
+      "tries": 1,
+      "points": 5,
+      "minutes": 805
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "counties-manukau-o6gddo63",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 138
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 145
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 144
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 11,
+      "tries": 3,
+      "points": 15,
+      "minutes": 748
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 2,
+      "points": 10,
+      "minutes": 132
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 224
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 13,
+      "tries": 5,
+      "points": 25,
+      "minutes": 865
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "counties-manukau-o6gddo63",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 139
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 13
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 14,
+      "tries": 2,
+      "points": 10,
+      "minutes": 794
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 91
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 4
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 7,
+      "tries": 1,
+      "points": 5,
+      "minutes": 357
+    }
+  ],
+  "ethan-de-groot": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 13,
+      "tries": 0,
+      "points": 0,
+      "minutes": 778
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 128
+    },
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "nations-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 151
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 12,
+      "tries": 1,
+      "points": 5,
+      "minutes": 682
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 50
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 146
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 0,
+      "points": 0,
+      "minutes": 204
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 12,
+      "tries": 1,
+      "points": 5,
+      "minutes": 577
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "southland-06288z68",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 99
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 179
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 1,
+      "points": 5,
+      "minutes": 259
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 149
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 12,
+      "tries": 3,
+      "points": 15,
+      "minutes": 670
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 167
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 162
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 13,
+      "tries": 0,
+      "points": 0,
+      "minutes": 573
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 50
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 28
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 274
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 12,
+      "tries": 2,
+      "points": 10,
+      "minutes": 512
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 60
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 24
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "southland-06288z68",
+      "appearances": 9,
+      "tries": 0,
+      "points": 0,
+      "minutes": 418
+    }
+  ],
+  "shannon-frizell": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "japan-rugby-league-one",
+      "teamSlug": "toshiba-brave-lupus-tokyo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 129
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "japan-rugby-league-one",
+      "teamSlug": "toshiba-brave-lupus-tokyo",
+      "appearances": 18,
+      "tries": 11,
+      "points": 55,
+      "minutes": 1377
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "japan-rugby-league-one",
+      "teamSlug": "toshiba-brave-lupus-tokyo",
+      "appearances": 17,
+      "tries": 10,
+      "points": 50,
+      "minutes": 1290
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 5,
+      "tries": 2,
+      "points": 10,
+      "minutes": 283
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 11,
+      "tries": 1,
+      "points": 5,
+      "minutes": 761
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 62
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 0,
+      "points": 0,
+      "minutes": 96
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 202
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 8,
+      "tries": 1,
+      "points": 5,
+      "minutes": 452
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 48
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 212
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 10,
+      "tries": 2,
+      "points": 10,
+      "minutes": 744
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "tasman-m98ee29x",
+      "appearances": 4,
+      "tries": 3,
+      "points": 15,
+      "minutes": 297
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 93
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 12,
+      "tries": 4,
+      "points": 20,
+      "minutes": 844
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "tasman-m98ee29x",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 160
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 225
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 128
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 0,
+      "points": 0,
+      "minutes": 128
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 13,
+      "tries": 6,
+      "points": 30,
+      "minutes": 678
+    },
+    {
+      "allRugbySeason": "2018-19",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 76
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "highlanders-016oyo95",
+      "appearances": 14,
+      "tries": 5,
+      "points": 25,
+      "minutes": 483
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 0,
+      "points": 0,
+      "minutes": 71
+    },
+    {
+      "allRugbySeason": "2017-18",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 1,
+      "points": 5,
+      "minutes": 192
+    }
+  ],
+  "mark-telea": [
+    {
+      "allRugbySeason": "2025-26",
+      "competitionSlug": "japan-rugby-league-one",
+      "teamSlug": "toyota-verblitz",
+      "appearances": 17,
+      "tries": 10,
+      "points": 50,
+      "minutes": 1350
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 13,
+      "tries": 6,
+      "points": 30,
+      "minutes": 978
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "north-harbour-d9rxxo98",
+      "appearances": 6,
+      "tries": 1,
+      "points": 5,
+      "minutes": 480
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2024-25",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 3,
+      "points": 15,
+      "minutes": 234
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 15,
+      "tries": 9,
+      "points": 45,
+      "minutes": 1180
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "north-harbour-d9rxxo98",
+      "appearances": 1,
+      "tries": 1,
+      "points": 5,
+      "minutes": 80
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "international-matches-n062z68w",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 240
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-world-cup",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 3,
+      "points": 15,
+      "minutes": 311
+    },
+    {
+      "allRugbySeason": "2023-24",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 4,
+      "tries": 1,
+      "points": 5,
+      "minutes": 174
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 13,
+      "tries": 12,
+      "points": 60,
+      "minutes": 1014
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "end-of-year-internationals",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 2,
+      "points": 10,
+      "minutes": 160
+    },
+    {
+      "allRugbySeason": "2022-23",
+      "competitionSlug": "rugby-championship",
+      "teamSlug": "new-zealand-5d9ywpjo",
+      "appearances": 2,
+      "tries": 1,
+      "points": 5,
+      "minutes": 151
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 14,
+      "tries": 3,
+      "points": 15,
+      "minutes": 1077
+    },
+    {
+      "allRugbySeason": "2021-22",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "north-harbour-d9rxxo98",
+      "appearances": 9,
+      "tries": 4,
+      "points": 20,
+      "minutes": 704
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 11,
+      "tries": 4,
+      "points": 20,
+      "minutes": 679
+    },
+    {
+      "allRugbySeason": "2020-21",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "tasman-m98ee29x",
+      "appearances": 3,
+      "tries": 2,
+      "points": 10,
+      "minutes": 212
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "super-rugby",
+      "teamSlug": "blues-x7jq1d91",
+      "appearances": 14,
+      "tries": 7,
+      "points": 35,
+      "minutes": 1069
+    },
+    {
+      "allRugbySeason": "2019-20",
+      "competitionSlug": "npc-n0628z68",
+      "teamSlug": "tasman-m98ee29x",
+      "appearances": 11,
+      "tries": 2,
+      "points": 10,
+      "minutes": 784
+    }
+  ]
+}

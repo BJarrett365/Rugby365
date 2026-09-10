@@ -1,0 +1,54 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2022_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=425",
+    "https://bokhist.com/PlayerData.aspx?PlayerID=909",
+    "https://all.rugby/player/steven-kitshoff",
+    "https://all.rugby/player/jordan-hendrikse"
+  ],
+  "note": "Jordan Hendrikse did not play the 2022 Rugby Championship (Springbok debut 22 Jun 2024 vs Wales). Wikipedia rugbyboxes name Jaden Hendrikse, not Jordan. Kitshoff played all six Tests: three from the bench, then three starts at loose-head. All.Rugby 21/22 TRC: 6 apps, 3 starts, 0 tries, 320 minutes. First Test minutes: All.Rugby 41 vs Wikipedia on at 56' (24) — All.Rugby used so match sum equals 320.",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-all-blacks-2022-08-06",
+      "venue": "Mbombela Stadium, Nelspruit",
+      "players": {
+        "steven-kitshoff": { "squadRole": "bench", "jerseyNumber": 17, "positionName": "loosehead prop", "minutes": 41, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-all-blacks-2022-08-13",
+      "venue": "Ellis Park Stadium, Johannesburg",
+      "players": {
+        "steven-kitshoff": { "squadRole": "bench", "jerseyNumber": 17, "positionName": "loosehead prop", "minutes": 45, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2022-08-27",
+      "venue": "Adelaide Oval, Adelaide",
+      "players": {
+        "steven-kitshoff": { "squadRole": "bench", "jerseyNumber": 17, "positionName": "loosehead prop", "minutes": 40, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2022-09-03",
+      "venue": "Sydney Football Stadium, Sydney",
+      "players": {
+        "steven-kitshoff": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "loosehead prop", "minutes": 71, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2022-09-17",
+      "venue": "Estadio Libertadores de América, Buenos Aires",
+      "players": {
+        "steven-kitshoff": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "loosehead prop", "minutes": 66, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    },
+    {
+      "fixtureSlug": "south-africa-v-argentina-2022-09-24",
+      "venue": "Kings Park Stadium, Durban",
+      "players": {
+        "steven-kitshoff": { "squadRole": "starting", "jerseyNumber": 1, "positionName": "loosehead prop", "minutes": 57, "tries": 0, "conversions": 0, "penalties": 0, "dropGoals": 0, "points": 0 }
+      }
+    }
+  ]
+}

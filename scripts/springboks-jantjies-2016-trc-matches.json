@@ -1,0 +1,39 @@
+{
+  "source": "https://en.wikipedia.org/wiki/2016_Rugby_Championship",
+  "crossCheck": [
+    "https://bokhist.com/PlayerData.aspx?PlayerID=799",
+    "https://all.rugby/player/elton-jantjies",
+    "https://bokhist.com/GameData.aspx?GameID=309"
+  ],
+  "note": "Only players who took the field. Jantjies started the first four Tests and was not in the match-day 23 for the last two (Morné Steyn started vs Australia 1 Oct and New Zealand 8 Oct). Minutes from Wikipedia rugbybox replacement times, matching All.Rugby 15/16 TRC (4 starts, 33 points, 248 minutes).",
+  "matches": [
+    {
+      "fixtureSlug": "south-africa-v-argentina-2016-08-20",
+      "venue": "Mbombela Stadium, Nelspruit",
+      "players": {
+        "elton-jantjies": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 80, "tries": 0, "conversions": 3, "penalties": 3, "dropGoals": 0, "points": 15 }
+      }
+    },
+    {
+      "fixtureSlug": "argentina-g567pe6e-v-south-africa-2016-08-27",
+      "venue": "Estadio Padre Ernesto Martearena, Salta",
+      "players": {
+        "elton-jantjies": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 45, "tries": 0, "conversions": 0, "penalties": 2, "dropGoals": 0, "points": 6 }
+      }
+    },
+    {
+      "fixtureSlug": "australia-og9nxrjl-v-south-africa-2016-09-10",
+      "venue": "Lang Park, Brisbane",
+      "players": {
+        "elton-jantjies": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 64, "tries": 0, "conversions": 2, "penalties": 0, "dropGoals": 0, "points": 4 }
+      }
+    },
+    {
+      "fixtureSlug": "new-zealand-5d9ywpjo-v-south-africa-2016-09-17",
+      "venue": "AMI Stadium, Christchurch",
+      "players": {
+        "elton-jantjies": { "squadRole": "starting", "jerseyNumber": 10, "positionName": "fly-half", "minutes": 59, "tries": 0, "conversions": 1, "penalties": 2, "dropGoals": 0, "points": 8 }
+      }
+    }
+  ]
+}

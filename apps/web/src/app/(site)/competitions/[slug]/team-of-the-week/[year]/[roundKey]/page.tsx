@@ -3,6 +3,11 @@ import { notFound } from "next/navigation";
 import { TeamOfWeekPicker } from "@/components/competitions/TeamOfWeekPicker";
 import { TeamOfWeekView } from "@/components/competitions/TeamOfWeekView";
 import { getCompetitionBySlug } from "@/lib/competition-admin-service";
+import { isRugbyChampionshipLineageSlug } from "@/lib/rugby-championship-lineage";
+import {
+  buildRugbyChampionshipTotwPickerSeasons,
+  rugbyChampionshipTotwUnavailableReason,
+} from "@/lib/rugby-championship-totw-rounds";
 import { buildTotwPickerSeasons } from "@/lib/team-of-week-picker";
 import {
   findPublishedEditionByRound,
@@ -49,13 +54,47 @@ export default async function TeamOfWeekRoundPage({
     }),
     listPublishedEditionsForCompetition(competition.id),
   ]);
-  if (!edition) notFound();
+
+  const championship = isRugbyChampionshipLineageSlug(slug);
+  const pickerSeasons = championship
+    ? buildRugbyChampionshipTotwPickerSeasons(allEditions)
+    : buildTotwPickerSeasons(allEditions);
+
+  if (!edition) {
+    if (!championship) notFound();
+    const unavailable =
+      rugbyChampionshipTotwUnavailableReason(yearNum, roundKey) ??
+      "Team of the Week could not be generated for this round: verified match ratings and full line-ups are not available.";
+    return (
+      <div>
+        <p className="text-sm text-[var(--pr-grey,#9aa)] mt-3 mb-2">
+          Select a season, then a round for that season.{" "}
+          <Link href={`/competitions/${slug}/team-of-the-week`}>Latest</Link>
+        </p>
+        {pickerSeasons.length > 0 ? (
+          <TeamOfWeekPicker
+            slug={slug}
+            seasons={pickerSeasons}
+            selectedYear={yearNum}
+            selectedRoundKey={roundKey}
+          />
+        ) : null}
+        <section className="totw">
+          <div className="totw-empty">
+            <h2 className="totw__title" style={{ fontSize: "1.25rem" }}>
+              Team of the Week unavailable
+            </h2>
+            <p>{unavailable}</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   const bundle = await getTeamOfWeekEditionBundle(edition.id);
   if (!bundle) notFound();
 
   const view = await hydrateTotwLiveImages(presentTeamOfWeekBundle(bundle));
-  const pickerSeasons = buildTotwPickerSeasons(allEditions);
 
   return (
     <div>
